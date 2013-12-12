@@ -1,0 +1,11 @@
+dependencies:
+  sudo apt-get install python3-yaml python3-urwid # python3-nose for tests
+
+To run, ensure you have a 'juju status' that will do something reasonable, and
+run src/cloud-install-status.
+
+To test, make sure you have python3-nose installed, then run:
+  nosetests3
+from tests/. (We can fix this to not be location dependant later on, I just
+haven't bothered for now.)
+

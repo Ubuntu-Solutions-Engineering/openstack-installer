@@ -1,0 +1,56 @@
+environment: local
+machines:
+  "0":
+    agent-state: started
+    agent-version: 1.15.0.1
+    dns-name: 10.0.3.1
+    instance-id: localhost
+    series: raring
+  "1":
+    agent-state: started
+    agent-version: 1.15.0.1
+    instance-id: tycho-local-machine-1
+    instance-state: missing
+    series: precise
+    containers:
+      1/lxc/0:
+        instance-id: pending
+        series: precise
+  "2":
+    agent-state: started
+    agent-version: 1.15.0.1
+    instance-id: tycho-local-machine-2
+    instance-state: missing
+    series: precise
+services:
+  mediawiki:
+    charm: cs:precise/mediawiki-10
+    exposed: false
+    units:
+      mediawiki/0:
+        agent-state: pending
+        machine: 1/lxc/0
+  mysql:
+    charm: cs:precise/mysql-27
+    exposed: false
+    relations:
+      cluster:
+      - mysql
+    units:
+      mysql/0:
+        agent-state: pending
+        agent-version: 1.15.0.1
+        machine: "1"
+        public-address: 10.0.3.81
+  wordpress:
+    charm: cs:precise/wordpress-19
+    exposed: false
+    relations:
+      loadbalancer:
+      - wordpress
+    units:
+      wordpress/0:
+        agent-state: pending
+        agent-version: 1.15.0.1
+        machine: "2"
+        public-address: 10.0.3.77

@@ -1,0 +1,22 @@
+machines:
+  0:
+    agent-state: not-started
+    dns-name: slave1.local
+    instance-id: /MAAS/api/1.0/nodes/node-4c49e73e-e8b8-11e2-ac16-5254002cb1d6/
+    instance-state: unknown
+  3:
+    agent-state: not-started
+    instance-id: /MAAS/api/1.0/nodes/node-5fb74ba0-e8c1-11e2-b109-5254002cb1d6/
+    dns-name: slave2.local
+    instance-state: unknown
+services:
+  mysql:
+    charm: cs:precise/mysql-25
+    relations:
+      cluster:
+      - mysql
+    units:
+      mysql/1:
+        agent-state: not-started
+        machine: 3
+        public-address: null

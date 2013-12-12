@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+import signal
+import sys
+
+import gui
+import pegasus
+import utils
+
+# TODO: Why does this crash?
+# pegasus.wait_for_services()
+
+def sig_handler(signum, frame):
+    utils.reset_blanking()
+    sys.exit()
+
+def get_data():
+    pegasus.maas_login()
+    return pegasus.poll_state()
+
+for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
+    signal.signal(sig, sig_handler)
+gui.PegasusGUI(get_data).run()

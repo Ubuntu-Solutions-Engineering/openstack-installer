@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+import re
+import os
+import tempfile
+import subprocess
+import urllib
+
+CONFIG_TEMPLATE = """#cloud-config
+datasource:
+  MAAS: {{consumer_key: {consumer_key}, metadata_url: 'http://localhost/MAAS/metadata',
+    token_key: {token_key}, token_secret: {token_secret}}}
+"""
+
+MAAS_CREDS = os.path.expanduser('~/.cloud-install/maas-creds')
+USER_DATA = os.path.join(tempfile.gettempdir(), 'uvt_user_data')
+
+SLAVE_PREFIX = 'slave'
+
+if not os.path.exists(USER_DATA):
+    with open(MAAS_CREDS) as f:
+        [consumer_key, token_key, token_secret] = f.read().strip().split(':')
+    with open(USER_DATA, 'wb') as f:
+        content = CONFIG_TEMPLATE.format(consumer_key=consumer_key,
+                                         token_key=token_key,
+                                         token_secret=token_secret)
+        f.write(bytes(content, 'utf-8'))
+
+def next_host():
+    def extract_id(host):
+        m = re.match(SLAVE_PREFIX + '(\d*)', host)
+        if m:
+            return int(m.groups()[0])
+        else:
+            return -1
+    out = subprocess.check_output(['uvt-kvm', 'list']).decode('utf-8').split('\n')
+    return max(map(extract_id, out)) + 1 if out else 0
+
+
+hostname = SLAVE_PREFIX + str(next_host())
+
+uvt = ['uvt-kvm', 'create', '--bridge', 'br0', hostname]
+subprocess.check_call(uvt)
+
+# Immediately power off the machine so we can make our edits to its disk.
+# uvt-kvm will support some kind of --no-start option in the future so we don't
+# have to do this.
+subprocess.check_call(['virsh', 'destroy', hostname])
+
+def find_path():
+    vols = subprocess.check_output(['virsh', 'vol-list', 'uvtool']).split('\n')
+    for vol in vols:
+        if vol.startswith(hostname + '.img'):
+            return vol.split()[1]
+    return None
+
+# Put our cloud-init config in the disk image.
+subprocess.check_call('add_maas_data', find_path(), USER_DATA)
+
+# Start the machine back up
+subprocess.check_call(['virsh', 'start', hostname])
+
+subprocess.check_call(['maas-cli', 'maas', 'nodes', 'new', 'hostname=' + hostname])
+creds = os.path.join(tempfile.gettempdir(), 'maas.creds')
+with open(creds, 'wb') as f:
+    req = urllib.urlopen(
+        'http://localhost/MAAS/metadata/latest/by-id/%s/?op=get_preseed' % hostname)
+    f.write(req.read())
+subprocess.check_call(['maas-signal.py', '--config', creds, 'OK'])

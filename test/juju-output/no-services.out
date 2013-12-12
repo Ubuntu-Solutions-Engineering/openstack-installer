@@ -1,0 +1,7 @@
+machines:
+  0:
+    agent-state: not-started
+    dns-name: slave1.local
+    instance-id: /MAAS/api/1.0/nodes/node-4c49e73e-e8b8-11e2-ac16-5254002cb1d6/
+    instance-state: unknown
+services: {}
