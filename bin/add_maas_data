@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo mount-image-callback $1 -- sh -c 'cat > $MOUNTPOINT/etc/cloud/cloud.cfg.d/90-maas.cfg' < $2

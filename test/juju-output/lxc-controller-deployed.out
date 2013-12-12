@@ -1,0 +1,122 @@
+environment: local
+machines:
+  "0":
+    agent-state: started
+    agent-version: 1.15.1.1
+    dns-name: 10.0.3.1
+    instance-id: localhost
+    series: raring
+  "1":
+    agent-state: started
+    agent-version: 1.15.1.1
+    instance-id: tycho-local-machine-1
+    instance-state: missing
+    series: precise
+    containers:
+      1/lxc/0:
+        instance-id: pending
+        series: precise
+      1/lxc/1:
+        instance-id: pending
+        series: precise
+      1/lxc/2:
+        instance-id: pending
+        series: precise
+      1/lxc/3:
+        instance-id: pending
+        series: precise
+      1/lxc/4:
+        instance-id: pending
+        series: precise
+      1/lxc/5:
+        instance-id: pending
+        series: precise
+services:
+  glance:
+    charm: cs:precise/glance-19
+    exposed: false
+    relations:
+      cluster:
+      - glance
+      identity-service:
+      - keystone
+      shared-db:
+      - mysql
+    units:
+      glance/0:
+        agent-state: pending
+        machine: 1/lxc/2
+  keystone:
+    charm: cs:precise/keystone-19
+    exposed: false
+    relations:
+      cluster:
+      - keystone
+      identity-service:
+      - glance
+      - openstack-dashboard
+      shared-db:
+      - mysql
+    units:
+      keystone/0:
+        agent-state: pending
+        machine: 1/lxc/3
+  mysql:
+    charm: cs:precise/mysql-27
+    exposed: false
+    relations:
+      cluster:
+      - mysql
+      shared-db:
+      - glance
+      - keystone
+    units:
+      mysql/0:
+        agent-state: pending
+        machine: 1/lxc/1
+  nova-cloud-controller:
+    charm: cs:precise/nova-cloud-controller-14
+    exposed: false
+    relations:
+      cluster:
+      - nova-cloud-controller
+    units:
+      nova-cloud-controller/0:
+        agent-state: pending
+        machine: 1/lxc/0
+  openstack-dashboard:
+    charm: cs:precise/openstack-dashboard-9
+    exposed: false
+    relations:
+      cluster:
+      - openstack-dashboard
+      identity-service:
+      - keystone
+    units:
+      openstack-dashboard/0:
+        agent-state: pending
+        machine: 1/lxc/5
+  rabbitmq-server:
+    charm: cs:precise/rabbitmq-server-14
+    exposed: false
+    relations:
+      cluster:
+      - rabbitmq-server
+    units:
+      rabbitmq-server/0:
+        agent-state: pending
+        machine: 1/lxc/4
+  wordpress:
+    charm: cs:precise/wordpress-19
+    exposed: false
+    relations:
+      loadbalancer:
+      - wordpress
+    units:
+      wordpress/0:
+        agent-state: started
+        agent-version: 1.15.1.1
+        machine: "1"
+        open-ports:
+        - 80/tcp
+        public-address: 10.0.3.225

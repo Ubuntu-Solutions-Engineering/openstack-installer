@@ -1,0 +1,167 @@
+#!/bin/sh
+
+set -e
+
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+db_capb backup
+
+dbSet()
+{
+	if ! db_get "$1"; then
+		db_register debian-installer/dummy "$1"
+		db_subst "$1" ID "$1"
+	fi
+	db_set "$1" "$2"
+}
+
+popState()
+{
+	if [ -n "$STATES" ]; then
+		STATE=${STATES##* }
+		STATES=${STATES% *}
+	else
+		STATE=""
+	fi
+}
+
+pushState()
+{
+	STATES="$STATES $1"
+}
+
+validateCIDR()
+{
+    addr=$1
+    # validate openstack-vmnetwork has a valid CIDR
+    # broken up into segments for easier readability
+    # first let's match that it starts with an number between 1-254
+    pattern="^([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])\."
+    # this part validates next segment of numbers between 1-254
+    pattern="${pattern}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])\."
+    # this part validates next segment of numbers between 1-254
+    pattern="${pattern}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])\."
+    # this part validates next segment of numbers between 1-254
+    pattern="${pattern}(0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])"
+    # this part validates that it ends in /NN
+    pattern="${pattern}/[0-9]{2}$"
+
+    if [[ ${addr} =~ $pattern ]]; then
+	return 0
+    else
+	return 1
+    fi
+}
+
+STATE=1
+while [ -n "$STATE" -a "$STATE" != 34 ]; do
+	NEXT_STATE=$((STATE + 1))
+	case "$STATE" in
+	    1)
+		db_input high cloud-install/install-type || true
+		;;
+	    2)
+		db_get cloud-install/install-type
+		case "$RET" in
+		    Multi-system)
+			install_type=multi
+			NEXT_STATE=10
+			;;
+		    "Single system")
+			install_type=single
+			NEXT_STATE=30
+			;;
+		    "Landscape managed")
+			install_type=landscape
+			NEXT_STATE=10
+			;;
+
+		esac
+		;;
+	    10)
+		db_input high cloud-install/manage-dhcp || true
+		;;
+	    11)
+		db_get cloud-install/manage-dhcp
+		if [ "$RET" = true ]; then
+		    manage_dhcp=true
+		    NEXT_STATE=15
+		else
+		    manage_dhcp=""
+		fi
+		;;
+	    12)
+		db_input high cloud-install/manual-dhcp || true
+		NEXT_STATE=30
+		;;
+	    15)
+		db_input high cloud-install/dhcp-range || true
+		NEXT_STATE=30
+		;;
+	    30)
+		db_input high cloud-install/openstack-admin-password || true
+		db_input high cloud-install/openstack-admin-password-again || true
+		;;
+	    31)
+		# Validate openstack password match
+		db_get cloud-install/openstack-admin-password
+		ADMIN_PW="$RET"
+		db_get cloud-install/openstack-admin-password-again
+		if [ "$ADMIN_PW" != "$RET" ]; then
+		    db_input critical cloud-install/password-mismatch
+		    NEXT_STATE=30
+		fi
+		;;
+
+	    32)
+		db_input high cloud-install/openstack-vmnetwork || true
+		;;
+	    33)
+		db_get cloud-install/openstack-vmnetwork
+		validateCIDR "$RET"
+		RET=$?
+		if [ "$RET" -ne 0 ]; then
+		    db_input critical cloud-install/valid-cidr
+		    NEXT_STATE=32
+		fi
+		;;
+	esac
+
+	if db_go; then
+	    pushState "$STATE"
+	    STATE=$NEXT_STATE
+	else
+	    popState
+	fi
+done
+if [ -z "$STATE" ]; then
+	exit 0
+fi
+
+db_get cloud-install/openstack-admin-password
+late_command="printf \"%s\n\" \"$RET\" > /target/etc/openstack.passwd; chmod 0600 /target/etc/openstack.passwd"
+
+dbSet tasksel/first "standard, server"; db_fset tasksel/first seen true
+
+packages="cloud-installer rungetty debconf-utils python-multipartposthandler python-passlib python3-yaml python3-urwid lxc git mongodb-server juju-core maas"
+case $install_type in
+multi)
+	if [ -n "$manage_dhcp" ]; then
+		packages="$packages maas-dns"
+	fi
+	;;
+single)
+	packages="$packages maas-dns qemu-system-x86 libvirt-bin cloud-utils"
+	;;
+landscape)
+	;;
+esac
+dbSet pkgsel/include "$packages"
+dbSet maas/installation-note ""; db_fset maas/installation-note seen true
+
+db_get preseed/late_command
+if [ -n "$RET" ]; then
+	late_command="$late_command; $RET"
+fi
+dbSet preseed/late_command "$late_command"

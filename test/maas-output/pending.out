@@ -1,0 +1,26 @@
+[
+    {
+        "status": 6, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-ed4672a0-539e-11e3-888b-525400f40f5c/macs/00:00:5e:cc:cc:cc/", 
+                "mac_address": "00:00:5e:cc:cc:cc"
+            }
+        ], 
+        "hostname": "juju-host.master", 
+        "power_type": "", 
+        "routers": null, 
+        "netboot": true, 
+        "cpu_count": 0, 
+        "storage": 0, 
+        "system_id": "node-ed4672a0-539e-11e3-888b-525400f40f5c", 
+        "architecture": "amd64/generic", 
+        "memory": 0, 
+        "owner": "root", 
+        "tag_names": [
+            "node-ed4672a0-539e-11e3-888b-525400f40f5c"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-ed4672a0-539e-11e3-888b-525400f40f5c/"
+    }
+]

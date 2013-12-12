@@ -1,0 +1,13 @@
+#!/usr/bin/env python2.7
+
+import sys, os
+sys.path.insert(0, "/usr/share/maas")
+os.environ["DJANGO_SETTINGS_MODULE"] = "maas.settings"
+
+from maasserver.models.user import get_creds_tuple
+from django.contrib.auth.models import User
+from apiclient.creds import convert_tuple_to_string
+
+admin = User.objects.get(username=sys.argv[1])
+token = admin.tokens.all()[0]
+print convert_tuple_to_string(get_creds_tuple(token))

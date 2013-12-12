@@ -1,0 +1,33 @@
+#!/bin/sh -ex
+
+. /usr/share/cloud-install/common.sh
+. /usr/share/cloud-install/maas.sh
+. /usr/share/cloud-install/juju.sh
+. /usr/share/cloud-install/multi.sh
+. /usr/share/cloud-install/single.sh
+
+if [ ! -e /var/log/cloud-install.log ]; then
+	touch /var/log/cloud-install.log
+	chmod 0600 /var/log/cloud-install.log
+fi
+exec 2>> /var/log/cloud-install.log
+
+trap exitInstall EXIT
+trap "" PIPE
+
+disableBlank
+
+if [ ! -e /etc/.cloud-installed ]; then
+	install_type=$(confValue cloud-install-udeb cloud-install/install-type)
+	case $install_type in
+	Multi-system)
+		multiInstall
+		;;
+	"Single system")
+		singleInstall
+		;;
+	"Landscape managed")
+		;;
+	esac
+	touch /etc/.cloud-installed
+fi

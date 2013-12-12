@@ -1,0 +1,15 @@
+environment: maas
+machines:
+  "0":
+    agent-state: started
+    agent-version: 1.16.3
+    instance-id: /MAAS/api/1.0/nodes/node-juju-bootstrap/
+    instance-state: missing
+    series: saucy
+  "1":
+    agent-state: started
+    agent-version: 1.16.3
+    dns-name: juju-host.master
+    instance-id: /MAAS/api/1.0/nodes/node-29e47a24-52c6-11e3-ae66-525400ab8ba1/
+    series: precise
+services: {}

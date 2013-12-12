@@ -1,0 +1,32 @@
+Source: cloud-installer
+Priority: extra
+Maintainer: Robert Ayres <robert.ayres@ubuntu.com>
+Build-Depends: debhelper (>= 8.0.0), po-debconf
+Standards-Version: 3.9.2
+Homepage: http://www.ubuntu.com
+
+Package: cloud-installer
+Section: admin
+Architecture: all
+Depends: ${misc:Depends}
+Description: Cloud installer
+ Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+ simple way to install, deploy and scale an openstack cloud on top of
+ Ubuntu server. Initial configurations are available for single
+ physical system deployments as well as multiple physical system
+ deployments.
+
+Package: cloud-installer-udeb
+Section: debian-installer
+Architecture: all
+XC-Package-Type: udeb
+Depends: ${misc:Depends}
+Description: Cloud installer integration
+ Ubuntu Cloud installer is a metal to cloud image that provides an
+ extremely simple way to install, deploy and scale an openstack cloud
+ on top of Ubuntu server. Initial configurations are available for
+ single physical system deployments as well as multiple physical
+ system deployments.
+ .
+ This package provides debian installer integration.
+XB-Installer-Menu-Item: 2350

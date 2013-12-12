@@ -1,0 +1,40 @@
+[
+    {
+        "status": 6,
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-4c49e73e-e8b8-11e2-ac16-5254002cb1d6/macs/52:54:00:42:a3:06/",
+                "mac_address": "52:54:00:42:a3:06"
+            }
+        ],
+        "netboot": true,
+        "hostname": "slave1.local",
+        "power_type": "",
+        "system_id": "node-4c49e73e-e8b8-11e2-ac16-5254002cb1d6",
+        "architecture": "amd64/generic",
+        "cpu_count": "4",
+        "memory": "8096",
+        "storage": "102400",
+        "tag_names": [],
+        "resource_uri": "tycho-local-machine-1"
+    },
+    {
+        "status": 6,
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-5fb74ba0-e8c1-11e2-b109-5254002cb1d6/macs/52:54:00:5f:1a:9e/",
+                "mac_address": "52:54:00:5f:1a:9e"
+            }
+        ],
+        "netboot": false,
+        "hostname": "slave2.local",
+        "power_type": "",
+        "system_id": "node-5fb74ba0-e8c1-11e2-b109-5254002cb1d6",
+        "architecture": "amd64/generic",
+        "cpu_count": "4",
+        "memory": "8096",
+        "storage": "102400",
+        "tag_names": [],
+        "resource_uri": "tycho-local-machine-2"
+    }
+]
