@@ -7,6 +7,8 @@ import yaml
 import json
 from textwrap import dedent
 import tempfile
+import re
+import urllib
 
 import utils
 
@@ -304,7 +306,67 @@ def wait_for_services():
         check_call(['start', 'wait-for-state', 'WAITER=cloud-install-status',
                     'WAIT_FOR=%s' % service, 'WAIT_STATE=running'])
 
-# TODO: there's really no reason this should live outside pegasus. We could
-# just put startkvm's code right here.
-def startkvm():
-    check_call('startkvm', stdout=DEVNULL, stderr=DEVNULL)
+class StartKVM:
+    CONFIG_TEMPLATE = """#cloud-config
+datasource:
+  MAAS: {{consumer_key: {consumer_key}, metadata_url: 'http://localhost/MAAS/metadata',
+    token_key: {token_key}, token_secret: {token_secret}}}
+"""
+    MAAS_CREDS = os.path.expanduser('~/.cloud-install/maas-creds')
+    USER_DATA = os.path.join(tempfile.gettempdir(), 'uvt_user_data')
+    SLAVE_PREFIX = 'slave'
+
+    def next_host(self):
+        def extract_id(self, host):
+            m = re.match(self.SLAVE_PREFIX + '(\d*)', host)
+            if m:
+                return int(m.groups()[0])
+            else:
+                return -1
+        out = subprocess.check_output(['uvt-kvm', 'list']).decode('utf-8').split('\n')
+        return max(map(self.extract_id, out)) + 1 if out else 0
+
+    def find_path(self, hostname):
+        vols = subprocess.check_output(['virsh', 'vol-list', 'uvtool']).split('\n')
+        for vol in vols:
+            if vol.startswith(self.hostname + '.img'):
+                return vol.split()[1]
+        return None
+
+    def run(self):
+        #check_call('startkvm', stdout=DEVNULL, stderr=DEVNULL)
+
+        if not os.path.exists(self.USER_DATA):
+            with open(self.MAAS_CREDS) as f:
+                [consumer_key, token_key, token_secret] = f.read().strip().split(':')
+                with open(self.USER_DATA, 'wb') as f:
+                    content = self.CONFIG_TEMPLATE.format(consumer_key=consumer_key,
+                                                          token_key=token_key,
+                                                          token_secret=token_secret)
+                f.write(bytes(content, 'utf-8'))
+
+
+        hostname = self.SLAVE_PREFIX + str(self.next_host())
+
+        uvt = ['uvt-kvm', 'create', '--bridge', 'br0', hostname]
+        subprocess.check_call(uvt)
+
+        # Immediately power off the machine so we can make our edits to its disk.
+        # uvt-kvm will support some kind of --no-start option in the future so we don't
+        # have to do this.
+        subprocess.check_call(['virsh', 'destroy', hostname])
+
+
+        # Put our cloud-init config in the disk image.
+        subprocess.check_call('add_maas_data', find_path(hostname), USER_DATA)
+
+        # Start the machine back up
+        subprocess.check_call(['virsh', 'start', hostname])
+
+        subprocess.check_call(['maas-cli', 'maas', 'nodes', 'new', 'hostname=' + hostname])
+        creds = os.path.join(tempfile.gettempdir(), 'maas.creds')
+        with open(creds, 'wb') as f:
+            req = urllib.urlopen(
+                'http://localhost/MAAS/metadata/latest/by-id/%s/?op=get_preseed' % (hostname,))
+            f.write(req.read())
+        subprocess.check_call(['maas-signal.py', '--config', creds, 'OK'])

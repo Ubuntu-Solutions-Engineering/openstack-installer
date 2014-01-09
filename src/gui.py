@@ -117,7 +117,7 @@ class ControllerOverlay(urwid.Overlay):
                 if pegasus.SINGLE_SYSTEM:
                     # Add one compute node in single system mode, all we have to do
                     # is start the KVM, the maas poll loop will take it from there.
-                    pegasus.startkvm()
+                    pegasus.StartKVM().run()
 
                 self.text.set_text(self.NODE_SETUP)
             return True
@@ -427,7 +427,7 @@ class NodeViewMode(urwid.Frame):
                 if compute:
                     # Here we just boot the KVM, the polling process will
                     # automatically allocate new kvms to nova-compute.
-                    pegasus.startkvm()
+                    pegasus.StartKVM().run()
                 self.cr.change_allocation(other, metadata)
             else:
                 self.cr.change_allocation(new_states, metadata)

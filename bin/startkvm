@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# TODO: deprecate once fully merged into pegasus
 
 import re
 import os
