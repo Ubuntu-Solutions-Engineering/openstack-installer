@@ -1,12 +1,12 @@
 import sys
-sys.path.append('../src')
+sys.path.append('../cloudinstall')
 
 from os.path import expanduser
 import urwid
 
-import gui
-import pegasus
-import helpers
+from cloudinstall import gui
+from cloudinstall import pegasus
+from cloudinstall import helpers
 
 DEPLOY_CMD = 'juju deploy --config {p} {{to}}  {{charm}}'.format(p='/tmp/openstack.yaml')
 ADD_RELATION = 'juju add-relation {charm1} {charm2}'

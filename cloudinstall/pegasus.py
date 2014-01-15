@@ -369,4 +369,4 @@ datasource:
             req = urllib.urlopen(
                 'http://localhost/MAAS/metadata/latest/by-id/%s/?op=get_preseed' % (hostname,))
             f.write(req.read())
-        subprocess.check_call(['maas-signal.py', '--config', creds, 'OK'])
+        subprocess.check_call(['cloud-install', 'maas-signal', '--config', creds, 'OK'])

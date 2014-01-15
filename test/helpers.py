@@ -1,5 +1,5 @@
 import contextlib
-import pegasus
+from cloudinstall import pegasus
 
 def load_status(fname, cons):
     def wrap(f):

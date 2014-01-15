@@ -1,4 +1,23 @@
-#!/usr/bin/python
+#
+# signal.py - MAAS signal routines
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This package is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# On Debian systems, the complete text of the GNU General
+# Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 import json
 import mimetypes
@@ -7,18 +26,16 @@ import random
 import socket
 import string
 import sys
-import urllib2
+import urllib
 
-from maas_api_helper import (
+from cloudinstall.maas.api_helper import (
     geturl,
     read_config,
     )
 
-
 MD_VERSION = "2012-03-01"
 VALID_STATUS = ("OK", "FAILED", "WORKING")
 POWER_TYPES = ("ipmi", "virsh", "ether_wake", "moonshot")
-
 
 def _encode_field(field_name, data, boundary):
     return ('--' + boundary,
@@ -72,50 +89,12 @@ def fail(msg):
     sys.stderr.write("FAIL: %s" % msg)
     sys.exit(1)
 
+def parse(args):
+    """ Parse options passed to it from cli
 
-def main():
+    @param args: CLI options which are described in 
+       C{cloud-install maas-signal help}
     """
-    Call with single argument of directory or http or https url.
-    If url is given additional arguments are allowed, which will be
-    interpreted as consumer_key, token_key, token_secret, consumer_secret.
-    """
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description='Send signal operation and optionally post files to MAAS')
-    parser.add_argument("--config", metavar="file",
-        help="Specify config file", default=None)
-    parser.add_argument("--ckey", metavar="key",
-        help="The consumer key to auth with", default=None)
-    parser.add_argument("--tkey", metavar="key",
-        help="The token key to auth with", default=None)
-    parser.add_argument("--csec", metavar="secret",
-        help="The consumer secret (likely '')", default="")
-    parser.add_argument("--tsec", metavar="secret",
-        help="The token secret to auth with", default=None)
-    parser.add_argument("--apiver", metavar="version",
-        help="The apiver to use ("" can be used)", default=MD_VERSION)
-    parser.add_argument("--url", metavar="url",
-        help="The data source to query", default=None)
-    parser.add_argument("--file", dest='files',
-        help="File to post", action='append', default=[])
-    parser.add_argument("--post", dest='posts',
-        help="name=value pairs to post", action='append', default=[])
-    parser.add_argument("--power-type", dest='power_type',
-        help="Power type.", choices=POWER_TYPES, default=None)
-    parser.add_argument("--power-parameters", dest='power_parms',
-        help="Power parameters.", default=None)
-    parser.add_argument(
-        "--script-result", metavar="retval", type=int, dest='script_result',
-        help="Return code of a commissioning script.")
-
-    parser.add_argument("status",
-        help="Status", choices=VALID_STATUS, action='store')
-    parser.add_argument("message", help="Optional message",
-        default="", nargs='?')
-
-    args = parser.parse_args()
-
     creds = {
         'consumer_key': args.ckey,
         'token_key': args.tkey,
@@ -183,9 +162,9 @@ def main():
             raise TypeError("Unexpected result from call: %s" % payload)
         else:
             msg = "Success"
-    except urllib2.HTTPError as exc:
+    except urllib.error.HTTPError as exc:
         msg = "http error [%s]" % exc.code
-    except urllib2.URLError as exc:
+    except urllib.error.URLError as exc:
         msg = "url error [%s]" % exc.reason
     except socket.timeout as exc:
         msg = "socket timeout [%s]" % exc
@@ -196,6 +175,3 @@ def main():
 
     sys.stderr.write("%s\n" % msg)
     sys.exit((exc is None))
-
-if __name__ == '__main__':
-    main()
