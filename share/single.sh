@@ -23,7 +23,7 @@ singleInstall()
 		gaugePrompt 6 "Creating MAAS super user"
 		createMaasSuperUser
 		echo 8
-		maas_creds=$(maas-get-user-creds root)
+		maas_creds=$(cloud-install maas-creds root)
 		saveMaasCreds $maas_creds
 		maasLogin $maas_creds
 		gaugePrompt 10 "Waiting for MAAS cluster registration"

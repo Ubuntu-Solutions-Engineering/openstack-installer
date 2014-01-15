@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 #
-# cloud-install - Main cloud-installer executable
+# roles.py - Cloud installer roles
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -20,9 +19,29 @@
 # On Debian systems, the complete text of the GNU General
 # Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
-import os
+import signal
 import sys
-from cloudinstall.interface import App
 
-if __name__ == '__main__':
-    sys.exit(App().run())
+from cloudinstall import gui
+from cloudinstall import pegasus
+from cloudinstall import utils
+
+# TODO: Why does this crash?
+# pegasus.wait_for_services()
+
+def sig_handler(signum, frame):
+    utils.reset_blanking()
+    sys.exit()
+
+for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
+    signal.signal(sig, sig_handler)
+
+class Status:
+    """ Class for displaying the services state through a UI similar to top
+    """
+    def get_data():
+        pegasus.maas_login()
+        return pegasus.poll_state()
+
+    def run(self):
+        gui.PegasusGUI(self.get_data).run()

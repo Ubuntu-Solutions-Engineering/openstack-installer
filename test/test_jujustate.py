@@ -1,7 +1,7 @@
 import sys
-sys.path.append('../src')
+sys.path.append('../cloudinstall')
 
-import pegasus
+from cloudinstall import pegasus
 import helpers
 
 load_status = lambda f: helpers.load_status(f, pegasus.JujuState)

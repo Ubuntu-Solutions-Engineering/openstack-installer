@@ -1,7 +1,7 @@
 import sys
-sys.path.append('../src')
+sys.path.append('../cloudinstall')
 
-from pegasus import parse_state, JujuState, MaasState, NOVA_CLOUD_CONTROLLER
+from cloudinstall.pegasus import parse_state, JujuState, MaasState, NOVA_CLOUD_CONTROLLER
 
 def test_poll_state():
     with open('juju-output/service-pending.out') as js:
