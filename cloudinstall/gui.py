@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-# On Debian systems, the complete text of the GNU General
-# Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 from collections import deque, defaultdict
 from errno import ENOENT
@@ -30,8 +27,8 @@ from traceback import format_exc
 import threading
 import urwid
 
-import pegasus
-import utils
+from cloudinstall import pegasus
+from cloudinstall import utils
 
 LOG_FILE = expanduser('~/.cloud-install/commands.log')
 

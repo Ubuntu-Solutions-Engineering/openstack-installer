@@ -15,29 +15,33 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-# On Debian systems, the complete text of the GNU General
-# Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 import argparse
+import sys
 
 from cloudinstall import roles
-from cloudinstall import maas
+from cloudinstall.maas import signal, api_helper
 
 class App:
     def __init__(self):
         self.args = self.parse_options(sys.argv)
+    
+    def cmd_status(self, options):
+        """ Loads Status GUI window
+        """
+        pass
+        return roles.Status().run()
 
     def cmd_maas_signal(self, options):
         """ Parses options passed to
             cloud-install maas [opts]
         """
-        return maas.signal.parse(options)
+        return signal.parse(options)
 
     def cmd_maas_creds(self, options):
         """ Parses username for retrieving MAAS user credentials
         """
-        return maas.api_helper.get_creds(options.username)
+        return api_helper.get_creds(options.username)
 
     def parse_options(self, *args, **kwds):
         parser = argparse.ArgumentParser(description='Cloud Installer',
@@ -51,7 +55,7 @@ class App:
         ########################################################################
         parser_status = subparsers.add_parser('status',
                                               help='Cloud services status')
-        parser_status.set_defaults(func=roles.Status().run())
+        parser_status.set_defaults(func=self.cmd_status)
 
         ########################################################################
         # MAAS signal interface
@@ -74,7 +78,7 @@ class App:
                                  default=None)
         parser_maas.add_argument("--apiver", metavar="version",
                                  help="The apiver to use ("" can be used)",
-                                 default=maas.signal.MD_VERSION)
+                                 default=signal.MD_VERSION)
         parser_maas.add_argument("--url", metavar="url",
                                  help="The data source to query", default=None)
         parser_maas.add_argument("--file", dest='files',
@@ -85,7 +89,7 @@ class App:
                                  action='append', default=[])
         parser_maas.add_argument("--power-type", dest='power_type',
                                  help="Power type.",
-                                 choices=maas.signal.POWER_TYPES,
+                                 choices=signal.POWER_TYPES,
                                  default=None)
         parser_maas.add_argument("--power-parameters", dest='power_parms',
                                  help="Power parameters.", default=None)
@@ -94,7 +98,7 @@ class App:
                                  help="Return code of a commissioning script.")
 
         parser_maas.add_argument("status",  help="Status", 
-                                 choices=maas.signal.VALID_STATUS,
+                                 choices=signal.VALID_STATUS,
                                  action='store')
         parser_maas.add_argument("message", help="Optional message",
                                  default="", nargs='?')
