@@ -15,32 +15,26 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-# On Debian systems, the complete text of the GNU General
-# Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
-from email.utils import parsedate
+from oauthlib.oauth1 import SIGNATURE_PLAINTEXT
+from requests_oauthlib import OAuth1
 import os
+import requests
 import sys
 import time
 import urllib
-
-import oauth.oauth as oauth
 import yaml
-
-sys.path.insert(0, "/usr/share/maas")
-os.environ["DJANGO_SETTINGS_MODULE"] = "maas.settings"
-
-from django.contrib.auth.models import User
 
 __all__ = [
     'geturl',
     'read_config',
+    'get_creds'
     ]
 
 def get_creds(username):
     """ Print MAAS user credentials
 
+    @param username: MAAS user to query for credentials
     Original code:
     import sys, os
     sys.path.insert(0, "/usr/share/maas")
@@ -54,12 +48,7 @@ def get_creds(username):
     token = admin.tokens.all()[0]
     print convert_tuple_to_string(get_creds_tuple(token))
     """
-    admin = User.objects.get(username=username)
-    token = admin.tokens.all()[0]
-
-    # TODO: print string repr
-    import pprint
-    pprint token
+    pass
 
 def read_config(url, creds):
     """Read cloud-init config from given `url` into `creds` dict.
@@ -74,7 +63,7 @@ def read_config(url, creds):
     @param creds: MAAS user credentials
     """
     if url.startswith("http://") or url.startswith("https://"):
-        cfg_str = urllib.request.urlopen(urllib.request.Request(url=url))
+        cfg_str = requests.get(url=url).content
     else:
         if url.startswith("file://"):
             url = url[7:]
@@ -91,28 +80,26 @@ def read_config(url, creds):
             creds[key] = cfg[key]
 
 
-def oauth_headers(url, consumer_key, token_key, token_secret, consumer_secret,
-                  clockskew=0):
-    """Build OAuth headers using given credentials."""
-    consumer = oauth.OAuthConsumer(consumer_key, consumer_secret)
-    token = oauth.OAuthToken(token_key, token_secret)
+def oauth_headers(url, consumer_key, token_key,
+                  token_secret, consumer_secret):
+    """Build OAuth headers using given credentials.
 
-    timestamp = int(time.time()) + clockskew
-
-    params = {
-        'oauth_version': "1.0",
-        'oauth_nonce': oauth.generate_nonce(),
-        'oauth_timestamp': timestamp,
-        'oauth_token': token.key,
-        'oauth_consumer_key': consumer.key,
-    }
-    req = oauth.OAuthRequest(http_url=url, parameters=params)
-    req.sign_request(
-        oauth.OAuthSignatureMethod_PLAINTEXT(), consumer, token)
-    return(req.to_header())
+    @param url: MAAS api endpoint
+    @param consumer_key: oauth consumer key
+    @param consumer_secret: oauth consumer secret
+    @param token_secret: oauth token secret from MAAS Oauth provider
+    @param token_key: oauth token key from MAAS Oauth provider
+    """
+    oauth = OAuth1(consumer_key, 
+                   client_secret=consumer_secret, 
+                   resource_owner_key=token_key, 
+                   resource_owner_secret=token_secret,
+                   signature_method=SIGNATURE_PLAINTEXT)
+    req = requests.post(url=url, auth=oauth)
+    return(req.headers)
 
 
-def authenticate_headers(url, headers, creds, clockskew):
+def authenticate_headers(url, headers, creds):
     """Update and sign a dict of request headers."""
     if creds.get('consumer_key', None) != None:
         headers.update(oauth_headers(
@@ -120,8 +107,8 @@ def authenticate_headers(url, headers, creds, clockskew):
             consumer_key=creds['consumer_key'],
             token_key=creds['token_key'],
             token_secret=creds['token_secret'],
-            consumer_secret=creds['consumer_secret'],
-            clockskew=clockskew))
+            consumer_secret=creds['consumer_secret']
+            ))
 
 
 def warn(msg):
@@ -129,37 +116,21 @@ def warn(msg):
 
 
 def geturl(url, creds, headers=None, data=None):
-    # Takes a dict of creds to be passed through to oauth_headers,
-    #   so it should have consumer_key, token_key, ...
+    """ Performs a authenticated request against a MAAS endpoint
+
+    @param url: MAAS endpoint
+    @param creds: dictionary of OAuth parameters C{oauth_token}, C{oauth_token_secret}
+    @param headers: Headers to be passed in with the request
+    @param data: extra data sent with the HTTP request
+    """
     if headers is None:
         headers = {}
     else:
         headers = dict(headers)
 
-    clockskew = 0
-
-    exc = Exception("Unexpected Error")
-    for naptime in (1, 1, 2, 4, 8, 16, 32):
-        authenticate_headers(url, headers, creds, clockskew)
-        try:
-            req = urllib.request.Request(url=url, data=data, headers=headers)
-            return urllib.request.urlopen(req).read()
-        except urllib.error.HTTPError as exc:
-            if 'date' not in exc.headers:
-                warn("date field not in %d headers" % exc.code)
-                pass
-            elif exc.code in (401, 403):
-                date = exc.headers['date']
-                try:
-                    ret_time = time.mktime(parsedate(date))
-                    clockskew = int(ret_time - time.time())
-                    warn("updated clock skew to %d" % clockskew)
-                except:
-                    warn("failed to convert date '%s'" % date)
-        except Exception as exc:
-            pass
-
-        warn("request to %s failed. sleeping %d.: %s" % (url, naptime, exc))
-        time.sleep(naptime)
-
-    raise exc
+    authenticate_headers(url, headers, creds)
+    try:
+        req = requests.get(url=url, params=data, headers=headers)
+        return req.content
+    except requests.execeptions.HTTPError as exc:
+        warn(exc.strerror)

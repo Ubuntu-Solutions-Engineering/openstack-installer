@@ -26,5 +26,10 @@ setup(name='cloud-installer',
       license="GPLv3+",
       scripts=['bin/cloud-install'],
       packages=['cloudinstall', 'cloudinstall.maas'],
-      requires=['PyYAML', 'six']
+      requires=['PyYAML',
+                'six',
+                'urwid',
+                'requests_oauthlib',
+                'requests',
+                'django']
      )

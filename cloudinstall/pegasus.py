@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-# On Debian systems, the complete text of the GNU General
-# Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 from io import StringIO
 from collections import defaultdict
@@ -31,7 +28,7 @@ import tempfile
 import re
 import urllib
 
-import utils
+from cloudinstall import utils
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
 MYSQL = 'mysql'
