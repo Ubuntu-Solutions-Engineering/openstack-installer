@@ -25,10 +25,7 @@ import string
 import sys
 import urllib
 
-from cloudinstall.maas.api_helper import (
-    geturl,
-    read_config,
-    )
+from cloudinstall.maas.client import MaasClient
 
 MD_VERSION = "2012-03-01"
 VALID_STATUS = ("OK", "FAILED", "WORKING")
@@ -101,7 +98,7 @@ def parse(args):
         }
 
     if args.config:
-        read_config(args.config, creds)
+        MaasAuth().read_config(args.config, creds)
 
     url = creds.get('metadata_url', None)
     if not url:
@@ -154,7 +151,7 @@ def parse(args):
     msg = ""
 
     try:
-        payload = geturl(url, creds=creds, headers=headers, data=data)
+        payload = MaasAuth().geturl(url, creds=creds, headers=headers, data=data)
         if payload != "OK":
             raise TypeError("Unexpected result from call: %s" % payload)
         else:

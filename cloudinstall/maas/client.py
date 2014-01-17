@@ -1,0 +1,165 @@
+#
+# client.py - Client routines for MAAS API
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This package is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+from cloudinstall.maas.state import MaasState
+from io import StringIO
+from requests_oauthlib import OAuth1
+from subprocess import DEVNULL, check_call, check_output
+import requests
+import json
+
+class MaasClient:
+    """ Client Class
+    """
+
+    def __init__(self, auth):
+        """ Entry point to client routines for interfacing
+        with MAAS api.
+
+        @param auth: MAAS Authorization class (required)
+        """
+        self.auth = auth
+
+    def _oauth(self):
+        """ Generates OAuth attributes for protected resources
+
+        @return: OAuth class
+        """
+        oauth = OAuth1(self.auth.consumer_key, 
+                       client_secret=self.auth.consumer_secret, 
+                       resource_owner_key=self.auth.token_key, 
+                       resource_owner_secret=self.auth.token_secret,
+                       signature_method='PLAINTEXT',
+                       signature_type='query')
+        return oauth
+
+    def get(self, url, params=None):
+        """ Performs a authenticated GET against a MAAS endpoint
+    
+        @param url: MAAS endpoint
+        @param data: extra data sent with the HTTP request
+        """
+        return requests.get(url=self.auth.api_url + url, 
+                            auth=self._oauth(),
+                            params=params)
+
+    def post(self, url, params=None):
+        """ Performs a authenticated POST against a MAAS endpoint
+    
+        @param url: MAAS endpoint
+        @param params: extra data sent with the HTTP request
+        """
+        return requests.post(url=self.auth.api_url + url, 
+                             auth=self._oauth(),
+                             params=params)
+
+    @property
+    def nodes(self):
+        """ Nodes managed by MAAS
+
+        @api url: /api/1.0/nodes/?op=list
+        @return list: List of managed nodes
+        """
+        res = self.get('/nodes/', dict(op='list'))
+        if res.ok:
+            return json.loads(res.text)
+        return []
+
+    def nodes_accept_all(self):
+        """ Accept all commissioned nodes
+        
+        @api url: /api/1.0/nodes/?op=accept_all
+        @return: Status/Fail boolean
+        """
+        res = self.post('/nodes/', dict(op='accept_all'))
+        if res.ok:
+            return True
+        return False
+
+    @property
+    def tags(self):
+        """ List tags known to MAAS
+
+        @api url: /api/1.0/tags/?op=list
+        @return: List of tags or empty list
+        """
+        res = self.get('/tags/', dict(op='list'))
+        if res.ok:
+            return json.loads(res.text)
+        return []
+
+    def ensure_tag(self, tag):
+        """ Create tag if it doesn't exist. 
+
+        @param tag: Tag name
+        @api url: /api/1.0/tags/?op=new&name={tag}
+        @return: Success/Fail boolean 
+        """
+        tags = {tagmd['name'] for tagmd in self.tags}
+        if tag not in tags:
+            res = self.post('/tags/', dict(op='new',name=tag))
+            return res.ok
+        return False
+        
+    def tag_machine(self, tag, system_id):
+        """ Tag the machine with the specified tag. 
+        
+        @param tag: Tag name
+        @param system_id: ID of node
+        @api url: /api/1.0/tags/{name}/?op=update_nodes
+        @return: Success/Fail boolean
+        """
+        res = self.post('/tags/%s/' % (tag,), dict(op='update_nodes', 
+                                                   add=system_id))
+        if res.ok:
+            return True
+        return False
+    
+    def name_tag(self, maas):
+        """ Tag each node as its hostname. 
+
+        This is a bit ugly. Since we want to be able to juju deploy to a
+        particular node that the user has selected, we use juju's constraints
+        support for maas. Unfortunately, juju didn't implement maas-name
+        directly, we have to tag each node with its hostname for now so that we
+        can pass that tag as a constraint to juju.
+
+        @param maas: MAAS object representing all managed nodes
+        """
+        for machine in maas:
+            tag = machine['system_id']
+            if 'tag_names' not in machine or tag not in machine['tag_names']:
+                ensure_tag(tag)
+                tag_machine(tag, tag)
+    
+    def fpi_tag(self, maas):
+        """ Tag each DECLARED host with the FPI tag. 
+
+        Also a little strange: we could define a tag with 'definition=true()' and
+        automatically tag each node. However, each time we un-tag a node, maas
+        evaluates the xpath expression again and re-tags it. So, we do it
+        once, manually, when the machine is in the DECLARED state (also to
+        avoid re-tagging things that have already been tagged).
+
+        @param maas: MAAS object representing all managed nodes
+        """
+        FPI_TAG = 'use-fastpath-installer'
+        ensure_tag(FPI_TAG)
+        for machine in maas:
+            if machine['status'] == MaasState.DECLARED:
+                tag_machine(FPI_TAG, machine['system_id'])

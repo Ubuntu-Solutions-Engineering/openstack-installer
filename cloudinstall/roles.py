@@ -36,9 +36,15 @@ for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
 class Status:
     """ Class for displaying the services state through a UI similar to top
     """
+    def __init__(self, auth=None):
+        """ Initialize status
+
+        @param auth: MAAS Auth class
+        """
+        self.auth = auth
+
     def get_data():
-        pegasus.maas_login()
-        return pegasus.poll_state()
+        return pegasus.poll_state(auth)
 
     def run(self):
         gui.PegasusGUI(self.get_data).run()
