@@ -20,28 +20,32 @@ import argparse
 import sys
 
 from cloudinstall import roles
-from cloudinstall.maas import signal, api_helper
+from cloudinstall.maas import signal
+from cloudinstall.maas.auth import MaasAuth
 
 class App:
     def __init__(self):
         self.args = self.parse_options(sys.argv)
+        self.auth = MaasAuth()
     
     def cmd_status(self, options):
         """ Loads Status GUI window
         """
-        pass
-        return roles.Status().run()
+        return roles.Status(self.auth).run()
 
     def cmd_maas_signal(self, options):
         """ Parses options passed to
-            cloud-install maas [opts]
+            cloud-install maas-signal [opts]
         """
         return signal.parse(options)
 
     def cmd_maas_creds(self, options):
         """ Parses username for retrieving MAAS user credentials
         """
-        return api_helper.get_creds(options.username)
+        api_key = self.auth.get_api_key(options.username)
+        if (options.login):
+            self.auth.login()
+        return api_key
 
     def parse_options(self, *args, **kwds):
         parser = argparse.ArgumentParser(description='Cloud Installer',
@@ -108,10 +112,13 @@ class App:
         # MAAS user credentials
         ########################################################################
         parser_maas_creds = subparsers.add_parser('maas-creds',
-                                            help='MAAS User credentials')
+                                                  help='MAAS User credentials')
         parser_maas_creds.add_argument("-u", "--username", metavar="username",
-                                 help="Username to get credentials for", 
-                                       default=None)
+                                       help="Username to get credentials for", 
+                                       default='root')
+        parser_maas_creds.add_argument("-l", "--login", dest="login",
+                                       help="Log into MAAS", action='store_true')
+
         parser_maas_creds.set_defaults(func=self.cmd_maas_creds)
 
         return parser.parse_args()

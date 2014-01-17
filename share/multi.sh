@@ -1,3 +1,21 @@
+#
+# multi.sh - Multi-install interface
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This package is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 multiInstall()
 {
 	whiptail --backtitle "$BACKTITLE" --infobox \
@@ -22,9 +40,8 @@ multiInstall()
 		gaugePrompt 6 "Creating MAAS super user"
 		createMaasSuperUser
 		echo 8
-		maas_creds=$(cloud-install maas-creds root)
+		maas_creds=$(cloud-install maas-creds -u root -l)
 		saveMaasCreds $maas_creds
-		maasLogin $maas_creds
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 		interface=$(ifquery -X lo --list)

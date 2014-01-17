@@ -1,3 +1,21 @@
+#
+# single.sh - Single install interface
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This package is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 singleInstall()
 {
 	whiptail --backtitle "$BACKTITLE" --infobox \
@@ -23,9 +41,8 @@ singleInstall()
 		gaugePrompt 6 "Creating MAAS super user"
 		createMaasSuperUser
 		echo 8
-		maas_creds=$(cloud-install maas-creds root)
+		maas_creds=$(cloud-install maas-creds -u root)
 		saveMaasCreds $maas_creds
-		maasLogin $maas_creds
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 		gaugePrompt 12 "Creating MAAS bridge"
@@ -34,13 +51,10 @@ singleInstall()
 		configureMaasNetworking $uuid br0 10.0.4.1 10.0.4.100 10.0.4.199
 		gaugePrompt 18 "Configuring DNS"
 		configureDns
-
-    gaugePrompt 40 "Downloading images"
-    uvtInstall
-
-    gaugePrompt 69 "LSB release hack"
-    lsbReleaseHack
-
+		gaugePrompt 40 "Downloading images"
+		uvtInstall
+		gaugePrompt 69 "LSB release hack"
+		lsbReleaseHack
 		gaugePrompt 70 "Configuring Juju"
 		admin_secret=$(pwgen -s 32)
 		configureJuju 10.0.4.1 $maas_creds $admin_secret
@@ -71,11 +85,11 @@ saveMaasCreds()
 
 uvtInstall()
 {
-  # uvtool needs to be installed while libvirtd is running.
-  apt-get -y install uvtool
+    # uvtool needs to be installed while libvirtd is running.
+    apt-get -y install uvtool
 
-  system_arch=$(dpkg --print-architecture)
-  uvt-simplestreams-libvirt sync arch=$system_arch release=precise
+    system_arch=$(dpkg --print-architecture)
+    uvt-simplestreams-libvirt sync arch=$system_arch release=precise
 }
 
 # XXX: HACK: TODO: Juju looks at the environment (i.e. /etc/lsb-release) to
@@ -83,5 +97,5 @@ uvtInstall()
 # containers, so we fake a precise environment.
 lsbReleaseHack()
 {
-  sed -i -e 's/13.10/12.04/g' -e 's/saucy/precise/' /etc/lsb-release
+    sed -i -e 's/13.10/12.04/g' -e 's/saucy/precise/' /etc/lsb-release
 }
