@@ -17,7 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from cloudinstall.maas.state import MaasState
-from io import StringIO
 from requests_oauthlib import OAuth1
 from subprocess import DEVNULL, check_call, check_output
 import requests
@@ -52,7 +51,7 @@ class MaasClient:
         """ Performs a authenticated GET against a MAAS endpoint
     
         @param url: MAAS endpoint
-        @param data: extra data sent with the HTTP request
+        @param params: extra data sent with the HTTP request
         """
         return requests.get(url=self.auth.api_url + url, 
                             auth=self._oauth(),
@@ -66,13 +65,25 @@ class MaasClient:
         """
         return requests.post(url=self.auth.api_url + url, 
                              auth=self._oauth(),
-                             params=params)
+                             data=params)
 
+    def delete(self, url, params=None):
+        """ Performs a authenticated DELETE against a MAAS endpoint
+    
+        @param url: MAAS endpoint
+        @param params: extra data sent with the HTTP request
+        """
+        return requests.delete(url=self.auth.api_url + url, 
+                             auth=self._oauth())
+
+
+    ############################################################################
+    # Node API
+    ############################################################################
     @property
     def nodes(self):
         """ Nodes managed by MAAS
 
-        @api url: /api/1.0/nodes/?op=list
         @return list: List of managed nodes
         """
         res = self.get('/nodes/', dict(op='list'))
@@ -83,7 +94,6 @@ class MaasClient:
     def nodes_accept_all(self):
         """ Accept all commissioned nodes
         
-        @api url: /api/1.0/nodes/?op=accept_all
         @return: Status/Fail boolean
         """
         res = self.post('/nodes/', dict(op='accept_all'))
@@ -91,11 +101,57 @@ class MaasClient:
             return True
         return False
 
+    def node_commission(self, system_id):
+        """ (Re)commission a node
+        
+        @param system_id: machine identification
+        @return: True on success False on failure
+        """
+        res = self.post('/nodes/%s' % (system_id,), dict(op='commission'))
+        if res.ok:
+            return True
+        return False
+
+    def node_start(self, system_id):
+        """ Power up a node
+
+        @param system_id: machine identification
+        @return: True on success False on failure
+        """
+        res = self.post('/nodes/%s' % (system_id,), dict(op='start'))
+        if res.ok:
+            return True
+        return False
+
+    def node_stop(self, system_id):
+        """ Shutdown a node
+
+        @param system_id: machine identification
+        @return: True on success False on failure
+        """
+        res = self.post('/nodes/%s' % (system_id,), dict(op='stop'))
+        if res.ok:
+            return True
+        return False
+
+    def node_remove(self, system_id):
+        """ Delete a node
+
+        @param system_id: machine identification
+        @return: True and success False on failure
+        """
+        res = self.delete('/nodes/%s' % (system_id,))
+        if res.ok:
+            return True
+        return False
+
+    ############################################################################
+    # Tag API
+    ############################################################################
     @property
     def tags(self):
         """ List tags known to MAAS
 
-        @api url: /api/1.0/tags/?op=list
         @return: List of tags or empty list
         """
         res = self.get('/tags/', dict(op='list'))
@@ -103,11 +159,10 @@ class MaasClient:
             return json.loads(res.text)
         return []
 
-    def ensure_tag(self, tag):
+    def tag_new(self, tag):
         """ Create tag if it doesn't exist. 
 
         @param tag: Tag name
-        @api url: /api/1.0/tags/?op=new&name={tag}
         @return: Success/Fail boolean 
         """
         tags = {tagmd['name'] for tagmd in self.tags}
@@ -115,13 +170,23 @@ class MaasClient:
             res = self.post('/tags/', dict(op='new',name=tag))
             return res.ok
         return False
+
+    def tag_delete(self, tag):
+        """ Delete a tag
+
+        @param tag: tag id
+        @return: True on success False on failure
+        """
+        res = self.delete('/tags/%s' % (tag,))
+        if res.ok:
+            return True
+        return False
         
     def tag_machine(self, tag, system_id):
         """ Tag the machine with the specified tag. 
         
         @param tag: Tag name
         @param system_id: ID of node
-        @api url: /api/1.0/tags/{name}/?op=update_nodes
         @return: Success/Fail boolean
         """
         res = self.post('/tags/%s/' % (tag,), dict(op='update_nodes', 
@@ -130,7 +195,7 @@ class MaasClient:
             return True
         return False
     
-    def name_tag(self, maas):
+    def tag_name(self, maas):
         """ Tag each node as its hostname. 
 
         This is a bit ugly. Since we want to be able to juju deploy to a
@@ -144,10 +209,10 @@ class MaasClient:
         for machine in maas:
             tag = machine['system_id']
             if 'tag_names' not in machine or tag not in machine['tag_names']:
-                ensure_tag(tag)
-                tag_machine(tag, tag)
+                self.tag_new(tag)
+                self.tag_machine(tag, tag)
     
-    def fpi_tag(self, maas):
+    def tag_fpi(self, maas):
         """ Tag each DECLARED host with the FPI tag. 
 
         Also a little strange: we could define a tag with 'definition=true()' and
@@ -159,7 +224,48 @@ class MaasClient:
         @param maas: MAAS object representing all managed nodes
         """
         FPI_TAG = 'use-fastpath-installer'
-        ensure_tag(FPI_TAG)
+        self.tag_new(FPI_TAG)
         for machine in maas:
             if machine['status'] == MaasState.DECLARED:
-                tag_machine(FPI_TAG, machine['system_id'])
+                self.tag_machine(FPI_TAG, machine['system_id'])
+
+    ############################################################################
+    # Users API
+    ############################################################################
+    @property
+    def users(self):
+        """ List users on MAAS
+
+        @return: List of registered users or an empty list
+        """
+        res = self.get('/users/')
+        if res.ok:
+            return json.loads(res.text)
+        return []
+
+    ############################################################################
+    # Zone API
+    ############################################################################
+    @property
+    def zones(self):
+        """ List physical zones
+
+        @return: List of managed zones or empty list
+        """
+        res = self.get('/zones/')
+        if res.ok:
+            return json.loads(res.text)
+        return []
+
+    def zone_new(self, name, description="Zone created by API"):
+        """ Create a physical zone
+
+        @param name: Name of the zone
+        @param description: Description of zone.
+        @return: True on success False on failure
+        """
+        res = self.post('/zones/', dict(name=name, 
+                                        description=description))
+        if res.ok:
+            return True
+        return False

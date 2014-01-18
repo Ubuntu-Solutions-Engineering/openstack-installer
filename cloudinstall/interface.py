@@ -42,10 +42,10 @@ class App:
     def cmd_maas_creds(self, options):
         """ Parses username for retrieving MAAS user credentials
         """
-        api_key = self.auth.get_api_key(options.username)
+        self.auth.get_api_key(options.username)
         if (options.login):
             self.auth.login()
-        return api_key
+        print(self.auth.api_key)
 
     def parse_options(self, *args, **kwds):
         parser = argparse.ArgumentParser(description='Cloud Installer',
