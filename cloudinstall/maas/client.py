@@ -18,7 +18,6 @@
 
 from cloudinstall.maas.state import MaasState
 from requests_oauthlib import OAuth1
-from subprocess import DEVNULL, check_call, check_output
 import requests
 import json
 
