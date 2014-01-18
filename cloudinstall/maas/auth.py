@@ -59,7 +59,6 @@ class MaasAuth:
                                      'apikey',
                                      '--username',
                                      username]).decode('ascii').rstrip('\n')
-        print(self.api_key)
 
     def read_config(self, url, creds):
         """Read cloud-init config from given `url` into `creds` dict.
@@ -92,12 +91,14 @@ class MaasAuth:
     
     def login(self):
         """ Login to MAAS api server
+
+        TODO: Deprecate once MAAS api matures (http://pad.lv/1058137)
         """
         if not self.api_key:
             raise Exception('No api_key was found, please run `cloud-install maas-creds -u root`')
             sys.exit(1)
 
-        check_call('maas-cli login maas http://localhost/MAAS/api/1.0 %s' % self.api_key,
+        check_call('maas-cli login maas http://localhost/MAAS/api/1.0 %s' % (self.api_key,),
                    shell=True, 
                    stderr=DEVNULL, 
                    stdout=DEVNULL)

@@ -18,6 +18,8 @@
 
 from subprocess import Popen, PIPE, DEVNULL, call
 from contextlib import contextmanager
+import string
+import random
 
 # String with number of minutes, or None.
 blank_len = None
@@ -55,3 +57,13 @@ def console_blank():
     yield
 
     reset_blanking()
+
+def randomString(size=6, chars=string.ascii_uppercase + string.digits):
+    """ Generate a random string
+
+    @param size: number of string characters
+    @param chars: range of characters (optional)
+
+    @return: a random string
+    """
+    return ''.join(random.choice(chars) for x in range(size))

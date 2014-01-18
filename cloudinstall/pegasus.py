@@ -131,9 +131,9 @@ def poll_state(auth):
 
     # Capture Maas state
     maas = MaasState(StringIO(m_client.nodes.decode('ascii')))
-    m_client.fpi_tag(maas)
+    m_client.tag_fpi(maas)
     m_client.nodes_accept_all()
-    m_client.name_tag(maas)
+    m_client.tag_name(maas)
     return parse_state(juju, maas)
 
 def parse_state(juju, maas):
