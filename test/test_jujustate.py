@@ -1,10 +1,10 @@
 import sys
 sys.path.append('../cloudinstall')
 
-from cloudinstall import pegasus
+from cloudinstall.juju.state import JujuState
 import helpers
 
-load_status = lambda f: helpers.load_status(f, pegasus.JujuState)
+load_status = lambda f: helpers.load_status(f, JujuState)
 
 @load_status('juju-output/no-services.out')
 def test_noservices(s):
