@@ -1,12 +1,15 @@
 import sys
-sys.path.append('../cloudinstall')
+sys.path.append('..')
 
 from os.path import expanduser
 import urwid
 
 from cloudinstall import gui
 from cloudinstall import pegasus
-from cloudinstall import helpers
+from cloudinstall.juju.state import JujuState
+from cloudinstall.maas.state import MaasState
+
+import helpers
 
 DEPLOY_CMD = 'juju deploy --config {p} {{to}}  {{charm}}'.format(p='/tmp/openstack.yaml')
 ADD_RELATION = 'juju add-relation {charm1} {charm2}'
@@ -58,8 +61,8 @@ def test_ControllerOverlay_process_deployed():
 def test_ControllerOverlay__controller_charms_to_allocate():
     with open('juju-output/lxc-controller-deployed.out') as juju_out:
         with open('maas-output/maas-for-lxc.out') as maas_out:
-            maas = pegasus.MaasState(maas_out)
-            juju = pegasus.JujuState(juju_out.read())
+            maas = MaasState(maas_out)
+            juju = JujuState(juju_out.read())
             data = pegasus.parse_state(juju, maas)
             over = gui.ControllerOverlay(None, None)
             charms = over._controller_charms_to_allocate(data)
@@ -121,8 +124,8 @@ def test_CommandRunner_deploy_tag():
 def test_ControllerOverlay__process_lxc():
     with open('juju-output/lxc-controller-deployed.out') as js:
         with open('maas-output/maas-for-lxc.out') as ms:
-            juju = pegasus.JujuState(js)
-            s = pegasus.parse_state(juju, pegasus.MaasState(ms))
+            juju = JujuState(js)
+            s = pegasus.parse_state(juju, MaasState(ms))
             overlay = gui.ControllerOverlay(None, NonRunningCommandRunner())
             assert not overlay.process(s)
 

@@ -18,6 +18,8 @@
 
 import yaml
 
+from collections import defaultdict
+
 class JujuState:
     def __init__(self, raw_yaml):
         """ Builds a JujuState from a file-like object containing the raw
