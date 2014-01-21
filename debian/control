@@ -6,7 +6,8 @@ Build-Depends:
   po-debconf, 
   dh-python, 
   python3-all, 
-  python3-setuptools
+  python3-setuptools,
+  python3-nose
 Standards-Version: 3.9.4
 Homepage: http://www.ubuntu.com
 X-Python3-Version: >= 3.3
@@ -14,7 +15,7 @@ X-Python3-Version: >= 3.3
 Package: cloud-installer
 Section: admin
 Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}
+Depends: ${misc:Depends}, ${python3:Depends}, python3-urwid, python3-requests, python3-oauthlib, python3-requests-oauthlib
 Description: Cloud installer
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
