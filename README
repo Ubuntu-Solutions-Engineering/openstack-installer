@@ -9,3 +9,18 @@ To test, make sure you have python3-nose installed, then run:
 from tests/. (We can fix this to not be location dependant later on, I just
 haven't bothered for now.)
 
+## Building a package
+
+python3-all python3-setuptools needed to build.
+
+$ make deb
+
+This will build the proper tarball and packages.
+
+## Building the tarball only
+
+$ make tarball
+
+## Cleaning
+
+$ make clean
