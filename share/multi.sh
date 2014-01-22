@@ -40,7 +40,7 @@ multiInstall()
 		gaugePrompt 6 "Creating MAAS super user"
 		createMaasSuperUser
 		echo 8
-		maas_creds=$(cloud-install maas-creds -u root -l)
+		maas_creds=$(maas apikey --username root)
 		saveMaasCreds $maas_creds
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration

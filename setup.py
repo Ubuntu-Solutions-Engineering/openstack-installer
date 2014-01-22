@@ -42,12 +42,11 @@ setup(name='cloud-installer',
       author_email='rober.ayres@ubuntu.com',
       url='https://launchpad.net/cloud-installer',
       license="GPLv3+",
-      scripts=['bin/cloud-install'],
+      scripts=['bin/cloud-install', 'bin/cloud-status'],
       packages=['cloudinstall', 'cloudinstall.maas'],
       requires=['PyYAML',
                 'six',
                 'urwid',
                 'requests_oauthlib',
-                'requests',
-                'django']
+                'requests']
      )
