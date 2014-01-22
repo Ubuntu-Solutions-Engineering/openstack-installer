@@ -12,5 +12,5 @@ tarball: $(NAME)_$(VERSION).orig.tar.gz
 clean:
 	debian/rules clean
 
-deb:
+deb: clean tarball
 	debuild -us -uc -i
