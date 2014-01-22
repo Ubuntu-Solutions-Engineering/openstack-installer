@@ -30,6 +30,7 @@ import urllib
 
 from cloudinstall import utils
 from cloudinstall.maas.state import MaasState
+from cloudinstall.juju.state import JujuState
 from cloudinstall.maas.client import MaasClient
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
