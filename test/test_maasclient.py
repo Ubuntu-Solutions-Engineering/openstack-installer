@@ -12,11 +12,15 @@ from cloudinstall.utils import randomString
 ROOT_USER = os.environ['CI_USER'] if 'CI_USER' in os.environ else 'admin'
 AUTH = MaasAuth()
 
+MAAS_INSTALLED = os.path.exists('/etc/maas')
+
+@unittest.skipIf(not MAAS_INSTALLED, "Maas is not installed")
 class MaasAuthTest(unittest.TestCase):
     def test_get_api_key(self):
         AUTH.get_api_key(ROOT_USER)
         self.assertEquals(3, len(AUTH.api_key.split(':')))
 
+@unittest.skipIf(not MAAS_INSTALLED, "Maas is not installed")
 class MaasClientTest(unittest.TestCase):
     def setUp(self):
         self.c = MaasClient(AUTH)
@@ -34,6 +38,7 @@ class MaasClientTest(unittest.TestCase):
         res = self.c.tag_delete(self.tag)
         self.assertTrue(res)
 
+@unittest.skipIf(not MAAS_INSTALLED, "Maas is not installed")
 class MaasClientZoneTest(unittest.TestCase):
     def setUp(self):
         self.c = MaasClient(AUTH)

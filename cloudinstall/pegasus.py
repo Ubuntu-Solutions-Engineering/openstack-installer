@@ -224,8 +224,6 @@ datasource:
         return None
 
     def run(self):
-        #check_call('startkvm', stdout=DEVNULL, stderr=DEVNULL)
-
         if not os.path.exists(self.USER_DATA):
             with open(self.MAAS_CREDS) as f:
                 [consumer_key, token_key, token_secret] = f.read().strip().split(':')
