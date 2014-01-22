@@ -63,7 +63,7 @@ configureDns()
 
 configureMaasImages()
 {
-	cp /usr/share/cloud-install/maas/* /etc/maas
+	cp /usr/share/cloud-installer/maas/* /etc/maas
 	chmod 0640 /etc/maas/pserv.yaml
 	chown :maas /etc/maas/pserv.yaml
 }

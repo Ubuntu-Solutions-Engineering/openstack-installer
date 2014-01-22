@@ -19,20 +19,13 @@
 import argparse
 import sys
 
-from cloudinstall import roles
 from cloudinstall.maas import signal
-from cloudinstall.maas.auth import MaasAuth
 
 class App:
     def __init__(self):
         self.args = self.parse_options(sys.argv)
         self.auth = MaasAuth()
     
-    def cmd_status(self, options):
-        """ Loads Status GUI window
-        """
-        return roles.Status(self.auth).run()
-
     def cmd_maas_signal(self, options):
         """ Parses options passed to
             cloud-install maas-signal [opts]
@@ -53,13 +46,6 @@ class App:
         subparsers = parser.add_subparsers(title='subcommands',
                                            description='valid subcommands',
                                            help='additional help')
-
-        ########################################################################
-        # Cloud services Status
-        ########################################################################
-        parser_status = subparsers.add_parser('status',
-                                              help='Cloud services status')
-        parser_status.set_defaults(func=self.cmd_status)
 
         ########################################################################
         # MAAS signal interface
@@ -107,19 +93,6 @@ class App:
         parser_maas.add_argument("message", help="Optional message",
                                  default="", nargs='?')
         parser_maas.set_defaults(func=self.cmd_maas_signal)
-
-        ########################################################################
-        # MAAS user credentials
-        ########################################################################
-        parser_maas_creds = subparsers.add_parser('maas-creds',
-                                                  help='MAAS User credentials')
-        parser_maas_creds.add_argument("-u", "--username", metavar="username",
-                                       help="Username to get credentials for", 
-                                       default='root')
-        parser_maas_creds.add_argument("-l", "--login", dest="login",
-                                       help="Log into MAAS", action='store_true')
-
-        parser_maas_creds.set_defaults(func=self.cmd_maas_creds)
 
         return parser.parse_args()
 
