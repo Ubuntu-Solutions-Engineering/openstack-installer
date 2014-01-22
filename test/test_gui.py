@@ -10,6 +10,7 @@ from cloudinstall.juju.state import JujuState
 from cloudinstall.maas.state import MaasState
 
 import helpers
+import mock
 
 DEPLOY_CMD = 'juju deploy --config {p} {{to}}  {{charm}}'.format(p='/tmp/openstack.yaml')
 ADD_RELATION = 'juju add-relation {charm1} {charm2}'
@@ -192,7 +193,12 @@ def test_allocation():
         result = helpers.parse_output('initial-install-config')
         nrc = NonRunningCommandRunner()
         overlay = gui.ControllerOverlay(None, nrc)
-        overlay.process(result)
+        class FakeStartKVM:
+            def run(self):
+                pass
+
+        with mock.patch('cloudinstall.pegasus.StartKVM', FakeStartKVM):
+            overlay.process(result)
 
         # we expect all the charms and relations to be added here
         assert len(nrc.to_run) == 14
