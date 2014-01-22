@@ -1,13 +1,14 @@
 Source: cloud-installer
 Priority: extra
 Maintainer: Robert Ayres <robert.ayres@ubuntu.com>
-Build-Depends: 
-  debhelper (>= 9), 
-  po-debconf, 
-  dh-python, 
-  python3-all, 
+Build-Depends:
+  debhelper (>= 9),
+  po-debconf,
+  dh-python,
+  python3-all,
   python3-setuptools,
-  python3-nose
+  python3-nose,
+  python3-mock
 Standards-Version: 3.9.4
 Homepage: http://www.ubuntu.com
 X-Python3-Version: >= 3.3
