@@ -1,10 +1,12 @@
-#!/bin/sh -ex
+#!/bin/sh
 
-. /usr/share/cloud-installer/common.sh
-. /usr/share/cloud-installer/maas.sh
-. /usr/share/cloud-installer/juju.sh
-. /usr/share/cloud-installer/multi.sh
-. /usr/share/cloud-installer/single.sh
+set -e
+
+. /usr/share/cloud-installer/profiles/common.sh
+. /usr/share/cloud-installer/profiles/maas.sh
+. /usr/share/cloud-installer/profiles/juju.sh
+. /usr/share/cloud-installer/profiles/multi.sh
+. /usr/share/cloud-installer/profiles/single.sh
 
 if [ ! -e /var/log/cloud-install.log ]; then
 	touch /var/log/cloud-install.log
@@ -15,18 +17,19 @@ exec 2>> /var/log/cloud-install.log
 trap exitInstall EXIT
 trap "" PIPE
 
-disableBlank
+# FIXME: broken on apt-get installer tests
+# disableBlank
 
 if [ ! -e /etc/.cloud-installed ]; then
-	install_type=$(confValue cloud-install-udeb cloud-install/install-type)
-	case $install_type in
-	Multi-system)
+	db_get cloud-install/install-type
+	case $RET in
+            Multi-system)
 		multiInstall
 		;;
-	"Single system")
+	    "Single system")
 		singleInstall
 		;;
-	"Landscape managed")
+	    "Landscape managed")
 		;;
 	esac
 	touch /etc/.cloud-installed

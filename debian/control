@@ -16,13 +16,83 @@ X-Python3-Version: >= 3.3
 Package: cloud-installer
 Section: admin
 Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}, python3-urwid, python3-requests, python3-oauthlib, python3-requests-oauthlib
-Description: Cloud installer
+Depends: 
+  ${misc:Depends},
+  ${python3:Depends},
+  debconf-utils,
+  git,
+  juju-core,
+  lxc,
+  mongodb-server,
+  python3-oauthlib,
+  python3-passlib,
+  python3-requests,
+  python3-requests,
+  python3-requests-oauthlib,
+  python3-urwid,
+  python3-urwid,
+  python3-yaml,
+  rungetty
+Description: Ubuntu Cloud installer
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
  physical system deployments as well as multiple physical system
  deployments.
+
+Package: cloud-installer-multi
+Section: admin
+Architecture: all
+Depends:
+  ${misc:Depends},
+  maas,
+  maas-dhcp,
+  maas-dns,
+  cloud-installer
+Description: Ubuntu Cloud installer (multi-system)
+ Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+ simple way to install, deploy and scale an openstack cloud on top of
+ Ubuntu server. Initial configurations are available for single
+ physical system deployments as well as multiple physical system
+ deployments.
+ .
+ This package provides the multi installer profile.
+
+Package: cloud-installer-single
+Section: admin
+Architecture: all
+Depends:
+  ${misc:Depends},
+  maas,
+  maas-dhcp,
+  maas-dns,
+  cloud-installer,
+  cloud-utils,
+  libvirt-bin,
+  qemu-system-x86
+Description: Ubuntu Cloud installer (single-system)
+ Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+ simple way to install, deploy and scale an openstack cloud on top of
+ Ubuntu server. Initial configurations are available for single
+ physical system deployments as well as multiple physical system
+ deployments.
+ .
+ This package provides the single installer profile.
+
+Package: cloud-installer-landscape
+Section: admin
+Architecture: all
+Depends:
+  ${misc:Depends},
+  cloud-installer
+Description: Ubuntu Cloud installer (landscape)
+ Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+ simple way to install, deploy and scale an openstack cloud on top of
+ Ubuntu server. Initial configurations are available for single
+ physical system deployments as well as multiple physical system
+ deployments.
+ .
+ This package provides the landscape installer profile.
 
 Package: cloud-installer-udeb
 Section: debian-installer

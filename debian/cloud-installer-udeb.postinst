@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -119,12 +119,12 @@ while [ -n "$STATE" -a "$STATE" != 34 ]; do
 		;;
 	    33)
 		db_get cloud-install/openstack-vmnetwork
-		validateCIDR "$RET"
-		RET=$?
-		if [ "$RET" -ne 0 ]; then
-		    db_input critical cloud-install/valid-cidr
-		    NEXT_STATE=32
-		fi
+		# validateCIDR "$RET"
+		# RET=$?
+		# if [ "$RET" -ne 0 ]; then
+		#     db_input critical cloud-install/valid-cidr
+		#     NEXT_STATE=32
+		# fi
 		;;
 	esac
 
