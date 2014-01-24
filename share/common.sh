@@ -1,5 +1,5 @@
 #
-# interface.py - Interface into cloud-installer routines
+# common.sh - helper functions for cloud-installer
 #
 # Copyright 2014 Canonical, Ltd.
 #
