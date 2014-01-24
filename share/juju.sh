@@ -183,7 +183,7 @@ configureJuju()
 configureJujuLogs()
 {
 	mkdir /var/log/juju
-	cp /usr/share/cloud-installer/juju/25-juju.conf /etc/rsyslog.d
+	cp /usr/share/cloud-install-common/juju/25-juju.conf /etc/rsyslog.d
 	chmod 0600 /etc/rsyslog.d/25-juju.conf
 	service rsyslog restart
 }
@@ -191,7 +191,7 @@ configureJujuLogs()
 configureMaasBootstrapNode()
 {
 	a2enmod rewrite
-	cp /usr/share/cloud-installer/juju/bootstrap.conf \
+	cp /usr/share/cloud-install-common/juju/bootstrap.conf \
 	    /etc/apache2/sites-available
 	a2dissite 000-default
 	a2ensite bootstrap
@@ -219,14 +219,14 @@ configureMongoDb()
 		dd if=/dev/zero of=/var/lib/juju/db/journal/prealloc.$c \
 		    bs=1M count=1
 	done
-	cp /usr/share/cloud-installer/juju/juju-db.conf /etc/init
+	cp /usr/share/cloud-install-common/juju/juju-db.conf /etc/init
 	service juju-db start 
 }
 
 configureProviderState()
 {
 	maas-upload-file http://localhost/MAAS/api/1.0 $2 $3-provider-state \
-	    /usr/share/cloud-installer/juju/provider-state
+	    /usr/share/cloud-install-common/juju/provider-state
 	url=http://$1$(maasFilePath $3-provider-state)
 	echo $url > /tmp/provider-state-url
 }
@@ -274,7 +274,7 @@ deployHostMachine()
 	chmod 0600 /var/lib/juju/agents/machine-1/agent.conf
 	version=$(juju version)
 	ln -s $version /var/lib/juju/tools/machine-1
-	cp /usr/share/cloud-installer/juju/jujud-machine-1.conf /etc/init
+	cp /usr/share/cloud-install-common/juju/jujud-machine-1.conf /etc/init
 	service jujud-machine-1 start
 }
 
@@ -355,7 +355,7 @@ startMachineAgent()
 {
 	rm /var/lib/juju/server.crt /var/lib/juju/server.key
 	ln -s $1 /var/lib/juju/tools/machine-0
-	cp /usr/share/cloud-installer/juju/jujud-machine-0.conf /etc/init
+	cp /usr/share/cloud-install-common/juju/jujud-machine-0.conf /etc/init
 	service jujud-machine-0 start
 }
 
