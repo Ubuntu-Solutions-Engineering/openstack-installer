@@ -16,6 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+getDhcpRange()
+{
+    db_get cloud-install/dhcp-range
+    if [ -z "$RET" ]; then
+	$(confValue cloud-install-udb cloud-install/manage-dchp)
+    fi
+}
+
 multiInstall()
 {
 	whiptail --backtitle "$BACKTITLE" --infobox \
@@ -26,7 +34,7 @@ multiInstall()
 	# lp 1247886
 	service squid-deb-proxy start || true
 
-	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install"
+	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install" || true
 	cp /etc/openstack.passwd "/home/$INSTALL_USER/.cloud-install"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
 
@@ -48,9 +56,10 @@ multiInstall()
 		gaugePrompt 15 "Configuring MAAS networking"
 		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
 		# Retrieve dhcp-range
-		db_get cloud-install/dhcp-range
+		dhcp_range=getDhcpRange
+		maasLogin $maas_creds
 		configureMaasNetworking $uuid $interface $gateway \
-		    ${RET%-*} ${RET#*-}
+		    ${dhcp_range%-*} ${dhcp_range#*-}
 		gaugePrompt 18 "Configuring DNS"
 		configureDns
 		gaugePrompt 20 "Importing MAAS boot images"

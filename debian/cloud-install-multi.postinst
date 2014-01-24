@@ -104,6 +104,8 @@ case "$1" in
 	printf "%s\n" "$RET" > /etc/openstack.passwd; chmod 0600 /etc/openstack.passwd
 	db_set maas/installation-note ""; db_fset maas/installation-note seen true
 	db_set cloud-install/install-type "Multi-system"
+	# Set our install user
+	db_set cloud-install/install-user $(getent passwd 1000|cut -d: -f1)
 	;;
     abort-upgrade|abort-remove|abort-deconfigure)
 	;;
@@ -116,8 +118,8 @@ esac
 #DEBHELPER#
 
 echo ""
-echo "*** Package install and configuration complete"
-echo "*** Please run sudo cloud-install to bring up your cloud."
+echo "*** Installation complete"
+echo "*** Please run sudo cloud-install to configure your cloud."
 echo ""
 
 exit 0

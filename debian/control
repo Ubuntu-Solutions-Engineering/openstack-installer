@@ -1,4 +1,4 @@
-Source: cloud-installer
+Source: cloud-install-common
 Priority: extra
 Maintainer: Robert Ayres <robert.ayres@ubuntu.com>
 Build-Depends:
@@ -13,7 +13,7 @@ Standards-Version: 3.9.4
 Homepage: http://www.ubuntu.com
 X-Python3-Version: >= 3.3
 
-Package: cloud-installer
+Package: cloud-install-common
 Section: admin
 Architecture: all
 Depends: 
@@ -40,7 +40,7 @@ Description: Ubuntu Cloud installer
  physical system deployments as well as multiple physical system
  deployments.
 
-Package: cloud-installer-multi
+Package: cloud-install-multi
 Section: admin
 Architecture: all
 Depends:
@@ -48,7 +48,7 @@ Depends:
   maas,
   maas-dhcp,
   maas-dns,
-  cloud-installer
+  cloud-install-common
 Description: Ubuntu Cloud installer (multi-system)
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
@@ -58,7 +58,7 @@ Description: Ubuntu Cloud installer (multi-system)
  .
  This package provides the multi installer profile.
 
-Package: cloud-installer-single
+Package: cloud-install-single
 Section: admin
 Architecture: all
 Depends:
@@ -66,7 +66,7 @@ Depends:
   maas,
   maas-dhcp,
   maas-dns,
-  cloud-installer,
+  cloud-install-common,
   cloud-utils,
   libvirt-bin,
   qemu-system-x86
@@ -79,12 +79,12 @@ Description: Ubuntu Cloud installer (single-system)
  .
  This package provides the single installer profile.
 
-Package: cloud-installer-landscape
+Package: cloud-install-landscape
 Section: admin
 Architecture: all
 Depends:
   ${misc:Depends},
-  cloud-installer
+  cloud-install
 Description: Ubuntu Cloud installer (landscape)
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
@@ -94,7 +94,7 @@ Description: Ubuntu Cloud installer (landscape)
  .
  This package provides the landscape installer profile.
 
-Package: cloud-installer-udeb
+Package: cloud-install-udeb
 Section: debian-installer
 Architecture: all
 XC-Package-Type: udeb

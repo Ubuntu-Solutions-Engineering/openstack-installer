@@ -63,7 +63,7 @@ configureDns()
 
 configureMaasImages()
 {
-	cp /usr/share/cloud-installer/maas/* /etc/maas
+	cp /usr/share/cloud-install-common/maas/* /etc/maas
 	chmod 0640 /etc/maas/pserv.yaml
 	chown :maas /etc/maas/pserv.yaml
 }
@@ -124,15 +124,20 @@ maasInterfaceExists()
 	fi
 }
 
+maasLogin()
+{
+    maas-cli login maas http://localhost/MAAS/api/1.0 $1
+}
+
 maasLogout()
 {
-	maas-cli logout maas
+    maas-cli logout maas
 }
 
 nodeSystemId()
 {
-	maas-cli maas nodes list mac_address=$1 \
-	    | python -c 'import json; import sys; print json.load(sys.stdin)[0]["system_id"]'
+    maas-cli maas nodes list mac_address=$1 \
+	| python -c 'import json; import sys; print json.load(sys.stdin)[0]["system_id"]'
 }
 
 waitForClusterRegistration()

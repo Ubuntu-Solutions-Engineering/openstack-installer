@@ -1,4 +1,4 @@
-cloud-installer (0.2-1) unstable; urgency=low
+cloud-install-common (0.2-1) unstable; urgency=low
 
   * Name change from carrierstack to cloud-installer
   * Add validation to the installers input dialogs
@@ -9,7 +9,7 @@ cloud-installer (0.2-1) unstable; urgency=low
 
  -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 15 Jan 2014 14:45:44 -0500
 
-cloud-installer (0.1) unstable; urgency=low
+cloud-install-common (0.1) unstable; urgency=low
 
   * Initial Release.
 
