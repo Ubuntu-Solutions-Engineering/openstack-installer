@@ -45,18 +45,14 @@ multiInstall()
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 		interface=$(ifquery -X lo --list)
-		manage_dhcp=$(confValue cloud-install-udeb \
-		    cloud-install/manage-dhcp)
-		if [ $manage_dhcp = true ]; then
-			gaugePrompt 15 "Configuring MAAS networking"
-			gateway=$(route -n | awk 'index($4, "G") { print $2 }')
-			dhcp_range=$(confValue cloud-install-udeb \
-			    cloud-install/dhcp-range)
-			configureMaasNetworking $uuid $interface $gateway \
-			    ${dhcp_range%-*} ${dhcp_range#*-}
-			gaugePrompt 18 "Configuring DNS"
-			configureDns
-		fi
+		gaugePrompt 15 "Configuring MAAS networking"
+		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
+		# Retrieve dhcp-range
+		db_get cloud-install/dhcp-range
+		configureMaasNetworking $uuid $interface $gateway \
+		    ${RET%-*} ${RET#*-}
+		gaugePrompt 18 "Configuring DNS"
+		configureDns
 		gaugePrompt 20 "Importing MAAS boot images"
 		configureMaasImages
 		maas-import-pxe-files 1>&2

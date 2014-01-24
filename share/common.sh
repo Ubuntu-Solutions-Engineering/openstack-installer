@@ -1,5 +1,5 @@
 #
-# interface.py - Interface into cloud-installer routines
+# common.sh - helper functions for cloud-installer
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -15,6 +15,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+. /usr/share/debconf/confmodule
+db_version 2.0
 
 BACKTITLE="Cloud install"
 TMP=$(mktemp -d /tmp/cloud-install.XXX)
@@ -111,4 +114,5 @@ waitForService()
 	done
 }
 
+# TODO: Address this as it will not work for apt-get method
 INSTALL_USER=$(confValue user-setup-udeb passwd/username)
