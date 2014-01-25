@@ -17,20 +17,20 @@ exec 2>> /var/log/cloud-install.log
 trap exitInstall EXIT
 trap "" PIPE
 
-# FIXME: broken on apt-get installer tests
-# disableBlank
+#disableBlank
 
 if [ ! -e /etc/.cloud-installed ]; then
-	db_get cloud-install/install-type
-	case $RET in
-            Multi-system)
-		multiInstall
-		;;
-	    "Single system")
-		singleInstall
-		;;
-	    "Landscape managed")
-		;;
-	esac
-	touch /etc/.cloud-installed
+    db_get cloud-install/install-type
+    case $RET in
+        Multi-system)
+	    multiInstall
+	    ;;
+	"Single system")
+	    singleInstall
+	    ;;
+	"Landscape managed")
+	    ;;
+    esac
+    touch /etc/.cloud-installed
 fi
+

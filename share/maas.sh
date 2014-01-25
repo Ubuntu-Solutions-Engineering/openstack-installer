@@ -63,7 +63,7 @@ configureDns()
 
 configureMaasImages()
 {
-	cp /usr/share/cloud-install-common/maas/* /etc/maas
+	cp /usr/share/cloud-install-common/maas-data/* /etc/maas
 	chmod 0640 /etc/maas/pserv.yaml
 	chown :maas /etc/maas/pserv.yaml
 }
@@ -110,13 +110,13 @@ maasAddress()
 maasFilePath()
 {
 	maas-cli maas files list "prefix=$1" \
-	    | python -c 'import json; import sys; print json.load(sys.stdin)[0]["anon_resource_uri"]'
+	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["anon_resource_uri"])'
 }
 
 maasInterfaceExists()
 {
 	exists=$(maas-cli maas node-group-interfaces list $1 \
-	    | python -c "import json; import sys; print len([interface for interface in json.load(sys.stdin) if interface[\"interface\"] == \"$2\"])")
+	    | python3 -c "import json; import sys; print(len([interface for interface in json.load(sys.stdin) if interface[\"interface\"] == \"$2\"]))")
 	if [ $exists = 1 ]; then
 		return 0
 	else
@@ -137,14 +137,14 @@ maasLogout()
 nodeSystemId()
 {
     maas-cli maas nodes list mac_address=$1 \
-	| python -c 'import json; import sys; print json.load(sys.stdin)[0]["system_id"]'
+	| python3 -c 'import json; import sys; print json.load(sys.stdin)[0]["system_id"]'
 }
 
 waitForClusterRegistration()
 {
 	while true; do
 		uuid=$(maas-cli maas node-groups list \
-		    | python -c 'import json; import sys; print json.load(sys.stdin)[0]["uuid"]')
+		    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["uuid"])')
 		if [ $uuid != master ]; then
 			break
 		fi

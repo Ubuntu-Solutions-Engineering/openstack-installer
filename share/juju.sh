@@ -18,7 +18,7 @@
 
 configAgent()
 {
-	python - "$@" <<-"EOF"
+	python3 - "$@" <<-"EOF"
 		from collections import OrderedDict
 		import sys
 		from sys import argv
@@ -154,7 +154,7 @@ configJujuTools()
 
 configureBootstrapAgent()
 {
-	mkdir /var/lib/juju/agents/bootstrap
+	mkdir /var/lib/juju/agents/bootstrap || true
 	echo "format 1.16" > /var/lib/juju/agents/bootstrap/format
 	configAgent bootstrap user-admin:bootstrap \
 	    "/home/$INSTALL_USER/.juju/maas-cert.pem" \
@@ -173,7 +173,7 @@ configureBootstrapAgent()
 
 configureJuju()
 {
-	mkdir -m 0700 "/home/$INSTALL_USER/.juju"
+	mkdir -m 0700 "/home/$INSTALL_USER/.juju" || true
 	configJujuEnvironment $1 $2 $3 \
 	    > "/home/$INSTALL_USER/.juju/environments.yaml"
 	chmod 0600 "/home/$INSTALL_USER/.juju/environments.yaml"
@@ -182,8 +182,8 @@ configureJuju()
 
 configureJujuLogs()
 {
-	mkdir /var/log/juju
-	cp /usr/share/cloud-install-common/juju/25-juju.conf /etc/rsyslog.d
+	mkdir /var/log/juju || true
+	cp /usr/share/cloud-install-common/juju-data/25-juju.conf /etc/rsyslog.d
 	chmod 0600 /etc/rsyslog.d/25-juju.conf
 	service rsyslog restart
 }
@@ -191,7 +191,7 @@ configureJujuLogs()
 configureMaasBootstrapNode()
 {
 	a2enmod rewrite
-	cp /usr/share/cloud-install-common/juju/bootstrap.conf \
+	cp /usr/share/cloud-install-common/juju-data/bootstrap.conf \
 	    /etc/apache2/sites-available
 	a2dissite 000-default
 	a2ensite bootstrap
@@ -201,7 +201,7 @@ configureMaasBootstrapNode()
 
 configureMachineAgent()
 {
-	mkdir -p /var/lib/juju/agents/machine-0
+	mkdir -p /var/lib/juju/agents/machine-0 || true
 	echo "format 1.16" > /var/lib/juju/agents/machine-0/format
 	configAgent machine-0 user-admin:bootstrap \
 	    "/home/$INSTALL_USER/.juju/maas-cert.pem" \
@@ -213,27 +213,27 @@ configureMachineAgent()
 
 configureMongoDb()
 {
-	mkdir -m 0700 /var/lib/juju/db
-	mkdir /var/lib/juju/db/journal
+	mkdir -m 0700 /var/lib/juju/db || true
+	mkdir /var/lib/juju/db/journal || true
 	for c in 0 1 2; do
 		dd if=/dev/zero of=/var/lib/juju/db/journal/prealloc.$c \
 		    bs=1M count=1
 	done
-	cp /usr/share/cloud-install-common/juju/juju-db.conf /etc/init
+	cp /usr/share/cloud-install-common/juju-data/juju-db.conf /etc/init
 	service juju-db start 
 }
 
 configureProviderState()
 {
 	maas-upload-file http://localhost/MAAS/api/1.0 $2 $3-provider-state \
-	    /usr/share/cloud-install-common/juju/provider-state
+	    /usr/share/cloud-install-common/juju-data/provider-state
 	url=http://$1$(maasFilePath $3-provider-state)
 	echo $url > /tmp/provider-state-url
 }
 
 createJujuServerDirectory()
 {
-	mkdir /var/lib/juju
+	mkdir /var/lib/juju || true
 	echo "hostname: $1" > /var/lib/juju/MAASmachine.txt
 }
 
@@ -264,7 +264,7 @@ deployHostMachine()
 	mongo --quiet --port 37017 \
 	    --eval "db = db.getSiblingDB('juju'); db.machines.update({_id: '1'}, {\$set: {passwordhash: '$hash'}})" \
 	    -u admin -p $2 --ssl admin
-	mkdir /var/lib/juju/agents/machine-1
+	mkdir /var/lib/juju/agents/machine-1 || true
 	echo "format 1.16" > /var/lib/juju/agents/machine-1/format
 	nonce=$(mongo --quiet --port 37017 \
 	    --eval "db = db.getSiblingDB('juju'); print(db.machines.findOne({_id: '1'}).nonce)" \
@@ -274,7 +274,7 @@ deployHostMachine()
 	chmod 0600 /var/lib/juju/agents/machine-1/agent.conf
 	version=$(juju version)
 	ln -s $version /var/lib/juju/tools/machine-1
-	cp /usr/share/cloud-install-common/juju/jujud-machine-1.conf /etc/init
+	cp /usr/share/cloud-install-common/juju-data/jujud-machine-1.conf /etc/init
 	service jujud-machine-1 start
 }
 
@@ -286,7 +286,7 @@ disableMongoDbService()
 
 extractJujuTools()
 {
-	mkdir -p /var/lib/juju/tools/$3
+	mkdir -p /var/lib/juju/tools/$3 || true
 	path=$(maasFilePath $2-tools/releases/juju-$3.tgz)
 	wget -nv -O /var/lib/juju/tools/juju-$3.tgz http://localhost$path
 	tar xzf /var/lib/juju/tools/juju-$3.tgz -C /var/lib/juju/tools/$3
@@ -343,19 +343,19 @@ jujuBootstrap()
 
 jujuPassword()
 {
-	python -c "from passlib.hash import pbkdf2_sha512; print pbkdf2_sha512.encrypt(\"$1\", salt=\"\x75\x82\x81\xca\", rounds=8192).split(\"\$\")[4][:24].replace(\".\", \"+\")"
+	python3 -c "from passlib.hash import pbkdf2_sha512; print(pbkdf2_sha512.encrypt(\"$1\", salt_size=16, rounds=8192).split(\"\$\")[4][:24].replace(\".\", \"+\"))"
 }
 
 maasAgentName()
 {
-	python -c "import yaml; print yaml.load(open(\"/home/$INSTALL_USER/.juju/environments/maas.jenv\"))[\"bootstrap-config\"][\"maas-agent-name\"]"
+	python3 -c "import yaml; print(yaml.load(open(\"/home/$INSTALL_USER/.juju/environments/maas.jenv\"))[\"bootstrap-config\"][\"maas-agent-name\"])"
 }
 
 startMachineAgent()
 {
 	rm /var/lib/juju/server.crt /var/lib/juju/server.key
 	ln -s $1 /var/lib/juju/tools/machine-0
-	cp /usr/share/cloud-install-common/juju/jujud-machine-0.conf /etc/init
+	cp /usr/share/cloud-install-common/juju-data/jujud-machine-0.conf /etc/init
 	service jujud-machine-0 start
 }
 
