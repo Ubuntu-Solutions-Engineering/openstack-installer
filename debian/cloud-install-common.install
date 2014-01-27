@@ -1,0 +1,15 @@
+etc/init/tty1.override                 etc/init
+share/common.sh                        usr/share/cloud-install-common/common
+share/juju.sh                          usr/share/cloud-install-common/common
+share/maas.sh                          usr/share/cloud-install-common/common
+share/multi.sh                         usr/share/cloud-install-common/common
+share/single.sh                        usr/share/cloud-install-common/common
+share/juju/25-juju.conf                usr/share/cloud-install-common/juju-data
+share/juju/25-juju-machine-1.conf      usr/share/cloud-install-common/juju-data
+share/juju/bootstrap.conf              usr/share/cloud-install-common/juju-data
+share/juju/juju-db.conf                usr/share/cloud-install-common/juju-data
+share/juju/jujud-machine-0.conf        usr/share/cloud-install-common/juju-data
+share/juju/jujud-machine-1.conf        usr/share/cloud-install-common/juju-data
+share/juju/provider-state              usr/share/cloud-install-common/juju-data
+share/maas/import_pxe_files            usr/share/cloud-install-common/maas-data
+share/maas/pserv.yaml                  usr/share/cloud-install-common/maas-data

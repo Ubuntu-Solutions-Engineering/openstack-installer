@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -119,12 +119,12 @@ while [ -n "$STATE" -a "$STATE" != 34 ]; do
 		;;
 	    33)
 		db_get cloud-install/openstack-vmnetwork
-		validateCIDR "$RET"
-		RET=$?
-		if [ "$RET" -ne 0 ]; then
-		    db_input critical cloud-install/valid-cidr
-		    NEXT_STATE=32
-		fi
+		# validateCIDR "$RET"
+		# RET=$?
+		# if [ "$RET" -ne 0 ]; then
+		#     db_input critical cloud-install/valid-cidr
+		#     NEXT_STATE=32
+		# fi
 		;;
 	esac
 
@@ -144,15 +144,13 @@ late_command="printf \"%s\n\" \"$RET\" > /target/etc/openstack.passwd; chmod 060
 
 dbSet tasksel/first "standard, server"; db_fset tasksel/first seen true
 
-packages="cloud-installer rungetty debconf-utils python-multipartposthandler python-passlib python3-yaml python3-urwid lxc git mongodb-server juju-core maas"
+packages="cloud-install-common"
 case $install_type in
 multi)
-	if [ -n "$manage_dhcp" ]; then
-		packages="$packages maas-dns"
-	fi
+	packages="$packages cloud-install-multi"
 	;;
 single)
-	packages="$packages maas-dns qemu-system-x86 libvirt-bin cloud-utils"
+	packages="$packages cloud-install-single"
 	;;
 landscape)
 	;;
