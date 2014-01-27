@@ -24,21 +24,21 @@ TMP=$(mktemp -d /tmp/cloud-install.XXX)
 
 confValue()
 {
-    db_get $1 $2
-    if [ -z "$RET" ]; then
-	debconf-get-selections --installer | awk -F "\t" -v "owner=$1" \
-	    -v "name=$2" '($1 == owner) && ($2 == name) { print $4 }'
-    fi
+	db_get $1 $2
+	if [ -z "$RET" ]; then
+	    debconf-get-selections --installer | awk -F "\t" -v "owner=$1" \
+	        -v "name=$2" '($1 == owner) && ($2 == name) { print $4 }'
+	fi
 }
 
 getInstallUser()
 {
-    db_get cloud-install/install-user
-    if [ -z "$RET" ]; then
-	$(confValue user-setup-udeb passwd/username)
-    else
-	echo "$RET"
-    fi
+	db_get cloud-install/install-user
+	if [ -z "$RET" ]; then
+	    $(confValue user-setup-udeb passwd/username)
+	else
+	    echo "$RET"
+	fi
 }
 
 configIptablesNat()
@@ -89,13 +89,12 @@ enableIpForwarding()
 
 error()
 {
-#    while true; do
-	# whiptail --title "[!] An error has occurred" \
-	#     --backtitle "$BACKTITLE" --ok-button Continue \
-	#     --msgbox "Installation aborted\n\nSee /var/log/cloud-install.log for details.\nUse Alt+F2 to access console." \
-	#     10 60
-#    done
-    echo "*** Error has occurred, see /var/log/cloud-install.log for details."
+	while true; do
+	    whiptail --title "[!] An error has occurred" \
+	        --backtitle "$BACKTITLE" --ok-button Continue \
+	        --msgbox "Installation aborted\n\nSee /var/log/cloud-install.log for details.\nUse Alt+F2 to access console." \
+	        10 60
+	done
 }
 
 exitInstall()
@@ -116,15 +115,15 @@ gaugePrompt()
 
 generateSshKeys()
 {
-    if [ ! -e "/home/$INSTALL_USER/.ssh/id_rsa" ]; then
-	sudo -u "$INSTALL_USER" ssh-keygen -N "" \
-	    -f "/home/$INSTALL_USER/.ssh/id_rsa" 1>&2
-    else
-	echo "*** ssh keys exist for this user, they will be used instead."
-	echo "*** If the current ssh keys are not passwordless you'll be"
-	echo "*** required to enter your ssh key password during juju"
-	echo "*** deployments."
-    fi
+	if [ ! -e "/home/$INSTALL_USER/.ssh/id_rsa" ]; then
+	    sudo -u "$INSTALL_USER" ssh-keygen -N "" \
+		 -f "/home/$INSTALL_USER/.ssh/id_rsa" 1>&2
+	else
+	    echo "*** ssh keys exist for this user, they will be used instead."
+	    echo "*** If the current ssh keys are not passwordless you'll be"
+	    echo "*** required to enter your ssh key password during juju"
+	    echo "*** deployments."
+	fi
 }
 
 waitForService()

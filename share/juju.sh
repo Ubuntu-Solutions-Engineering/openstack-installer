@@ -241,10 +241,10 @@ createJujuServerDirectory()
 deployHostMachine()
 {
 	maas-cli maas nodes new architecture=amd64/generic \
-	    mac_addresses=00:00:5e:cc:cc:cc hostname=juju-host
-      cpu_count=$(grep -c processor /proc/cpuinfo) \
-      memory=$(awk -F":" '$1~/MemTotal/{print $2/1024}' /proc/meminfo ) \
-      storage=$(df | awk '$6~/\/$/{print $2/1024}')
+	    mac_addresses=00:00:5e:cc:cc:cc hostname=juju-host \
+	    cpu_count=$(grep -c processor /proc/cpuinfo) \
+	    memory=$(awk -F":" '$1~/MemTotal/{print $2/1024}' /proc/meminfo ) \
+	    storage=$(df | awk '$6~/\/$/{print $2/1024}')
 
 	system_id=$(nodeSystemId 00:00:5e:cc:cc:cc)
 	wget -O $TMP/maas.creds \
