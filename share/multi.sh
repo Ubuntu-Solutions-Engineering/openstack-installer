@@ -16,6 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+getDhcpRange()
+{
+	db_get cloud-install/dhcp-range
+	if [ -z "$RET" ]; then
+		$(confValue cloud-install-udb cloud-install/manage-dchp)
+	else
+		echo "$RET"
+	fi
+}
+
 multiInstall()
 {
 	whiptail --backtitle "$BACKTITLE" --infobox \
@@ -26,7 +36,7 @@ multiInstall()
 	# lp 1247886
 	service squid-deb-proxy start || true
 
-	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install"
+	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install" || true
 	cp /etc/openstack.passwd "/home/$INSTALL_USER/.cloud-install"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
 
@@ -42,21 +52,23 @@ multiInstall()
 		echo 8
 		maas_creds=$(maas apikey --username root)
 		saveMaasCreds $maas_creds
+		maasLogin $maas_creds
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
-		interface=$(ifquery -X lo --list)
-		manage_dhcp=$(confValue cloud-install-udeb \
-		    cloud-install/manage-dhcp)
-		if [ $manage_dhcp = true ]; then
-			gaugePrompt 15 "Configuring MAAS networking"
-			gateway=$(route -n | awk 'index($4, "G") { print $2 }')
-			dhcp_range=$(confValue cloud-install-udeb \
-			    cloud-install/dhcp-range)
-			configureMaasNetworking $uuid $interface $gateway \
-			    ${dhcp_range%-*} ${dhcp_range#*-}
-			gaugePrompt 18 "Configuring DNS"
-			configureDns
-		fi
+		# FIXME: This breaks subsequent commands if more than 1 ethX device exists.
+		#
+		# Below shows the output where eth1 should be the router_ip
+		# eg: configureMaasNetworking 76bd6217-dbb9-438b-b437-28ec0eb645ac \
+		#    eth0 eth1 10.0.2.2 10.0.2.100 10.0.2.150
+		interface=$(ifquery -X lo -X eth1 --list)
+		gaugePrompt 15 "Configuring MAAS networking"
+		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
+		# Retrieve dhcp-range
+		dhcp_range=$(getDhcpRange)
+		configureMaasNetworking $uuid $interface $gateway \
+		    ${dhcp_range%-*} ${dhcp_range#*-}
+		gaugePrompt 18 "Configuring DNS"
+		configureDns
 		gaugePrompt 20 "Importing MAAS boot images"
 		configureMaasImages
 		maas-import-pxe-files 1>&2
