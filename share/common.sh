@@ -134,4 +134,25 @@ waitForService()
 	done
 }
 
+getDhcpRange()
+{
+	db_get cloud-install/dhcp-range
+	if [ -z "$RET" ]; then
+		$(confValue cloud-install-udeb cloud-install/manage-dhcp)
+	else
+		echo "$RET"
+	fi
+}
+
+getInstallInterface()
+{
+	db_get cloud-install/install-interface
+	if [ -z "$RET" ]; then
+	    $(confValue cloud-install-udeb cloud-install/install-interface)
+	else
+	    echo "$RET"
+	fi
+}
+
+
 INSTALL_USER=$(getInstallUser)
