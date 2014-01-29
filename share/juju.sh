@@ -220,7 +220,7 @@ configureMongoDb()
 		    bs=1M count=1
 	done
 	cp /usr/share/cloud-install-common/juju-data/juju-db.conf /etc/init
-	service juju-db start 
+	service juju-db start || true
 }
 
 configureProviderState()
