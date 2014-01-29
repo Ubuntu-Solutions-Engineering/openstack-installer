@@ -17,3 +17,7 @@ rm -rf ~/.juju
 sudo apt-get -yy remove maas* maas-* juju* juju-*
 sudo apt-get -yy purge maas* maas-* juju* juju-*
 sudo service apache2 stop
+
+echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+echo you might need to fix your /etc/resolv.conf
+echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
