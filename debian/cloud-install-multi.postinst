@@ -48,6 +48,11 @@ validateCIDR()
     fi
 }
 
+getInterfaces()
+{
+	ifconfig -s|egrep -v 'Iface|lo'|egrep -o '^[a-zA-Z0-9]+'|paste -sd ","
+}
+
 STATE=1
 case "$1" in
     configure)
@@ -55,25 +60,31 @@ case "$1" in
 	    NEXT_STATE=$((STATE + 1))
 	    case "$STATE" in
 		1)
-		    db_input high cloud-install/dhcp-range || true
+		    db_subst cloud-install/install-interface "$(getInterfaces)"
+		    echo $(getInterfaces)
+		    db_input high cloud-install/install-interface || true
 		    NEXT_STATE=2
 		    ;;
 		2)
+		    db_input high cloud-install/dhcp-range || true
+		    NEXT_STATE=3
+		    ;;
+		3)
 		    db_input high cloud-install/openstack-admin-password || true
 		    db_input high cloud-install/openstack-admin-password-again || true
 		    ;;
-		3)
+		4)
 		    # Validate openstack password match
 		    db_get cloud-install/openstack-admin-password
 		    ADMIN_PW="$RET"
 		    db_get cloud-install/openstack-admin-password-again
 		    if [ "$ADMIN_PW" != "$RET" ]; then
 			db_input critical cloud-install/password-mismatch
-			NEXT_STATE=2
+			NEXT_STATE=3
 		    fi
 		    ;;
 
-		4)
+		5)
 		    db_input high cloud-install/openstack-vmnetwork || true
 		    ;;
 		5)

@@ -8,6 +8,13 @@ Type: string
 Description: Set install user
  Sets the installation user to run as
 
+Template: cloud-install/install-interface
+Type: multiselect
+Choices: ${CHOICES}
+Description: Select network interface
+ Provides list of available interfaces for cloud installer to
+ manage.
+
 Template: cloud-install/dhcp-range
 Type: string
 Description: IP address range (<ip addr low>-<ip addr high>):
