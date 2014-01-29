@@ -13,4 +13,4 @@ share/juju/jujud-machine-1.conf        usr/share/cloud-install-common/juju-data
 share/juju/provider-state              usr/share/cloud-install-common/juju-data
 share/maas/import_pxe_files            usr/share/cloud-install-common/maas-data
 share/maas/pserv.yaml                  usr/share/cloud-install-common/maas-data
-bin/maas-upload-file                   usr/bin/maas-upload-file
+bin/maas-upload-file                   usr/bin
