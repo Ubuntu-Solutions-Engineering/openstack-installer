@@ -16,16 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-getDhcpRange()
-{
-	db_get cloud-install/dhcp-range
-	if [ -z "$RET" ]; then
-		$(confValue cloud-install-udb cloud-install/manage-dchp)
-	else
-		echo "$RET"
-	fi
-}
-
 multiInstall()
 {
 	whiptail --backtitle "$BACKTITLE" --infobox \
@@ -60,7 +50,7 @@ multiInstall()
 		# Below shows the output where eth1 should be the router_ip
 		# eg: configureMaasNetworking 76bd6217-dbb9-438b-b437-28ec0eb645ac \
 		#    eth0 eth1 10.0.2.2 10.0.2.100 10.0.2.150
-		interface=$(db_get cloud-install/install-interface)
+		interface=$(getInstallInterface)
 		gaugePrompt 15 "Configuring MAAS networking"
 		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
 		# Retrieve dhcp-range

@@ -50,7 +50,7 @@ validateCIDR()
 
 getInterfaces()
 {
-    ifconfig -s|egrep -v 'Iface|lo'|egrep -o '^[a-zA-Z0-9]+'|tr '\n' " "
+	ifconfig -s|egrep -v 'Iface|lo'|egrep -o '^[a-zA-Z0-9]+'|paste -sd ', '| sed -s 's/,/, /g'
 }
 
 STATE=1
