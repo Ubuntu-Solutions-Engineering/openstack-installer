@@ -60,7 +60,7 @@ multiInstall()
 		# Below shows the output where eth1 should be the router_ip
 		# eg: configureMaasNetworking 76bd6217-dbb9-438b-b437-28ec0eb645ac \
 		#    eth0 eth1 10.0.2.2 10.0.2.100 10.0.2.150
-		interface=$(ifquery -X lo -X eth1 --list)
+		interface=$(db_get cloud-install/install-interface)
 		gaugePrompt 15 "Configuring MAAS networking"
 		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
 		# Retrieve dhcp-range
