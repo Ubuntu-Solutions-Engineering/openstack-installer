@@ -34,7 +34,7 @@ configAgent()
 
 		def load_file(name):
 		    with open(name, "rb") as f:
-		        return base64.b64encode(f.read())
+		        return base64.b64encode(f.read().decode("utf-8"))
 
 		def ordereddict_representer(dumper, data):
 		    return dumper.represent_mapping("tag:yaml.org,2002:map", data.items())
@@ -53,7 +53,7 @@ configAgent()
 		                               ("stateserverkey", load_file(argv[8])),
 		                               ("apiport", int(argv[9]))]))
 		yaml.add_representer(OrderedDict, ordereddict_representer)
-		yaml.dump(config, sys.stdout.decode("utf-8"), IgnoreAliasesDumper, default_flow_style=False)
+		yaml.dump(config, sys.stdout, IgnoreAliasesDumper, default_flow_style=False)
 		EOF
 }
 
@@ -73,7 +73,7 @@ configAgentEnv()
 
 		def load_file(name):
 		    with open(name, "rb") as f:
-		        return f.read()
+		        return f.read().decode("utf-8")
 
 		def ordereddict_representer(dumper, data):
 		    return dumper.represent_mapping("tag:yaml.org,2002:map", data.items())
@@ -97,7 +97,7 @@ configAgentEnv()
 		                       ("state-port", 37017),
 		                       ("tools-url", ""),
 		                       ("type", "maas")]),
-		          sys.stdout.decode("utf-8"), IgnoreAliasesDumper, default_flow_style=False)
+		          sys.stdout, IgnoreAliasesDumper, default_flow_style=False)
 		EOF
 }
 
