@@ -34,7 +34,7 @@ configAgent()
 
 		def load_file(name):
 		    with open(name, "rb") as f:
-		        return base64.b64encode(f.read().decode("utf-8"))
+		        return base64.b64encode(f.read()).decode("utf-8")
 
 		def ordereddict_representer(dumper, data):
 		    return dumper.represent_mapping("tag:yaml.org,2002:map", data.items())
@@ -364,7 +364,7 @@ syncJujuTools()
 	(
 		cd "/home/$INSTALL_USER"
 		for c in 0 1 2; do
-			if sudo -H -u "$INSTALL_USER" juju --show-log sync-tools --all; then
+			if sudo -H -u "$INSTALL_USER" juju --show-log sync-tools; then
 				exit 0
 			fi
 			sleep 5
