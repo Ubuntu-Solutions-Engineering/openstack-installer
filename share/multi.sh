@@ -51,11 +51,12 @@ multiInstall()
 		# eg: configureMaasNetworking 76bd6217-dbb9-438b-b437-28ec0eb645ac \
 		#    eth0 eth1 10.0.2.2 10.0.2.100 10.0.2.150
 		interface=$(getInstallInterface)
+		createMaasBridge $interface br0
 		gaugePrompt 15 "Configuring MAAS networking"
 		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
 		# Retrieve dhcp-range
 		dhcp_range=$(getDhcpRange)
-		configureMaasNetworking $uuid $interface $gateway \
+		configureMaasNetworking $uuid br0 $gateway \
 		    ${dhcp_range%-*} ${dhcp_range#*-}
 		gaugePrompt 18 "Configuring DNS"
 		configureDns
@@ -64,13 +65,13 @@ multiInstall()
 		maas-import-pxe-files 1>&2
 
 		gaugePrompt 70 "Configuring Juju"
-		address=$(ifconfig $interface | egrep -o "inet addr:[0-9.]+" \
+		address=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
 		    | sed -e "s/^inet addr://")
 		admin_secret=$(pwgen -s 32)
 		configureJuju $address $maas_creds $admin_secret
 		gaugePrompt 80 "Bootstrapping Juju"
 		host=$(maasAddress $address).master
-		jujuBootstrap $address $host $maas_creds $admin_secret
+		jujuBootstrap
 		echo 99
 		maasLogout
 

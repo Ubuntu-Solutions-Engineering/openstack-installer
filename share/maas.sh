@@ -91,8 +91,12 @@ configureMaasNetworking()
 
 createMaasBridge()
 {
-	configMaasBridge >> /etc/network/interfaces
-	ifup br0 1>&2
+	# TODO this needs seriously improving
+	echo "" >> /etc/network/interfaces
+	awk "/^auto $1\$/ { print \"auto $2\"; next } /^iface $1 inet/,/^\$/ { switch (\$0) { case /^iface $1 inet/: s = \$0; sub(\"$1\", \"$2\", s); print s; break; case \"\": print \"\\tbridge_ports eth0\\n\"; break; default: print \$0 } next } { print \$0 } END { print \"\\nauto $1\\niface $1 inet manual\" }" \
+	    /etc/network/interfaces > $TMP/interfaces
+	mv $TMP/interfaces /etc/network/interfaces
+	ifdown $1; ifup $1 $2
 }
 
 createMaasSuperUser()
