@@ -11,7 +11,6 @@ echo
 
 cat /tmp/kill_it_with_fire | sudo maas shell
 
-rm -rf ~/.ssh
 rm -rf ~/.juju
 
 sudo apt-get -yy remove maas* maas-* juju* juju-*
