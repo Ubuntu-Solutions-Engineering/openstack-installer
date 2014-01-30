@@ -89,12 +89,13 @@ enableIpForwarding()
 
 error()
 {
-	while true; do
+	# TODO: Comment out for now so we can at least exit the gui session
+	# while true; do
 	    whiptail --title "[!] An error has occurred" \
 	        --backtitle "$BACKTITLE" --ok-button Continue \
 	        --msgbox "Installation aborted\n\nSee /var/log/cloud-install.log for details.\nUse Alt+F2 to access console." \
 	        10 60
-	done
+	# done
 }
 
 exitInstall()
