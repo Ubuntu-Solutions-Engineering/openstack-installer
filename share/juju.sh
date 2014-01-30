@@ -53,7 +53,7 @@ configAgent()
 		                               ("stateserverkey", load_file(argv[8])),
 		                               ("apiport", int(argv[9]))]))
 		yaml.add_representer(OrderedDict, ordereddict_representer)
-		yaml.dump(config, sys.stdout, IgnoreAliasesDumper, default_flow_style=False)
+		yaml.dump(config, sys.stdout.decode("utf-8"), IgnoreAliasesDumper, default_flow_style=False)
 		EOF
 }
 
@@ -97,7 +97,7 @@ configAgentEnv()
 		                       ("state-port", 37017),
 		                       ("tools-url", ""),
 		                       ("type", "maas")]),
-		          sys.stdout, IgnoreAliasesDumper, default_flow_style=False)
+		          sys.stdout.decode("utf-8"), IgnoreAliasesDumper, default_flow_style=False)
 		EOF
 }
 
@@ -185,7 +185,7 @@ configureJujuLogs()
 	mkdir /var/log/juju || true
 	cp /usr/share/cloud-install-common/juju-data/25-juju.conf /etc/rsyslog.d
 	chmod 0600 /etc/rsyslog.d/25-juju.conf
-	service rsyslog restart
+	service rsyslog restart || true
 }
 
 configureMaasBootstrapNode()
@@ -196,7 +196,7 @@ configureMaasBootstrapNode()
 	a2dissite 000-default
 	a2ensite bootstrap
 	configBootstrapNode $1 > /var/www/node-juju-bootstrap
-	service apache2 restart
+	service apache2 restart || true
 }
 
 configureMachineAgent()
@@ -275,7 +275,7 @@ deployHostMachine()
 	version=$(juju version)
 	ln -s $version /var/lib/juju/tools/machine-1
 	cp /usr/share/cloud-install-common/juju-data/jujud-machine-1.conf /etc/init
-	service jujud-machine-1 start
+	service jujud-machine-1 start || true
 }
 
 disableMongoDbService()
@@ -356,7 +356,7 @@ startMachineAgent()
 	rm /var/lib/juju/server.crt /var/lib/juju/server.key
 	ln -s $1 /var/lib/juju/tools/machine-0
 	cp /usr/share/cloud-install-common/juju-data/jujud-machine-0.conf /etc/init
-	service jujud-machine-0 start
+	service jujud-machine-0 start || true
 }
 
 syncJujuTools()
