@@ -32,7 +32,8 @@ Depends:
   python3-urwid,
   python3-urwid,
   python3-yaml,
-  rungetty
+  rungetty,
+  gawk
 Description: Ubuntu Cloud installer
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
