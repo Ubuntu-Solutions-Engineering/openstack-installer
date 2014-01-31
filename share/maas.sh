@@ -127,7 +127,7 @@ maasLogout()
 nodeSystemId()
 {
 	maas-cli maas nodes list mac_address=$1 \
-	    | python3 -c 'import json; import sys; print json.load(sys.stdin)[0]["system_id"]'
+	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["system_id"])'
 }
 
 waitForClusterRegistration()
