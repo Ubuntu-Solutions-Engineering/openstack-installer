@@ -36,20 +36,6 @@ EOF
 EOF
 }
 
-configMaasBridge()
-{
-	cat <<"EOF"
-
-auto br0
-iface br0 inet static
-	address 10.0.4.1
-	netmask 255.255.255.0
-	network 10.0.4.0
-	broadcast 10.0.4.255
-	bridge_ports none
-EOF
-}
-
 configureDns()
 {
 	configBindOptions $(awk '/^nameserver / { print $2 }' /etc/resolv.conf) \
