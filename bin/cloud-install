@@ -8,6 +8,10 @@ set -e
 . /usr/share/cloud-install-common/common/multi.sh
 . /usr/share/cloud-install-common/common/single.sh
 
+# set universal default locale
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 if [ ! -e /var/log/cloud-install.log ]; then
 	touch /var/log/cloud-install.log
 	chmod 0600 /var/log/cloud-install.log
