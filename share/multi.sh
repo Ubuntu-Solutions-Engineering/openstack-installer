@@ -18,6 +18,8 @@
 
 multiInstall()
 {
+  set -ex
+
 	whiptail --backtitle "$BACKTITLE" --infobox \
 	    "Waiting for services to start" 8 60
 	waitForService maas-region-celery maas-cluster-celery maas-pserv \
