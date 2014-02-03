@@ -59,7 +59,10 @@ multiInstall()
 		configureDns
 		gaugePrompt 20 "Importing MAAS boot images"
 		configureMaasImages
-		maas-import-pxe-files 1>&2
+
+		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
+				maas-import-pxe-files 1>&2
+		fi
 
 		gaugePrompt 70 "Configuring Juju"
 		address=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
