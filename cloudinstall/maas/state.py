@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import json
-
 class MaasState:
     DECLARED = 0
     COMMISSIONING = 1
@@ -27,11 +25,11 @@ class MaasState:
     RESERVED = 5
     ALLOCATED = 6
     RETIRED = 7
-    def __init__(self, raw_json):
-        self._json = json.load(raw_json)
+    def __init__(self, maas):
+        self._maas = maas
 
     def __iter__(self):
-        return iter(self._json)
+        return iter(self._maas)
 
     def hostname_for_instance_id(self, id):
         for machine in self:
@@ -40,11 +38,7 @@ class MaasState:
 
     @property
     def machines(self):
-        return len(self._json)
+        return len(self._maas)
 
     def num_in_state(self, state):
-        return len(list(filter(lambda m: int(m["status"]) == state, self._json)))
-
-
-
-
+        return len(list(filter(lambda m: int(m["status"]) == state, self._maas)))

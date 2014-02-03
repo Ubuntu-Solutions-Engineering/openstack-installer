@@ -131,7 +131,7 @@ def poll_state(auth):
     m_client = MaasClient(auth=auth)
 
     # Capture Maas state
-    maas = MaasState(StringIO(m_client.nodes.decode('ascii')))
+    maas = MaasState(m_client.nodes)
     m_client.tag_fpi(maas)
     m_client.nodes_accept_all()
     m_client.tag_name(maas)
@@ -257,8 +257,8 @@ datasource:
             req = urllib.urlopen(
                 'http://localhost/MAAS/metadata/latest/by-id/%s/?op=get_preseed' % (hostname,))
             f.write(req.read())
-        subprocess.check_call(['cloud-install', 'maas-signal', '--config', creds, 'OK'])
+        subprocess.check_call(['maas-signal', '--config', creds, 'OK'])
 
 class MaasLoginFailure(Exception):
     MESSAGE = "Could not read login credentials. Please run:" \
-    "    maas-get-user-creds root > ~/.carrierstack/maas-creds"
+    "    maas-get-user-creds root > ~/.cloud-install/maas-creds"
