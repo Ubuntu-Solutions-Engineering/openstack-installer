@@ -258,3 +258,7 @@ datasource:
                 'http://localhost/MAAS/metadata/latest/by-id/%s/?op=get_preseed' % (hostname,))
             f.write(req.read())
         subprocess.check_call(['cloud-install', 'maas-signal', '--config', creds, 'OK'])
+
+class MaasLoginFailure(Exception):
+    MESSAGE = "Could not read login credentials. Please run:" \
+    "    maas-get-user-creds root > ~/.carrierstack/maas-creds"
