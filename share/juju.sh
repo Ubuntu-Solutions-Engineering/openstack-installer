@@ -58,7 +58,7 @@ jujuBootstrap()
 	    "http://localhost/MAAS/metadata/latest/by-id/$system_id/?op=get_preseed"
 	maas-signal --config $TMP/maas.creds OK || true
 
-	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju bootstrap)
+	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju bootstrap --upload-tools)
 	# TODO There is a delay between adding a machine via the cli, which
 	#      returns instantly, and the juju provisioning worker picking up
 	#      the request and creating the necessary machine placeholder.
