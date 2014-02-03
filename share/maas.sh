@@ -122,6 +122,7 @@ maasLogin()
 maasLogout()
 {
 	maas-cli logout maas
+	rm -rf /home/$INSTALL_USER/.maascli.db
 }
 
 nodeSystemId()
