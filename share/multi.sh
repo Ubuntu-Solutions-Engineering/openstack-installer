@@ -73,6 +73,7 @@ multiInstall()
 		host=$(maasAddress $address).master
 		jujuBootstrap
 		echo 99
+		maas-cli admin tags new name=use-fastpath-installer definition="true()"
 		maasLogout
 
 		gaugePrompt 100 "Installation complete"
