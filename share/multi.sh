@@ -18,8 +18,7 @@
 
 multiInstall()
 {
-  set -ex
-
+	set -ex
 	whiptail --backtitle "$BACKTITLE" --infobox \
 	    "Waiting for services to start" 8 60
 	waitForService maas-region-celery maas-cluster-celery maas-pserv \
@@ -61,7 +60,7 @@ multiInstall()
 		configureMaasImages
 
 		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
-				maas-import-pxe-files 1>&2
+			maas-import-pxe-files 1>&2
 		fi
 
 		gaugePrompt 70 "Configuring Juju"

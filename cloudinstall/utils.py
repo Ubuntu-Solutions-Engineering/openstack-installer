@@ -16,13 +16,62 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import Popen, PIPE, DEVNULL, call
+from subprocess import Popen, PIPE, DEVNULL, call, STDOUT
 from contextlib import contextmanager
+import os
+import re
 import string
 import random
 
 # String with number of minutes, or None.
 blank_len = None
+
+def get_command_output(command, timeout=300):
+    """ Execute command through system shell
+
+    @return: returncode, stdout, 0
+    """
+    cmd_env = os.environ
+    # set consistent locale
+    cmd_env['LC_ALL'] = 'C'
+    if timeout:
+        command = "/usr/bin/timeout %ds %s" % (timeout, command)
+
+    p = Popen(command, shell=True,
+              stdout=PIPE, stderr=STDOUT,
+              bufsize=-1, env=cmd_env, close_fds=True)
+    stdout, stderr = p.communicate()
+    return (p.returncode, stdout.decode('utf-8'), 0)
+
+def get_network_interface(iface):
+    """ Get network interface properties
+
+    @param iface: Interface to query (ex. eth0)
+    @return: dict of interface properties or None if no properties
+    """
+    (status, output, runtime) = get_command_output('ifconfig %s' % (iface,))
+    line = output.split('\n')[1:2][0].lstrip()
+    regex = re.compile('^inet addr:([0-9]+(?:\.[0-9]+){3})\s+Bcast:([0-9]+(?:\.[0-9]+){3})\s+Mask:([0-9]+(?:\.[0-9]+){3})')
+    match = re.match(regex, line)
+    if match:
+        return {'address': match.group(1),
+                'broadcast': match.group(2),
+                'netmask': match.group(3)}
+    return None
+
+def get_network_interfaces():
+    """ Get network interfaces
+
+    @return: list of available interfaces and their properties
+    """
+    interfaces = []
+    (status, output, runtime) = get_command_output('ifconfig -s')
+    _ifconfig = output.split('\n')[1:-1]
+    for i in _ifconfig:
+        name = i.split(' ')[0]
+        if 'lo' not in name:
+            interfaces.append({name : get_network_interface(name)})
+    return interfaces
 
 def partition(pred, iterable):
     yes, no = [], []

@@ -76,13 +76,13 @@ class TextOverlay(urwid.Overlay):
 # TODO: Use TextOverlay
 class ControllerOverlay(urwid.Overlay):
     PXE_BOOT = "You need one node to act as the cloud controller. Please PXE " \
-    "boot the node you would like to use."""
+               "boot the node you would like to use."
 
     LXC_WAIT = "Please wait while the cloud controller is installed on your " \
-    "host system."
+               "host system."
 
     NODE_SETUP = "Your node has been correctly detected. " \
-    "Please wait until setup is complete "
+                 "Please wait until setup is complete "
 
     def __init__(self, underlying, command_runner):
         self.allocated = None

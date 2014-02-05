@@ -39,7 +39,7 @@ setup(name='cloud-install-common',
       deployments as well as multiple physical system deployments.
       """,
       author='Robert Ayres',
-      author_email='rober.ayres@ubuntu.com',
+      author_email='robert.ayres@ubuntu.com',
       url='https://launchpad.net/cloud-installer',
       license="GPLv3+",
       scripts=['bin/cloud-install', 'bin/cloud-status', 'bin/maas-signal',
