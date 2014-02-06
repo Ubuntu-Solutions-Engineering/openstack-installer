@@ -630,7 +630,10 @@ class PegasusGUI(urwid.MainLoop):
 
         def run_f():
             nonlocal result
-            result = f()
+            try:
+                result = f()
+            except Exception as e:
+                self.console.command_runner._add("Status thread:", format_exc())
             write(write_fd, bytes('done', 'ascii'))
 
         threading.Thread(target=run_f).start()
