@@ -143,6 +143,10 @@ def parse_state(juju, maas):
     for machine in maas:
         m = juju.machine(machine['resource_uri']) or \
             {"machine_no": -1, "agent-state": "unallocated"}
+
+        if machine['hostname'].startswith('juju-bootstrap'):
+            continue
+
         d = {
             "fqdn": machine['hostname'],
             "memory": machine['memory'],
