@@ -47,7 +47,7 @@ multiInstall()
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 		interface=$(getInstallInterface)
-		createMaasBridge $interface br0
+		createMaasBridge $interface
 		gaugePrompt 15 "Configuring MAAS networking"
 		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
 		# Retrieve dhcp-range

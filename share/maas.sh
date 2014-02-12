@@ -36,6 +36,18 @@ EOF
 EOF
 }
 
+configMaasBridge()
+{
+	cat <<-EOF
+		auto $1
+		iface $1 inet manual
+
+		auto br0
+		EOF
+	cat "$2"
+	printf "\t%s\n" "bridge_ports $1"
+}
+
 configureDns()
 {
 	configBindOptions $(awk '/^nameserver / { print $2 }' /etc/resolv.conf) \
@@ -52,6 +64,44 @@ configureMaasImages()
 	cp /usr/share/cloud-install-common/maas-data/* /etc/maas
 	chmod 0640 /etc/maas/pserv.yaml
 	chown :maas /etc/maas/pserv.yaml
+}
+
+configureMaasInterfaces()
+{
+	awk -v interface=$1 -v "bridge_cfg=$2" -f - "$3" <<-"EOF"
+		function strip(s)
+		{
+		    sub(/^[[:blank:]]+/, "", s)
+		    sub(/[[:blank:]]+$/, "", s)
+		    return s
+		}
+
+		/^[[:blank:]]*(iface|mapping|auto|allow-[^ ]+|source) / {
+		    s_iface = 0; iface = 0
+		}
+
+		$0 ~ "^[[:blank:]]*auto (" interface "|br0)$" { print "#" $0; next }
+
+		$0 ~ "^[[:blank:]]*iface (" interface "|br0) " {
+		    s_iface = 1
+		    if ($2 == interface) {
+		        iface = 1
+		        print "iface br0", $3, $4 > bridge_cfg
+		    }
+		    print "#" $0
+		    next
+		}
+
+		s_iface == 1 {
+		    if (iface == 1) {
+		        print "\t" strip($0) > bridge_cfg
+		    }
+		    print "#" $0
+		    next
+		}
+
+		{ print $0 }
+		EOF
 }
 
 configureMaasNetworking()
@@ -77,12 +127,22 @@ configureMaasNetworking()
 
 createMaasBridge()
 {
-	# TODO this needs seriously improving
-	echo "" >> /etc/network/interfaces
-	awk "/^auto $1\$/ { print \"auto $2\"; next } /^iface $1 inet/,/^\$/ { switch (\$0) { case /^iface $1 inet/: s = \$0; sub(\"$1\", \"$2\", s); print s; break; case \"\": print \"\\tbridge_ports eth0\\n\"; break; default: print \$0 } next } { print \$0 } END { print \"\\nauto $1\\niface $1 inet manual\" }" \
-	    /etc/network/interfaces > $TMP/interfaces
-	mv $TMP/interfaces /etc/network/interfaces
-	ifdown $1; ifup $1 $2
+	ifdown $1 br0 1>&2 || true
+	for cfg in /etc/network/interfaces /etc/network/interfaces.d/*.cfg; do
+		[ -e "$cfg" ] || continue
+		configureMaasInterfaces $1 $TMP/bridge.cfg "$cfg" \
+		    > $TMP/interfaces.cfg
+		mv $TMP/interfaces.cfg "$cfg"
+	done
+	if ! grep -Eq '^[[:blank:]]*source /etc/network/interfaces\.d/\*\.cfg[[:blank:]]*$' \
+	    /etc/network/interfaces; then
+		printf "\n%s\n" "source /etc/network/interfaces.d/*.cfg" \
+		    >> /etc/network/interfaces
+	fi
+	mkdir -p /etc/network/interfaces.d
+	configMaasBridge $1 $TMP/bridge.cfg \
+	    > /etc/network/interfaces.d/cloud-install.cfg
+	ifup $1 br0 1>&2
 }
 
 createMaasSuperUser()
