@@ -80,7 +80,7 @@ configureMaasInterfaces()
 		    s_iface = 0; iface = 0
 		}
 
-		$0 ~ "^[[:blank:]]*auto (" interface "|br0)$" { print "#" $0; next }
+		$0 ~ "^[[:blank:]]*auto (" interface "|br0)[[:blank:]]*$" { print "#" $0; next }
 
 		$0 ~ "^[[:blank:]]*iface (" interface "|br0) " {
 		    s_iface = 1
