@@ -110,16 +110,20 @@ class ControllerOverlay(urwid.Overlay):
         return set(pegasus.CONTROLLER_CHARMS) - charms
 
     def _process(self, data):
-        allocated, unallocated = utils.partition(lambda d: 'charms' in d, data)
-        controllers = [n for n in allocated if pegasus.NOVA_CLOUD_CONTROLLER in n['charms']]
+        def is_allocated(d):
+            return 'charms' in d or d['agent_state'] == 'started'
+        allocated, unallocated = utils.partition(is_allocated, data)
+        self.command_runner._add('allocated', str(allocated))
+        self.command_runner._add('unallocated', str(unallocated))
+        controllers = [n for n in allocated if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
 
         if len(controllers) == 0:
             # First, we do add-machine, so that we can then deploy everything
             # into a container in subsequent steps.
             if len(unallocated) == 0 and not pegasus.SINGLE_SYSTEM:
                 self.command_runner.add_machine()
-            else:
-                id = unallocated[0]['machine_no']
+            elif len(allocated) > 0:
+                id = allocated[0]['machine_no']
 
                 # For single system installs, we use containers on the bare
                 # metal (assumed to be machine 1, given to us by the

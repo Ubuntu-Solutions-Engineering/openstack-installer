@@ -15,3 +15,7 @@ clean:
 
 deb: clean tarball
 	debuild -us -uc -i
+
+.PHONY: status
+status:
+	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
