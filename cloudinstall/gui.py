@@ -111,42 +111,39 @@ class ControllerOverlay(urwid.Overlay):
 
     def _process(self, data):
         def is_allocated(d):
-            return 'charms' in d or d['agent_state'] == 'started'
+            return 'charms' in d or d['agent_state'] in ['started', 'pending']
         allocated, unallocated = utils.partition(is_allocated, data)
         controllers = [n for n in allocated if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
 
-        if len(controllers) == 0:
-            # First, we do add-machine, so that we can then deploy everything
-            # into a container in subsequent steps.
-            if (len(allocated) == 0 and len(unallocated) > 0 and
-                    not pegasus.SINGLE_SYSTEM):
-                self.command_runner.add_machine()
-            elif len(allocated) > 0:
-                id = allocated[0]['machine_no']
+        # First, we do add-machine, so that we can then deploy everything
+        # into a container in subsequent steps.
+        if (len(allocated) == 0 and len(unallocated) > 0 and
+                not pegasus.SINGLE_SYSTEM):
+            self.command_runner.add_machine()
+        elif len(allocated) > 0:
+            id = allocated[0]['machine_no']
 
-                # For single system installs, we use containers on the bare
-                # metal (assumed to be machine 1, given to us by the
-                # installer). Everywhere else, we just use the first available
-                # machine, which is the id of the first machine in the
-                # unallocated list.
-                if pegasus.SINGLE_SYSTEM:
-                    assert id == "1"
+            # For single system installs, we use containers on the bare
+            # metal (assumed to be machine 1, given to us by the
+            # installer). Everywhere else, we just use the first available
+            # machine, which is the id of the first machine in the
+            # unallocated list.
+            if pegasus.SINGLE_SYSTEM:
+                assert id == "1"
 
-                for charm in self._controller_charms_to_allocate(data):
-                    self.command_runner.deploy(charm, id='lxc:%s' % id)
-
-                if pegasus.SINGLE_SYSTEM:
-                    # Add one compute node in single system mode, all we have to do
-                    # is start the KVM, the maas poll loop will take it from there.
-                    pegasus.StartKVM().run()
-
-                self.text.set_text(self.NODE_SETUP)
-            return True
-        else:
             pending = self._controller_charms_to_allocate(data)
-            # If there are no charms left pending, we're done pre-allocating
-            # everything we need, so return false.
-            return len(pending) != 0
+            if len(pending) == 0:
+                return False
+
+            for charm in pending:
+                self.command_runner.deploy(charm, id='lxc:%s' % id)
+
+            if pegasus.SINGLE_SYSTEM:
+                # Add one compute node in single system mode, all we have to do
+                # is start the KVM, the maas poll loop will take it from there.
+                pegasus.StartKVM().run()
+
+            self.text.set_text(self.NODE_SETUP)
 
 
 def _wrap_focus(widgets, unfocused=None):
