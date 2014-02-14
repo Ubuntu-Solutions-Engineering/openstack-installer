@@ -135,7 +135,7 @@ def poll_state(auth):
     m_client.tag_fpi(maas)
     m_client.nodes_accept_all()
     m_client.tag_name(maas)
-    return parse_state(juju, maas)
+    return parse_state(juju, maas), juju
 
 def parse_state(juju, maas):
     results = []
@@ -266,3 +266,11 @@ datasource:
 class MaasLoginFailure(Exception):
     MESSAGE = "Could not read login credentials. Please run:" \
     "    maas-get-user-creds root > ~/.cloud-install/maas-creds"
+
+if __name__ == '__main__':
+    from cloudinstall.maas.auth import MaasAuth
+    import pprint
+
+    auth = MaasAuth()
+    auth.get_api_key('root')
+    pprint.pprint(poll_state(auth))

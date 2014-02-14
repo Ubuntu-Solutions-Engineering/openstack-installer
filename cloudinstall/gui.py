@@ -371,8 +371,8 @@ class CommandRunner(urwid.ListBox):
                 cmd = "juju add-unit {to} {charm}".format(to=to, charm=charm)
                 self._run(cmd)
 
-    def update(self, data):
-        self.services = {c for n in data for c in n.metadata.get('charms', [])}
+    def update(self, juju_state):
+        self.services = set(juju_state.services.keys())
 
     def poll(self):
         if self.running and self.running.poll() is not None:
@@ -461,7 +461,8 @@ class NodeViewMode(urwid.Frame):
             return []
 
 
-    def do_update(self, data):
+    def do_update(self, data_and_juju_state):
+        data, juju = data_and_juju_state
         new_data = [Node(t, self.open_dialog) for t in data]
         prev_total = len(self.nodes._contents)
 
@@ -491,7 +492,7 @@ class NodeViewMode(urwid.Frame):
                 self.cr.change_allocation([pegasus.NOVA_COMPUTE], node.metadata)
 
         self.nodes.update(new_data)
-        self.cr.update(new_data)
+        self.cr.update(juju)
 
     def tick(self):
         if self.ticks_left == 0:
