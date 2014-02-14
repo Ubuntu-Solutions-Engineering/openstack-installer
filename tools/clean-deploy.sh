@@ -1,5 +1,7 @@
 #!/bin/bash
 
+juju destroy-environment
+
 rm -rf ~/.juju
 
 sudo apt-get -yy purge '.*maas.*' '.*juju.*'
