@@ -365,11 +365,14 @@ class CommandRunner(urwid.ListBox):
                 # TODO: we should make this a bit nicer, and do the
                 # SINGLE_SYSTEM test a little higher up.
                 if pegasus.SINGLE_SYSTEM:
-                    to = "--to lxc:1"
+                    cmd = "juju add-unit --to lxc:1 {charm}".format(to=to, charm=charm)
+                    self._run(cmd)
                 else:
-                    to = "--constraints tags={tag}".format(tag=metadata['tag'])
-                cmd = "juju add-unit {to} {charm}".format(to=to, charm=charm)
-                self._run(cmd)
+                    constraints = "juju set-constraints --service {charm} tags={{tag}}".format(
+                        charm=charm)
+                    self._run(constraints.format(tag=metadata['tag']))
+                    self._run("juju add-unit {charm}".format(charm=charm))
+                    self._run(constraints.format(tag=''))
 
     def update(self, juju_state):
         self.services = set(juju_state.services.keys())
