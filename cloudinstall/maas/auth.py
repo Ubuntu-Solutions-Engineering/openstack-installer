@@ -98,7 +98,7 @@ class MaasAuth:
             raise Exception('No api_key was found, please run `cloud-install maas-creds -u root`')
             sys.exit(1)
 
-        check_call('maas-cli login maas http://localhost/MAAS/api/1.0 %s' % (self.api_key,),
+        check_call('maas login maas http://localhost/MAAS/api/1.0 %s' % (self.api_key,),
                    shell=True, 
                    stderr=DEVNULL, 
                    stdout=DEVNULL)

@@ -113,12 +113,12 @@ configureMaasNetworking()
 	broadcast=$(ifconfig $2 | egrep -o "Bcast:[0-9.]+" \
 	    | sed -e "s/^Bcast://")
 	if maasInterfaceExists $1 $2; then
-		maas-cli maas node-group-interface update $1 $2 ip=$address \
+		maas maas node-group-interface update $1 $2 ip=$address \
 		    interface=$2 management=2 subnet_mask=$netmask \
 		    broadcast_ip=$broadcast router_ip=$3 ip_range_low=$4 \
 		    ip_range_high=$5 1>&2
 	else
-		maas-cli maas node-group-interfaces new $1 ip=$address \
+		maas maas node-group-interfaces new $1 ip=$address \
 		    interface=$2 management=2 subnet_mask=$netmask \
 		    broadcast_ip=$broadcast router_ip=$3 ip_range_low=$4 \
 		    ip_range_high=$5 1>&2
@@ -159,13 +159,13 @@ maasAddress()
 
 maasFilePath()
 {
-	maas-cli maas files list "prefix=$1" \
+	maas maas files list "prefix=$1" \
 	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["anon_resource_uri"])'
 }
 
 maasInterfaceExists()
 {
-	exists=$(maas-cli maas node-group-interfaces list $1 \
+	exists=$(maas maas node-group-interfaces list $1 \
 	    | python3 -c "import json; import sys; print(len([interface for interface in json.load(sys.stdin) if interface[\"interface\"] == \"$2\"]))")
 	if [ $exists = 1 ]; then
 		return 0
@@ -176,25 +176,25 @@ maasInterfaceExists()
 
 maasLogin()
 {
-	maas-cli login maas http://localhost/MAAS/api/1.0 $1
+	maas login maas http://localhost/MAAS/api/1.0 $1
 }
 
 maasLogout()
 {
-	maas-cli logout maas
+	maas logout maas
 	rm -rf /home/$INSTALL_USER/.maascli.db
 }
 
 nodeSystemId()
 {
-	maas-cli maas nodes list mac_address=$1 \
+	maas maas nodes list mac_address=$1 \
 	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["system_id"])'
 }
 
 waitForClusterRegistration()
 {
 	while true; do
-		uuid=$(maas-cli maas node-groups list \
+		uuid=$(maas maas node-groups list \
 		    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["uuid"])')
 		if [ $uuid != master ]; then
 			break

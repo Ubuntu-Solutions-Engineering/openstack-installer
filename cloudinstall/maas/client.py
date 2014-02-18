@@ -172,7 +172,7 @@ class MaasClient:
         return False
         """
         try:
-            check_call(['maas-cli', 'maas', 'tags', 'new', 'name=' + tag], stdout=DEVNULL, stderr=DEVNULL)
+            check_call(['maas', 'maas', 'tags', 'new', 'name=' + tag], stdout=DEVNULL, stderr=DEVNULL)
         except CalledProcessError:
             pass
 
@@ -200,7 +200,7 @@ class MaasClient:
         return False
         """
         try:
-            check_call(['maas-cli', 'maas', 'tag', 'update-nodes', tag, 'add=' + system_id], stdout=DEVNULL, stderr=DEVNULL)
+            check_call(['maas', 'maas', 'tag', 'update-nodes', tag, 'add=' + system_id], stdout=DEVNULL, stderr=DEVNULL)
         except CalledProcessError:
             pass
 

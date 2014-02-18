@@ -41,7 +41,7 @@ multiInstall()
 		gaugePrompt 6 "Creating MAAS super user"
 		createMaasSuperUser
 		echo 8
-		maas_creds=$(maas apikey --username root)
+		maas_creds=$(maas-region-admin apikey --username root)
 		saveMaasCreds $maas_creds
 		maasLogin $maas_creds
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
@@ -74,7 +74,7 @@ multiInstall()
 		gaugePrompt 75 "Bootstrapping Juju"
 		juju status
 		echo 99
-		maas-cli maas tags new name=use-fastpath-installer definition="true()"
+		maas maas tags new name=use-fastpath-installer definition="true()"
 		maasLogout
 
 		gaugePrompt 100 "Installation complete"

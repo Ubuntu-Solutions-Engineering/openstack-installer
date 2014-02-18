@@ -255,7 +255,7 @@ datasource:
         # Start the machine back up
         subprocess.check_call(['virsh', 'start', hostname])
 
-        subprocess.check_call(['maas-cli', 'maas', 'nodes', 'new', 'hostname=' + hostname])
+        subprocess.check_call(['maas', 'maas', 'nodes', 'new', 'hostname=' + hostname])
         creds = os.path.join(tempfile.gettempdir(), 'maas.creds')
         with open(creds, 'wb') as f:
             req = urllib.urlopen(

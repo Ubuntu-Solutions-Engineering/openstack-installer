@@ -23,7 +23,7 @@
 
 TODO: Remove once LP#1187826 is Fix Released.
 
-This is a workaround while file uploads don't work via maas-cli; see
+This is a workaround while file uploads don't work via maas; see
 https://bugs.launchpad.net/maas/+bug/1187826 for details.
 """
 
