@@ -87,7 +87,7 @@ jujuBootstrap()
 	mac=$(grep lxc.network.hwaddr /var/lib/lxc/juju-bootstrap/config \
 	    | cut -d " " -f 3)
 	# TODO dynamic architecture selection
-	maas-cli maas nodes new architecture=amd64/generic mac_addresses=$mac \
+	maas maas nodes new architecture=amd64/generic mac_addresses=$mac \
 	    hostname=juju-bootstrap
 	system_id=$(nodeSystemId $mac)
 	wget -O $TMP/maas.creds \
