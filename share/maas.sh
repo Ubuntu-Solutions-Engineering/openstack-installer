@@ -149,7 +149,7 @@ createMaasSuperUser()
 {
 	password=$(cat /etc/openstack.passwd)
 	printf "%s\n%s\n" "$password" "$password" \
-	    | setsid sh -c "maas createsuperuser --username root --email root@example.com 1>&2"
+	    | setsid sh -c "maas-region-admin createsuperuser --username root --email root@example.com 1>&2"
 }
 
 maasAddress()
