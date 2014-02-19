@@ -46,10 +46,21 @@ multiInstall()
 		maasLogin $maas_creds
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
-		interface=$(getInstallInterface)
-		createMaasBridge $interface
+
+		installInterface=$(getInstallInterface)
+		createMaasBridge $installInterface
 		gaugePrompt 15 "Configuring MAAS networking"
-		gateway=$(route -n | awk 'index($4, "G") { print $2 }')
+
+		bridgeInterface=$(getBridgeInterface)
+		if [ "$bridgeInterface" = "None" ]; then
+			gateway=$(route -n | awk 'index($4, "G") { print $2 }')
+		else
+		  gateway=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
+	        | sed -e "s/^inet addr://")
+      configureNat $(ip addr show $bridgeInterface | awk '/^    inet / { print $2 }')
+      enableIpForwarding
+    fi
+
 		# Retrieve dhcp-range
 		dhcp_range=$(getDhcpRange)
 		configureMaasNetworking $uuid br0 $gateway \

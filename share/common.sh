@@ -155,5 +155,14 @@ getInstallInterface()
 	fi
 }
 
+getBridgeInterface()
+{
+	db_get cloud-install/bridge-interface
+	if [ -z "$RET" ]; then
+	    $(confValue cloud-install-udeb cloud-install/bridge-interface)
+	else
+	    echo "$RET"
+	fi
+}
 
 INSTALL_USER=$(getInstallUser)

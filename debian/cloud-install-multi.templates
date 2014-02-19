@@ -15,6 +15,14 @@ Description: Select network interface
  Provides list of available interfaces for cloud installer to
  manage.
 
+Template: cloud-install/bridge-interface
+Type: select
+Choices: None, ${BRIDGE_OPTIONS}
+Description: Select a bridge interface
+ Sometimes it is useful to run MaaS on its own network. If you would like the
+ MaaS node to act as a gateway for this network, select the interface which can
+ talk to the outside world.
+
 Template: cloud-install/dhcp-range
 Type: string
 Description: IP address range (<ip addr low>-<ip addr high>):
@@ -37,17 +45,6 @@ Template: cloud-install/password-mismatch
 Type: error
 Description: Password input error
  The two passwords you entered were not the same, please try again.
-
-Template: cloud-install/openstack-vmnetwork
-Type: string
-Default: 192.168.1.0/24
-Description: OpenStack VM network range (CIDR value):
- Network range to use for each tenant's virtual machines.
-
-Template: cloud-install/valid-cidr
-Type: error
-Description: CIDR input error
- The network address entered is not a valid CIDR representation, please try again.
 
 Template: cloud-install/title
 Type: string
