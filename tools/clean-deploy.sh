@@ -1,6 +1,6 @@
 #!/bin/bash
 
-juju destroy-environment
+yes | juju destroy-environment
 
 rm -rf ~/.juju
 
