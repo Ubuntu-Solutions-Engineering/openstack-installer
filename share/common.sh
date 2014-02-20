@@ -16,29 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-. /usr/share/debconf/confmodule
-db_version 2.0
-
 BACKTITLE="Cloud install"
 TMP=$(mktemp -d /tmp/cloud-install.XXX)
 
 confValue()
 {
-	db_get $1 $2
-	if [ -z "$RET" ]; then
-	    debconf-get-selections --installer | awk -F "\t" -v "owner=$1" \
-	        -v "name=$2" '($1 == owner) && ($2 == name) { print $4 }'
-	fi
+	debconf-get-selections | awk -F "\t" -v "owner=$1" \
+	    -v "name=$2" '($1 == owner) && ($2 == name) { print $4 }'
 }
 
 getInstallUser()
 {
-	db_get cloud-install/install-user
-	if [ -z "$RET" ]; then
-	    $(confValue user-setup-udeb passwd/username)
-	else
-	    echo "$RET"
-	fi
+	echo $(confValue cloud-install-multi cloud-install/install-user)
 }
 
 configIptablesNat()
@@ -137,32 +126,17 @@ waitForService()
 
 getDhcpRange()
 {
-	db_get cloud-install/dhcp-range
-	if [ -z "$RET" ]; then
-		$(confValue cloud-install-udeb cloud-install/manage-dhcp)
-	else
-		echo "$RET"
-	fi
+	echo $(confValue cloud-install-multi cloud-install/dhcp-range)
 }
 
 getInstallInterface()
 {
-	db_get cloud-install/install-interface
-	if [ -z "$RET" ]; then
-	    $(confValue cloud-install-udeb cloud-install/install-interface)
-	else
-	    echo "$RET"
-	fi
+	echo $(confValue cloud-install-multi cloud-install/install-interface)
 }
 
 getBridgeInterface()
 {
-	db_get cloud-install/bridge-interface
-	if [ -z "$RET" ]; then
-	    $(confValue cloud-install-udeb cloud-install/bridge-interface)
-	else
-	    echo "$RET"
-	fi
+	echo $(confValue cloud-install-multi cloud-install/bridge-interface)
 }
 
 INSTALL_USER=$(getInstallUser)

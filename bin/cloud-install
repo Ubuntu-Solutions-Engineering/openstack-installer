@@ -24,7 +24,7 @@ trap "" PIPE
 #disableBlank
 
 if [ ! -e /etc/.cloud-installed ]; then
-    db_get cloud-install/install-type
+    RET=$(confValue cloud-install-multi cloud-install/install-type)
     case $RET in
 	Multi-system)
 	    multiInstall
