@@ -1,15 +1,12 @@
 #!/bin/bash
 
 yes | juju destroy-environment
-sudo lxc-stop -n juju-bootstrap
-sudo lxc-destroy -n juju-bootstrap
-
-# TODO: delete when LP 1282657 is fixed
-sudo lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
 
 rm -rf ~/.juju
 
 sudo apt-get -yy purge '.*maas.*' '.*juju.*'
+sudo lxc-stop -n juju-bootstrap
+sudo lxc-destroy -n juju-bootstrap
 sudo service apache2 stop
 sudo rm /etc/.cloud-installed
 
