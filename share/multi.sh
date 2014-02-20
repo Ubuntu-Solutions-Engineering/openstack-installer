@@ -81,7 +81,7 @@ multiInstall()
 		configureJuju $address $maas_creds $admin_secret
 		gaugePrompt 60 "Bootstrapping Juju"
 		host=$(maasAddress $address).master
-		jujuBootstrap
+		jujuBootstrap $uuid
 		gaugePrompt 75 "Bootstrapping Juju"
 		juju status
 		echo 99

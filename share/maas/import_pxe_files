@@ -13,7 +13,7 @@ fi
 
 
 #RELEASES="precise quantal raring saucy"
-RELEASES="precise"
+RELEASES="precise trusty"
 #ARCHES="amd64/generic i386/generic armhf/highbank"
 ARCHES="amd64/generic i386/generic"
 #LOCALE="en_US"
