@@ -90,7 +90,7 @@ jujuBootstrap()
 	# TODO dynamic architecture selection
 	# NOTE: nodegroup= here intentionally left blank.
 	maas maas nodes new architecture=amd64/generic mac_addresses=$mac \
-	    hostname=juju-bootstrap nodegroup=
+	    hostname=juju-bootstrap nodegroup= power_type=virsh
 	system_id=$(nodeSystemId $mac)
 	wget -O $TMP/maas.creds \
 	    "http://localhost/MAAS/metadata/latest/by-id/$system_id/?op=get_preseed"
