@@ -80,8 +80,6 @@ configureManualProvider()
 # TODO break this function into smaller ones
 jujuBootstrap()
 {
-	maas_nodegroup_uuid=$1
-
 	# TODO: uncomment and fix cleanup script when LP 1282657 is fixed
 	# lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
 	sed -e "s/^lxc.network.link.*$/lxc.network.link = br0/" -i \
@@ -90,8 +88,9 @@ jujuBootstrap()
 	mac=$(grep lxc.network.hwaddr /var/lib/lxc/juju-bootstrap/config \
 	    | cut -d " " -f 3)
 	# TODO dynamic architecture selection
+	# NOTE: nodegroup= here intentionally left blank.
 	maas maas nodes new architecture=amd64/generic mac_addresses=$mac \
-	    hostname=juju-bootstrap nodegroup=$maas_nodegroup_uuid
+	    hostname=juju-bootstrap nodegroup=
 	system_id=$(nodeSystemId $mac)
 	wget -O $TMP/maas.creds \
 	    "http://localhost/MAAS/metadata/latest/by-id/$system_id/?op=get_preseed"
