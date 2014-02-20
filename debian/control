@@ -23,6 +23,7 @@ Depends:
   git,
   juju-core,
   lxc,
+  cgroup-lite,
   mongodb-server,
   python3-oauthlib,
   python3-passlib,
