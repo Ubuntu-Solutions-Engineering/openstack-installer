@@ -80,8 +80,7 @@ configureManualProvider()
 # TODO break this function into smaller ones
 jujuBootstrap()
 {
-	# TODO: uncomment and fix cleanup script when LP 1282657 is fixed
-	# lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
+	lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
 	sed -e "s/^lxc.network.link.*$/lxc.network.link = br0/" -i \
 	    /var/lib/lxc/juju-bootstrap/config
 
