@@ -11,3 +11,9 @@ export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/cloud-install-common
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_installinit:
+	dh_installinit --no-start
+
+override_dh_auto_test:
+	@echo "No tests."

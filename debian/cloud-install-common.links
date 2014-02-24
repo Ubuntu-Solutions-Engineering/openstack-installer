@@ -1,2 +1,4 @@
-/usr/share/cloud-install-common/cloud-install /usr/bin/cloud-install
-/usr/share/cloud-install-common/cloud-status /usr/bin/cloud-status
+/usr/share/cloud-install/cloud-install		/usr/bin/cloud-install
+/usr/share/cloud-install/cloud-status 		/usr/bin/cloud-status
+/usr/share/cloud-install/maas-upload-file	/usr/bin/maas-upload-file
+/usr/share/cloud-install/maas-signal		/usr/bin/maas-signal

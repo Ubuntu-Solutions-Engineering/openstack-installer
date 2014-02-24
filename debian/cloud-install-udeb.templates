@@ -1,6 +1,6 @@
 Template: cloud-install/dhcp-range
 Type: string
-Description: IP address range (<ip addr low>-<ip addr high>):
+_Description: IP address range (<ip addr low>-<ip addr high>):
  IP address range for DHCP leases.
  New nodes will be assigned addresses from this pool.
 
@@ -8,14 +8,14 @@ Template: cloud-install/install-type
 Type: select
 Choices: Single system, Multi-system, Landscape managed
 Default: Single system
-Description: Select install type:
+_Description: Install type:
  Install an OpenStack cloud for multiple systems, entirely on this machine or
  multiple systems managed by Landscape.
 
 Template: cloud-install/manage-dhcp
 Type: boolean
 Default: true
-Description: Manage DHCP and DNS?
+_Description: Manage DHCP and DNS?
  This node can manage DHCP and DNS for the network, allowing new nodes to be
  added via PXE booting.
  .
@@ -24,37 +24,37 @@ Description: Manage DHCP and DNS?
 
 Template: cloud-install/manual-dhcp
 Type: note
-Description: Manually configure DHCP and DNS
+_Description: Manually configure DHCP and DNS
  Follow instructions on http://maas.ubuntu.com for DHCP and DNS configuration
 
 Template: cloud-install/openstack-admin-password
 Type: password
-Description: Choose a password for the OpenStack admin user:
+_Description: OpenStack admin user password:
  A good password will contain a mixture of letters, numbers and punctuation and
  should be changed at regular intervals.
 
 Template: cloud-install/openstack-admin-password-again
 Type: password
-Description: Re-enter OpenStack admin user password to verify:
+_Description: OpenStack admin user password to verify:
  Please enter the same OpenStack admin user password again to verify that you
  have typed it correctly.
 
 Template: cloud-install/password-mismatch
 Type: error
-Description: Password input error
+_Description: Password input error:
  The two passwords you entered were not the same, please try again.
 
 Template: cloud-install/openstack-vmnetwork
 Type: string
 Default: 192.168.1.0/24
-Description: OpenStack VM network range (CIDR value):
+_Description: OpenStack VM network range (CIDR value):
  Network range to use for each tenant's virtual machines.
 
 Template: cloud-install/valid-cidr
 Type: error
-Description: CIDR input error
+_Description: CIDR input error:
  The network address entered is not a valid CIDR representation, please try again.
 
 Template: debian-installer/cloud-install-udeb/title
 Type: text
-Description: Cloud install
+_Description: Cloud install

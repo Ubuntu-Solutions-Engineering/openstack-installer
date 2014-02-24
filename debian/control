@@ -1,6 +1,7 @@
-Source: cloud-install-common
+Source: cloud-install
+Section: admin
 Priority: extra
-Maintainer: Robert Ayres <robert.ayres@ubuntu.com>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends:
   debhelper (>= 9),
   po-debconf,
@@ -10,13 +11,27 @@ Build-Depends:
   python3-nose,
   python3-mock
 Standards-Version: 3.9.4
-Homepage: http://www.ubuntu.com
+Homepage: https://launchpad.net/cloud-installer
 X-Python3-Version: >= 3.3
+Vcs-Browser: https://bazaar.launchpad.net/~solutions-engineering/cloud-installer/trunk/files
+Vcs-Bzr: lp:cloud-installer
 
-Package: cloud-install-common
-Section: admin
+Package: cloud-install
 Architecture: all
 Depends: 
+  ${misc:Depends},
+  ${python3:Depends},
+  cloud-install-common
+Description: Ubuntu Cloud installer - metapackage
+ Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+ simple way to install, deploy and scale an openstack cloud on top of
+ Ubuntu server. Initial configurations are available for single
+ physical system deployments as well as multiple physical system
+ deployments.
+
+Package: cloud-install-common
+Architecture: any
+Depends:
   ${misc:Depends},
   ${python3:Depends},
   debconf-utils,
@@ -35,7 +50,7 @@ Depends:
   python3-yaml,
   rungetty,
   gawk
-Description: Ubuntu Cloud installer
+Description: Ubuntu Cloud installer - common support files
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
@@ -44,14 +59,14 @@ Description: Ubuntu Cloud installer
 
 Package: cloud-install-multi
 Section: admin
-Architecture: all
+Architecture: any
 Depends:
   ${misc:Depends},
   maas,
   maas-dhcp,
   maas-dns,
   cloud-install-common
-Description: Ubuntu Cloud installer (multi-system)
+Description: Ubuntu Cloud installer (multi-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
@@ -62,7 +77,7 @@ Description: Ubuntu Cloud installer (multi-system)
 
 Package: cloud-install-single
 Section: admin
-Architecture: all
+Architecture: any
 Depends:
   ${misc:Depends},
   maas,
@@ -72,7 +87,7 @@ Depends:
   cloud-utils,
   libvirt-bin,
   qemu-system-x86
-Description: Ubuntu Cloud installer (single-system)
+Description: Ubuntu Cloud installer (single-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
@@ -83,11 +98,11 @@ Description: Ubuntu Cloud installer (single-system)
 
 Package: cloud-install-landscape
 Section: admin
-Architecture: all
+Architecture: any
 Depends:
   ${misc:Depends},
   cloud-install
-Description: Ubuntu Cloud installer (landscape)
+Description: Ubuntu Cloud installer (landscape) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single

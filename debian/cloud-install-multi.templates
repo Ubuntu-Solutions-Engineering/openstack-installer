@@ -1,51 +1,51 @@
 Template: cloud-install/install-type
 Type: string
-Description: Set install type
+_Description: Install type:
  Install an OpenStack cloud for multiple systems.
 
 Template: cloud-install/install-user
 Type: string
-Description: Set install user
+_Description: Install user:
  Sets the installation user to run as
 
 Template: cloud-install/install-interface
 Type: select
 Choices: ${CHOICES}
-Description: Select network interface
+_Description: Network interface:
  Provides list of available interfaces for cloud installer to
  manage.
 
 Template: cloud-install/bridge-interface
 Type: select
 Choices: None, ${BRIDGE_OPTIONS}
-Description: Select a bridge interface
+_Description: Bridge interface:
  Sometimes it is useful to run MaaS on its own network. If you would like the
  MaaS node to act as a gateway for this network, select the interface which can
  talk to the outside world.
 
 Template: cloud-install/dhcp-range
 Type: string
-Description: IP address range (<ip addr low>-<ip addr high>):
+_Description: IP address range (<ip addr low>-<ip addr high>):
  IP address range for DHCP leases.
  New nodes will be assigned addresses from this pool.
 
 Template: cloud-install/openstack-admin-password
 Type: password
-Description: Choose a password for the OpenStack admin user:
+_Description: OpenStack admin user password:
  A good password will contain a mixture of letters, numbers and punctuation and
  should be changed at regular intervals.
 
 Template: cloud-install/openstack-admin-password-again
 Type: password
-Description: Re-enter OpenStack admin user password to verify:
+_Description: OpenStack admin user password to verify:
  Please enter the same OpenStack admin user password again to verify that you
  have typed it correctly.
 
 Template: cloud-install/password-mismatch
 Type: error
-Description: Password input error
+_Description: Password input error.
  The two passwords you entered were not the same, please try again.
 
 Template: cloud-install/title
 Type: string
-Description: Cloud install
+_Description: Cloud install:

@@ -10,8 +10,8 @@ script
 	. /etc/default/locale
 	export LANG LANGUAGE
 
-	INSTALL_USER=$(debconf-get-selections --installer \
-	    | awk -F "\t" '($1 == "user-setup-udeb") && ($2 == "passwd/username") { print $4 }')
+	INSTALL_USER=$(debconf-get-selections \
+	    | awk -F "\t" '($1 == "cloud-install-multi") && ($2 == "cloud-install/install-user") { print $4 }')
 
 	if [ ! -e /etc/.cloud-installed ]; then
 		export HOME=/root

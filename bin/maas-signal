@@ -9,7 +9,7 @@ import string
 import sys
 import urllib2
 
-from maas_api_helper import (
+from cloudinstall.maas.maas_api_helper import (
     geturl,
     read_config,
     )
