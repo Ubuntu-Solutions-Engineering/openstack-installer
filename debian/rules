@@ -2,11 +2,11 @@
 
 export PYBUILD_NAME=cloudinstall
 export PYBUILD_DISABLE_python2=1
-export PYBUILD_INSTALL_DIR=usr/share/cloud-install-common/
-export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/cloud-install-common/ \
+export PYBUILD_INSTALL_DIR=usr/share/cloud-install/
+export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/cloud-install/ \
 	--install-data=usr/ \
-	--install-scripts=usr/share/cloud-install-common/ \
-	--root=$(CURDIR)/debian/cloud-install-common/ \
+	--install-scripts=usr/share/cloud-install/ \
+	--root=$(CURDIR)/debian/cloud-install/ \
 	--no-compile -O0
 
 %:
