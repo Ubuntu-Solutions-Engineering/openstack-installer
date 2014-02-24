@@ -1,4 +1,4 @@
-etc/init/tty1.override etc/init
+etc/init/tty1.override                 etc/init
 share/common.sh                        usr/share/cloud-install/common
 share/juju.sh                          usr/share/cloud-install/common
 share/maas.sh                          usr/share/cloud-install/common

@@ -18,9 +18,8 @@ Vcs-Bzr: lp:cloud-installer
 
 Package: cloud-install
 Architecture: all
-Depends: 
+Depends:
   ${misc:Depends},
-  ${python3:Depends},
   cloud-install-common
 Description: Ubuntu Cloud installer - metapackage
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely

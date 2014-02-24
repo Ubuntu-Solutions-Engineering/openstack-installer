@@ -2,11 +2,11 @@
 
 set -e
 
-. /usr/share/cloud-install-common/common/common.sh
-. /usr/share/cloud-install-common/common/maas.sh
-. /usr/share/cloud-install-common/common/juju.sh
-. /usr/share/cloud-install-common/common/multi.sh
-. /usr/share/cloud-install-common/common/single.sh
+. /usr/share/cloud-install/common/common.sh
+. /usr/share/cloud-install/common/maas.sh
+. /usr/share/cloud-install/common/juju.sh
+. /usr/share/cloud-install/common/multi.sh
+. /usr/share/cloud-install/common/single.sh
 
 if [ ! -e /var/log/cloud-install.log ]; then
 	touch /var/log/cloud-install.log
