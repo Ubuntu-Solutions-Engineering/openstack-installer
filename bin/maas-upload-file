@@ -28,13 +28,13 @@ https://bugs.launchpad.net/maas/+bug/1187826 for details.
 """
 
 import argparse
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from MultipartPostHandler import MultipartPostHandler
 
 from apiclient.maas_client import MAASOAuth
 
-class HTTPMAASOAuthProcessor(urllib2.BaseHandler):
+class HTTPMAASOAuthProcessor(urllib.request.BaseHandler):
 
     def __init__(self, consumer_key, resource_token, resource_secret):
         self.auth = MAASOAuth(consumer_key, resource_token, resource_secret)
@@ -42,7 +42,7 @@ class HTTPMAASOAuthProcessor(urllib2.BaseHandler):
     def http_request(self, req):
         headers = {}
         self.auth.sign_request(req.get_full_url(), headers)
-        for name, value in headers.iteritems():
+        for name, value in headers.items():
             req.add_header(name, value)
         return req
 
@@ -54,7 +54,7 @@ parser.add_argument("file", help="File to upload")
 
 args = parser.parse_args()
 
-opener = urllib2.build_opener(MultipartPostHandler,
+opener = urllib.request.build_opener(MultipartPostHandler,
                               HTTPMAASOAuthProcessor(*args.credentials.split(":")))
 params = {"filename": args.name, "file": open(args.file, "rb")}
 opener.open(args.url + "/files/?op=add", params)
