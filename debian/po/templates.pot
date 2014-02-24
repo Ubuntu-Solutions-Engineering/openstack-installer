@@ -1,0 +1,212 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: cloud-install\n"
+"Report-Msgid-Bugs-To: cloud-install@packages.debian.org\n"
+"POT-Creation-Date: 2014-02-20 19:04-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: string
+#. Description
+#. Type: select
+#. Description
+#: ../cloud-install-multi.templates:1001 ../cloud-install-udeb.templates:2001
+msgid "Install type:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-multi.templates:1001
+msgid "Install an OpenStack cloud for multiple systems."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-multi.templates:2001
+msgid "Install user:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-multi.templates:2001
+msgid "Sets the installation user to run as"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../cloud-install-multi.templates:3001
+msgid "Network interface:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../cloud-install-multi.templates:3001
+msgid "Provides list of available interfaces for cloud installer to manage."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../cloud-install-multi.templates:4001
+msgid "Bridge interface:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../cloud-install-multi.templates:4001
+msgid ""
+"Sometimes it is useful to run MaaS on its own network. If you would like the "
+"MaaS node to act as a gateway for this network, select the interface which "
+"can talk to the outside world."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-multi.templates:5001 ../cloud-install-udeb.templates:1001
+msgid "IP address range (<ip addr low>-<ip addr high>):"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-multi.templates:5001 ../cloud-install-udeb.templates:1001
+msgid ""
+"IP address range for DHCP leases. New nodes will be assigned addresses from "
+"this pool."
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../cloud-install-multi.templates:6001 ../cloud-install-udeb.templates:5001
+msgid "OpenStack admin user password:"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../cloud-install-multi.templates:6001 ../cloud-install-udeb.templates:5001
+msgid ""
+"A good password will contain a mixture of letters, numbers and punctuation "
+"and should be changed at regular intervals."
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../cloud-install-multi.templates:7001 ../cloud-install-udeb.templates:6001
+msgid "OpenStack admin user password to verify:"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../cloud-install-multi.templates:7001 ../cloud-install-udeb.templates:6001
+msgid ""
+"Please enter the same OpenStack admin user password again to verify that you "
+"have typed it correctly."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../cloud-install-multi.templates:8001
+msgid "Password input error."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../cloud-install-multi.templates:8001 ../cloud-install-udeb.templates:7001
+msgid "The two passwords you entered were not the same, please try again."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-multi.templates:9001
+msgid "Cloud install:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../cloud-install-udeb.templates:2001
+msgid ""
+"Install an OpenStack cloud for multiple systems, entirely on this machine or "
+"multiple systems managed by Landscape."
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../cloud-install-udeb.templates:3001
+msgid "Manage DHCP and DNS?"
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../cloud-install-udeb.templates:3001
+msgid ""
+"This node can manage DHCP and DNS for the network, allowing new nodes to be "
+"added via PXE booting."
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../cloud-install-udeb.templates:3001
+msgid ""
+"If you prefer to use existing DHCP and DNS servers, they need to be "
+"reconfigured for PXE booting and resolving of any additional nodes."
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../cloud-install-udeb.templates:4001
+msgid "Manually configure DHCP and DNS"
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../cloud-install-udeb.templates:4001
+msgid ""
+"Follow instructions on http://maas.ubuntu.com for DHCP and DNS configuration"
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../cloud-install-udeb.templates:7001
+msgid "Password input error:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-udeb.templates:8001
+msgid "OpenStack VM network range (CIDR value):"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../cloud-install-udeb.templates:8001
+msgid "Network range to use for each tenant's virtual machines."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../cloud-install-udeb.templates:9001
+msgid "CIDR input error:"
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../cloud-install-udeb.templates:9001
+msgid ""
+"The network address entered is not a valid CIDR representation, please try "
+"again."
+msgstr ""
+
+#. Type: text
+#. Description
+#: ../cloud-install-udeb.templates:10001
+msgid "Cloud install"
+msgstr ""
