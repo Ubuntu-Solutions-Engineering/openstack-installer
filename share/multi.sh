@@ -51,13 +51,12 @@ multiInstall()
 		createMaasBridge $installInterface
 		gaugePrompt 15 "Configuring MAAS networking"
 
-		bridgeInterface=$(getBridgeInterface)
-		if [ "$bridgeInterface" = "None" ]; then
+		if [ "$(getBridgeInterface)" = "false" ]; then
 			gateway=$(route -n | awk 'index($4, "G") { print $2 }')
 		else
 			gateway=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
 			    | sed -e "s/^inet addr://")
-			configureNat $(ip addr show $bridgeInterface | awk '/^    inet / { print $2 }')
+			configureNat $(ip addr show br0 | awk '/^    inet / { print $2 }')
 			enableIpForwarding
 		fi
 

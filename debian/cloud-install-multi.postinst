@@ -53,8 +53,10 @@ case "$1" in
 			NEXT_STATE=3
 			;;
 		    3)
-			db_subst cloud-install/bridge-interface BRIDGE_OPTIONS "$(getBridgeOptions)"
-			db_input high cloud-install/bridge-interface || true
+			count=$(getInterfaces | wc -w)
+			if [[ $count -gt 2 ]]; then
+				db_input high cloud-install/bridge-interface || true
+			fi
 			NEXT_STATE=4
 			;;
 		    4)
