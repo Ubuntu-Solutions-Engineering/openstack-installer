@@ -20,7 +20,7 @@ script
 	else
 		export HOME=/home/$INSTALL_USER
 		user=$INSTALL_USER
-		cmd=/usr/bin/cloud-install-status
+		cmd=/usr/bin/cloud-status
 	fi
 	exec /sbin/rungetty -u "$user" -g "$user" -w "$HOME" tty1 $cmd
 end script
