@@ -56,7 +56,7 @@ class MaasAuth:
         @param username: MAAS user to query for credentials
         """
         self.api_key = check_output(['sudo',
-                                     'maas',
+                                     'maas-region-admin',
                                      'apikey',
                                      '--username',
                                      username]).decode('ascii').rstrip('\n')
