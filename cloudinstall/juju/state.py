@@ -20,6 +20,7 @@ import yaml
 
 from collections import defaultdict
 
+
 class JujuState:
     def __init__(self, raw_yaml):
         """ Builds a JujuState from a file-like object containing the raw
@@ -67,6 +68,7 @@ class JujuState:
         machines, and containers are not included. """
         def by_instance_id(unit):
             return self._yaml['machines'][unit['machine']]['instance-id']
+
         def not_lxc(id_):
             return 'lxc' not in id_
         return self._build_unit_map(by_instance_id, not_lxc)
@@ -77,6 +79,7 @@ class JujuState:
         name]) """
         def by_machine_name(unit):
             return unit['machine']
+
         def is_lxc(id_):
             return 'lxc' in id_
         return self._build_unit_map(by_machine_name, allow_id=is_lxc)

@@ -1,4 +1,4 @@
-cloud-install (0.2-0ubuntu1) trusty; urgency=low
+cloud-install-common (0.2-0ubuntu1) trusty; urgency=low
 
   * Name change from carrierstack to cloud-installer
   * Add validation to the installers input dialogs
@@ -10,7 +10,7 @@ cloud-install (0.2-0ubuntu1) trusty; urgency=low
 
  -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 20 Feb 2014 17:32:26 -0500
 
-cloud-install (0.1) unstable; urgency=low
+cloud-install-common (0.1) unstable; urgency=low
 
   * Initial Release.
 

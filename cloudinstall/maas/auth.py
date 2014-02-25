@@ -21,6 +21,7 @@ import requests
 import yaml
 import sys
 
+
 class MaasAuth:
     """ MAAS Authorization class
     """
@@ -62,13 +63,13 @@ class MaasAuth:
 
     def read_config(self, url, creds):
         """Read cloud-init config from given `url` into `creds` dict.
-    
+
         Updates any keys in `creds` that are None with their corresponding
         values in the config.
-    
+
         Important keys include `metadata_url`, and the actual OAuth
         credentials.
-    
+
         @param url: cloud-init config URL
         @param creds: MAAS user credentials
         """
@@ -78,28 +79,29 @@ class MaasAuth:
             if url.startswith("file://"):
                 url = url[7:]
             cfg_str = open(url, "r").read()
-    
+
         cfg = yaml.safe_load(cfg_str)
-    
+
         # Support reading cloud-init config for MAAS datasource.
         if 'datasource' in cfg:
             cfg = cfg['datasource']['MAAS']
-    
+
         for key in creds.keys():
-            if key in cfg and creds[key] == None:
+            if key in cfg and creds[key] is None:
                 creds[key] = cfg[key]
-    
+
     def login(self):
         """ Login to MAAS api server
 
         TODO: Deprecate once MAAS api matures (http://pad.lv/1058137)
         """
         if not self.api_key:
-            raise Exception('No api_key was found, please run `cloud-install maas-creds -u root`')
+            raise Exception('No api_key was found, please run '
+                            '`cloud-install maas-creds -u root`')
             sys.exit(1)
 
-        check_call('maas login maas http://localhost/MAAS/api/1.0 %s' % (self.api_key,),
-                   shell=True, 
-                   stderr=DEVNULL, 
+        check_call('maas login maas http://localhost/MAAS/api/1.0 '
+                   '%s' % (self.api_key,),
+                   shell=True,
+                   stderr=DEVNULL,
                    stdout=DEVNULL)
-

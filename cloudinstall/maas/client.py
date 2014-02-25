@@ -23,6 +23,7 @@ import json
 
 from subprocess import check_call, CalledProcessError, DEVNULL
 
+
 class MaasClient:
     """ Client Class
     """
@@ -75,12 +76,11 @@ class MaasClient:
         @param params: extra data sent with the HTTP request
         """
         return requests.delete(url=self.auth.api_url + url,
-                             auth=self._oauth())
+                               auth=self._oauth())
 
-
-    ############################################################################
+    ###########################################################################
     # Node API
-    ############################################################################
+    ###########################################################################
     @property
     def nodes(self):
         """ Nodes managed by MAAS
@@ -146,9 +146,9 @@ class MaasClient:
             return True
         return False
 
-    ############################################################################
+    ###########################################################################
     # Tag API
-    ############################################################################
+    ###########################################################################
     @property
     def tags(self):
         """ List tags known to MAAS
@@ -172,7 +172,10 @@ class MaasClient:
         return False
         """
         try:
-            check_call(['maas', 'maas', 'tags', 'new', 'name=' + tag], stdout=DEVNULL, stderr=DEVNULL)
+            check_call(['maas', 'maas', 'tags',
+                        'new', 'name=' + tag],
+                       stdout=DEVNULL,
+                       stderr=DEVNULL)
         except CalledProcessError:
             pass
 
@@ -200,18 +203,22 @@ class MaasClient:
         return False
         """
         try:
-            check_call(['maas', 'maas', 'tag', 'update-nodes', tag, 'add=' + system_id], stdout=DEVNULL, stderr=DEVNULL)
+            check_call(['maas', 'maas', 'tag', 'update-nodes',
+                        tag, 'add=' + system_id],
+                       stdout=DEVNULL,
+                       stderr=DEVNULL)
         except CalledProcessError:
             pass
 
     def tag_name(self, maas):
         """ Tag each node as its hostname.
 
-        This is a bit ugly. Since we want to be able to juju deploy to a
-        particular node that the user has selected, we use juju's constraints
-        support for maas. Unfortunately, juju didn't implement maas-name
-        directly, we have to tag each node with its hostname for now so that we
-        can pass that tag as a constraint to juju.
+        This is a bit ugly. Since we want to be able to juju deploy to
+        a particular node that the user has selected, we use juju's
+        constraints support for maas. Unfortunately, juju didn't
+        implement maas-name directly, we have to tag each node with
+        its hostname for now so that we can pass that tag as a
+        constraint to juju.
 
         @param maas: MAAS object representing all managed nodes
         """
@@ -224,11 +231,12 @@ class MaasClient:
     def tag_fpi(self, maas):
         """ Tag each DECLARED host with the FPI tag.
 
-        Also a little strange: we could define a tag with 'definition=true()' and
-        automatically tag each node. However, each time we un-tag a node, maas
-        evaluates the xpath expression again and re-tags it. So, we do it
-        once, manually, when the machine is in the DECLARED state (also to
-        avoid re-tagging things that have already been tagged).
+        Also a little strange: we could define a tag with
+        'definition=true()' and automatically tag each node. However,
+        each time we un-tag a node, maas evaluates the xpath
+        expression again and re-tags it. So, we do it once, manually,
+        when the machine is in the DECLARED state (also to avoid
+        re-tagging things that have already been tagged).
 
         @param maas: MAAS object representing all managed nodes
         """
@@ -238,9 +246,9 @@ class MaasClient:
             if machine['status'] == MaasState.DECLARED:
                 self.tag_machine(FPI_TAG, machine['system_id'])
 
-    ############################################################################
+    ###########################################################################
     # Users API
-    ############################################################################
+    ###########################################################################
     @property
     def users(self):
         """ List users on MAAS
@@ -252,9 +260,9 @@ class MaasClient:
             return json.loads(res.text)
         return []
 
-    ############################################################################
+    ###########################################################################
     # Zone API
-    ############################################################################
+    ###########################################################################
     @property
     def zones(self):
         """ List physical zones

@@ -1,7 +1,7 @@
 #
 # Makefile for cloud-install
 #
-NAME = cloud-install
+NAME = cloud-install-common
 VERSION = $(shell echo `awk  -F "\"" '/^__version__="/{print $$2}' cloudinstall/__init__.py`)
 TOPDIR = $(shell basename `pwd`)
 
@@ -14,6 +14,7 @@ clean:
 	debian/rules clean
 
 deb: clean tarball
+	wrap-and-sort
 	debconf-updatepo
 	debuild -us -uc -i
 
