@@ -12,6 +12,7 @@ tarball: $(NAME)_$(VERSION).orig.tar.gz
 
 clean:
 	debian/rules clean
+	rm -rf debian/cloud-install
 
 deb: clean tarball
 	wrap-and-sort
