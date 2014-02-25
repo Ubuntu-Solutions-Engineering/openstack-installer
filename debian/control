@@ -5,9 +5,6 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debconf-utils,
                debhelper (>= 9),
                dh-python,
-               gawk,
-               juju-core,
-               lxc,
                po-debconf,
                python3-all,
                python3-mock,
@@ -27,7 +24,7 @@ Vcs-Bzr: lp:cloud-installer
 
 Package: cloud-install-common
 Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}
+Depends: gawk, juju-core, lxc, ${misc:Depends}, ${python3:Depends}
 Description: Ubuntu Cloud installer - common support files
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
