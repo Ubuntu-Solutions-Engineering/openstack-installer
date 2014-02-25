@@ -2,8 +2,7 @@ Source: cloud-install-common
 Section: admin
 Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-Build-Depends: cgroup-lite,
-               debconf-utils,
+Build-Depends: debconf-utils,
                debhelper (>= 9),
                dh-python,
                gawk,
