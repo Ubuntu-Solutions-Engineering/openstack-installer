@@ -1,3 +1,2 @@
-cloud-install: postrm-does-not-call-updaterc.d-for-init.d-script
 cloud-install: init.d-script-not-marked-as-conffile
 cloud-install: init.d-script-not-included-in-package

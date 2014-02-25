@@ -32,9 +32,9 @@ getInterfaces()
 
 getBridgeOptions()
 {
-  db_get cloud-install/install-interface
-  INSTALL_IF="$RET"
-  getInterfaces | sed -e "s/$INSTALL_IF, //g"
+	db_get cloud-install/install-interface
+	INSTALL_IF="$RET"
+	getInterfaces | sed -e "s/$INSTALL_IF, //g"
 }
 
 STATE=1
