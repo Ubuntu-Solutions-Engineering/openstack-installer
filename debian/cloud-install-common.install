@@ -1,3 +1,5 @@
+bin/cloud-install                      usr/share/cloud-install/bin
+bin/cloud-status                       usr/share/cloud-install/bin
 etc/init/tty1.override                 etc/init
 share/common.sh                        usr/share/cloud-install/common
 share/juju.sh                          usr/share/cloud-install/common
