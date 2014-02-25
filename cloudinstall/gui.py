@@ -35,15 +35,16 @@ LOG_FILE = expanduser('~/.cloud-install/commands.log')
 # Time to lock in seconds
 LOCK_TIME = 120
 
-NODE_FORMAT = "{fqdn:<20}|{cpu_count:>6}|{memory:>10}|{storage:>12}|{agent_state:<12}|{tags}"
-NODE_HEADER = "{fqdn:<20}|{cpu_count:<6}|{memory:<10}|{storage:<12}|{agent_state:<12}|{tags}".format(
-    fqdn="Hostname",
-    cpu_count="# CPUs",
-    memory="RAM (MB)",
-    storage="Storage (GB)",
-    agent_state="State",
-    tags="Charms"
-)
+NODE_FORMAT = "|".join(["{fqdn:<20}", "{cpu_count:>6}", "{memory:>10}",
+                        "{storage:>12}", "{agent_state:<12}", "{tags}"])
+NODE_HEADER = "|".join(["{fqdn:<20}", "{cpu_count:<6}", "{memory:<10}",
+                        "{storage:<12}", "{agent_state:<12}",
+                        "{tags}"]).format(fqdn="Hostname",
+                                          cpu_count="# CPUs",
+                                          memory="RAM (MB)",
+                                          storage="Storage (GB)",
+                                          agent_state="State",
+                                          tags="Charms")
 
 STYLES = [
     ('body',         'white',      'black',),
@@ -60,12 +61,15 @@ TITLE_TEXT = "Pegasus - your cloud's scout"
 if not IS_TTY:
     TITLE_TEXT = "%s (q to quit)" % TITLE_TEXT
 
+
 def _allocation_for_charms(charms):
     als = [pegasus.ALLOCATION.get(c, '') for c in charms]
     return list(filter(lambda x: x, als))
 
+
 def time():
     return strftime('%Y-%m-%d %H:%M')
+
 
 class TextOverlay(urwid.Overlay):
     def __init__(self, text, underlying):
@@ -73,10 +77,11 @@ class TextOverlay(urwid.Overlay):
         w = urwid.AttrWrap(w, "dialog")
         urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 5)
 
+
 # TODO: Use TextOverlay
 class ControllerOverlay(urwid.Overlay):
-    PXE_BOOT = "You need one node to act as the cloud controller. Please PXE " \
-               "boot the node you would like to use."
+    PXE_BOOT = "You need one node to act as the cloud controller. " \
+               "Please PXE boot the node you would like to use."
 
     LXC_WAIT = "Please wait while the cloud controller is installed on your " \
                "host system."
@@ -106,14 +111,15 @@ class ControllerOverlay(urwid.Overlay):
         return continue_
 
     def _controller_charms_to_allocate(self, data):
-        charms = {c for n in data if 'charms' in n for c in n['charms'] }
+        charms = {c for n in data if 'charms' in n for c in n['charms']}
         return set(pegasus.CONTROLLER_CHARMS) - charms
 
     def _process(self, data):
         def is_allocated(d):
             return 'charms' in d or d['agent_state'] in ['started', 'pending']
         allocated, unallocated = utils.partition(is_allocated, data)
-        controllers = [n for n in allocated if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
+        controllers = [n for n in allocated
+                       if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
 
         # First, we do add-machine, so that we can then deploy everything
         # into a container in subsequent steps.
@@ -154,6 +160,8 @@ def _wrap_focus(widgets, unfocused=None):
 
 
 RADIO_STATES = list(pegasus.ALLOCATION.values())
+
+
 class ChangeStateDialog(urwid.Overlay):
     def __init__(self, underlying, metadata, on_success, on_cancel):
         self.metadata = metadata
@@ -201,6 +209,7 @@ class ChangeStateDialog(urwid.Overlay):
             else:
                 self.keypress(size, 'page down')
         return urwid.Overlay.keypress(self, size, key)
+
 
 class Node(urwid.Text):
     """ Metadata is a dict with the following:
@@ -270,7 +279,8 @@ class ListWithHeader(urwid.Frame):
             if n.name not in existing:
                 self._contents.append(_wrap_focus(n))
         still_existing = map(lambda n: n.name, nodes)
-        self._contents[:] = filter(lambda n: n.original_widget.name in still_existing, self._contents)
+        self._contents[:] = filter(lambda n: n.original_widget.name
+                                   in still_existing, self._contents)
 
 
 class CommandRunner(urwid.ListBox):
@@ -302,7 +312,8 @@ class CommandRunner(urwid.ListBox):
             with open(LOG_FILE, "a") as f:
                 f.write(txt + "\n")
         except IOError as e:
-            add_to_f8('log writer:', 'Problem accessing %s:\n%s' % (LOG_FILE, e))
+            add_to_f8('log writer:',
+                      'Problem accessing %s:\n%s' % (LOG_FILE, e))
 
     def _run(self, command):
         self.to_run.append(command)
@@ -326,7 +337,7 @@ class CommandRunner(urwid.ListBox):
         to = "" if id is None else "--to " + str(id)
         constraints = "" if tag is None else "--constraints tags=" + tag
         cmd = "juju deploy {config} {to} {constraints} {charm}".format(
-                config=config, to=to, constraints=constraints, charm=charm)
+            config=config, to=to, constraints=constraints, charm=charm)
         self._run(cmd)
         self.services.add(charm)
         self.to_add[charm] = pegasus.RELATIONS.get(charm, [])
@@ -352,7 +363,7 @@ class CommandRunner(urwid.ListBox):
             cmd = "juju terminate-machine {id}"
             self._run(cmd.format(id=metadata['machine_no']))
 
-        state_to_charm = {v:k for k, v in pegasus.ALLOCATION.items()}
+        state_to_charm = {v: k for k, v in pegasus.ALLOCATION.items()}
         for state in set(new_states) - set(metadata.get('charms', [])):
             charm = state_to_charm[state]
             new_service = charm not in self.services
@@ -365,11 +376,12 @@ class CommandRunner(urwid.ListBox):
                 # TODO: we should make this a bit nicer, and do the
                 # SINGLE_SYSTEM test a little higher up.
                 if pegasus.SINGLE_SYSTEM:
-                    cmd = "juju add-unit --to lxc:1 {charm}".format(to=to, charm=charm)
+                    cmd = "juju add-unit --to lxc:1 " \
+                          "{charm}".format(to=to, charm=charm)
                     self._run(cmd)
                 else:
-                    constraints = "juju set-constraints --service {charm} tags={{tag}}".format(
-                        charm=charm)
+                    constraints = "juju set-constraints --service " \
+                                  "{charm} tags={{tag}}".format(charm=charm)
                     self._run(constraints.format(tag=metadata['tag']))
                     self._run("juju add-unit {charm}".format(charm=charm))
                     self._run(constraints.format(tag=''))
@@ -417,7 +429,8 @@ class NodeViewMode(urwid.Frame):
         self.loop = loop
 
         self.cr = command_runner
-        urwid.Frame.__init__(self, header=header, body=self.nodes, footer=footer)
+        urwid.Frame.__init__(self, header=header, body=self.nodes,
+                             footer=footer)
         self.controller_overlay = ControllerOverlay(self, self.cr)
         self._target = self.controller_overlay
         self.logged_in = False
@@ -441,6 +454,7 @@ class NodeViewMode(urwid.Frame):
     def open_dialog(self, metadata):
         def destroy():
             self.loop.widget = self
+
         def ok(new_states):
             if pegasus.SINGLE_SYSTEM:
                 compute, other = utils.partition(
@@ -462,7 +476,6 @@ class NodeViewMode(urwid.Frame):
         except pegasus.MaasLoginFailure:
             self.logged_in = False
             return []
-
 
     def do_update(self, data_and_juju_state):
         data, juju = data_and_juju_state
@@ -492,7 +505,8 @@ class NodeViewMode(urwid.Frame):
                 lambda n: n.is_compute, new_data)
 
             for node in unallocated:
-                self.cr.change_allocation([pegasus.NOVA_COMPUTE], node.metadata)
+                self.cr.change_allocation([pegasus.NOVA_COMPUTE],
+                                          node.metadata)
 
         self.nodes.update(new_data)
         self.cr.update(juju)
@@ -500,11 +514,14 @@ class NodeViewMode(urwid.Frame):
     def tick(self):
         if self.ticks_left == 0:
             self.ticks_left = self.poll_interval
+
             def update_and_redraw(data):
                 self.do_update(data)
                 self.loop.draw_screen()
             self.loop.run_async(self._check_login_get_data, update_and_redraw)
-        self.timer.set_text("Poll in %d seconds (%d)" % (self.ticks_left, threading.active_count()))
+        self.timer.set_text("Poll in %d seconds (%d)"
+                            % (self.ticks_left,
+                               threading.active_count()))
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
@@ -518,18 +535,20 @@ class NodeViewMode(urwid.Frame):
 
 class LockScreen(urwid.Overlay):
     LOCKED = "The screen is locked. Please enter a password (this is the " \
-    "password you entered for OpenStack during installation). "
+             "password you entered for OpenStack during installation). "
 
     INVALID = ("error", "Invalid password.")
 
     IOERROR = ("error", "Problem accessing %s. Please make sure it contains "
-    "exactly one line that is the lock password." % pegasus.PASSWORD_FILE)
+               "exactly one line that is the lock password."
+               % pegasus.PASSWORD_FILE)
 
     def __init__(self, underlying, unlock):
         self.unlock = unlock
         self.password = urwid.Edit("Password: ", mask='*')
         self.invalid = urwid.Text("")
-        w = urwid.ListBox([urwid.Text(self.LOCKED), self.invalid, self.password])
+        w = urwid.ListBox([urwid.Text(self.LOCKED), self.invalid,
+                           self.password])
         w = urwid.LineBox(w)
         w = urwid.AttrWrap(w, "dialog")
         urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 8)
@@ -550,12 +569,12 @@ class LockScreen(urwid.Overlay):
 class PegasusGUI(urwid.MainLoop):
     def __init__(self, get_data):
         self.console = ConsoleMode()
-        self.node_view = NodeViewMode(self, get_data, self.console.command_runner)
-        self.lock_ticks = 0 # start in a locked state
+        self.node_view = NodeViewMode(self, get_data,
+                                      self.console.command_runner)
+        self.lock_ticks = 0  # start in a locked state
         self.locked = False
         urwid.MainLoop.__init__(self, self.node_view.target, STYLES,
                                 unhandled_input=self._header_hotkeys)
-
 
     def _key_pressed(self, keys, raw):
         # We use this as an 'input filter' just to hook when keys are pressed;
@@ -581,6 +600,7 @@ class PegasusGUI(urwid.MainLoop):
             if self.lock_ticks == 0:
                 self.locked = True
                 old = self.widget
+
                 def unlock():
                     # If the controller overlay finished its work while we were
                     # locked, bypass it.
@@ -625,7 +645,8 @@ class PegasusGUI(urwid.MainLoop):
             try:
                 callback(result)
             except Exception as e:
-                self.console.command_runner._add("Status thread:", format_exc())
+                self.console.command_runner._add("Status thread:",
+                                                 format_exc())
             finally:
                 self.remove_watch_pipe(write_fd)
                 close(write_fd)
@@ -637,14 +658,15 @@ class PegasusGUI(urwid.MainLoop):
             try:
                 result = f()
             except Exception as e:
-                self.console.command_runner._add("Status thread:", format_exc())
+                self.console.command_runner._add("Status thread:",
+                                                 format_exc())
             write(write_fd, bytes('done', 'ascii'))
 
         threading.Thread(target=run_f).start()
 
 
 if __name__ == "__main__":
-    def garbage(foo = []):
+    def garbage(foo=[]):
         metadata = {
             "fqdn": "line %d" % len(foo),
             "cpu_count": 1,

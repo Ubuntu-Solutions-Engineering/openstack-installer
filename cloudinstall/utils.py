@@ -26,6 +26,7 @@ import random
 # String with number of minutes, or None.
 blank_len = None
 
+
 def get_command_output(command, timeout=300):
     """ Execute command through system shell
 
@@ -43,6 +44,7 @@ def get_command_output(command, timeout=300):
     stdout, stderr = p.communicate()
     return (p.returncode, stdout.decode('utf-8'), 0)
 
+
 def get_network_interface(iface):
     """ Get network interface properties
 
@@ -59,6 +61,7 @@ def get_network_interface(iface):
                 'netmask': match.group(3)}
     return None
 
+
 def get_network_interfaces():
     """ Get network interfaces
 
@@ -70,8 +73,9 @@ def get_network_interfaces():
     for i in _ifconfig:
         name = i.split(' ')[0]
         if 'lo' not in name:
-            interfaces.append({name : get_network_interface(name)})
+            interfaces.append({name: get_network_interface(name)})
     return interfaces
+
 
 def partition(pred, iterable):
     yes, no = [], []
@@ -79,14 +83,17 @@ def partition(pred, iterable):
         (yes if pred(i) else no).append(i)
     return (yes, no)
 
+
 # TODO: replace with check_output()
 def _run(cmd):
     return Popen(cmd.split(), stdout=PIPE, stderr=DEVNULL).communicate()[0]
+
 
 def reset_blanking():
     global blank_len
     if blank_len is not None:
         call(('setterm', '-blank', blank_len))
+
 
 @contextmanager
 def console_blank():
@@ -106,6 +113,7 @@ def console_blank():
     yield
 
     reset_blanking()
+
 
 def randomString(size=6, chars=string.ascii_uppercase + string.digits):
     """ Generate a random string

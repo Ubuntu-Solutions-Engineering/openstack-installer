@@ -34,19 +34,19 @@ from cloudinstall.juju.state import JujuState
 from cloudinstall.maas.client import MaasClient
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
-MYSQL                 = 'mysql'
-RABBITMQ_SERVER       = 'rabbitmq-server'
-GLANCE                = 'glance'
-KEYSTONE              = 'keystone'
-OPENSTACK_DASHBOARD   = 'openstack-dashboard'
-NOVA_COMPUTE          = 'nova-compute'
-SWIFT                 = 'swift'
-CEPH                  = 'ceph'
+MYSQL = 'mysql'
+RABBITMQ_SERVER = 'rabbitmq-server'
+GLANCE = 'glance'
+KEYSTONE = 'keystone'
+OPENSTACK_DASHBOARD = 'openstack-dashboard'
+NOVA_COMPUTE = 'nova-compute'
+SWIFT = 'swift'
+CEPH = 'ceph'
 
-CONTROLLER     = "Controller"
-COMPUTE        = "Compute"
+CONTROLLER = "Controller"
+COMPUTE = "Compute"
 OBJECT_STORAGE = "Object Storage"
-BLOCK_STORAGE  = "Block Storage"
+BLOCK_STORAGE = "Block Storage"
 
 ALLOCATION = {
     NOVA_CLOUD_CONTROLLER: CONTROLLER,
@@ -77,7 +77,7 @@ try:
     with open(PASSWORD_FILE) as f:
         OPENSTACK_PASSWORD = f.read().strip()
 except IOError:
-    OPENSTACK_PASSWORD=None
+    OPENSTACK_PASSWORD = None
 
 # This is kind of a hack. juju deploy $foo rejects foo if it doesn't have a
 # config or there aren't any options in the declared config. So, we have to
@@ -103,6 +103,7 @@ CONFIG_TEMPLATE = dedent("""\
 
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
 
+
 def juju_config_arg(charm):
     path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
     if not exists(path):
@@ -110,6 +111,7 @@ def juju_config_arg(charm):
             f.write(bytes(CONFIG_TEMPLATE, 'utf-8'))
     config = "" if charm in _OMIT_CONFIG else "--config {path}"
     return config.format(path=path)
+
 
 def poll_state(auth):
     """ Polls current state of Juju and MAAS
@@ -137,6 +139,7 @@ def poll_state(auth):
     m_client.tag_name(maas)
     return parse_state(juju, maas), juju
 
+
 def parse_state(juju, maas):
     results = []
 
@@ -151,7 +154,7 @@ def parse_state(juju, maas):
             "fqdn": machine['hostname'],
             "memory": machine['memory'],
             "cpu_count": machine['cpu_count'],
-            "storage": str(int(machine['storage']) / 1024), # MB => GB
+            "storage": str(int(machine['storage']) / 1024),  # MB => GB
             "tag": machine['system_id'],
             "machine_no": m["machine_no"],
             "agent_state": m["agent-state"],
@@ -170,7 +173,8 @@ def parse_state(juju, maas):
 
     for container, (charms, units) in juju.containers.items():
         machine_no, _, lxc_id = container.split('/')
-        hostname = maas.hostname_for_instance_id(juju.id_for_machine_no(machine_no))
+        hostname = maas.hostname_for_instance_id(
+            juju.id_for_machine_no(machine_no))
         d = {
             # TODO: this really needs to be network visible, maybe we should
             # use the IP instead?
@@ -186,6 +190,7 @@ def parse_state(juju, maas):
         results.append(d)
     return results
 
+
 def wait_for_services():
     services = [
         'maas-region-celery',
@@ -199,6 +204,7 @@ def wait_for_services():
     for service in services:
         check_call(['start', 'wait-for-state', 'WAITER=cloud-install-status',
                     'WAIT_FOR=%s' % service, 'WAIT_STATE=running'])
+
 
 class StartKVM:
     CONFIG_TEMPLATE = """#cloud-config
@@ -217,11 +223,14 @@ datasource:
                 return int(m.groups()[0])
             else:
                 return -1
-        out = subprocess.check_output(['uvt-kvm', 'list']).decode('utf-8').split('\n')
+        out = subprocess.check_output(['uvt-kvm', 'list'])
+        .decode('utf-8').split('\n')
         return max(map(self.extract_id, out)) + 1 if out else 0
 
     def find_path(self, hostname):
-        vols = subprocess.check_output(['virsh', 'vol-list', 'uvtool']).split('\n')
+        vols = subprocess
+        .check_output(['virsh', 'vol-list', 'uvtool'])
+        .split('\n')
         for vol in vols:
             if vol.startswith(self.hostname + '.img'):
                 return vol.split()[1]
@@ -230,24 +239,25 @@ datasource:
     def run(self):
         if not os.path.exists(self.USER_DATA):
             with open(self.MAAS_CREDS) as f:
-                [consumer_key, token_key, token_secret] = f.read().strip().split(':')
+                [consumer_key,
+                 token_key,
+                 token_secret] = f.read().strip().split(':')
                 with open(self.USER_DATA, 'wb') as f:
-                    content = self.CONFIG_TEMPLATE.format(consumer_key=consumer_key,
-                                                          token_key=token_key,
-                                                          token_secret=token_secret)
+                    content = self.CONFIG_TEMPLATE
+                    .format(consumer_key=consumer_key,
+                            token_key=token_key,
+                            token_secret=token_secret)
                 f.write(bytes(content, 'utf-8'))
-
 
         hostname = self.SLAVE_PREFIX + str(self.next_host())
 
         uvt = ['uvt-kvm', 'create', '--bridge', 'br0', hostname]
         subprocess.check_call(uvt)
 
-        # Immediately power off the machine so we can make our edits to its disk.
-        # uvt-kvm will support some kind of --no-start option in the future so we don't
-        # have to do this.
+        # Immediately power off the machine so we can make our edits
+        # to its disk.  uvt-kvm will support some kind of --no-start
+        # option in the future so we don't have to do this.
         subprocess.check_call(['virsh', 'destroy', hostname])
-
 
         # Put our cloud-init config in the disk image.
         subprocess.check_call('add_maas_data', find_path(hostname), USER_DATA)
@@ -255,7 +265,8 @@ datasource:
         # Start the machine back up
         subprocess.check_call(['virsh', 'start', hostname])
 
-        subprocess.check_call(['maas', 'maas', 'nodes', 'new', 'hostname=' + hostname])
+        subprocess.check_call(['maas', 'maas', 'nodes',
+                               'new', 'hostname=' + hostname])
         creds = os.path.join(tempfile.gettempdir(), 'maas.creds')
         with open(creds, 'wb') as f:
             req = urllib.urlopen(
@@ -263,9 +274,10 @@ datasource:
             f.write(req.read())
         subprocess.check_call(['maas-signal', '--config', creds, 'OK'])
 
+
 class MaasLoginFailure(Exception):
-    MESSAGE = "Could not read login credentials. Please run:" \
-    "    maas-get-user-creds root > ~/.cloud-install/maas-creds"
+    MESSAGE = "Could not read login credentials. Please run: " \
+              "maas-get-user-creds root > ~/.cloud-install/maas-creds"
 
 if __name__ == '__main__':
     from cloudinstall.maas.auth import MaasAuth
