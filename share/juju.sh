@@ -93,7 +93,8 @@ jujuBootstrap()
 	system_id=$(nodeSystemId $mac)
 	wget -O $TMP/maas.creds \
 	    "http://localhost/MAAS/metadata/latest/by-id/$system_id/?op=get_preseed"
-	maas-signal --config $TMP/maas.creds OK || true
+	python2 /etc/maas/templates/commissioning-user-data/snippets/maas_signal.py \
+	    --config $TMP/maas.creds OK || true
 
 	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju bootstrap --upload-tools)
 	# TODO There is a delay between adding a machine via the cli, which
