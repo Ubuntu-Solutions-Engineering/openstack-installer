@@ -223,14 +223,13 @@ datasource:
                 return int(m.groups()[0])
             else:
                 return -1
-        out = subprocess.check_output(['uvt-kvm', 'list'])
-        .decode('utf-8').split('\n')
+        out = subprocess.check_output(
+            ['uvt-kvm', 'list']).decode('utf-8').split('\n')
         return max(map(self.extract_id, out)) + 1 if out else 0
 
     def find_path(self, hostname):
-        vols = subprocess
-        .check_output(['virsh', 'vol-list', 'uvtool'])
-        .split('\n')
+        vols = subprocess.check_output(
+            ['virsh', 'vol-list', 'uvtool']).split('\n')
         for vol in vols:
             if vol.startswith(self.hostname + '.img'):
                 return vol.split()[1]
@@ -243,10 +242,9 @@ datasource:
                  token_key,
                  token_secret] = f.read().strip().split(':')
                 with open(self.USER_DATA, 'wb') as f:
-                    content = self.CONFIG_TEMPLATE
-                    .format(consumer_key=consumer_key,
-                            token_key=token_key,
-                            token_secret=token_secret)
+                    content = self.CONFIG_TEMPLATE.format(
+                        consumer_key=consumer_key, token_key=token_key,
+                        token_secret=token_secret)
                 f.write(bytes(content, 'utf-8'))
 
         hostname = self.SLAVE_PREFIX + str(self.next_host())
