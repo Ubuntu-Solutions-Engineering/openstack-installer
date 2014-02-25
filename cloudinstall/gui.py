@@ -150,6 +150,7 @@ class ControllerOverlay(urwid.Overlay):
                 pegasus.StartKVM().run()
 
             self.text.set_text(self.NODE_SETUP)
+        return True
 
 
 def _wrap_focus(widgets, unfocused=None):
