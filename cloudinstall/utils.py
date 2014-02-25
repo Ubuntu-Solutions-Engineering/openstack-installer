@@ -32,7 +32,7 @@ def get_command_output(command, timeout=300):
 
     @return: returncode, stdout, 0
     """
-    cmd_env = os.environ
+    cmd_env = os.environ.copy()
     # set consistent locale
     cmd_env['LC_ALL'] = 'C'
     if timeout:
