@@ -2,6 +2,7 @@
 
 yes | juju destroy-environment
 
+rm -r ~/.maascli.db
 rm -rf ~/.juju
 
 sudo apt-get -yy purge '.*maas.*' '.*juju.*'
