@@ -2,7 +2,7 @@
 # Makefile for cloud-install
 #
 NAME = cloud-install-common
-VERSION = $(shell echo `awk  -F "\"" '/^__version__="/{print $$2}' cloudinstall/__init__.py`)
+VERSION = $(shell echo `awk  -F "\"" '/^__version__ = "/{print $$2}' cloudinstall/__init__.py`)
 TOPDIR = $(shell basename `pwd`)
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
