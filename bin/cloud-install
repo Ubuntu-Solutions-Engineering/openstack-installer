@@ -8,11 +8,9 @@ set -e
 . /usr/share/cloud-install/common/multi.sh
 . /usr/share/cloud-install/common/single.sh
 
-if [ ! -e /var/log/cloud-install.log ]; then
-	touch /var/log/cloud-install.log
-	chmod 0600 /var/log/cloud-install.log
-fi
-exec 2>> /var/log/cloud-install.log
+log="/var/log/cloud-install.log"
+( umask 066 && touch "$log" )
+exec 2>> "$log"
 
 trap exitInstall EXIT
 trap "" PIPE
