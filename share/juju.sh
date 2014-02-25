@@ -96,7 +96,7 @@ jujuBootstrap()
 	python2 /etc/maas/templates/commissioning-user-data/snippets/maas_signal.py \
 	    --config $TMP/maas.creds OK || true
 
-	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju bootstrap --upload-tools)
+	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju bootstrap --upload-tools &)
 	# TODO There is a delay between adding a machine via the cli, which
 	#      returns instantly, and the juju provisioning worker picking up
 	#      the request and creating the necessary machine placeholder.
