@@ -36,7 +36,7 @@ def get_command_output(command, timeout=300):
     # set consistent locale
     cmd_env['LC_ALL'] = 'C'
     if timeout:
-        command = "/usr/bin/timeout %ds %s" % (timeout, command)
+        command = "timeout %ds %s" % (timeout, command)
 
     p = Popen(command, shell=True,
               stdout=PIPE, stderr=STDOUT,
