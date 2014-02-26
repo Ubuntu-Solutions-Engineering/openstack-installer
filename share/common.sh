@@ -27,7 +27,7 @@ confValue()
 
 getInstallUser()
 {
-	echo $(confValue cloud-install-multi cloud-install/install-user)
+	echo $(confValue cloud-install-multi cloud-installer/install-user)
 }
 
 configIptablesNat()
@@ -126,17 +126,17 @@ waitForService()
 
 getDhcpRange()
 {
-	echo $(confValue cloud-install-multi cloud-install/dhcp-range)
+	echo $(confValue cloud-install-multi cloud-installer/dhcp-range)
 }
 
 getInstallInterface()
 {
-	echo $(confValue cloud-install-multi cloud-install/install-interface)
+	echo $(confValue cloud-install-multi cloud-installer/install-interface)
 }
 
 getBridgeInterface()
 {
-	echo $(confValue cloud-install-multi cloud-install/bridge-interface)
+	echo $(confValue cloud-install-multi cloud-installer/bridge-interface)
 }
 
 INSTALL_USER=$(getInstallUser)

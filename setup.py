@@ -30,7 +30,7 @@ if sys.argv[-1] == 'clean':
     os.system('rm -rf cloud_installer.egg-info build dist')
     sys.exit()
 
-setup(name='cloud-install',
+setup(name='cloud-installer',
       version=cloudinstall.__version__,
       description="""Ubuntu Cloud installer is a metal to cloud
       image that provides an extremely simple way to install, deploy
