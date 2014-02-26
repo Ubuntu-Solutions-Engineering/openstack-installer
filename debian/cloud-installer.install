@@ -1,0 +1,17 @@
+bin/cloud-install                      usr/share/cloud-installer/bin
+bin/cloud-status                       usr/share/cloud-installer/bin
+etc/init/tty1.override                 etc/init
+share/common.sh                        usr/share/cloud-installer/common
+share/juju.sh                          usr/share/cloud-installer/common
+share/juju/25-juju-machine-1.conf      usr/share/cloud-installer/juju-data
+share/juju/25-juju.conf                usr/share/cloud-installer/juju-data
+share/juju/bootstrap.conf              usr/share/cloud-installer/juju-data
+share/juju/juju-db.conf                usr/share/cloud-installer/juju-data
+share/juju/jujud-machine-0.conf        usr/share/cloud-installer/juju-data
+share/juju/jujud-machine-1.conf        usr/share/cloud-installer/juju-data
+share/juju/provider-state              usr/share/cloud-installer/juju-data
+share/maas.sh                          usr/share/cloud-installer/common
+share/maas/import_pxe_files            usr/share/cloud-installer/maas-data
+share/maas/pserv.yaml                  usr/share/cloud-installer/maas-data
+share/multi.sh                         usr/share/cloud-installer/common
+share/single.sh                        usr/share/cloud-installer/common

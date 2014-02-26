@@ -1,5 +1,7 @@
-cloud-install-common (0.2-0ubuntu1) trusty; urgency=low
+cloud-installer (0.1-0ubuntu1) trusty; urgency=low
 
+  [ Robert Ayres ]
+  * Initial Release.
   * Name change from carrierstack to cloud-installer
   * Add validation to the installers input dialogs
   * code reorganization
@@ -8,10 +10,4 @@ cloud-install-common (0.2-0ubuntu1) trusty; urgency=low
   * install as a private python module
   * Closes "needs-packaging" bug (LP: #1282837)
 
- -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 20 Feb 2014 17:32:26 -0500
-
-cloud-install-common (0.1) unstable; urgency=low
-
-  * Initial Release.
-
- -- Robert Ayres <robert.ayres@ubuntu.com>  Mon, 18 Mar 2013 11:55:21 +0000
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 26 Feb 2014 13:26:37 -0500

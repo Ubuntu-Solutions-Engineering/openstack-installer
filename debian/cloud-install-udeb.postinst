@@ -36,10 +36,10 @@ while [ -n "$STATE" -a "$STATE" != 34 ]; do
 	NEXT_STATE=$((STATE + 1))
 	case "$STATE" in
 	    1)
-		db_input high cloud-install/install-type || true
+		db_input high cloud-installer/install-type || true
 		;;
 	    2)
-		db_get cloud-install/install-type
+		db_get cloud-installer/install-type
 		case "$RET" in
 		    Multi-system)
 			install_type=multi
@@ -57,10 +57,10 @@ while [ -n "$STATE" -a "$STATE" != 34 ]; do
 		esac
 		;;
 	    10)
-		db_input high cloud-install/manage-dhcp || true
+		db_input high cloud-installer/manage-dhcp || true
 		;;
 	    11)
-		db_get cloud-install/manage-dhcp
+		db_get cloud-installer/manage-dhcp
 		if [ "$RET" = true ]; then
 		    manage_dhcp=true
 		    NEXT_STATE=15
@@ -69,33 +69,33 @@ while [ -n "$STATE" -a "$STATE" != 34 ]; do
 		fi
 		;;
 	    12)
-		db_input high cloud-install/manual-dhcp || true
+		db_input high cloud-installer/manual-dhcp || true
 		NEXT_STATE=30
 		;;
 	    15)
-		db_input high cloud-install/dhcp-range || true
+		db_input high cloud-installer/dhcp-range || true
 		NEXT_STATE=30
 		;;
 	    30)
-		db_input high cloud-install/openstack-admin-password || true
-		db_input high cloud-install/openstack-admin-password-again || true
+		db_input high cloud-installer/openstack-admin-password || true
+		db_input high cloud-installer/openstack-admin-password-again || true
 		;;
 	    31)
 		# Validate openstack password match
-		db_get cloud-install/openstack-admin-password
+		db_get cloud-installer/openstack-admin-password
 		ADMIN_PW="$RET"
-		db_get cloud-install/openstack-admin-password-again
+		db_get cloud-installer/openstack-admin-password-again
 		if [ "$ADMIN_PW" != "$RET" ]; then
-		    db_input critical cloud-install/password-mismatch
+		    db_input critical cloud-installer/password-mismatch
 		    NEXT_STATE=30
 		fi
 		;;
 
 	    32)
-		db_input high cloud-install/openstack-vmnetwork || true
+		db_input high cloud-installer/openstack-vmnetwork || true
 		;;
 	    33)
-		db_get cloud-install/openstack-vmnetwork
+		db_get cloud-installer/openstack-vmnetwork
 		;;
 	esac
 
@@ -110,12 +110,12 @@ if [ -z "$STATE" ]; then
 	exit 0
 fi
 
-db_get cloud-install/openstack-admin-password
+db_get cloud-installer/openstack-admin-password
 late_command="printf \"%s\n\" \"$RET\" > /target/etc/openstack.passwd; chmod 0600 /target/etc/openstack.passwd"
 
 dbSet tasksel/first "standard, server"; db_fset tasksel/first seen true
 
-packages="cloud-install-common"
+packages="cloud-installer"
 case $install_type in
 multi)
 	packages="$packages cloud-install-multi"

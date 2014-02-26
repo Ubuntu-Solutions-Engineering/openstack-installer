@@ -1,4 +1,4 @@
-Source: cloud-install-common
+Source: cloud-installer
 Section: admin
 Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
@@ -22,23 +22,20 @@ X-Python3-Version: >= 3.3
 Vcs-Browser: https://bazaar.launchpad.net/~solutions-engineering/cloud-installer/master
 Vcs-Bzr: lp:cloud-installer
 
-Package: cloud-install-common
+Package: cloud-installer
 Architecture: all
 Depends: gawk, juju-core, lxc, ${misc:Depends}, ${python3:Depends}
-Description: Ubuntu Cloud installer - common support files
+Description: Ubuntu Cloud installer
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
  physical system deployments as well as multiple physical system
  deployments.
- .
- This package provides the common libraries utilized by the installer
- profiles.
 
 Package: cloud-install-multi
 Section: admin
 Architecture: any
-Depends: cloud-install-common, maas, maas-dhcp, maas-dns, ${misc:Depends}
+Depends: cloud-installer, maas, maas-dhcp, maas-dns, ${misc:Depends}
 Description: Ubuntu Cloud installer (multi-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
@@ -51,7 +48,7 @@ Description: Ubuntu Cloud installer (multi-system) - dependency package
 Package: cloud-install-single
 Section: admin
 Architecture: any
-Depends: cloud-install-common,
+Depends: cloud-installer,
          cloud-utils,
          libvirt-bin,
          maas,
@@ -71,7 +68,7 @@ Description: Ubuntu Cloud installer (single-system) - dependency package
 Package: cloud-install-landscape
 Section: admin
 Architecture: any
-Depends: cloud-install, ${misc:Depends}
+Depends: cloud-installer, ${misc:Depends}
 Description: Ubuntu Cloud installer (landscape) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of

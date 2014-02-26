@@ -32,7 +32,7 @@ getInterfaces()
 
 getBridgeOptions()
 {
-	db_get cloud-install/install-interface
+	db_get cloud-installer/install-interface
 	INSTALL_IF="$RET"
 	getInterfaces | sed -e "s/$INSTALL_IF, //g"
 }
@@ -44,33 +44,33 @@ case "$1" in
 		NEXT_STATE=$((STATE + 1))
 		case "$STATE" in
 		    1)
-			db_subst cloud-install/install-interface CHOICES "$(getInterfaces)"
-			db_input high cloud-install/install-interface || true
+			db_subst cloud-installer/install-interface CHOICES "$(getInterfaces)"
+			db_input high cloud-installer/install-interface || true
 			NEXT_STATE=2
 			;;
 		    2)
-			db_input high cloud-install/dhcp-range || true
+			db_input high cloud-installer/dhcp-range || true
 			NEXT_STATE=3
 			;;
 		    3)
 			count=$(getInterfaces | wc -w)
 			if [[ $count -gt 2 ]]; then
-				db_input high cloud-install/bridge-interface || true
+				db_input high cloud-installer/bridge-interface || true
 			fi
 			NEXT_STATE=4
 			;;
 		    4)
-			db_input high cloud-install/openstack-admin-password || true
-			db_input high cloud-install/openstack-admin-password-again || true
+			db_input high cloud-installer/openstack-admin-password || true
+			db_input high cloud-installer/openstack-admin-password-again || true
 			NEXT_STATE=5
 			;;
 		    5)
 			# Validate openstack password match
-			db_get cloud-install/openstack-admin-password
+			db_get cloud-installer/openstack-admin-password
 			ADMIN_PW="$RET"
-			db_get cloud-install/openstack-admin-password-again
+			db_get cloud-installer/openstack-admin-password-again
 			if [ "$ADMIN_PW" != "$RET" ]; then
-			    db_input critical cloud-install/password-mismatch
+			    db_input critical cloud-installer/password-mismatch
 			    NEXT_STATE=4
 			fi
 			;;
@@ -89,12 +89,12 @@ case "$1" in
 	    fi
 
 	    # Store openstack credentials
-	    db_get cloud-install/openstack-admin-password
+	    db_get cloud-installer/openstack-admin-password
 	    printf "%s\n" "$RET" > /etc/openstack.passwd; chmod 0600 /etc/openstack.passwd
 	    db_set maas/installation-note ""; db_fset maas/installation-note seen true
-	    db_set cloud-install/install-type "Multi-system"
+	    db_set cloud-installer/install-type "Multi-system"
 	    # Set our install user
-	    db_set cloud-install/install-user $(getent passwd 1000|cut -d: -f1)
+	    db_set cloud-installer/install-user $(getent passwd 1000|cut -d: -f1)
 	    ;;
 	abort-upgrade|abort-remove|abort-deconfigure)
 	    ;;

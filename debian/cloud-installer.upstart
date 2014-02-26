@@ -11,7 +11,7 @@ script
 	export LANG LANGUAGE
 
 	INSTALL_USER=$(debconf-get-selections \
-	    | awk -F "\t" '($1 == "cloud-install-multi") && ($2 == "cloud-install/install-user") { print $4 }')
+	    | awk -F "\t" '($1 == "cloud-install-multi") && ($2 == "cloud-installer/install-user") { print $4 }')
 
 	if [ ! -e /etc/.cloud-installed ]; then
 		export HOME=/root
