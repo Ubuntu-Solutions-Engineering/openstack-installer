@@ -70,7 +70,7 @@ configureManualDns()
 
 configureManualProvider()
 {
-	mkdir -m 0700 "/home/$INSTALL_USER/.juju"
+	mkdir -m 0700 -p "/home/$INSTALL_USER/.juju"
 	configManualEnvironment $1 $2 \
 	    > "/home/$INSTALL_USER/.juju/environments.yaml"
 	chmod 0600 "/home/$INSTALL_USER/.juju/environments.yaml"
