@@ -1,3 +1,4 @@
 cloud-installer: binary-without-manpage
 cloud-installer: init.d-script-not-marked-as-conffile
 cloud-installer: init.d-script-not-included-in-package
+cloud-installer: postrm-does-not-call-updaterc.d-for-init.d-script
