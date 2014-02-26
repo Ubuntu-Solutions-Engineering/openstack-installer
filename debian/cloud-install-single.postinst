@@ -1,0 +1,70 @@
+#!/bin/sh
+# postinst for #PACKAGE#
+#
+# see: dh_installdeb(1)
+
+set -e
+
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+db_capb backup
+
+STATE=1
+case "$1" in
+configure)
+	while [ "$STATE" != 0 -a "$STATE" != 3 ]; do
+		case "$STATE" in
+		1)
+			db_input high cloud-install/openstack-admin-password || true
+			;;
+		2)
+			db_input high cloud-install/openstack-admin-password-again || true
+			;;
+		3)
+			# Validate openstack password match
+			db_get cloud-install/openstack-admin-password
+			ADMIN_PW="$RET"
+			db_get cloud-install/openstack-admin-password-again
+			if [ "$ADMIN_PW" != "$RET" ]; then
+				db_input critical cloud-install/password-mismatch || true
+				db_go
+				STATE=1
+				continue
+			fi
+			;;
+		esac
+
+		if db_go; then
+			STATE=$((STATE + 1))
+		else
+			STATE=$((STATE - 1))
+		fi
+	done
+	if [ "$STATE" = 0 ]; then
+		exit 0
+	fi
+
+	# Store openstack credentials
+	db_get cloud-install/openstack-admin-password
+	printf "%s\n" "$RET" > /etc/openstack.passwd; chmod 0600 /etc/openstack.passwd
+	db_set cloud-install/install-type "Single system"
+	# Set our install user
+	db_set cloud-install/install-user $(getent passwd 1000 | cut -d: -f1)
+	;;
+abort-upgrade|abort-remove|abort-deconfigure)
+	;;
+*)
+	echo "postinst called with unknown argument \`$1'" >&2
+	exit 1
+	;;
+esac
+
+#DEBHELPER#
+
+echo ""
+echo "*** Installation complete"
+echo "*** Please run sudo cloud-install to configure your cloud."
+echo ""
+
+exit 0

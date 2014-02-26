@@ -1,0 +1,30 @@
+Template: cloud-install/install-type
+Type: string
+_Description: Install type:
+ Install an OpenStack cloud for multiple systems.
+
+Template: cloud-install/install-user
+Type: string
+_Description: Install user:
+ Sets the installation user to run as
+
+Template: cloud-install/openstack-admin-password
+Type: password
+_Description: OpenStack admin user password:
+ A good password will contain a mixture of letters, numbers and punctuation and
+ should be changed at regular intervals.
+
+Template: cloud-install/openstack-admin-password-again
+Type: password
+_Description: OpenStack admin user password to verify:
+ Please enter the same OpenStack admin user password again to verify that you
+ have typed it correctly.
+
+Template: cloud-install/password-mismatch
+Type: error
+_Description: Password input error.
+ The two passwords you entered were not the same, please try again.
+
+Template: cloud-install/title
+Type: string
+_Description: Cloud install:
