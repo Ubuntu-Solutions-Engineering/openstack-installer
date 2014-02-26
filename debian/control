@@ -24,13 +24,22 @@ Vcs-Bzr: lp:cloud-installer
 
 Package: cloud-installer
 Architecture: all
-Depends: gawk, juju-core, lxc, ${misc:Depends}, ${python3:Depends}
+Depends: debconf-utils,
+         gawk,
+         juju-core,
+         lxc,
+         pwgen,
+         ${misc:Depends},
+         ${python3:Depends}
 Description: Ubuntu Cloud installer
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
  physical system deployments as well as multiple physical system
  deployments.
+ .
+ This package provides the common libraries utilized by the installer
+ profiles.
 
 Package: cloud-install-multi
 Section: admin
@@ -48,14 +57,7 @@ Description: Ubuntu Cloud installer (multi-system) - dependency package
 Package: cloud-install-single
 Section: admin
 Architecture: any
-Depends: cloud-installer,
-         cloud-utils,
-         libvirt-bin,
-         maas,
-         maas-dhcp,
-         maas-dns,
-         qemu-system-x86,
-         ${misc:Depends}
+Depends: cloud-install-common, qemu-system-x86, uvtool-libvirt, ${misc:Depends}
 Description: Ubuntu Cloud installer (single-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
