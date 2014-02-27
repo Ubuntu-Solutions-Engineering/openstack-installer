@@ -107,7 +107,6 @@ jujuBootstrap()
 	cp $TMP/maas.creds \
 	    /var/lib/lxc/juju-bootstrap/rootfs/etc/cloud/cloud.cfg.d/91_maas.cfg
 	lxc-start -n juju-bootstrap -d
-	wait $!
 }
 
 bootstrapManualProvider()
