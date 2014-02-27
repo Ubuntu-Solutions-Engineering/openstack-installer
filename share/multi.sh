@@ -70,7 +70,8 @@ multiInstall()
 		configureMaasImages
 
 		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
-			maas-import-pxe-files 1>&2
+			http_proxy=$MAAS_IMAGES_PROXY HTTP_PROXY=$MAAS_IMAGES_PROXY \
+			    maas-import-pxe-files 1>&2
 		fi
 
 		gaugePrompt 70 "Configuring Juju"
