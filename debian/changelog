@@ -1,13 +1,6 @@
-cloud-installer (0.1-0ubuntu1) trusty; urgency=low
+cloud-installer (0.1+bzr111-0ubuntu1) trusty; urgency=low
 
   [ Robert Ayres ]
-  * Initial Release.
-  * Name change from carrierstack to cloud-installer
-  * Add validation to the installers input dialogs
-  * code reorganization
-  * py3 ports
-  * single entry point for all exposed cloud-installer routines
-  * install as a private python module
-  * Closes "needs-packaging" bug (LP: #1282837)
+  * Intial Release. Closes "needs-packaging" bug (LP: #1282837)
 
  -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 26 Feb 2014 13:26:37 -0500
