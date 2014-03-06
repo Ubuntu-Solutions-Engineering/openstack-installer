@@ -3,7 +3,7 @@
 yes | juju destroy-environment
 
 rm -r ~/.maascli.db
-rm -rf ~/.juju
+rm -rf ~/.juju ~/.cloud-install
 
 sudo apt-get -yy purge '.*maas.*' '.*juju.*'
 sudo lxc-stop -n juju-bootstrap
