@@ -1,2 +1,2 @@
-/usr/share/cloud-installer/bin/cloud-install		/usr/bin/cloud-install
-/usr/share/cloud-installer/bin/cloud-status 		/usr/bin/cloud-status
+/usr/share/cloud-installer/cloud-install		/usr/bin/cloud-install
+/usr/share/cloud-installer/cloud-status 		/usr/bin/cloud-status
