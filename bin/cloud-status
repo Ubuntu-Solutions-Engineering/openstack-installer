@@ -23,8 +23,6 @@ import signal
 import sys
 import os
 
-sys.path.insert(0, "%s/../" % (os.path.abspath(os.path.dirname(__file__)),))
-
 from cloudinstall import gui
 from cloudinstall import pegasus
 from cloudinstall import utils

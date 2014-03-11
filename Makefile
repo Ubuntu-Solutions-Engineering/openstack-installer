@@ -11,13 +11,17 @@ $(NAME)_$(VERSION).orig.tar.gz: clean
 tarball: $(NAME)_$(VERSION).orig.tar.gz
 
 clean:
-	debian/rules clean
-	rm -rf debian/cloud-install
+	@debian/rules clean
+	@rm -rf debian/cloud-install
+
+deb-src: clean tarball
+	wrap-and-sort
+	@debuild -S -us -uc
 
 deb: clean tarball
 	wrap-and-sort
 	debconf-updatepo
-	debuild -us -uc -i
+	@debuild -us -uc -i
 
 .PHONY: status
 status:
