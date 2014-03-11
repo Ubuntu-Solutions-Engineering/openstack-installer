@@ -443,6 +443,10 @@ class NodeViewMode(urwid.Frame):
     @target.setter
     def target(self, val):
         self._target = val
+        # Don't switch from command runner back to us "randomly" (i.e. when
+        # the setup is complete and the overlay goes away).
+        if isinstance(self.loop.widget, ConsoleMode):
+            return
         # don't accidentally unlock
         if not isinstance(self.loop.widget, LockScreen):
             self.loop.widget = val
