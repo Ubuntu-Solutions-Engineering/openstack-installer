@@ -341,15 +341,13 @@ class CommandRunner(urwid.ListBox):
             config=config, to=to, constraints=constraints, charm=charm)
         self._run(cmd)
         self.services.add(charm)
-        self.to_add[charm] = pegasus.RELATIONS.get(charm, [])
-        remaining = defaultdict(lambda: [])
-        for charm, relations in self.to_add.items():
-            for relation in relations:
-                if relation in self.services:
-                    cmd = "juju add-relation {charm} {relation}"
-                    self._run(cmd.format(charm=charm, relation=relation))
-                else:
-                    remaining[charm].append(relation)
+        self.to_add.append(pegasus.get_charm_relations(charm))
+        remaining = []
+        for relation, cmd in self.to_add:
+            if relation in self.services:
+                self._run(cmd)
+            else:
+                remaining.append((relation, cmd))
         self.to_add = remaining
 
     def change_allocation(self, new_states, metadata):
