@@ -74,7 +74,7 @@ RELATIONS = {
 
 def get_charm_relations(charm):
     """ Return a list of (relation, command) of relations to add. """
-    for rel in RELATIONS[charm]:
+    for rel in RELATIONS.get(charm, []):
         if charm == NOVA_COMPUTE and rel == RABBITMQ_SERVER:
             c, r = (NOVA_COMPUTE + ":amqp", RABBITMQ_SERVER + ":amqp")
         else:
