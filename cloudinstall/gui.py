@@ -105,6 +105,11 @@ class ControllerOverlay(urwid.Overlay):
         shown, false otherwise. """
         if self.done:
             return False
+
+        # Wait until the command runner is done to do any more processing
+        # steps.
+        if len(self.command_runner.to_run) > 0:
+            return True
         continue_ = self._process(data)
         if not continue_:
             self.done = True
