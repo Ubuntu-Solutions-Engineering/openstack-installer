@@ -15,6 +15,7 @@ Build-Depends: debconf-utils,
                python3-requests-oauthlib,
                python3-setuptools,
                python3-urwid,
+               python3-ws4py,
                python3-yaml
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/cloud-installer
@@ -38,6 +39,7 @@ Depends: debconf-utils,
          python3-requests-oauthlib,
          python3-setuptools,
          python3-urwid,
+         python3-ws4py,
          python3-yaml,
          ${misc:Depends},
          ${python3:Depends}
