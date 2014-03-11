@@ -72,6 +72,16 @@ RELATIONS = {
     OPENSTACK_DASHBOARD: [KEYSTONE],
 }
 
+def get_charm_relations(charm):
+    """ Return a list of (relation, command) of relations to add. """
+    for rel in RELATIONS[charm]:
+        if charm == NOVA_COMPUTE and rel == RABBITMQ_SERVER:
+            c, r = (NOVA_COMPUTE + ":amqp", RABBITMQ_SERVER + ":amqp")
+        else:
+            c, r = (charm, rel)
+        cmd = "juju add-relation {charm} {relation}"
+        yield (r, cmd.format(charm=c, relations=r))
+
 PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
 try:
     with open(PASSWORD_FILE) as f:
