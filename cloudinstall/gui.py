@@ -116,7 +116,8 @@ class ControllerOverlay(urwid.Overlay):
 
     def _process(self, data):
         def is_allocated(d):
-            return 'charms' in d or d['agent_state'] in ['started', 'pending']
+            allocated_states = ['started', 'pending', 'down']
+            return 'charms' in d or d['agent_state'] in allocated_states
         allocated, unallocated = utils.partition(is_allocated, data)
         controllers = [n for n in allocated
                        if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
