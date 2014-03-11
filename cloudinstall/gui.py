@@ -341,9 +341,9 @@ class CommandRunner(urwid.ListBox):
             config=config, to=to, constraints=constraints, charm=charm)
         self._run(cmd)
         self.services.add(charm)
-        self.to_add.append(pegasus.get_charm_relations(charm))
+        self.to_add.extend(pegasus.get_charm_relations(charm))
         remaining = []
-        for relation, cmd in self.to_add:
+        for (relation, cmd) in self.to_add:
             if relation in self.services:
                 self._run(cmd)
             else:
