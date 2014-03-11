@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import deque, defaultdict
+from collections import deque
 from errno import ENOENT
 from os import write, close
 from os.path import expanduser
@@ -291,7 +291,7 @@ class CommandRunner(urwid.ListBox):
         self.to_run = deque()
         self.running = None
         self.services = set()
-        self.to_add = defaultdict(lambda: [])
+        self.to_add = []
 
     def keypress(self, size, key):
         if key.lower() == "ctrl u":
