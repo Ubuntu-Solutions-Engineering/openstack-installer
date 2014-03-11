@@ -186,9 +186,7 @@ def parse_state(juju, maas):
         hostname = maas.hostname_for_instance_id(
             juju.id_for_machine_no(machine_no))
         d = {
-            # TODO: this really needs to be network visible, maybe we should
-            # use the IP instead?
-            "fqdn": hostname,
+            "fqdn": juju.container(machine_no, lxc_id)['dns-name'],
             "memory": "LXC",
             "cpu_count": "LXC",
             "storage": "LXC",

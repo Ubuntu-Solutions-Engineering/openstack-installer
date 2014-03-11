@@ -83,3 +83,7 @@ class JujuState:
         def is_lxc(id_):
             return 'lxc' in id_
         return self._build_unit_map(by_machine_name, allow_id=is_lxc)
+
+    def container(self, machine, id_):
+        lxc = "%s/lxc/%s" % (machine, id_)
+        return self._yaml["machines"][machine]["containers"][lxc]
