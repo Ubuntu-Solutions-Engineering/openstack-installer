@@ -80,7 +80,7 @@ def get_charm_relations(charm):
         else:
             c, r = (charm, rel)
         cmd = "juju add-relation {charm} {relation}"
-        yield (r, cmd.format(charm=c, relations=r))
+        yield (r, cmd.format(charm=c, relation=r))
 
 PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
 try:
