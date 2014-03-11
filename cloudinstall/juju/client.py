@@ -31,6 +31,7 @@ params['Params'] = {'AuthTag': 'user-admin',
 """
 
 class JujuWS(WebSocketClient):
+    CREDS = ""
     def opened(self):
         self.send(json.dumps(params))
 
@@ -38,21 +39,54 @@ class JujuWS(WebSocketClient):
         print(("Closed", code, reason))
 
     def received_message(self, m):
-        print(("Message", json.loads(m.data.decode('utf-8'))))
-
+        return json.loads(m.data.decode('utf-8'))
 
 class JujuClient:
     """ Juju client class """
-    def __init__(self, params, url='juju-bootstrap.master:17070', protocols=['https-only']):
+    def __init__(self, params, url='juju-bootstrap.master:17070',
+                 protocols=['https-only']):
         self.params = params
         self.conn = JujuWS(self.url, protocols=self.protocols)
 
-    def login(self):
+    def login(self, password):
+        self.conn.CREDS = {'Type': 'Admin',
+                           'Request': 'Login',
+                           'RequestId': 1,
+                           'Params' : { 'AuthTag' : 'user-admin',
+                                        'Password' : password}}
         self.conn.connect()
 
     def close(self):
         self.conn.close()
 
-    def get(self, params):
+    def call(self, params):
         """ Get json data from juju api daemon """
-        self.conn.send(json.dumps(params))
+        return self.conn.send(json.dumps(params))
+
+    def info(self):
+        """ Returns Juju environment state """
+        return self.call(dict(Type="Client",
+                              Request="EnvironmentInfo"))
+
+    def add_charm(self, charm_url):
+        """ Adds charm """
+        return self.call(dict(Type="Client",
+                              Request="AddCharm",
+                              Params=dict(URL=charm_url)))
+
+    def get_charm(self, charm_url):
+        """ Get charm """
+        return self.call(dict(Type='Client',
+                              Request='CharmInfo',
+                              Params=dict(CharmURL=charm_url)))
+
+    def get_env_constraints(self):
+        """ Get environment constraints """
+        return self.call(dict(Type="Client",
+                              Request="GetEnvironmentConstraints"))
+
+    def set_env_constraints(self, constraints):
+        """ Set environment constraints """
+        return self.call(dict(Type="Client",
+                              Request="SetEnvironmentConstraints",
+                              Params=constraints))
