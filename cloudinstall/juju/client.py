@@ -41,12 +41,13 @@ class JujuWS(WebSocketClient):
     def received_message(self, m):
         return json.loads(m.data.decode('utf-8'))
 
+
 class JujuClient:
     """ Juju client class """
-    def __init__(self, params, url='juju-bootstrap.master:17070',
+    def __init__(self, url='juju-bootstrap.master:17070',
                  protocols=['https-only']):
-        self.params = params
         self.conn = JujuWS(self.url, protocols=self.protocols)
+        self.is_connected = False
 
     def login(self, password):
         self.conn.CREDS = {'Type': 'Admin',
@@ -55,6 +56,7 @@ class JujuClient:
                            'Params' : { 'AuthTag' : 'user-admin',
                                         'Password' : password}}
         self.conn.connect()
+        self.is_connected = True
 
     def close(self):
         self.conn.close()
