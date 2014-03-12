@@ -37,7 +37,7 @@ JUJU_INSTALLED = os.path.exists(os.path.join(os.path.expanduser('~'),
 @unittest.skipIf(not JUJU_INSTALLED, "Juju is not installed")
 class JujuClientTest(unittest.TestCase):
     def setUp(self):
-        self.c = JujuClient()
+        self.c = JujuClient(url=JUJU_URL)
 
     def test_login(self):
         self.c.login(JUJU_PASS)
