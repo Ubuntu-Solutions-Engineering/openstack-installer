@@ -18,43 +18,34 @@
 
 from ws4py.client.threadedclient import WebSocketClient
 import json
-
-"""
-Example parameters passed to juju:
-
-params = {}
-params['Type'] = "Admin"
-params['Request'] = 'Login'
-params['RequestId'] = 1
-params['Params'] = {'AuthTag': 'user-admin',
-                    'Password': 'f0d44f279b47cc8b5f7ea291f5e3b30a'}
-"""
+import os
+from pprint import pprint
 
 class JujuWS(WebSocketClient):
-    CREDS = ""
     def opened(self):
-        self.send(json.dumps(params))
+        creds = {'Type': 'Admin',
+                 'Request': 'Login',
+                 'RequestId': 1,
+                 'Params' : { 'AuthTag' : 'user-admin',
+                              'Password' : os.environ['JUJU_PASS']}}
+        self.send(json.dumps(creds))
 
     def closed(self, code, reason):
         print(("Closed", code, reason))
 
     def received_message(self, m):
+        pprint(m.data.decode('utf-8'))
         return json.loads(m.data.decode('utf-8'))
-
 
 class JujuClient:
     """ Juju client class """
-    def __init__(self, url='juju-bootstrap.master:17070',
-                 protocols=['https-only']):
-        self.conn = JujuWS(self.url, protocols=self.protocols)
+    def __init__(self, url='wss://juju-bootstrap.master:17070/'):
+        self.conn = JujuWS(url, protocols=['https-only'])
+        self._request_id = 1
         self.is_connected = False
 
     def login(self, password):
-        self.conn.CREDS = {'Type': 'Admin',
-                           'Request': 'Login',
-                           'RequestId': 1,
-                           'Params' : { 'AuthTag' : 'user-admin',
-                                        'Password' : password}}
+        self.conn.daemon = False
         self.conn.connect()
         self.is_connected = True
 
@@ -63,7 +54,9 @@ class JujuClient:
 
     def call(self, params):
         """ Get json data from juju api daemon """
-        return self.conn.send(json.dumps(params))
+        self._request_id = self._request_id + 1
+        params['RequestId'] = self._request_id
+        self.conn.send(json.dumps(params))
 
     def info(self):
         """ Returns Juju environment state """
