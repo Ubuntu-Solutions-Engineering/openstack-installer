@@ -23,6 +23,7 @@
 
 import unittest
 import os
+from pprint import pprint
 import sys
 sys.path.insert(0, '../cloudinstall')
 
@@ -30,7 +31,7 @@ from cloudinstall.juju.client import JujuClient
 from cloudinstall.utils import randomString
 
 JUJU_PASS = os.environ['JUJU_PASS'] if os.environ['JUJU_PASS'] else randomString()
-JUJU_URL = os.environ['JUJU_URL'] if os.environ['JUJU_URL'] else 'juju-bootstrap.master'
+JUJU_URL = os.environ['JUJU_URL'] if os.environ['JUJU_URL'] else 'wss://juju-bootstrap.master:17070/'
 JUJU_INSTALLED = os.path.exists(os.path.join(os.path.expanduser('~'),
                                              '.juju/environments.yaml'))
 
@@ -39,9 +40,25 @@ class JujuClientTest(unittest.TestCase):
     def setUp(self):
         self.c = JujuClient(url=JUJU_URL)
 
+    def tearDown(self):
+        self.c.close()
+
     def test_login(self):
         self.c.login(JUJU_PASS)
-        self.assertTrue(self.is_connected)
+        self.assertTrue(self.c.is_connected)
+
+@unittest.skipIf(not JUJU_INSTALLED, "Juju is not installed")
+class JujuApiTest(unittest.TestCase):
+    def setUp(self):
+        self.c = JujuClient(url=JUJU_URL)
+        self.c.login(JUJU_PASS)
+
+    def tearDown(self):
+        self.c.close()
+
+    def test_info(self):
+        ret = self.c.info()
+        self.assertTrue(ret)
 
 if __name__ == '__main__':
     unittest.main()
