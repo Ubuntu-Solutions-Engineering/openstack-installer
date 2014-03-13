@@ -281,13 +281,7 @@ class ListWithHeader(urwid.Frame):
         return len(self._contents) > 0
 
     def update(self, nodes):
-        existing = [x.original_widget.name for x in self._contents]
-        for n in nodes:
-            if n.name not in existing:
-                self._contents.append(_wrap_focus(n))
-        still_existing = map(lambda n: n.name, nodes)
-        self._contents[:] = filter(lambda n: n.original_widget.name
-                                   in still_existing, self._contents)
+        self._contents[:] = _wrap_focus(nodes)
 
 
 class CommandRunner(urwid.ListBox):
@@ -686,11 +680,15 @@ if __name__ == "__main__":
             "agent_state": "pending",
         }
 
-        if len(foo) % 2 == 0:
+        if len(foo) % 2 == 1:
             metadata['charms'] = ["nova-compute"]
-        if len(foo) % 3 == 0:
-            metadata['charms'] = pegasus.CONTROLLER_CHARMS[3:]
-        if len(foo) % 3 == 0:
+        if len(foo) % 3 == 1:
             metadata['charms'] = pegasus.CONTROLLER_CHARMS
-        return foo
+        if len(foo) > 3:
+            foo[0]['charms'] = ['nova-compute']
+        foo.append(metadata)
+
+        class BogusJujuState():
+            services = {}
+        return foo, BogusJujuState
     PegasusGUI(garbage).run()
