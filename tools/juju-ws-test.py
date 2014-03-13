@@ -4,13 +4,16 @@ from ws4py.client.threadedclient import WebSocketClient
 from pprint import pprint
 import json
 import os
+import time
 
 params = {}
 params['Type'] = "Admin"
-params['Request'] = 'Login'
+params['Request'] = "Login"
 params['RequestId'] = 1
-params['Params'] = {'AuthTag': 'user-admin',
-                    'Password': os.environ['JUJU_PASS']}
+params['Params'] = {"AuthTag": "user-admin",
+                    "Password": os.environ['JUJU_PASS']}
+
+msg = None
 
 class Stupid(WebSocketClient):
     def opened(self):
@@ -26,6 +29,7 @@ if __name__ == '__main__':
     ws = Stupid(os.environ['JUJU_URL'], protocols=['https-only'])
     ws.daemon = False
     ws.connect()
+    time.sleep(1)
     info = {'Type': 'Client',
             'Request': 'EnvironmentInfo'}
     ws.send(json.dumps(info))

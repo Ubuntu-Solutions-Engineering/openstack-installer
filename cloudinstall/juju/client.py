@@ -19,7 +19,7 @@
 from ws4py.client.threadedclient import WebSocketClient
 import json
 import os
-from pprint import pprint
+import time
 
 class JujuWS(WebSocketClient):
     def opened(self):
@@ -27,15 +27,19 @@ class JujuWS(WebSocketClient):
                  'Request': 'Login',
                  'RequestId': 1,
                  'Params' : { 'AuthTag' : 'user-admin',
-                              'Password' : os.environ['JUJU_PASS']}}
+                              'Password' : self.juju_pass}}
         self.send(json.dumps(creds))
 
-    def closed(self, code, reason):
-        print(("Closed", code, reason))
-
     def received_message(self, m):
-        pprint(m.data.decode('utf-8'))
-        return json.loads(m.data.decode('utf-8'))
+        json.loads(m.data.decode('utf-8'))
+
+    @property
+    def juju_pass(self):
+        return self._juju_pass
+
+    @juju_pass.setter
+    def juju_pass(self, password):
+        self._juju_pass = password
 
 class JujuClient:
     """ Juju client class """
@@ -46,7 +50,10 @@ class JujuClient:
 
     def login(self, password):
         self.conn.daemon = False
-        self.conn.connect()
+        self.conn.juju_pass = password
+        if not self.is_connected:
+            self.conn.connect()
+        time.sleep(1)
         self.is_connected = True
 
     def close(self):
