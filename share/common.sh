@@ -137,6 +137,12 @@ dialogMsgBox()
 	    --msgbox "$3" $4 $5
 }
 
+dialogPassword()
+{
+	whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox "$2" $3 \
+	    $4 3>&1 1>/dev/tty 2>&3 || true
+}
+
 getInterfaces()
 {
 	ifconfig -s | egrep -v 'Iface|lo' | egrep -o '^[a-zA-Z0-9]+' | paste -sd ' '

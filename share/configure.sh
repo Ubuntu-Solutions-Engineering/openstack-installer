@@ -71,13 +71,13 @@ configureInstall()
 			state=30; continue
 			;;
 		30)
-			openstack_password=$(dialogInput "OpenStack admin user password:" "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." 10 60)
+			openstack_password=$(dialogPassword "OpenStack admin user password:" "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." 10 60)
 			if [ -z "$openstack_password" ]; then
 				popState; continue
 			fi
 			;;
 		31)
-			openstack_password2=$(dialogInput "OpenStack admin user password to verify:" "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." 10 60)
+			openstack_password2=$(dialogPassword "OpenStack admin user password to verify:" "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." 10 60)
 			if [ -z "$openstack_password2" ]; then
 				popState; continue
 			fi
