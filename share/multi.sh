@@ -29,7 +29,7 @@ multiInstall()
 	    --gauge "Please wait" 8 60 0 < $TMP/fifo &
 	{
 		gaugePrompt 2 "Installing packages"
-		apt-get -y install cloud-install-multi
+		DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -f -q -y cloud-install-multi </dev/null
 		# lp 1247886
 		service squid-deb-proxy start || true
 
