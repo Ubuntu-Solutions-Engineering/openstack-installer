@@ -70,16 +70,14 @@ multiInstall()
 			    maas-import-pxe-files 1>&2
 		fi
 
-		gaugePrompt 70 "Configuring Juju"
+		gaugePrompt 60 "Configuring Juju"
 		address=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
 		    | sed -e "s/^inet addr://")
 		admin_secret=$(pwgen -s 32)
 		configureJuju $address $maas_creds $admin_secret
-		gaugePrompt 60 "Bootstrapping Juju"
+		gaugePrompt 75 "Bootstrapping Juju"
 		host=$(maasAddress $address).master
 		jujuBootstrap
-		gaugePrompt 75 "Bootstrapping Juju"
-		juju status
 		echo 99
 		maas maas tags new name=use-fastpath-installer definition="true()"
 		maasLogout
