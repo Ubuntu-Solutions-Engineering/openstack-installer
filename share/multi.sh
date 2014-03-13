@@ -18,24 +18,22 @@
 
 multiInstall()
 {
-	set -ex
-	whiptail --backtitle "$BACKTITLE" --infobox \
-	    "Waiting for services to start" 8 60
-	waitForService maas-region-celery maas-cluster-celery maas-pserv \
-	    maas-txlongpoll
-
-	# lp 1247886
-	service squid-deb-proxy start || true
 
 	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install" || true
-	cp /etc/openstack.passwd "/home/$INSTALL_USER/.cloud-install"
+	echo "$openstack_password" > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
 
 	mkfifo -m 0600 $TMP/fifo
 	whiptail --title "Installing" --backtitle "$BACKTITLE" \
 	    --gauge "Please wait" 8 60 0 < $TMP/fifo &
 	{
-		gaugePrompt 2 "Generating SSH keys"
+		gaugePrompt 2 "Installing packages"
+		apt-get -y install cloud-install-multi
+		# lp 1247886
+		service squid-deb-proxy start || true
+
+		gaugePrompt 4 "Generating SSH keys"
 		generateSshKeys
 
 		gaugePrompt 6 "Creating MAAS super user"
@@ -47,11 +45,10 @@ multiInstall()
 		gaugePrompt 10 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 
-		installInterface=$(getInstallInterface)
-		createMaasBridge $installInterface
+		createMaasBridge $interface
 		gaugePrompt 15 "Configuring MAAS networking"
 
-		if [ "$(getBridgeInterface)" = "false" ]; then
+		if [ -z "$bridge_interface" ]; then
 			gateway=$(route -n | awk 'index($4, "G") { print $2 }')
 		else
 			gateway=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
@@ -61,7 +58,6 @@ multiInstall()
 		fi
 
 		# Retrieve dhcp-range
-		dhcp_range=$(getDhcpRange)
 		configureMaasNetworking $uuid br0 $gateway \
 		    ${dhcp_range%-*} ${dhcp_range#*-}
 		gaugePrompt 18 "Configuring DNS"

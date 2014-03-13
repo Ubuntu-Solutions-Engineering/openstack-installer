@@ -1,2 +1,0 @@
-cloud-install-multi: no-debconf-config
-cloud-install-multi: postinst-uses-db-input

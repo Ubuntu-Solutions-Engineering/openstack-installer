@@ -16,19 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-BACKTITLE="Cloud install"
+BACKTITLE="Cloud install"
 TMP=$(mktemp -d /tmp/cloud-install.XXX)
-
-confValue()
-{
-	debconf-get-selections | awk -F "\t" -v "owner=$1" \
-	    -v "name=$2" '($1 == owner) && ($2 == name) { print $4 }'
-}
-
-getInstallUser()
-{
-	echo $(confValue cloud-install-multi cloud-installer/install-user)
-}
 
 configIptablesNat()
 {
@@ -116,27 +105,41 @@ generateSshKeys()
 	fi
 }
 
-waitForService()
+dialogInput()
 {
-	for service; do
-		start wait-for-state WAITER=cloud-install \
-		    WAIT_FOR=$service WAIT_STATE=running > /dev/null
-	done
+	whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox "$2" $3 $4 \
+	    "$5" 3>&1 1>/dev/tty 2>&3 || true
 }
 
-getDhcpRange()
+dialogMenu()
 {
-	echo $(confValue cloud-install-multi cloud-installer/dhcp-range)
+	title=$1
+	text=$2
+	height=$3
+	width=$4
+	menu_height=$5
+	shift 5
+	for item; do
+		echo "\"$item\""
+		echo '""'
+	done | xargs whiptail --title "$title" --backtitle "$BACKTITLE" --menu \
+	    "$text" $height $width $menu_height 3>&1 1>/dev/tty 2>&3 || true
 }
 
-getInstallInterface()
+dialogYesNo()
 {
-	echo $(confValue cloud-install-multi cloud-installer/install-interface)
+	whiptail --title "$1" --backtitle "$BACKTITLE" --yesno "$2" $3 $4
 }
 
-getBridgeInterface()
+dialogMsgBox()
 {
-	echo $(confValue cloud-install-multi cloud-installer/bridge-interface)
+	whiptail --title "$1" --backtitle "$BACKTITLE" --ok-button "$2" \
+	    --msgbox "$3" $4 $5
 }
 
-INSTALL_USER=$(getInstallUser)
+getInterfaces()
+{
+	ifconfig -s | egrep -v 'Iface|lo' | egrep -o '^[a-zA-Z0-9]+' | paste -sd ' '
+}
+
+INSTALL_USER=$(getent passwd 1000 | cut -d : -f 1)

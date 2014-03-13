@@ -1,2 +1,0 @@
-cloud-install-single: no-debconf-config
-cloud-install-single: postinst-uses-db-input

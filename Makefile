@@ -20,7 +20,6 @@ deb-src: clean tarball
 
 deb: clean tarball
 	wrap-and-sort
-	debconf-updatepo
 	@debuild -us -uc -i
 
 .PHONY: status

@@ -5,6 +5,7 @@ set -e
 . /usr/share/cloud-installer/common/common.sh
 . /usr/share/cloud-installer/common/maas.sh
 . /usr/share/cloud-installer/common/juju.sh
+. /usr/share/cloud-installer/common/configure.sh
 . /usr/share/cloud-installer/common/multi.sh
 . /usr/share/cloud-installer/common/single.sh
 
@@ -18,17 +19,16 @@ trap "" PIPE
 #disableBlank
 
 if [ ! -e /etc/.cloud-installed ]; then
-    RET=$(confValue cloud-install-multi cloud-installer/install-type)
-    case $RET in
+	configureInstall
+	case $install_type in
 	Multi-system)
-	    multiInstall
-	    ;;
+		multiInstall
+		;;
 	"Single system")
-	    singleInstall
-	    ;;
+		singleInstall
+		;;
 	"Landscape managed")
-	    ;;
-    esac
-    touch /etc/.cloud-installed
+		;;
+	esac
+	touch /etc/.cloud-installed
 fi
-

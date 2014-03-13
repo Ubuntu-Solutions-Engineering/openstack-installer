@@ -18,20 +18,20 @@
 
 singleInstall()
 {
-	whiptail --backtitle "$BACKTITLE" --infobox \
-	    "Waiting for services to start" 8 60
-	waitForService libvirt-bin lxc lxc-net
 
 	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install"
-	touch "/home/$INSTALL_USER/.cloud-install/single"
-	cp /etc/openstack.passwd "/home/$INSTALL_USER/.cloud-install"
+	echo "$openstack_password" > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
 
 	mkfifo -m 0600 $TMP/fifo
 	whiptail --title "Installing" --backtitle "$BACKTITLE" \
 	    --gauge "Please wait" 8 60 0 < $TMP/fifo &
 	{
-		gaugePrompt 2 "Generating SSH keys"
+		gaugePrompt 2 "Installing packages"
+		apt-get -y install cloud-install-single
+
+		gaugePrompt 4 "Generating SSH keys"
 		generateSshKeys
 
 		gaugePrompt 20 "Configuring DNS"
