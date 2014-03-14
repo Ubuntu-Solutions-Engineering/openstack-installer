@@ -102,7 +102,7 @@ jujuBootstrap()
 	#      the request and creating the necessary machine placeholder.
 	#      Ideally we'd keep polling the output of juju status before
 	#      proceeding. For now we just sleep.
-	sleep 10
+	sleep 20
 	rm -rf /var/lib/lxc/juju-bootstrap/rootfs/var/lib/cloud/seed/*
 	cp $TMP/maas.creds \
 	    /var/lib/lxc/juju-bootstrap/rootfs/etc/cloud/cloud.cfg.d/91_maas.cfg
