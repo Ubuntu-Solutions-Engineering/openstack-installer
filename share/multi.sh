@@ -27,6 +27,7 @@ multiInstall()
 	mkfifo -m 0600 $TMP/fifo
 	whiptail --title "Installing" --backtitle "$BACKTITLE" \
 	    --gauge "Please wait" 8 60 0 < $TMP/fifo &
+	gauge_pid=$!
 	{
 		gaugePrompt 2 "Installing packages"
 		DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -f -q -y cloud-install-multi </dev/null
@@ -85,7 +86,7 @@ multiInstall()
 		gaugePrompt 100 "Installation complete"
 		sleep 2
 	} > $TMP/fifo
-	wait $!
+	wait $gauge_pid
 }
 
 saveMaasCreds()
