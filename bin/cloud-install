@@ -34,4 +34,6 @@ if [ ! -e /etc/.cloud-installed ]; then
 		;;
 	esac
 	touch /etc/.cloud-installed
+	exitInstall
+	cd "/home/$INSTALL_USER"; exec sudo -H -u "$INSTALL_USER" cloud-status
 fi
