@@ -185,6 +185,12 @@ maasLogout()
 	rm -rf /home/$INSTALL_USER/.maascli.db
 }
 
+nodeStatus()
+{
+	maas maas nodes list id=$1 \
+	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["status"])'
+}
+
 nodeSystemId()
 {
 	maas maas nodes list mac_address=$1 \
@@ -199,6 +205,13 @@ waitForClusterRegistration()
 		if [ $uuid != master ]; then
 			break
 		fi
+		sleep 5
+	done
+}
+
+waitForNodeStatus()
+{
+	while [ $(nodeStatus $1) -ne $2 ]; do
 		sleep 5
 	done
 }
