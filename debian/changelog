@@ -1,3 +1,9 @@
+cloud-installer (0.1+git-cb0f8c-0ubuntu1) trusty; urgency=low
+
+  * Multi-install support for lxc and baremetal deployments.
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Sat, 15 Mar 2014 14:09:09 -0400
+
 cloud-installer (0.1+bzr111-0ubuntu1) trusty; urgency=low
 
   [ Robert Ayres ]
