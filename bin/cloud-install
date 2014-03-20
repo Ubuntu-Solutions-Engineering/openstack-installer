@@ -12,6 +12,7 @@ set -e
 
 log="/var/log/cloud-install.log"
 ( umask 066 && touch "$log" )
+set -x
 exec 2>> "$log"
 
 trap exitInstall EXIT
