@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-configJujuEnvironment()
+configMaasEnvironment()
 {
 	cat <<-EOF
 		default: maas
@@ -46,9 +46,11 @@ configLocalEnvironment()
 
 configureJuju()
 {
+	env_type=$1
+	shift
+
 	mkdir -m 0700 "/home/$INSTALL_USER/.juju"
-	configLocalEnvironment \
-          > "/home/$INSTALL_USER/.juju/environments.yaml"
+	$env_type $@ > "/home/$INSTALL_USER/.juju/environments.yaml"
 	chmod 0600 "/home/$INSTALL_USER/.juju/environments.yaml"
 	chown -R -- "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.juju"
 }

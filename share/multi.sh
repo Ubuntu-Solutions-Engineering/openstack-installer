@@ -75,7 +75,7 @@ multiInstall()
 		address=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
 		    | sed -e "s/^inet addr://")
 		admin_secret=$(pwgen -s 32)
-		configureJuju $address $maas_creds $admin_secret
+		configureJuju configMaasEnvironment $address $maas_creds $admin_secret
 		gaugePrompt 75 "Bootstrapping Juju"
 		host=$(maasAddress $address).master
 		jujuBootstrap

@@ -37,7 +37,7 @@ singleInstall()
 		generateSshKeys
 
 		gaugePrompt 80 "Bootstrapping Juju"
-		configureJuju
+		configureJuju configLocalEnvironment
                 (
                   cd "/home/$INSTALL_USER"
                   sudo -H -u "$INSTALL_USER" juju bootstrap
