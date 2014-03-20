@@ -8,6 +8,7 @@ set -e
 . /usr/share/cloud-installer/common/configure.sh
 . /usr/share/cloud-installer/common/multi.sh
 . /usr/share/cloud-installer/common/single.sh
+. /usr/share/cloud-installer/common/landscape.sh
 
 log="/var/log/cloud-install.log"
 ( umask 066 && touch "$log" )
@@ -28,6 +29,7 @@ if [ ! -e /etc/.cloud-installed ]; then
 		singleInstall
 		;;
 	"Landscape managed")
+		landscapeInstall
 		;;
 	*)
 		exit 0
