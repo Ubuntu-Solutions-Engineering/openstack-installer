@@ -20,13 +20,11 @@ singleInstall()
 {
 
 	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install" || true
-        mkdir -m 0700 "/home/$INSTALL_USER/.juju" || true
 
         touch /home/$INSTALL_USER/.cloud-install/single
 	echo "$openstack_password" > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
-	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.juju"
 
 	mkfifo -m 0600 $TMP/fifo
 	whiptail --title "Installing" --backtitle "$BACKTITLE" \

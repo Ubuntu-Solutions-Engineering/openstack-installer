@@ -3,6 +3,7 @@ bin/cloud-status                       usr/share/cloud-installer
 share/common.sh                        usr/share/cloud-installer/common
 share/configure.sh                     usr/share/cloud-installer/common
 share/juju.sh                          usr/share/cloud-installer/common
+share/landscape.sh                     usr/share/cloud-installer/common
 share/maas.sh                          usr/share/cloud-installer/common
 share/maas/import_pxe_files            usr/share/cloud-installer/maas-data
 share/maas/pserv.yaml                  usr/share/cloud-installer/maas-data
