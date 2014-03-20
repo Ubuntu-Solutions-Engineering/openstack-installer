@@ -183,8 +183,6 @@ def parse_state(juju, maas):
 
     for container, (charms, units) in juju.containers.items():
         machine_no, _, lxc_id = container.split('/')
-        hostname = maas.hostname_for_instance_id(
-            juju.id_for_machine_no(machine_no))
         d = {
             "fqdn": juju.container(machine_no, lxc_id)['dns-name'],
             "memory": "LXC",
