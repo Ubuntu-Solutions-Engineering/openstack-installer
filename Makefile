@@ -2,7 +2,8 @@
 # Makefile for cloud-install
 #
 NAME = cloud-installer
-VERSION = $(shell echo `awk  -F "\"" '/^__version__ = "/{print $$2}' cloudinstall/__init__.py`)+git-cb0f8c
+GIT_REV = $(shell git log --oneline -n1| cut -d" " -f1)
+VERSION = $(shell echo `awk  -F "\"" '/^__version__ = "/{print $$2}' cloudinstall/__init__.py`)+git-${GIT_REV}
 TOPDIR = $(shell basename `pwd`)
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
@@ -22,6 +23,10 @@ deb: clean tarball
 	wrap-and-sort
 	@debuild -us -uc -i
 
-.PHONY: status
+current_version:
+	@echo ${GIT_REV}
+
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
+
+.PHONY: status current_version deb deb-src clean tarball
