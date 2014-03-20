@@ -19,10 +19,14 @@
 singleInstall()
 {
 
-	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install"
+	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install" || true
+        mkdir -m 0700 "/home/$INSTALL_USER/.juju" || true
+
+        touch /home/$INSTALL_USER/.cloud-install/single
 	echo "$openstack_password" > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
+	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.juju"
 
 	mkfifo -m 0600 $TMP/fifo
 	whiptail --title "Installing" --backtitle "$BACKTITLE" \
@@ -34,14 +38,13 @@ singleInstall()
 		gaugePrompt 4 "Generating SSH keys"
 		generateSshKeys
 
-		gaugePrompt 20 "Configuring DNS"
-		configureManualDns
-
-		admin_secret=$(pwgen -s 32)
-		storage_auth_key=$(pwgen -s 32)
-		configureManualProvider $admin_secret $storage_auth_key
 		gaugePrompt 80 "Bootstrapping Juju"
-		bootstrapManualProvider
+                configLocalEnvironment > "/home/$INSTALL_USER/.juju/environments.yaml"
+                (
+                  cd "/home/$INSTALL_USER"
+                  sudo -H -u "$INSTALL_USER" juju bootstrap
+                  sudo -H -u "$INSTALL_USER" juju set-constraints mem=1G
+                )
 		echo 99
 
 		gaugePrompt 100 "Installation complete"
