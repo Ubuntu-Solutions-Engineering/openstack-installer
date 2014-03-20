@@ -44,6 +44,15 @@ configLocalEnvironment()
 		EOF
 }
 
+configureJuju()
+{
+	mkdir -m 0700 "/home/$INSTALL_USER/.juju"
+	configLocalEnvironment \
+          > "/home/$INSTALL_USER/.juju/environments.yaml"
+	chmod 0600 "/home/$INSTALL_USER/.juju/environments.yaml"
+	chown -R -- "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.juju"
+}
+
 # TODO break this function into smaller ones
 jujuBootstrap()
 {
