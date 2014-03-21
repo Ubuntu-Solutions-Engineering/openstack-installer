@@ -77,7 +77,13 @@ Description: Ubuntu Cloud installer (single-system) - dependency package
 Package: cloud-install-landscape
 Section: admin
 Architecture: any
-Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, ${misc:Depends}
+Depends: juju-core,
+         juju-deployer,
+         lxc,
+         maas,
+         maas-dhcp,
+         maas-dns,
+         ${misc:Depends}
 Description: Ubuntu Cloud installer (landscape) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
