@@ -1,4 +1,4 @@
-cloud-installer (0.1+git-cedb23a-0ubuntu1) trusty; urgency=low
+cloud-installer (0.1+git-cdd3609-0ubuntu1) trusty; urgency=low
 
   * Multi-install support for lxc and baremetal deployments.
 
