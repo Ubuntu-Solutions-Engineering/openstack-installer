@@ -15,19 +15,19 @@ clean:
 	@debian/rules clean
 	@rm -rf debian/cloud-install
 
-deb-src: clean tarball
+deb-src: clean update_changelog tarball
 	wrap-and-sort
 	@debuild -S -us -uc
 
-deb: clean tarball
+deb: clean update_changelog tarball
 	wrap-and-sort
 	@debuild -us -uc -i
 
 current_version:
-	@echo ${GIT_REV}
+	@echo $(VERSION)
 
 update_changelog:
-	@sed -i -r "s/(\d\.\d.git-)(.*)(-\dubuntu\d.*)/\1$(VERSION)\3/" debian/changelog
+	@sed -i -r "s/(^\w+-\w+\s.*git-)(\w+)/\1$(GIT_REV)/" debian/changelog
 
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
