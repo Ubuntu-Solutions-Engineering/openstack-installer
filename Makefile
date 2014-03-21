@@ -26,6 +26,9 @@ deb: clean tarball
 current_version:
 	@echo ${GIT_REV}
 
+update_changelog:
+	@sed -i -r "s/(\d\.\d.git-)(.*)(-\dubuntu\d.*)/\1$(VERSION)\3/" debian/changelog
+
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
 
