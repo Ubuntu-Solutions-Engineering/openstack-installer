@@ -1,6 +1,6 @@
 cloud-installer (0.1+git-cdd3609-0ubuntu1) trusty; urgency=low
 
-  * Multi-install support for lxc and baremetal deployments.
+  * Multi-install support for lxc, kvm, and baremetal deployments.
 
  -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 20 Mar 2014 20:32:53 -0400
 
