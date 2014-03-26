@@ -33,6 +33,9 @@ multiInstall()
 		DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -f -q -y cloud-install-multi </dev/null
 		# lp 1247886
 		service squid-deb-proxy start || true
+		service lxc-net stop || true
+		sed -e 's/^USE_LXC_BRIDGE="true"/USE_LXC_BRIDGE="false"/' -i \
+		    /etc/default/lxc-net
 
 		gaugePrompt 4 "Generating SSH keys"
 		generateSshKeys
