@@ -49,12 +49,9 @@ multiInstall()
 		createMaasBridge $interface
 		gaugePrompt 15 "Configuring MAAS networking"
 
-		if [ -z "$bridge_interface" ]; then
-			gateway=$(route -n | awk 'index($4, "G") { print $2 }')
-		else
-			gateway=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
-			    | sed -e "s/^inet addr://")
-			configureNat $(ip addr show br0 | awk '/^    inet / { print $2 }')
+		if [ -n "$bridge_interface" ]; then
+			gateway=$(ipAddress br0)
+			configureNat $(ipNetwork br0)
 			enableIpForwarding
 		fi
 
@@ -72,8 +69,7 @@ multiInstall()
 		fi
 
 		gaugePrompt 60 "Configuring Juju"
-		address=$(ifconfig br0 | egrep -o "inet addr:[0-9.]+" \
-		    | sed -e "s/^inet addr://")
+		address=$(ipAddress br0)
 		admin_secret=$(pwgen -s 32)
 		configureJuju configMaasEnvironment $address $maas_creds $admin_secret
 		gaugePrompt 75 "Bootstrapping Juju"

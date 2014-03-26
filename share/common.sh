@@ -161,6 +161,16 @@ ipAddress()
 	ifconfig $1 | egrep -o "inet addr:[0-9.]+" | sed -e "s/^inet addr://"
 }
 
+ipBroadcast()
+{
+	ifconfig $1 | egrep -o "Bcast:[0-9.]+" | sed -e "s/^Bcast://"
+}
+
+ipNetmask()
+{
+	ifconfig $1 | egrep -o "Mask:[0-9.]+" | sed -e "s/^Mask://"
+}
+
 ipNetwork()
 {
 	ip addr show $1 | awk '/^    inet / { print $2 }'
