@@ -52,23 +52,31 @@ configureInstall()
 			fi
 			;;
 		11)
-			dhcp_range=""
-			state=12; continue
-			;;
-		12)
-			dhcp_range=$(dialogInput "IP address range (<ip addr low>-<ip addr high>):" "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." 10 60 "$dhcp_range")
-			if [ -z "$dhcp_range" ]; then
-				popState; continue
-			fi
-			;;
-		13)
 			bridge_interface=""
 			if [ $interfaces_count -ge 2 ]; then
 				if dialogYesNo "Bridge interface?" "Sometimes it is useful to run MaaS on its own network. If you are running MaaS on its own network and would like to bridge this network to the outside world, please indicate so." 10 60; then
 					bridge_interface=true
 				fi
 			fi
-			state=30; continue
+			state=12; continue
+			;;
+		12)
+			network=$(ipNetwork $interface)
+			address=$(ipAddress $interface)
+			if [ -n "$bridge_interface" ]; then
+				dhcp_range=$(ipRange $network $address)
+			else
+				gateway=$(gateway)
+				dhcp_range=$(ipRange $network $address $gateway)
+			fi
+			state=13; continue
+			;;
+		13)
+			dhcp_range=$(dialogInput "IP address range (<ip addr low>-<ip addr high>):" "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." 10 60 "$dhcp_range")
+			if [ -z "$dhcp_range" ]; then
+				popState; continue
+			fi
+			next_state=30
 			;;
 		30)
 			openstack_password=$(dialogPassword "OpenStack admin user password:" "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." 10 60)
