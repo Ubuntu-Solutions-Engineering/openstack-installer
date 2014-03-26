@@ -19,6 +19,9 @@
 BACKTITLE="Cloud install"
 TMP=$(mktemp -d /tmp/cloud-install.XXX)
 
+export PYTHONPATH=/usr/share/cloud-installer/common
+export PYTHONDONTWRITEBYTECODE=true
+
 configIptablesNat()
 {
 	cat <<-EOF
@@ -146,6 +149,36 @@ dialogPassword()
 getInterfaces()
 {
 	ifconfig -s | egrep -v 'Iface|lo' | egrep -o '^[a-zA-Z0-9]+' | paste -sd ' '
+}
+
+gateway()
+{
+	route -n | awk 'index($4, "G") { print $2 }'
+}
+
+ipAddress()
+{
+	ifconfig $1 | egrep -o "inet addr:[0-9.]+" | sed -e "s/^inet addr://"
+}
+
+ipNetwork()
+{
+	ip addr show $1 | awk '/^    inet / { print $2 }'
+}
+
+ipRange()
+{
+	python3 - "$@" <<-"EOF"
+		from ipaddress import ip_address, ip_network
+		from sys import argv
+
+		from ip_range import ip_range, ip_range_max
+
+		network = ip_network(argv[1], strict=False)
+		ip_low, ip_high = ip_range_max(network, [ip_address(arg) for arg in argv[2:]]) \
+		                      if len(argv) >= 3 else ip_range(network)
+		print(str(ip_low) + "-" + str(ip_high))
+		EOF
 }
 
 INSTALL_USER=$(getent passwd 1000 | cut -d : -f 1)
