@@ -49,6 +49,7 @@ configureInstall()
 				fi
 			else
 				interface=$interfaces
+				state=$next_state; continue
 			fi
 			;;
 		11)
@@ -58,7 +59,7 @@ configureInstall()
 					bridge_interface=true
 				fi
 			fi
-			state=12; continue
+			state=$next_state; continue
 			;;
 		12)
 			network=$(ipNetwork $interface)
@@ -69,7 +70,7 @@ configureInstall()
 				gateway=$(gateway)
 				dhcp_range=$(ipRange $network $address $gateway)
 			fi
-			state=13; continue
+			state=$next_state; continue
 			;;
 		13)
 			dhcp_range=$(dialogInput "IP address range (<ip addr low>-<ip addr high>):" "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." 10 60 "$dhcp_range")
