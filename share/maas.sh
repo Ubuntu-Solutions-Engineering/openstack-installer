@@ -106,12 +106,9 @@ configureMaasInterfaces()
 
 configureMaasNetworking()
 {
-	address=$(ifconfig $2 | egrep -o "inet addr:[0-9.]+" \
-	    | sed -e "s/^inet addr://")
-	netmask=$(ifconfig $2 | egrep -o "Mask:[0-9.]+" \
-	    | sed -e "s/^Mask://")
-	broadcast=$(ifconfig $2 | egrep -o "Bcast:[0-9.]+" \
-	    | sed -e "s/^Bcast://")
+	address=$(ipAddress $2)
+	netmask=$(ipNetmask $2)
+	broadcast=$(ipBroadcast $2)
 	if maasInterfaceExists $1 $2; then
 		maas maas node-group-interface update $1 $2 ip=$address \
 		    interface=$2 management=2 subnet_mask=$netmask \
