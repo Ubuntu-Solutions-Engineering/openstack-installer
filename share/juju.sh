@@ -74,7 +74,7 @@ jujuBootstrap()
 	python2 /etc/maas/templates/commissioning-user-data/snippets/maas_signal.py \
 	    --config $TMP/maas.creds OK || true
 
-	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju sync-tools)
+	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju --show-log sync-tools)
 	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju bootstrap --upload-tools) &
 	waitForNodeStatus $system_id 6
 	rm -rf /var/lib/lxc/juju-bootstrap/rootfs/var/lib/cloud/seed/*
