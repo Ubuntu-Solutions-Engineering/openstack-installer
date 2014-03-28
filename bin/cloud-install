@@ -33,10 +33,13 @@ if [ ! -e /etc/.cloud-installed ]; then
 		landscapeInstall
 		;;
 	*)
-		exit 0
+		echo "Bad cloud installer type: " $install_type
+		exit 1
 		;;
 	esac
 	touch /etc/.cloud-installed
-	exitInstall
-	cd "/home/$INSTALL_USER"; exec sudo -H -u "$INSTALL_USER" cloud-status
+else
+	echo "Cloud already installed."
 fi
+exitInstall
+cd "/home/$INSTALL_USER"; exec sudo -H -u "$INSTALL_USER" cloud-status
