@@ -48,7 +48,7 @@ def main():
         except ConnectionError:
             pass
         time.sleep(10)
-    print('Found landscape at %s' % host)
+    print(host)
 
 if __name__ == '__main__':
     main()
