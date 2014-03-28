@@ -5,7 +5,14 @@ yes | juju destroy-environment
 rm -r ~/.maascli.db
 rm -rf ~/.juju ~/.cloud-install
 
-sudo apt-get -yy purge '.*maas.*' '.*juju.*' cloud-installer
+sudo apt-get -yy purge '.*maas.*' '.*juju.*'
+
+# these may or may not be installed, so we list them all individually
+sudo apt-get -yy purge cloud-install-single
+sudo apt-get -yy purge cloud-install-multi
+sudo apt-get -yy purge cloud-install-landscape
+sudo apt-get -yy purge cloud-installer
+
 sudo lxc-stop -n juju-bootstrap
 sudo lxc-destroy -n juju-bootstrap
 sudo service apache2 stop
