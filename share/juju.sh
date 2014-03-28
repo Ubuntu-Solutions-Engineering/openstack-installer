@@ -61,6 +61,11 @@ jujuBootstrap()
 	lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
 	sed -e "s/^lxc.network.link.*$/lxc.network.link = br0/" -i \
 	    /var/lib/lxc/juju-bootstrap/config
+	# lxc has to look like vanilla maas ubuntu for juju cloud-init script
+	# to run
+	rm /var/lib/lxc/juju-bootstrap/rootfs/etc/network/interfaces.d/eth0.cfg
+	printf "%s\n%s\n" "auto eth0" "iface eth0 inet dhcp" \
+	    >> /var/lib/lxc/juju-bootstrap/rootfs/etc/network/interfaces
 
 	mac=$(grep lxc.network.hwaddr /var/lib/lxc/juju-bootstrap/config \
 	    | cut -d " " -f 3)
