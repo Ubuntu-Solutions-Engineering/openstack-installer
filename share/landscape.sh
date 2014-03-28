@@ -16,6 +16,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+function getLandscapeCert() {
+	begin="-----BEGIN CERTIFICATE-----"
+	end="-----END CERTIFICATE-----"
+	cert=$(echo | openssl s_client -connect "$1":443 < /dev/null 2>/dev/null)
+	echo "$begin"
+	echo "$cert" | sed '1,/^-----BEGIN CERTIFICATE-----$/d' \
+	    | sed '/^-----END CERTIFICATE-----$/,$d'
+	echo "$end"
+}
+
 landscapeInstall()
 {
 	# The landscape install needs a fully working juju bootstrap environment,
@@ -31,9 +41,19 @@ landscapeInstall()
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
 	# while to set up and deployer doesn't wait until they're finished (it has
 	# no way to, viz. LP #1254766), so we wait until everything is ok.
-	wait-for-landscape
+	landscape_ip=$(wait-for-landscape)
 
-	# TODO: create a landscape user, get the user's credentials and make the
-	# "RegisterMAASRegionController" API call. There is some discussion with
-	# landscape-crew pending about how to do this.
+	certfile=~/.cloud-install/landscape-ca.pem
+	get_certificate "http://$landscape_ip/api/" > "$certfile"
+
+	# TODO: should we ask about these emails and things?
+	landscape-api \
+	    --key anonymous --secret anonymous --uri "https://$landscape_ip/api/" \
+	    --ssl-ca-file "$certfile" \
+	    call BootstrapLDS \
+	    admin_email='foo@example.com' \
+	    admin_password='foo' \
+	    admin_name='Steve Irwin' \
+	    root_url="https://$landscape_ip/" \
+	    system_email='landscape@example.com'
 }
