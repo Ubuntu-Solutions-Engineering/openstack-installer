@@ -33,7 +33,7 @@ if [ ! -e /etc/.cloud-installed ]; then
 		landscapeInstall
 		;;
 	*)
-		echo "Bad cloud installer type: " $install_type
+		# install cancelled by user
 		exit 1
 		;;
 	esac
