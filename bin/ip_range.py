@@ -1,4 +1,4 @@
-#
+#!/usr/bin/env python3
 # ip_range.py - Cloud install ip utilities
 #
 # Copyright 2014 Canonical, Ltd.
@@ -59,3 +59,12 @@ def ip_range_max(network, exclude):
         return ip_range(network)
 
     return ip_address(current[0]), ip_address(current[-1])
+
+if __name__ == '__main__':
+    from ipaddress import ip_address, ip_network
+    from sys import argv
+
+    network = ip_network(argv[1], strict=False)
+    ip_low, ip_high = ip_range_max(network, [ip_address(arg) for arg in argv[2:]]) \
+                          if len(argv) >= 3 else ip_range(network)
+    print(str(ip_low) + "-" + str(ip_high))

@@ -65,10 +65,10 @@ configureInstall()
 			network=$(ipNetwork $interface)
 			address=$(ipAddress $interface)
 			if [ -n "$bridge_interface" ]; then
-				dhcp_range=$(ipRange $network $address)
+				dhcp_range=$(ip_range.py $network $address)
 			else
 				gateway=$(gateway)
-				dhcp_range=$(ipRange $network $address $gateway)
+				dhcp_range=$(ip_range.py $network $address $gateway)
 			fi
 			state=$next_state; continue
 			;;
