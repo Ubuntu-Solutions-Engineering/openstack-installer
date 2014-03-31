@@ -56,4 +56,8 @@ landscapeInstall()
 	    admin_name='Steve Irwin' \
 	    root_url="https://$landscape_ip/" \
 	    system_email='landscape@example.com'
+
+	echo "Your Landscape installation is complete!"
+	echo "Please go to http://$landscape_ip/account/standalone/openstack to"
+	echo "continue with the installation of your OpenStack cloud."
 }
