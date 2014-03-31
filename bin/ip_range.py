@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# ip_range.py - Cloud install ip utilities
+#
+# ip_range.py - Cloud install ip range utility
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -19,7 +20,7 @@
 from ipaddress import ip_address, ip_network
 
 def ip_range(network):
-
+    """Return tuple of low, high IP address for given network"""
     num_addresses = network.num_addresses
     if num_addresses == 1:
         host = network[0]
@@ -30,7 +31,11 @@ def ip_range(network):
         return network[1], network[-2]
 
 def ip_range_max(network, exclude):
+    """Return tuple of low, high IP address for largest IP address range within
+    the given network.
 
+    Accepts a list of IP addresses to exclude.
+    """
     if (network.num_addresses <= 2) or (len(exclude) == 0):
         return ip_range(network)
 
@@ -60,11 +65,16 @@ def ip_range_max(network, exclude):
 
     return ip_address(current[0]), ip_address(current[-1])
 
-if __name__ == '__main__':
-    from ipaddress import ip_address, ip_network
+if __name__ == "__main__":
+    import sys
     from sys import argv
+
+    args = len(argv)
+    if args == 1:
+        print("Missing arguments", file=sys.stderr)
+        sys.exit(1)
 
     network = ip_network(argv[1], strict=False)
     ip_low, ip_high = ip_range_max(network, [ip_address(arg) for arg in argv[2:]]) \
-                          if len(argv) >= 3 else ip_range(network)
+                          if args >= 3 else ip_range(network)
     print(str(ip_low) + "-" + str(ip_high))
