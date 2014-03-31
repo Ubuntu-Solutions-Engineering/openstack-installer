@@ -36,7 +36,7 @@ landscapeInstall()
 	# right licensing configs cloned into their home directory; we can fix this
 	# later when the landscape charm deploys with a free license.
 	cd "/home/$INSTALL_USER/landscape-charm/config" && \
-      juju-deployer -Wdv -c landscape-deployments.yaml landscape-dense-maas
+	    juju-deployer -Wdv -c landscape-deployments.yaml landscape-dense-maas
 
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
 	# while to set up and deployer doesn't wait until they're finished (it has
@@ -44,7 +44,7 @@ landscapeInstall()
 	landscape_ip=$(wait-for-landscape)
 
 	certfile=~/.cloud-install/landscape-ca.pem
-	get_certificate "http://$landscape_ip/api/" > "$certfile"
+	get_certificate "$landscape_ip" > "$certfile"
 
 	# TODO: should we ask about these emails and things?
 	landscape-api \
