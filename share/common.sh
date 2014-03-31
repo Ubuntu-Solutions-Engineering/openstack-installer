@@ -176,19 +176,4 @@ ipNetwork()
 	ip addr show $1 | awk '/^    inet / { print $2 }'
 }
 
-ipRange()
-{
-	python3 - "$@" <<-"EOF"
-		from ipaddress import ip_address, ip_network
-		from sys import argv
-
-		from ip_range import ip_range, ip_range_max
-
-		network = ip_network(argv[1], strict=False)
-		ip_low, ip_high = ip_range_max(network, [ip_address(arg) for arg in argv[2:]]) \
-		                      if len(argv) >= 3 else ip_range(network)
-		print(str(ip_low) + "-" + str(ip_high))
-		EOF
-}
-
 INSTALL_USER=$(getent passwd 1000 | cut -d : -f 1)
