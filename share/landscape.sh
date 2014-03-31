@@ -52,7 +52,7 @@ landscapeInstall()
 	    --ssl-ca-file "$certfile" \
 	    call BootstrapLDS \
 	    admin_email='foo@example.com' \
-	    admin_password='foo' \
+	    admin_password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd") \
 	    admin_name='Steve Irwin' \
 	    root_url="https://$landscape_ip/" \
 	    system_email='landscape@example.com'
