@@ -34,7 +34,7 @@ if [ ! -e /etc/.cloud-installed ]; then
 		;;
 	*)
 		# install cancelled by user
-		exit 1
+		exit 0
 		;;
 	esac
 	touch /etc/.cloud-installed
