@@ -7,3 +7,5 @@ passlib
 mock
 setuptools
 urwid
+nose
+nose-cov
