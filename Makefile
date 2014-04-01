@@ -4,7 +4,7 @@
 NAME        = cloud-installer
 TOPDIR      := $(shell basename `pwd`)
 GIT_REV     := $(shell git log --oneline -n1| cut -d" " -f1)
-VERSION     := $(shell ./share/re print_version)
+VERSION     := $(shell ./tools/version)
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
 	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude=debian
