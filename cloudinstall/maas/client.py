@@ -96,11 +96,15 @@ class MaasClient:
         """ Accept all commissioned nodes
 
         @return: Status/Fail boolean
-        """
         res = self.post('/nodes/', dict(op='accept_all'))
         if res.ok:
             return True
         return False
+        """
+        try:
+            check_call(['maas', 'maas', 'nodes', 'accept-all'])
+        except CalledProcessError:
+            pass
 
     def node_commission(self, system_id):
         """ (Re)commission a node
