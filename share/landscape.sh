@@ -1,5 +1,5 @@
 #
-# multi.sh - Multi-install interface
+# landscape.sh - Landscape-install interface
 #
 # Copyright 2014 Canonical, Ltd.
 #
