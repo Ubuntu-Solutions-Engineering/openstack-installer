@@ -64,6 +64,10 @@ configureLandscape() {
 	done
 }
 
+getDictField() {
+  python3 -c "d = $1; print(d['$2'])"
+}
+
 landscapeInstall()
 {
 	configureLandscape
@@ -81,12 +85,14 @@ landscapeInstall()
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
 	# while to set up and deployer doesn't wait until they're finished (it has
 	# no way to, viz. LP #1254766), so we wait until everything is ok.
-	landscape_ip=$(./bin/wait-for-landscape)
+	landscape_ip=$(wait-for-landscape)
 
 	certfile=~/.cloud-install/landscape-ca.pem
 	getLandscapeCert "$landscape_ip" > "$certfile"
 
-	landscape-api \
+	# landscape-api just prints a __repr__ of the response we get, which contains
+	# both LANDSCAPE_API_KEY and LANDSCAPE_API_SECRET for the user.
+	resp=$(landscape-api \
 	    --key anonymous --secret anonymous --uri "https://$landscape_ip/api/" \
 	    --ssl-ca-file "$certfile" \
 	    call BootstrapLDS \
@@ -94,7 +100,17 @@ landscapeInstall()
 	    admin_password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd") \
 	    admin_name="$admin_name"
 	    root_url="https://$landscape_ip/" \
-	    system_email="$system_email"
+	    system_email="$system_email")
+	landscape_api_key=$(getDictField "$resp" LANDSCAPE_API_KEY)
+	landscape_api_secret=$(getDictField "$resp" LANDSCAPE_API_SECRET)
+
+	landscape-api \
+	    --key "$landscape_api_key" \
+	    --secret "$landscape_api_secret" \
+	    --uri "https://$landscape_ip/api" \
+	    register-maas-region-controller \
+	    endpoint="http://$(ipAddress br0)/MAAS" \
+	    credentials="$(cat /home/$INSTALL_USER/.cloud-install/maas-creds)"
 
 	echo "Your Landscape installation is complete!"
 	echo "Please go to http://$landscape_ip/account/standalone/openstack to"
