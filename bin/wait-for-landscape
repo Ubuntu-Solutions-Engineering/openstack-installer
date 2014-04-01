@@ -42,9 +42,13 @@ def main():
     while True:
         try:
             # Landscape generates a self signed cert for each install.
-            r = requests.get('http://%s/' %  host, verify=False)
+            r = requests.get('http://%s/' % host, verify=False)
             if MAGIC_OK_STRING in r.text:
-                break
+                # now do an API call to make sure the API is up (it gives 503
+                # for a while)
+                r = requests.get('http://%s/api' % host, verify=False)
+                if r.status_code == 200:
+                    break
         except ConnectionError:
             pass
         time.sleep(10)
