@@ -26,8 +26,48 @@ getLandscapeCert() {
 	echo "$end"
 }
 
+getDomain() {
+	echo "$1" | grep -E "^[^@]+@[^@]+\.[^@]+$" | sed -E -e 's/[^@]+@([^@]+\.[^@]+)/\1/'
+}
+
+configureLandscape() {
+	state=ask_user
+	email_domain=example.com
+	while [ -n "$state" ] && [ "$state" != 4 ]; do
+		next_state=$((state + 1))
+		case $state in
+		1)
+			admin_email=$(dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60)
+			result=$(getDomain "$admin_email")
+			if [ -z "$result" ]; then
+				popState; continue
+			fi
+			email_domain="$result"
+			;;
+		2)
+			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
+			admin_name=$(dialogInput "Landscape user's full name" "Please enter the full name of the admin user for Landscape." 10 60 "$suggested_name")
+			if [ -z "$admin_name" ]; then
+				popState; continue
+			fi
+			;;
+		3)
+			system_email=$(dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain")
+			result=$(getDomain "$system_email")
+			if [ -z "$result" ]; then
+				popState; continue
+			fi
+			;;
+		esac
+		pushState "$state"
+		state=$next_state
+	done
+}
+
 landscapeInstall()
 {
+	configureLandscape
+
 	# The landscape install needs a fully working juju bootstrap environment,
 	# just like the multi install with no status screen does.
 	multiInstall
@@ -41,21 +81,20 @@ landscapeInstall()
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
 	# while to set up and deployer doesn't wait until they're finished (it has
 	# no way to, viz. LP #1254766), so we wait until everything is ok.
-	landscape_ip=$(wait-for-landscape)
+	landscape_ip=$(./bin/wait-for-landscape)
 
 	certfile=~/.cloud-install/landscape-ca.pem
-	get_certificate "$landscape_ip" > "$certfile"
+	getLandscapeCert "$landscape_ip" > "$certfile"
 
-	# TODO: should we ask about these emails and things?
 	landscape-api \
 	    --key anonymous --secret anonymous --uri "https://$landscape_ip/api/" \
 	    --ssl-ca-file "$certfile" \
 	    call BootstrapLDS \
-	    admin_email='foo@example.com' \
+	    admin_email="$admin_email" \
 	    admin_password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd") \
-	    admin_name='Steve Irwin' \
+	    admin_name="$admin_name"
 	    root_url="https://$landscape_ip/" \
-	    system_email='landscape@example.com'
+	    system_email="$system_email"
 
 	echo "Your Landscape installation is complete!"
 	echo "Please go to http://$landscape_ip/account/standalone/openstack to"
