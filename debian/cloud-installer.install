@@ -8,4 +8,5 @@ share/maas.sh                          usr/share/cloud-installer/common
 share/maas/import_pxe_files            usr/share/cloud-installer/maas-data
 share/maas/pserv.yaml                  usr/share/cloud-installer/maas-data
 share/multi.sh                         usr/share/cloud-installer/common
+share/print-first-group                usr/share/cloud-installer/common
 share/single.sh                        usr/share/cloud-installer/common
