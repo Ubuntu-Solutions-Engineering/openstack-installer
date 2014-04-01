@@ -4,19 +4,19 @@
 
 ### Pre-reqs
 
-* python3-yaml
-* python3-urwid
-* python3-nose
+* debhelper
+* dh-python
+* python3-all
 * python3-mock
+* python3-nose
 * python3-oauthlib
 * python3-passlib
 * python3-requests
 * python3-requests-oauthlib
 * python3-setuptools
-* python3-all
-* debhelper
-* po-debconf
-* dh-python
+* python3-urwid
+* python3-ws4py
+* python3-yaml
 
 ### Running tests
 
@@ -26,6 +26,10 @@
 
 `$ make deb`
 
+This will build a package for the current host system. If you wish to
+build for other releases please checkout
+[sbuild](https://wiki.ubuntu.com/SimpleSbuild)
+
 ### Building the tarball only
 
 `$ make tarball`
@@ -34,9 +38,23 @@
 
 `$ make clean`
 
-## Users
+## Installing
 
-The packages are in process of being included in the archive. Currently, the packages need to be built
-manually as described above. Once built you will have the option to install **cloud-install-{multi,single,landscape}**. Once those packages are installed the following command will start the installer:
+### PPA
+
+`$ sudo apt-add-repository ppa:cloud-installer/ppa`
+
+### Running
 
 `$ sudo cloud-install`
+
+# Copyright
+
+Copyright 2014 Canonical, Ltd.
+
+# License
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
