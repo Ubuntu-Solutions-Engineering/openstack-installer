@@ -4,7 +4,7 @@
 NAME        = cloud-installer
 TOPDIR      := $(shell basename `pwd`)
 GIT_REV     := $(shell git log --oneline -n1| cut -d" " -f1)
-VERSION     := $(shell perl -nle '/${NAME}\s.(.*)-\dubuntu\d/ && print($1) && exit' debian/changelog)
+VERSION     := $(shell ./share/re print_version)
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
 	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude=debian
@@ -30,7 +30,7 @@ git_rev:
 	@echo $(GIT_REV)
 
 update_version:
-	@sed -i -r "s/(^__version__\s=\s)(.*)/\1$(VERSION)/" cloudinstall/__init__.py
+	@sed -i -r "s/(^__version__\s=\s)(.*)/\1\"$(VERSION)\"/" cloudinstall/__init__.py
 
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
