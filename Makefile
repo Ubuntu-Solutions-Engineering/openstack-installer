@@ -1,10 +1,10 @@
 #
 # Makefile for cloud-install
 #
-NAME = cloud-installer
-GIT_REV = $(shell git log --oneline -n1| cut -d" " -f1)
-VERSION = $(shell echo `awk  -F "\"" '/^__version__ = "/{print $$2}' cloudinstall/__init__.py`)+git-${GIT_REV}
-TOPDIR = $(shell basename `pwd`)
+NAME        = cloud-installer
+TOPDIR      := $(shell basename `pwd`)
+GIT_REV     := $(shell git log --oneline -n1| cut -d" " -f1)
+VERSION     := $(shell perl -nle '/${NAME}\s.(.*)-\dubuntu\d/ && print($1) && exit' debian/changelog)
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
 	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude=debian
@@ -15,21 +15,24 @@ clean:
 	@debian/rules clean
 	@rm -rf debian/cloud-install
 
-deb-src: clean update_changelog tarball
+deb-src: clean update_version tarball
 	wrap-and-sort
 	@debuild -S -us -uc
 
-deb: clean update_changelog tarball
+deb: clean update_version tarball
 	wrap-and-sort
 	@debuild -us -uc -i
 
 current_version:
 	@echo $(VERSION)
 
-update_changelog:
-	@sed -i -r "s/(^\w+-\w+\s.*git-)(\w+)/\1$(GIT_REV)/" debian/changelog
+git_rev:
+	@echo $(GIT_REV)
+
+update_version:
+	@sed -i -r "s/(^__version__\s=\s)(.*)/\1$(VERSION)/" cloudinstall/__init__.py
 
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
 
-.PHONY: status current_version deb deb-src clean tarball
+all: deb
