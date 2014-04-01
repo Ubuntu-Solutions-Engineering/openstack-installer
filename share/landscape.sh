@@ -107,7 +107,8 @@ landscapeInstall()
 	landscape-api \
 	    --key "$landscape_api_key" \
 	    --secret "$landscape_api_secret" \
-	    --uri "https://$landscape_ip/api" \
+	    --uri "https://$landscape_ip/api/" \
+	    --ssl-ca-file "$certfile" \
 	    register-maas-region-controller \
 	    endpoint="http://$(ipAddress br0)/MAAS" \
 	    credentials="$(cat /home/$INSTALL_USER/.cloud-install/maas-creds)"
