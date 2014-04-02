@@ -85,7 +85,7 @@ landscapeInstall()
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
 	# while to set up and deployer doesn't wait until they're finished (it has
 	# no way to, viz. LP #1254766), so we wait until everything is ok.
-	landscape_ip=$(wait-for-landscape)
+	landscape_ip=$($wait_for_landscape)
 
 	certfile=~/.cloud-install/landscape-ca.pem
 	getLandscapeCert "$landscape_ip" > "$certfile"
