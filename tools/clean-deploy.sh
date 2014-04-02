@@ -1,6 +1,7 @@
 #!/bin/bash
 
-yes | juju destroy-environment
+yes | juju destroy-environment --force maas
+yes | juju destroy-environment --force local
 
 rm -r ~/.maascli.db
 rm -rf ~/.juju ~/.cloud-install
