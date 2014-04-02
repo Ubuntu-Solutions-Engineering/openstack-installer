@@ -11,6 +11,12 @@ $(NAME)_$(VERSION).orig.tar.gz: clean
 
 tarball: $(NAME)_$(VERSION).orig.tar.gz
 
+.PHONY: install-dependencies
+install-dependencies:
+	sudo apt-get install debhelper python3-setuptools python3-requests \
+		python3-requests-oauthlib python3-urwid python3-yaml python3-ws4py \
+		python3-mock python3-nose devscripts python3-all python3-passlib
+
 clean:
 	@debian/rules clean
 	@rm -rf debian/cloud-install
