@@ -64,14 +64,7 @@ Description: Ubuntu Cloud installer (multi-system) - dependency package
 Package: cloud-install-single
 Section: admin
 Architecture: any
-Depends: juju-core,
-         lxc,
-         mongodb-server,
-         qemu-system-x86,
-         rsyslog-gnutls,
-         uvtool,
-         uvtool-libvirt,
-         ${misc:Depends}
+Depends: juju-local, ${misc:Depends}
 Description: Ubuntu Cloud installer (single-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
