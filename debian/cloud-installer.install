@@ -1,5 +1,7 @@
 bin/cloud-install                      usr/share/cloud-installer
 bin/cloud-status                       usr/share/cloud-installer
+bin/ip_range.py                        usr/share/cloud-installer/bin
+bin/wait-for-landscape                 usr/share/cloud-installer/bin
 share/common.sh                        usr/share/cloud-installer/common
 share/configure.sh                     usr/share/cloud-installer/common
 share/juju.sh                          usr/share/cloud-installer/common

@@ -16,12 +16,13 @@ clean:
 	@rm -rf debian/cloud-install
 
 deb-src: clean update_version tarball
-	wrap-and-sort
 	@debuild -S -us -uc
 
 deb: clean update_version tarball
-	wrap-and-sort
 	@debuild -us -uc -i
+
+sbuild: clean update_version tarball
+	@sbuild -d trusty-amd64
 
 current_version:
 	@echo $(VERSION)
@@ -30,6 +31,7 @@ git_rev:
 	@echo $(GIT_REV)
 
 update_version:
+	wrap-and-sort
 	@sed -i -r "s/(^__version__\s=\s)(.*)/\1\"$(VERSION)\"/" cloudinstall/__init__.py
 
 status:
