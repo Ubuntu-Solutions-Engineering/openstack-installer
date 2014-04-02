@@ -1,8 +1,9 @@
-cloud-installer (0.12+git20140401-0ubuntu1) trusty; urgency=low
+cloud-installer (0.13+git20140401-0ubuntu1) trusty; urgency=low
 
   * New build
+  * Initial support for landscape installs
 
- -- Robert Ayres <robert.ayres@ubuntu.com>  Fri, 28 Mar 2014 17:27:32 +0000
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 01 Apr 2014 21:37:10 -0400
 
 cloud-installer (0.1+git20140320-0ubuntu1) trusty; urgency=low
 
