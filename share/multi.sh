@@ -68,9 +68,13 @@ multiInstall()
 		gaugePrompt 20 "Importing MAAS boot images"
 		configureMaasImages
 
+		if [ -n "$MAAS_HTTP_PROXY" ]; then
+			maas maas maas set-config name=http_proxy value="$MAAS_HTTP_PROXY"
+		fi
+
 		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
-			http_proxy=$MAAS_IMAGES_PROXY HTTP_PROXY=$MAAS_IMAGES_PROXY \
-			    maas-import-pxe-files 1>&2
+			maas maas node-groups import-boot-images
+			waitForBootImages
 		fi
 
 		gaugePrompt 60 "Configuring Juju"
