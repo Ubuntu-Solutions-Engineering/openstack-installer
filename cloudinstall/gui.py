@@ -83,7 +83,7 @@ class ControllerOverlay(urwid.Overlay):
     PXE_BOOT = "You need one node to act as the cloud controller. " \
                "Please PXE boot the node you would like to use."
 
-    LXC_WAIT = "Please wait while the cloud controller is installed on your " \
+    NODE_WAIT = "Please wait while the cloud controller is installed on your " \
                "host system."
 
     NODE_SETUP = "Your node has been correctly detected. " \
@@ -93,7 +93,7 @@ class ControllerOverlay(urwid.Overlay):
         self.allocated = None
         self.command_runner = command_runner
         self.done = False
-        start_text = self.LXC_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
+        start_text = self.NODE_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
         self.text = urwid.Text(start_text)
         w = urwid.Filler(self.text)
         w = urwid.LineBox(w)
