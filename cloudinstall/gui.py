@@ -127,34 +127,19 @@ class ControllerOverlay(urwid.Overlay):
         controllers = [n for n in allocated
                        if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
 
-        # First, we do add-machine, so that we can then deploy everything
-        # into a container in subsequent steps.
-        if (len(allocated) == 0 and len(unallocated) > 0 and
-                not pegasus.SINGLE_SYSTEM):
+        if (len(allocated) == 0 and len(unallocated) > 0 or
+            pegasus.SINGLE_SYSTEM):
             self.command_runner.add_machine()
-        elif len(allocated) > 0:
+        elif len(allocated) > 0 and pegasus.MULTI_SYSTEM:
             id = allocated[0]['machine_no']
-
-            # For single system installs, we use containers on the bare
-            # metal (assumed to be machine 1, given to us by the
-            # installer). Everywhere else, we just use the first available
-            # machine, which is the id of the first machine in the
-            # unallocated list.
-            if pegasus.SINGLE_SYSTEM:
-                assert id == "1"
 
             pending = self._controller_charms_to_allocate(data)
             if len(pending) == 0:
                 return False
 
             for charm in pending:
-                self.command_runner.deploy(charm, id='lxc:%s' % id)
-
-            if pegasus.SINGLE_SYSTEM:
-                # Add one compute node in single system mode, all we have to do
-                # is start the KVM, the maas poll loop will take it from there.
-                pegasus.StartKVM().run()
-
+                self.command_runner.deploy(charm, id='kvm:%s' % id)
+        else:
             self.text.set_text(self.NODE_SETUP)
         return True
 
@@ -368,7 +353,7 @@ class CommandRunner(urwid.ListBox):
             new_service = charm not in self.services
             if new_service:
                 if pegasus.SINGLE_SYSTEM:
-                    self.deploy(charm, id='lxc:1')
+                    self.deploy(charm, id='kvm:1')
                 else:
                     self.deploy(charm, tag=metadata['tag'])
             else:
@@ -465,7 +450,7 @@ class NodeViewMode(urwid.Frame):
                 if compute:
                     # Here we just boot the KVM, the polling process will
                     # automatically allocate new kvms to nova-compute.
-                    pegasus.StartKVM().run()
+                    self.cr.add_machine()
                 self.cr.change_allocation(other, metadata)
             else:
                 self.cr.change_allocation(new_states, metadata)
@@ -482,6 +467,8 @@ class NodeViewMode(urwid.Frame):
 
     def do_update(self, data_and_juju_state):
         data, juju = data_and_juju_state
+        from pprint import pprint
+        pprint(data)
         new_data = [Node(t, self.open_dialog) for t in data]
         prev_total = len(self.nodes._contents)
 
@@ -637,7 +624,10 @@ class PegasusGUI(urwid.MainLoop):
         can't actually run python functions asynchronously. So, if we want to
         run a long-running function which should update the UI, we have to get
         a fd to have urwid watch for us, and then we send data to it when it's
-        done. """
+        done.
+
+        FIXME: Once https://github.com/wardi/urwid/pull/57 is implemented.
+        """
 
         result = None
 
