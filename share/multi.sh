@@ -33,7 +33,6 @@ multiInstall()
 	{
 		gaugePrompt 2 "Installing packages"
 		# Use MaaS version closer to Trusty release (MaaS 1.5)
-		apt-add-repository -y ppa:maas-maintainers/experimental
 		apt-get update
 		DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -f -q -y cloud-install-multi </dev/null
 		# lp 1247886
