@@ -77,8 +77,7 @@ class TextOverlay(urwid.Overlay):
         urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 5)
 
 
-# TODO: Use TextOverlay
-class ControllerOverlay(urwid.Overlay):
+class ControllerOverlay(TextOverlay):
     PXE_BOOT = "You need one node to act as the cloud controller. " \
                "Please PXE boot the node you would like to use."
 
@@ -92,12 +91,8 @@ class ControllerOverlay(urwid.Overlay):
         self.allocated = None
         self.command_runner = command_runner
         self.done = False
-        start_text = self.NODE_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
-        self.text = urwid.Text(start_text)
-        w = urwid.Filler(self.text)
-        w = urwid.LineBox(w)
-        w = urwid.AttrWrap(w, "dialog")
-        urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 5)
+        self.start_text = self.NODE_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
+        TextOverlay.__init__(self, self.start_text, underlying)
 
     def process(self, data):
         """ Process a node list. Returns True if the overlay still needs to be
