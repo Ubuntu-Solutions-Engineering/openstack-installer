@@ -594,7 +594,7 @@ class PegasusGUI(urwid.MainLoop):
                 self.widget = self.node_view.target
             else:
                 self.widget = self.console
-        if key in ['q', 'Q'] and not IS_TTY:
+        if key in ['q', 'Q']:
             raise urwid.ExitMainLoop()
 
     def tick(self, unused_loop=None, unused_data=None):
