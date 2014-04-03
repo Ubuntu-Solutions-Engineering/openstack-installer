@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set -e
+set -ex
 
 . /usr/share/cloud-installer/common/common.sh
 . /usr/share/cloud-installer/common/maas.sh
@@ -27,10 +27,7 @@ set -e
 . /usr/share/cloud-installer/common/single.sh
 . /usr/share/cloud-installer/common/landscape.sh
 
-log="/var/log/cloud-install.log"
-( umask 066 && touch "$log" )
-set -x
-exec 2>> "$log"
+startLog
 
 trap exitInstall EXIT
 trap "" PIPE

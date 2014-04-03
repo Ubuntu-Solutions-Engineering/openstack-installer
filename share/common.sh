@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 BACKTITLE="Cloud install"
+LOG=/var/log/cloud-install.log
 TMP=$(mktemp -d /tmp/cloud-install.XXX)
 
 export PYTHONPATH=/usr/share/cloud-installer/common
@@ -79,6 +80,7 @@ error()
 exitInstall()
 {
 	ret=$?
+	stopLog
 	wait
 	if [ $ret -gt 0 ]; then
 		error
@@ -171,6 +173,27 @@ ipNetmask()
 ipNetwork()
 {
 	ip addr show $1 | awk '/^    inet / { print $2 }'
+}
+
+startLog()
+{
+	(umask 0077; touch "$LOG")
+	printf "Cloud installation started %s\n" "$(date)" >> "$LOG"
+	mkfifo -m 0600 "$TMP/log"
+	ts "$TMP/log" >> "$LOG" &
+	exec 2> "$TMP/log"
+}
+
+stopLog()
+{
+	exec 2>&1
+	rm -f "$TMP/log"
+	printf "Cloud installation finished %s\n" "$(date)" >> "$LOG"
+}
+
+ts()
+{
+	awk '{ print strftime("%F %T"), $0 }' "$1"
 }
 
 INSTALL_USER=$(getent passwd 1000 | cut -d : -f 1)
