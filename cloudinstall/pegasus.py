@@ -33,6 +33,7 @@ from cloudinstall.maas.state import MaasState
 from cloudinstall.juju.state import JujuState
 from cloudinstall.maas.client import MaasClient
 
+
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
 MYSQL = 'mysql'
 RABBITMQ_SERVER = 'rabbitmq-server'
@@ -72,6 +73,12 @@ RELATIONS = {
     OPENSTACK_DASHBOARD: [KEYSTONE],
 }
 
+
+class MaasLoginFailure(Exception):
+    MESSAGE = "Could not read login credentials. Please run: " \
+              "maas-get-user-creds root > ~/.cloud-install/maas-creds"
+
+
 def get_charm_relations(charm):
     """ Return a list of (relation, command) of relations to add. """
     for rel in RELATIONS.get(charm, []):
@@ -97,6 +104,7 @@ _OMIT_CONFIG = [
     RABBITMQ_SERVER,
 ]
 
+# TODO: Use trusty + havana
 CONFIG_TEMPLATE = dedent("""\
     glance:
         openstack-origin: cloud:precise-grizzly
@@ -112,7 +120,7 @@ CONFIG_TEMPLATE = dedent("""\
 """).format(password=OPENSTACK_PASSWORD)
 
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
-
+MULTI_SYSTEM = exists(expanduser('~/.cloud-install/multi'))
 
 def juju_config_arg(charm):
     path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
@@ -123,7 +131,7 @@ def juju_config_arg(charm):
     return config.format(path=path)
 
 
-def poll_state(auth):
+def poll_state(auth=None):
     """ Polls current state of Juju and MAAS
 
     @param auth: MAAS Auth class
@@ -135,51 +143,59 @@ def poll_state(auth):
     juju = JujuState(StringIO(juju.decode('ascii')))
 
     # Login to MAAS
-    if not auth.is_logged_in:
+    maas = None
+    if auth and not auth.is_logged_in:
         auth.get_api_key('root')
         auth.login()
 
-    # Load Client routines
-    m_client = MaasClient(auth=auth)
+        # Load Client routines
+        m_client = MaasClient(auth=auth)
 
-    # Capture Maas state
-    maas = MaasState(m_client.nodes)
-    m_client.tag_fpi(maas)
-    m_client.nodes_accept_all()
-    m_client.tag_name(maas)
+        # Capture Maas state
+        maas = MaasState(m_client.nodes)
+        m_client.tag_fpi(maas)
+        m_client.nodes_accept_all()
+        m_client.tag_name(maas)
     return parse_state(juju, maas), juju
 
 
-def parse_state(juju, maas):
+def parse_state(juju, maas=None):
+    """ Parses the current state of juju containers and maas nodes
+
+    @param juju: juju polled state
+    @param maas: maas polled state
+    @return: list of nodes/containers created
+    """
     results = []
 
-    for machine in maas:
-        m = juju.machine(machine['resource_uri']) or \
-            {"machine_no": -1, "agent-state": "unallocated"}
+    if maas:
+        for machine in maas:
+            m = juju.machine(machine['resource_uri']) or \
+                {"machine_no": -1, "agent-state": "unallocated"}
 
-        if machine['hostname'].startswith('juju-bootstrap'):
-            continue
+            if machine['hostname'].startswith('juju-bootstrap'):
+                continue
 
-        d = {
-            "fqdn": machine['hostname'],
-            "memory": machine['memory'],
-            "cpu_count": machine['cpu_count'],
-            "storage": str(int(machine['storage']) / 1024),  # MB => GB
-            "tag": machine['system_id'],
-            "machine_no": m["machine_no"],
-            "agent_state": m["agent-state"],
-        }
-        charms, units = juju.assignments.get(machine['resource_uri'], ([], []))
-        if charms:
-            d['charms'] = charms
-        if units:
-            d['units'] = units
+            d = {
+                "fqdn": machine['hostname'],
+                "memory": machine['memory'],
+                "cpu_count": machine['cpu_count'],
+                "storage": str(int(machine['storage']) / 1024),  # MB => GB
+                "tag": machine['system_id'],
+                "machine_no": m["machine_no"],
+                "agent_state": m["agent-state"],
+            }
+            charms, units = juju.assignments.get(machine['resource_uri'], ([], []))
+            if charms:
+                d['charms'] = charms
+            if units:
+                d['units'] = units
 
-        # We only want to list nodes that are already assigned to our juju
-        # instance or that could be assigned to our juju instance; nodes
-        # allocated to other users should be ignored, however, we have no way
-        # to distinguish those in the API currently, so we just add everything.
-        results.append(d)
+            # We only want to list nodes that are already assigned to our juju
+            # instance or that could be assigned to our juju instance; nodes
+            # allocated to other users should be ignored, however, we have no way
+            # to distinguish those in the API currently, so we just add everything.
+            results.append(d)
 
     for container, (charms, units) in juju.containers.items():
         machine_no, _, lxc_id = container.split('/')
@@ -277,16 +293,3 @@ datasource:
                 'http://localhost/MAAS/metadata/latest/by-id/%s/?op=get_preseed' % (hostname,))
             f.write(req.read())
         subprocess.check_call(['maas-signal', '--config', creds, 'OK'])
-
-
-class MaasLoginFailure(Exception):
-    MESSAGE = "Could not read login credentials. Please run: " \
-              "maas-get-user-creds root > ~/.cloud-install/maas-creds"
-
-if __name__ == '__main__':
-    from cloudinstall.maas.auth import MaasAuth
-    import pprint
-
-    auth = MaasAuth()
-    auth.get_api_key('root')
-    pprint.pprint(poll_state(auth))

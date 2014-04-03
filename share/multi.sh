@@ -20,6 +20,8 @@ multiInstall()
 {
 
 	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install" || true
+
+        touch /home/$INSTALL_USER/.cloud-install/multi
 	echo "$openstack_password" > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
