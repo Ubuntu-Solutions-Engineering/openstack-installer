@@ -20,16 +20,20 @@ from collections import deque
 from errno import ENOENT
 from os import write, close
 from os.path import expanduser
-import re
 from subprocess import check_call, Popen, PIPE, STDOUT
 from time import strftime
 from traceback import format_exc
+import re
 import threading
 import urwid
 
 from cloudinstall import pegasus
 from cloudinstall import utils
 
+TITLE_TEXT = "Pegasus - your cloud's scout (q to quit)"
+
+#- Properties -----------------------------------------------------------------
+IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 LOG_FILE = expanduser('~/.cloud-install/commands.log')
 
 # Time to lock in seconds
@@ -55,12 +59,7 @@ STYLES = [
     ('error',        'white',      'dark red'),
 ]
 
-IS_TTY = re.match('/dev/tty[0-9]', utils._run('tty').decode('ascii'))
-
-TITLE_TEXT = "Pegasus - your cloud's scout"
-if not IS_TTY:
-    TITLE_TEXT = "%s (q to quit)" % TITLE_TEXT
-
+RADIO_STATES = list(pegasus.ALLOCATION.values())
 
 def _allocation_for_charms(charms):
     als = [pegasus.ALLOCATION.get(c, '') for c in charms]
@@ -149,9 +148,6 @@ def _wrap_focus(widgets, unfocused=None):
         return [urwid.AttrMap(w, unfocused, "focus") for w in widgets]
     except TypeError:
         return urwid.AttrMap(widgets, unfocused, "focus")
-
-
-RADIO_STATES = list(pegasus.ALLOCATION.values())
 
 
 class ChangeStateDialog(urwid.Overlay):
