@@ -20,16 +20,20 @@ from collections import deque
 from errno import ENOENT
 from os import write, close
 from os.path import expanduser
-import re
 from subprocess import check_call, Popen, PIPE, STDOUT
 from time import strftime
 from traceback import format_exc
+import re
 import threading
 import urwid
 
 from cloudinstall import pegasus
 from cloudinstall import utils
 
+TITLE_TEXT = "Pegasus - your cloud's scout (q to quit)"
+
+#- Properties -----------------------------------------------------------------
+IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 LOG_FILE = expanduser('~/.cloud-install/commands.log')
 
 # Time to lock in seconds
@@ -55,12 +59,7 @@ STYLES = [
     ('error',        'white',      'dark red'),
 ]
 
-IS_TTY = re.match('/dev/tty[0-9]', utils._run('tty').decode('ascii'))
-
-TITLE_TEXT = "Pegasus - your cloud's scout"
-if not IS_TTY:
-    TITLE_TEXT = "%s (q to quit)" % TITLE_TEXT
-
+RADIO_STATES = list(pegasus.ALLOCATION.values())
 
 def _allocation_for_charms(charms):
     als = [pegasus.ALLOCATION.get(c, '') for c in charms]
@@ -78,12 +77,11 @@ class TextOverlay(urwid.Overlay):
         urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 5)
 
 
-# TODO: Use TextOverlay
-class ControllerOverlay(urwid.Overlay):
+class ControllerOverlay(TextOverlay):
     PXE_BOOT = "You need one node to act as the cloud controller. " \
                "Please PXE boot the node you would like to use."
 
-    LXC_WAIT = "Please wait while the cloud controller is installed on your " \
+    NODE_WAIT = "Please wait while the cloud controller is installed on your " \
                "host system."
 
     NODE_SETUP = "Your node has been correctly detected. " \
@@ -93,12 +91,8 @@ class ControllerOverlay(urwid.Overlay):
         self.allocated = None
         self.command_runner = command_runner
         self.done = False
-        start_text = self.LXC_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
-        self.text = urwid.Text(start_text)
-        w = urwid.Filler(self.text)
-        w = urwid.LineBox(w)
-        w = urwid.AttrWrap(w, "dialog")
-        urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 5)
+        self.start_text = self.NODE_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
+        TextOverlay.__init__(self, self.start_text, underlying)
 
     def process(self, data):
         """ Process a node list. Returns True if the overlay still needs to be
@@ -127,34 +121,19 @@ class ControllerOverlay(urwid.Overlay):
         controllers = [n for n in allocated
                        if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
 
-        # First, we do add-machine, so that we can then deploy everything
-        # into a container in subsequent steps.
-        if (len(allocated) == 0 and len(unallocated) > 0 and
-                not pegasus.SINGLE_SYSTEM):
+        if (len(allocated) == 0 and len(unallocated) > 0 or
+            pegasus.SINGLE_SYSTEM):
             self.command_runner.add_machine()
-        elif len(allocated) > 0:
+        elif len(allocated) > 0 and pegasus.MULTI_SYSTEM:
             id = allocated[0]['machine_no']
-
-            # For single system installs, we use containers on the bare
-            # metal (assumed to be machine 1, given to us by the
-            # installer). Everywhere else, we just use the first available
-            # machine, which is the id of the first machine in the
-            # unallocated list.
-            if pegasus.SINGLE_SYSTEM:
-                assert id == "1"
 
             pending = self._controller_charms_to_allocate(data)
             if len(pending) == 0:
                 return False
 
             for charm in pending:
-                self.command_runner.deploy(charm, id='lxc:%s' % id)
-
-            if pegasus.SINGLE_SYSTEM:
-                # Add one compute node in single system mode, all we have to do
-                # is start the KVM, the maas poll loop will take it from there.
-                pegasus.StartKVM().run()
-
+                self.command_runner.deploy(charm, id='kvm:%s' % id)
+        else:
             self.text.set_text(self.NODE_SETUP)
         return True
 
@@ -164,9 +143,6 @@ def _wrap_focus(widgets, unfocused=None):
         return [urwid.AttrMap(w, unfocused, "focus") for w in widgets]
     except TypeError:
         return urwid.AttrMap(widgets, unfocused, "focus")
-
-
-RADIO_STATES = list(pegasus.ALLOCATION.values())
 
 
 class ChangeStateDialog(urwid.Overlay):
@@ -368,7 +344,7 @@ class CommandRunner(urwid.ListBox):
             new_service = charm not in self.services
             if new_service:
                 if pegasus.SINGLE_SYSTEM:
-                    self.deploy(charm, id='lxc:1')
+                    self.deploy(charm, id='kvm:1')
                 else:
                     self.deploy(charm, tag=metadata['tag'])
             else:
@@ -465,7 +441,7 @@ class NodeViewMode(urwid.Frame):
                 if compute:
                     # Here we just boot the KVM, the polling process will
                     # automatically allocate new kvms to nova-compute.
-                    pegasus.StartKVM().run()
+                    self.cr.add_machine()
                 self.cr.change_allocation(other, metadata)
             else:
                 self.cr.change_allocation(new_states, metadata)
@@ -482,6 +458,8 @@ class NodeViewMode(urwid.Frame):
 
     def do_update(self, data_and_juju_state):
         data, juju = data_and_juju_state
+        from pprint import pprint
+        pprint(data)
         new_data = [Node(t, self.open_dialog) for t in data]
         prev_total = len(self.nodes._contents)
 
@@ -594,7 +572,7 @@ class PegasusGUI(urwid.MainLoop):
                 self.widget = self.node_view.target
             else:
                 self.widget = self.console
-        if key in ['q', 'Q'] and not IS_TTY:
+        if key in ['q', 'Q']:
             raise urwid.ExitMainLoop()
 
     def tick(self, unused_loop=None, unused_data=None):
@@ -637,7 +615,10 @@ class PegasusGUI(urwid.MainLoop):
         can't actually run python functions asynchronously. So, if we want to
         run a long-running function which should update the UI, we have to get
         a fd to have urwid watch for us, and then we send data to it when it's
-        done. """
+        done.
+
+        FIXME: Once https://github.com/wardi/urwid/pull/57 is implemented.
+        """
 
         result = None
 

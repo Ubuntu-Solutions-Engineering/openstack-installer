@@ -28,7 +28,7 @@ deb: clean update_version tarball
 	@debuild -us -uc -i
 
 sbuild: clean update_version tarball
-	@sbuild -d trusty-amd64
+	@sbuild -d trusty-amd64 -j4
 
 current_version:
 	@echo $(VERSION)

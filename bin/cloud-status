@@ -32,13 +32,19 @@ from cloudinstall.maas.auth import MaasAuth
 
 def sig_handler(signum, frame):
     utils.reset_blanking()
-    sys.exit()
+    sys.exit(1)
 
 for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
     signal.signal(sig, sig_handler)
 
 def get_data():
-    return pegasus.poll_state(MaasAuth())
+    """ Starts the polling routine.
+
+    This initiates both maas and juju states, however, we only
+    utilize maas if multi installation.
+    """
+    auth = MaasAuth() if not pegasus.SINGLE_SYSTEM else None
+    return pegasus.poll_state(auth)
 
 if __name__ == '__main__':
     gui = gui.PegasusGUI(get_data)
