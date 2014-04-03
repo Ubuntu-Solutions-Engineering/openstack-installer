@@ -78,6 +78,12 @@ def get_network_interfaces():
 
 
 def partition(pred, iterable):
+    """ Returns tuple of allocated and unallocated systems
+
+    @param pred: status predicate
+    @param iterable: machine data
+    @return: tuple containing ([allocated], [unallocated])
+    """
     yes, no = [], []
     for i in iterable:
         (yes if pred(i) else no).append(i)

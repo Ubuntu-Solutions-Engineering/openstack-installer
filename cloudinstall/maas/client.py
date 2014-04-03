@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.maas.state import MaasState
+from cloudinstall.maas import MaasState
 from requests_oauthlib import OAuth1
 import requests
 import json
