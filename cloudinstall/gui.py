@@ -458,8 +458,6 @@ class NodeViewMode(urwid.Frame):
 
     def do_update(self, data_and_juju_state):
         data, juju = data_and_juju_state
-        from pprint import pprint
-        pprint(data)
         new_data = [Node(t, self.open_dialog) for t in data]
         prev_total = len(self.nodes._contents)
 
