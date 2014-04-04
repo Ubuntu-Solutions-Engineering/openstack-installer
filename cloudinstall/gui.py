@@ -122,10 +122,9 @@ class ControllerOverlay(TextOverlay):
         controllers = [n for n in allocated
                        if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
 
-        # First, we do add-machine, so that we can then deploy everything
-        # into a container in subsequent steps.
-        if (len(allocated) == 0 and len(unallocated) > 0 and
-            not pegasus.SINGLE_SYSTEM):
+        # First, we do add-machine, so that we can then deploy
+        # everything into a container in subsequent steps.
+        if (len(allocated) == 0 and len(unallocated) > 0):
             self.command_runner.add_machine()
         elif len(allocated) > 0:
             id = allocated[0]['machine_no']
@@ -135,8 +134,8 @@ class ControllerOverlay(TextOverlay):
                 return False
 
             for charm in pending:
-                # We deploy all the charms in the multi install into a
-                # container on the first node.
+                # We deploy all the charms into a container on the
+                # first node.
                 self.command_runner.deploy(charm, id='lxc:%s' % id)
         else:
             TextOverlay(self.NODE_SETUP, self.underlying)
