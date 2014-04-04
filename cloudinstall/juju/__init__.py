@@ -38,8 +38,13 @@ class JujuState:
         """
         return self._yaml['machines'][no]['instance-id']
 
+    @property
+    def machines(self):
+        """ Returns machines known to juju """
+        return self._yaml['machines'].items()
+
     def machine(self, id):
-        for no, m in self._yaml['machines'].items():
+        for no, m in self.machines:
             if m['instance-id'] == id:
                 m['machine_no'] = no
                 return m
