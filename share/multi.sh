@@ -82,7 +82,6 @@ multiInstall()
 		admin_secret=$(pwgen -s 32)
 		configureJuju configMaasEnvironment $address $maas_creds $admin_secret
 		gaugePrompt 75 "Bootstrapping Juju"
-		host=$(maasAddress $address).master
 		jujuBootstrap $uuid
 		echo 99
 		maas maas tags new name=use-fastpath-installer definition="true()"

@@ -43,7 +43,7 @@ class JujuWS(WebSocketClient):
 
 class JujuClient:
     """ Juju client class """
-    def __init__(self, url='wss://juju-bootstrap.master:17070/'):
+    def __init__(self, url='wss://juju-bootstrap.maas:17070/'):
         self.conn = JujuWS(url, protocols=['https-only'])
         self._request_id = 1
         self.is_connected = False
