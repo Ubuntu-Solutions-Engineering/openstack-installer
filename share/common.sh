@@ -181,12 +181,14 @@ startLog()
 	printf "Cloud installation started %s\n" "$(date)" >> "$LOG"
 	mkfifo -m 0600 "$TMP/log"
 	ts "$TMP/log" >> "$LOG" &
+	log_pid=$!
 	exec 2> "$TMP/log"
 }
 
 stopLog()
 {
 	exec 2>&1
+	wait $log_pid
 	rm -f "$TMP/log"
 	printf "Cloud installation finished %s\n" "$(date)" >> "$LOG"
 }
