@@ -88,11 +88,12 @@ class ControllerOverlay(TextOverlay):
                  "Please wait until setup is complete "
 
     def __init__(self, underlying, command_runner):
+        self.underlying = underlying
         self.allocated = None
         self.command_runner = command_runner
         self.done = False
         self.start_text = self.NODE_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
-        TextOverlay.__init__(self, self.start_text, underlying)
+        TextOverlay.__init__(self, self.start_text, self.underlying)
 
     def process(self, data):
         """ Process a node list. Returns True if the overlay still needs to be
@@ -138,7 +139,7 @@ class ControllerOverlay(TextOverlay):
                 # container on the first node.
                 self.command_runner.deploy(charm, id='lxc:%s' % id)
         else:
-            self.text.set_text(self.NODE_SETUP)
+            TextOverlay(self.NODE_SETUP, self.underlying)
         return True
 
 
