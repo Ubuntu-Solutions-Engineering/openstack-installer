@@ -58,6 +58,8 @@ configureJuju()
 # TODO break this function into smaller ones
 jujuBootstrap()
 {
+	cluster_uuid=$1
+
 	lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
 	sed -e "s/^lxc.network.link.*$/lxc.network.link = br0/" -i \
 	    /var/lib/lxc/juju-bootstrap/config
@@ -70,9 +72,8 @@ jujuBootstrap()
 	mac=$(grep lxc.network.hwaddr /var/lib/lxc/juju-bootstrap/config \
 	    | cut -d " " -f 3)
 	# TODO dynamic architecture selection
-	# NOTE: nodegroup= here intentionally left blank.
 	maas maas nodes new architecture=amd64/generic mac_addresses=$mac \
-	    hostname=juju-bootstrap nodegroup= power_type=virsh
+	    hostname=juju-bootstrap nodegroup=$cluster_uuid power_type=virsh
 	system_id=$(nodeSystemId $mac)
 	wget -O $TMP/maas.creds \
 	    "http://localhost/MAAS/metadata/latest/by-id/$system_id/?op=get_preseed"
