@@ -1,7 +1,8 @@
-``cloudinstall.pegasus`` --- GUI helpers
+``cloudinstall.gui`` --- GUI Interface
 ========================================
 
-.. automodule:: cloudinstall.pegasus
+.. automodule:: cloudinstall.gui
     :members:
     :undoc-members:
     :show-inheritance:
+

@@ -1,7 +1,7 @@
-``cloudinstall.pegasus`` --- GUI helpers
+``cloudinstall.utils`` --- Utility helpers
 ========================================
 
-.. automodule:: cloudinstall.pegasus
+.. automodule:: cloudinstall.utils
     :members:
     :undoc-members:
     :show-inheritance:

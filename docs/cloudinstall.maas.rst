@@ -1,5 +1,8 @@
-maas Package
+MAAS Package
 ============
+
+This package contains modules necessary for communicating with the
+MaaS API server.
 
 :mod:`maas` Package
 -------------------
