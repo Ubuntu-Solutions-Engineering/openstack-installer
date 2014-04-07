@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Represents a juju status """
+
 import yaml
 
 from collections import defaultdict
@@ -24,26 +26,39 @@ from collections import defaultdict
 class JujuState:
     def __init__(self, raw_yaml):
         """ Builds a JujuState from a file-like object containing the raw
-        output from 'juju status'
+        output from __juju status__
 
-        @param raw_yaml: yaml output from `juju status`
+        :param raw_yaml: YAML object
         """
         self._yaml = yaml.load(raw_yaml)
 
     def id_for_machine_no(self, no):
-        """ Returns instance-id of a machine
+        """ Returns id of a machine
 
-        @param no: Machine number
-        @return: instance-id string
+        :param no: machine number
+        :type no: int
+        :returns: instance-id of machine
+        :rtype: str
         """
         return self._yaml['machines'][no]['instance-id']
 
     @property
     def machines(self):
-        """ Returns machines known to juju """
+        """ Machines property
+
+        :returns: machines known to juju
+        :rtype: list
+        """
         return self._yaml['machines'].items()
 
     def machine(self, id):
+        """ Returns instance-id of machine
+
+        :param id: machine id
+        :type id: int
+        :returns: instance-id
+        :rtype: str
+        """
         for no, m in self.machines:
             if m['instance-id'] == id:
                 m['machine_no'] = no
@@ -51,7 +66,11 @@ class JujuState:
 
     @property
     def services(self):
-        """ Map of {servicename: nodecount}. """
+        """ Juju services property
+
+        :returns: list of {servicename: nodecount}
+        :rtype: list
+        """
         ret = {}
         for svc, contents in self._yaml.get('services', {}).items():
             ret[svc] = len(contents.get('units', []))
@@ -73,9 +92,13 @@ class JujuState:
 
     @property
     def assignments(self):
-        """ Return a map of instance-id: ([charm name], [unit name]), useful
-        for figuring out what is deployed where. Note that these are physical
-        machines, and containers are not included. """
+        """ Return a map of instance-ids and its charm/unit names,
+        useful for figuring out what is deployed where. Note that
+        these are physical machines, and containers are not included.
+
+        :returns: [{instance-id: ([charm name], [unit name])}]
+        :rtype: list
+        """
         def by_instance_id(unit):
             return self._yaml['machines'][unit['machine']]['instance-id']
 
@@ -85,8 +108,11 @@ class JujuState:
 
     @property
     def containers(self):
-        """ A map of container-id (e.g. "1/lxc/0") to ([charm name], [unit
-        name]) """
+        """ A map of container-ids
+
+        :returns: [{"1/lxc/0": ([charm name], [unit name])]
+        :rtype: list
+        """
         def by_machine_name(unit):
             return unit['machine']
 
@@ -95,5 +121,15 @@ class JujuState:
         return self._build_unit_map(by_machine_name, allow_id=is_lxc)
 
     def container(self, machine, id_):
+        """ Inspect a container
+
+        :param machine: id of machine to inspect
+        :type machine: int
+        :param id_: lxc container id
+        :type id_: int
+        :returns: Returns a dictionary of the container information for
+                  specific machine and lxc id.
+        :rtype: dict
+        """
         lxc = "%s/lxc/%s" % (machine, id_)
         return self._yaml["machines"][machine]["containers"][lxc]
