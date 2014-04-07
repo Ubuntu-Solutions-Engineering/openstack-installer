@@ -197,8 +197,12 @@ def parse_state(juju, maas=None):
 
     for container, (charms, units) in juju.containers.items():
         machine_no, _, lxc_id = container.split('/')
+        try:
+            fqdn = juju.container(machine_no, lxc_id)['dns-name']
+        except:
+            fqdn = 'Pending ...'
         d = {
-            "fqdn": juju.container(machine_no, lxc_id)['dns-name'],
+            "fqdn": fqdn,
             "memory": "LXC",
             "cpu_count": "LXC",
             "storage": "LXC",
