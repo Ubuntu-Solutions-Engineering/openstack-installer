@@ -34,14 +34,33 @@ class MaasState:
         return iter(self._maas)
 
     def hostname_for_instance_id(self, id):
+        """ Query hostname by instance id
+
+        :param id: id of machine
+        :type id: int
+        :returns: hostname
+        :rtype: str
+        """
         for machine in self:
             if machine['resource_uri'] == id:
                 return machine['hostname']
 
     @property
     def machines(self):
+        """ Machines property
+
+        :returns: number of machines known to maas
+        :rtype: int
+        """
         return len(self._maas)
 
     def num_in_state(self, state):
+        """ Number of machines in a particular state
+
+        :param state: a machine state
+        :type state: str
+        :returns: number of machines in `status`
+        :rtype: int
+        """
         return len(list(filter(lambda m: int(m["status"]) == state,
                                self._maas)))

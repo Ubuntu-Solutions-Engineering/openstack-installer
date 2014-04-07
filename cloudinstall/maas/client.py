@@ -32,14 +32,14 @@ class MaasClient:
         """ Entry point to client routines for interfacing
         with MAAS api.
 
-        @param auth: MAAS Authorization class (required)
+        :param auth: MAAS Authorization class (required)
         """
         self.auth = auth
 
     def _oauth(self):
         """ Generates OAuth attributes for protected resources
 
-        @return: OAuth class
+        :returns: OAuth class
         """
         oauth = OAuth1(self.auth.consumer_key,
                        client_secret=self.auth.consumer_secret,
@@ -52,8 +52,8 @@ class MaasClient:
     def get(self, url, params=None):
         """ Performs a authenticated GET against a MAAS endpoint
 
-        @param url: MAAS endpoint
-        @param params: extra data sent with the HTTP request
+        :param url: MAAS endpoint
+        :param params: extra data sent with the HTTP request
         """
         return requests.get(url=self.auth.api_url + url,
                             auth=self._oauth(),
@@ -62,8 +62,8 @@ class MaasClient:
     def post(self, url, params=None):
         """ Performs a authenticated POST against a MAAS endpoint
 
-        @param url: MAAS endpoint
-        @param params: extra data sent with the HTTP request
+        :param url: MAAS endpoint
+        :param params: extra data sent with the HTTP request
         """
         return requests.post(url=self.auth.api_url + url,
                              auth=self._oauth(),
@@ -72,8 +72,8 @@ class MaasClient:
     def delete(self, url, params=None):
         """ Performs a authenticated DELETE against a MAAS endpoint
 
-        @param url: MAAS endpoint
-        @param params: extra data sent with the HTTP request
+        :param url: MAAS endpoint
+        :param params: extra data sent with the HTTP request
         """
         return requests.delete(url=self.auth.api_url + url,
                                auth=self._oauth())
@@ -85,7 +85,8 @@ class MaasClient:
     def nodes(self):
         """ Nodes managed by MAAS
 
-        @return list: List of managed nodes
+        :returns: managed nodes
+        :rtype: list
         """
         res = self.get('/nodes/', dict(op='list'))
         if res.ok:
@@ -95,11 +96,16 @@ class MaasClient:
     def nodes_accept_all(self):
         """ Accept all commissioned nodes
 
-        @return: Status/Fail boolean
-        res = self.post('/nodes/', dict(op='accept_all'))
-        if res.ok:
-            return True
-        return False
+        :returns: Status
+        :rtype: bool
+
+        .. todo::
+        .. code::
+
+            res = self.post('/nodes/', dict(op='accept_all'))
+            if res.ok:
+                return True
+            return False
         """
         try:
             check_call(['maas', 'maas', 'nodes', 'accept-all'])
@@ -109,8 +115,8 @@ class MaasClient:
     def node_commission(self, system_id):
         """ (Re)commission a node
 
-        @param system_id: machine identification
-        @return: True on success False on failure
+        :param system_id: machine identification
+        :returns: True on success False on failure
         """
         res = self.post('/nodes/%s' % (system_id,), dict(op='commission'))
         if res.ok:
@@ -120,8 +126,8 @@ class MaasClient:
     def node_start(self, system_id):
         """ Power up a node
 
-        @param system_id: machine identification
-        @return: True on success False on failure
+        :param system_id: machine identification
+        :returns: True on success False on failure
         """
         res = self.post('/nodes/%s' % (system_id,), dict(op='start'))
         if res.ok:
@@ -131,8 +137,8 @@ class MaasClient:
     def node_stop(self, system_id):
         """ Shutdown a node
 
-        @param system_id: machine identification
-        @return: True on success False on failure
+        :param system_id: machine identification
+        :returns: True on success False on failure
         """
         res = self.post('/nodes/%s' % (system_id,), dict(op='stop'))
         if res.ok:
@@ -142,8 +148,8 @@ class MaasClient:
     def node_remove(self, system_id):
         """ Delete a node
 
-        @param system_id: machine identification
-        @return: True and success False on failure
+        :param system_id: machine identification
+        :returns: True and success False on failure
         """
         res = self.delete('/nodes/%s' % (system_id,))
         if res.ok:
@@ -157,7 +163,7 @@ class MaasClient:
     def tags(self):
         """ List tags known to MAAS
 
-        @return: List of tags or empty list
+        :returns: List of tags or empty list
         """
         res = self.get('/tags/', dict(op='list'))
         if res.ok:
@@ -167,13 +173,19 @@ class MaasClient:
     def tag_new(self, tag):
         """ Create tag if it doesn't exist.
 
-        @param tag: Tag name
-        @return: Success/Fail boolean
-        tags = {tagmd['name'] for tagmd in self.tags}
-        if tag not in tags:
-            res = self.post('/tags/', dict(op='new',name=tag))
-            return res.ok
-        return False
+        :param tag: Tag name
+        :returns: Success/Fail boolean
+
+        .. todo::
+        .. code::
+
+            # Make use of rest api
+
+            tags = {tagmd['name'] for tagmd in self.tags}
+            if tag not in tags:
+                res = self.post('/tags/', dict(op='new',name=tag))
+                return res.ok
+            return False
         """
         try:
             check_call(['maas', 'maas', 'tags',
@@ -186,8 +198,10 @@ class MaasClient:
     def tag_delete(self, tag):
         """ Delete a tag
 
-        @param tag: tag id
-        @return: True on success False on failure
+        :param tag: tag id
+        :type tag: str
+        :returns: True on success False on failure
+        :rtype: bool
         """
         res = self.delete('/tags/%s' % (tag,))
         if res.ok:
@@ -197,14 +211,23 @@ class MaasClient:
     def tag_machine(self, tag, system_id):
         """ Tag the machine with the specified tag.
 
-        @param tag: Tag name
-        @param system_id: ID of node
-        @return: Success/Fail boolean
-        res = self.post('/tags/%s/' % (tag,), dict(op='update_nodes',
-                                                   add=system_id))
-        if res.ok:
-            return True
-        return False
+        :param tag: Tag name
+        :type tag: str
+        :param system_id: ID of node
+        :type system_id: str
+        :returns: Success or Fail
+        :rtype: bool
+
+        .. todo::
+        .. code::
+
+            # Make use of rest api
+            res = self.post('/tags/%s/' % (tag,),
+                            dict(op='update_nodes',
+                                 add=system_id))
+            if res.ok:
+                return True
+            return False
         """
         try:
             check_call(['maas', 'maas', 'tag', 'update-nodes',
@@ -224,7 +247,7 @@ class MaasClient:
         its hostname for now so that we can pass that tag as a
         constraint to juju.
 
-        @param maas: MAAS object representing all managed nodes
+        :param maas: MAAS object representing all managed nodes
         """
         for machine in maas:
             tag = machine['system_id']
@@ -242,7 +265,7 @@ class MaasClient:
         when the machine is in the DECLARED state (also to avoid
         re-tagging things that have already been tagged).
 
-        @param maas: MAAS object representing all managed nodes
+        :param maas: MAAS object representing all managed nodes
         """
         FPI_TAG = 'use-fastpath-installer'
         self.tag_new(FPI_TAG)
@@ -257,7 +280,7 @@ class MaasClient:
     def users(self):
         """ List users on MAAS
 
-        @return: List of registered users or an empty list
+        :returns: List of registered users or an empty list
         """
         res = self.get('/users/')
         if res.ok:
@@ -271,7 +294,7 @@ class MaasClient:
     def zones(self):
         """ List physical zones
 
-        @return: List of managed zones or empty list
+        :returns: List of managed zones or empty list
         """
         res = self.get('/zones/')
         if res.ok:
@@ -281,9 +304,9 @@ class MaasClient:
     def zone_new(self, name, description="Zone created by API"):
         """ Create a physical zone
 
-        @param name: Name of the zone
-        @param description: Description of zone.
-        @return: True on success False on failure
+        :param name: Name of the zone
+        :param description: Description of zone.
+        :returns: True on success False on failure
         """
         res = self.post('/zones/', dict(name=name,
                                         description=description))

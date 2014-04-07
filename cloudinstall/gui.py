@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Pegasus - gui interface to Ubuntu Cloud Installer """
+
 from collections import deque
 from errno import ENOENT
 from os import write, close

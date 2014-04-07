@@ -29,6 +29,7 @@ import cloudinstall
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode']
 
 autodoc_docstring_signature = False
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -44,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Ubuntu Cloud Installer'
-copyright = u'2014, Solutions Engineering'
+copyright = u'2014, Canonical Ltd'
 
 version = release = cloudinstall.__version__
 
