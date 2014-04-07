@@ -30,7 +30,15 @@ blank_len = None
 def get_command_output(command, timeout=300):
     """ Execute command through system shell
 
-    @return: returncode, stdout, 0
+    :param command: command to run
+    :type command: str
+    :returns: (returncode, stdout, 0)
+    :rtype: tuple
+
+    .. code::
+
+        # Get output of juju status
+        ret, out, rtime = utils.get_command_output('juju status')
     """
     cmd_env = os.environ.copy()
     # set consistent locale
@@ -48,8 +56,15 @@ def get_command_output(command, timeout=300):
 def get_network_interface(iface):
     """ Get network interface properties
 
-    @param iface: Interface to query (ex. eth0)
-    @return: dict of interface properties or None if no properties
+    :param iface: Interface to query (ex. eth0)
+    :type iface: str
+    :return: interface properties or empty if none
+    :rtype: dict
+
+    .. code::
+
+        # Get address, broadcast, and netmask of eth0
+        iface = utils.get_network_interface('eth0')
     """
     (status, output, runtime) = get_command_output('ifconfig %s' % (iface,))
     line = output.split('\n')[1:2][0].lstrip()
@@ -59,13 +74,14 @@ def get_network_interface(iface):
         return {'address': match.group(1),
                 'broadcast': match.group(2),
                 'netmask': match.group(3)}
-    return None
+    return {}
 
 
 def get_network_interfaces():
     """ Get network interfaces
 
-    @return: list of available interfaces and their properties
+    :returns: available interfaces and their properties
+    :rtype: list
     """
     interfaces = []
     (status, output, runtime) = get_command_output('ifconfig -s')
@@ -80,9 +96,19 @@ def get_network_interfaces():
 def partition(pred, iterable):
     """ Returns tuple of allocated and unallocated systems
 
-    @param pred: status predicate
-    @param iterable: machine data
-    @return: tuple containing ([allocated], [unallocated])
+    :param pred: status predicate
+    :type pred: function
+    :param iterable: machine data
+    :type iterable: list
+    :returns: ([allocated], [unallocated])
+    :rtype: tuple
+
+    .. code::
+
+        def is_allocated(d):
+            allocated_states = ['started', 'pending', 'down']
+            return 'charms' in d or d['agent_state'] in allocated_states
+        allocated, unallocated = utils.partition(is_allocated, [{state: 'pending'}])
     """
     yes, no = [], []
     for i in iterable:
@@ -124,9 +150,12 @@ def console_blank():
 def randomString(size=6, chars=string.ascii_uppercase + string.digits):
     """ Generate a random string
 
-    @param size: number of string characters
-    @param chars: range of characters (optional)
+    :param size: number of string characters
+    :type size: int
+    :param chars: range of characters (optional)
+    :type chars: str
 
-    @return: a random string
+    :returns: a random string
+    :rtype: str
     """
     return ''.join(random.choice(chars) for x in range(size))

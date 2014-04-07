@@ -121,6 +121,13 @@ SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
 MULTI_SYSTEM = exists(expanduser('~/.cloud-install/multi'))
 
 def juju_config_arg(charm):
+    """ Query configuration parameters for openstack charms
+
+    :param charm: name of charm
+    :type charm: str
+    :return: path of openstack configuration
+    :rtype: str
+    """
     path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
     if not exists(path):
         with open(path, 'wb') as f:
@@ -132,7 +139,8 @@ def juju_config_arg(charm):
 def poll_state(auth=None):
     """ Polls current state of Juju and MAAS
 
-    @param auth: MAAS Auth class
+    :param auth: Maas authorization class
+    :type auth: MaasAuth
     """
     # Capture Juju state
     juju = utils._run('juju status')
@@ -160,9 +168,12 @@ def poll_state(auth=None):
 def parse_state(juju, maas=None):
     """ Parses the current state of juju containers and maas nodes
 
-    @param juju: juju polled state
-    @param maas: maas polled state
-    @return: list of nodes/containers created
+    :param juju: juju polled state
+    :type juju: JujuState()
+    :param maas: maas polled state
+    :type mass: MaasState()
+    :return: nodes/containers
+    :rtype: list
     """
     results = []
 
@@ -216,6 +227,7 @@ def parse_state(juju, maas=None):
 
 
 def wait_for_services():
+    """ Wait for services to be in ready state """
     services = [
         'maas-region-celery',
         'maas-cluster-celery',
