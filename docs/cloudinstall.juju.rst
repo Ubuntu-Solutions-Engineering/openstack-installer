@@ -1,5 +1,8 @@
-juju Package
+Juju Package
 ============
+
+This package contains necessary modules for communicating with the
+Juju api server and executing **juju** related commands from the cli.
 
 :mod:`juju` Package
 -------------------

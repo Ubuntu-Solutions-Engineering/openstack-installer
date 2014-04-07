@@ -1,13 +1,23 @@
 Ubuntu Cloud Installer
 ==================================================
 
-`Code <https://github.com/ubuntu-solutions-engineering/cloud-installer>`_
+`Github project page <https://github.com/ubuntu-solutions-engineering/cloud-installer>`_
 
-Contents:
+.. todo::
+
+   * Document single, multi, and landscape install guides.
+
+   * Expand examples for all documented classes, methods, and functions.
+
+
+Reference
+^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 2
 
-   cloudinstall.maas
-   cloudinstall.juju
    pegasus
+   gui
+   utils
+   cloudinstall.juju
+   cloudinstall.maas
