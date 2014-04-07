@@ -35,25 +35,40 @@ class MaasAuth:
     @property
     def is_logged_in(self):
         """ Checks if we are logged into the MAAS api
+
+        :rtype: bool
         """
         return True if self.api_key else False
 
     @property
     def consumer_key(self):
+        """ Maas consumer key
+
+        :rtype: str
+        """
         return self.api_key.split(':')[0] if self.api_key else None
 
     @property
     def token_key(self):
+        """ Maas oauth token key
+
+        :rtype: str
+        """
         return self.api_key.split(':')[1] if self.api_key else None
 
     @property
     def token_secret(self):
+        """ Maas oauth token secret
+
+        :rtype: str
+        """
         return self.api_key.split(':')[2] if self.api_key else None
 
     def get_api_key(self, username):
         """ MAAS api key
 
-        @param username: MAAS user to query for credentials
+        :param username: MAAS user to query for credentials
+        :type username: str
         """
         self.api_key = check_output(['sudo',
                                      'maas-region-admin',
@@ -70,8 +85,10 @@ class MaasAuth:
         Important keys include `metadata_url`, and the actual OAuth
         credentials.
 
-        @param url: cloud-init config URL
-        @param creds: MAAS user credentials
+        :param url: cloud-init config URL
+        :type url: str
+        :param creds: MAAS user credentials
+        :type creds: dict
         """
         if url.startswith("http://") or url.startswith("https://"):
             cfg_str = requests.get(url=url).content
