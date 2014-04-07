@@ -9,3 +9,4 @@ setuptools
 urwid
 nose
 nose-cov
+readthedocs-sphinx-ext

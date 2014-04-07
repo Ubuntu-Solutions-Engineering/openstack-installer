@@ -49,6 +49,10 @@ class JujuClient:
         self.is_connected = False
 
     def login(self, password):
+        """ Login to juju
+
+        :param password: password of juju websocket api server
+        """
         self.conn.daemon = False
         self.conn.juju_pass = password
         if not self.is_connected:
@@ -57,10 +61,15 @@ class JujuClient:
         self.is_connected = True
 
     def close(self):
+        """ Closes connection to juju websocket """
         self.conn.close()
 
     def call(self, params):
-        """ Get json data from juju api daemon """
+        """ Get json data from juju api daemon
+
+        :params params: Additional params to be passed into request
+        :type params: dict
+        """
         self._request_id = self._request_id + 1
         params['RequestId'] = self._request_id
         self.conn.send(json.dumps(params))
