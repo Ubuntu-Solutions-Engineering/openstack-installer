@@ -112,33 +112,37 @@ class ControllerOverlay(TextOverlay):
             self.done = True
         return continue_
 
-    def _controller_charms_to_allocate(self, data):
-        charms = {c for n in data if 'charms' in n for c in n['charms']}
-        return set(pegasus.CONTROLLER_CHARMS) - charms
-
     def _process(self, data):
-        def is_allocated(d):
-            allocated_states = ['started', 'pending', 'down']
-            return 'charms' in d or d['agent_state'] in allocated_states
-        allocated, unallocated = utils.partition(is_allocated, data)
-        controllers = [n for n in allocated
-                       if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
+        allocated = data.machines_allocated
+        unallocated = data.machines_unallocated
+        for machine in allocated:
+            if pegasus.NOVA_CLOUD_CONTROLLER in machine.charms:
+                return False
 
-        # First, we do add-machine, so that we can then deploy
-        # everything into a container in subsequent steps.
-        if (len(allocated) == 0 and len(unallocated) > 0):
-            self.command_runner.add_machine()
+        # Regardless of install type (single, multi) we always
+        # create at least 1 machine to deploy our cloud-controller
+        # on
+        if len(allocated) == 0:
+            if pegasus.MULTI_SYSTEM and len(unallocated) > 0:
+                self.command_runner.add_machine()
+            elif pegasus.SINGLE_SYSTEM:
+                self.command_runner.add_machine()
         elif len(allocated) > 0:
-            id = allocated[0]['machine_no']
-
-            pending = self._controller_charms_to_allocate(data)
+            machine = allocated[0]
+            pending = set(pegasus.CONTROLLER_CHARMS) - set(machine.charms)
             if len(pending) == 0:
                 return False
 
             for charm in pending:
-                # We deploy all the charms into a container on the
-                # first node.
-                self.command_runner.deploy(charm, id='lxc:%s' % id)
+                # If multi system install into lxc containers on machine
+                # TODO: Decide if we want to still keep this since single
+                # installs deploy all charms into the machine itself.
+                if pegasus.MULTI_SYSTEM:
+                    id_ = 'lxc:%s' % (machine.machine_id,)
+                else:
+                    id_ = machine.machine_id
+                # Deploy any remaining charms onto machine
+                self.command_runner.deploy(charm, id=id_)
         else:
             TextOverlay(self.NODE_SETUP, self.underlying)
         return True
@@ -475,7 +479,7 @@ class NodeViewMode(urwid.Frame):
             self._old_focus = None
 
         if self.target == self.controller_overlay and \
-                not self.controller_overlay.process(data):
+                not self.controller_overlay.process(juju):
             self.target = self
             for n in new_data:
                 if n.is_horizon:
@@ -651,29 +655,3 @@ class PegasusGUI(urwid.MainLoop):
             write(write_fd, bytes('done', 'ascii'))
 
         threading.Thread(target=run_f).start()
-
-
-if __name__ == "__main__":
-    def garbage(foo=[]):
-        metadata = {
-            "fqdn": "line %d" % len(foo),
-            "cpu_count": 1,
-            "memory": 2048,
-            "storage": 2048,
-            "id": "not a unique snowflake",
-            "machine_no": 100,
-            "agent_state": "pending",
-        }
-
-        if len(foo) % 2 == 1:
-            metadata['charms'] = ["nova-compute"]
-        if len(foo) % 3 == 1:
-            metadata['charms'] = pegasus.CONTROLLER_CHARMS
-        if len(foo) > 3:
-            foo[0]['charms'] = ['nova-compute']
-        foo.append(metadata)
-
-        class BogusJujuState():
-            services = {}
-        return foo, BogusJujuState
-    PegasusGUI(garbage).run()

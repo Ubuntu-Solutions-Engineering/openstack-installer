@@ -1,0 +1,140 @@
+environment: local
+machines:
+  "0":
+    agent-state: started
+    agent-version: 1.18.0.1
+    dns-name: localhost
+    instance-id: localhost
+    series: trusty
+  "2":
+    agent-state: started
+    agent-version: 1.18.0.1
+    dns-name: 10.0.3.174
+    instance-id: poe-local-machine-2
+    series: precise
+    hardware: arch=amd64 cpu-cores=1 mem=512M root-disk=8192M
+  "3":
+    agent-state: started
+    agent-version: 1.18.0.1
+    dns-name: 10.0.3.218
+    instance-id: poe-local-machine-3
+    series: precise
+    hardware: arch=amd64 cpu-cores=1 mem=1024M root-disk=8192M
+services:
+  ceph:
+    charm: cs:precise/ceph-22
+    exposed: false
+    relations:
+      mon:
+      - ceph
+    units:
+      ceph/0:
+        agent-state: error
+        agent-state-info: 'hook failed: "config-changed"'
+        agent-version: 1.18.0.1
+        machine: "3"
+        public-address: 10.0.3.218
+  glance:
+    charm: cs:precise/glance-30
+    exposed: false
+    relations:
+      cluster:
+      - glance
+    units:
+      glance/0:
+        agent-state: started
+        agent-version: 1.18.0.1
+        machine: "3"
+        open-ports:
+        - 9292/tcp
+        public-address: 10.0.3.218
+  keystone:
+    charm: cs:precise/keystone-31
+    exposed: false
+    relations:
+      cluster:
+      - keystone
+      shared-db:
+      - mysql
+    units:
+      keystone/0:
+        agent-state: error
+        agent-state-info: 'hook failed: "shared-db-relation-changed"'
+        agent-version: 1.18.0.1
+        machine: "3"
+        public-address: 10.0.3.218
+  mysql:
+    charm: cs:precise/mysql-38
+    exposed: false
+    relations:
+      cluster:
+      - mysql
+      shared-db:
+      - keystone
+      - nova-cloud-controller
+    units:
+      mysql/0:
+        agent-state: started
+        agent-version: 1.18.0.1
+        machine: "3"
+        public-address: 10.0.3.218
+  nova-cloud-controller:
+    charm: cs:precise/nova-cloud-controller-32
+    exposed: false
+    relations:
+      cluster:
+      - nova-cloud-controller
+      shared-db:
+      - mysql
+    units:
+      nova-cloud-controller/0:
+        agent-state: error
+        agent-state-info: 'hook failed: "shared-db-relation-changed"'
+        agent-version: 1.18.0.1
+        machine: "3"
+        open-ports:
+        - 3333/tcp
+        - 8773/tcp
+        - 8774/tcp
+        public-address: 10.0.3.218
+  nova-compute:
+    charm: cs:precise/nova-compute-25
+    exposed: false
+    relations:
+      compute-peer:
+      - nova-compute
+    units:
+      nova-compute/0:
+        agent-state: started
+        agent-version: 1.18.0.1
+        machine: "2"
+        public-address: 10.0.3.174
+  openstack-dashboard:
+    charm: cs:precise/openstack-dashboard-15
+    exposed: false
+    relations:
+      cluster:
+      - openstack-dashboard
+    units:
+      openstack-dashboard/0:
+        agent-state: started
+        agent-version: 1.18.0.1
+        machine: "3"
+        open-ports:
+        - 80/tcp
+        - 443/tcp
+        public-address: 10.0.3.218
+  rabbitmq-server:
+    charm: cs:precise/rabbitmq-server-21
+    exposed: false
+    relations:
+      cluster:
+      - rabbitmq-server
+    units:
+      rabbitmq-server/0:
+        agent-state: started
+        agent-version: 1.18.0.1
+        machine: "3"
+        open-ports:
+        - 5672/tcp
+        public-address: 10.0.3.218

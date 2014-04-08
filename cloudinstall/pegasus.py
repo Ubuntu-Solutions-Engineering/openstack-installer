@@ -136,11 +136,8 @@ def juju_config_arg(charm):
     return config.format(path=path)
 
 
-def poll_state(auth=None):
+def poll_state():
     """ Polls current state of Juju and MAAS
-
-    :param auth: Maas authorization class
-    :type auth: MaasAuth
     """
     # Capture Juju state
     juju = utils._run('juju status')
@@ -148,9 +145,10 @@ def poll_state(auth=None):
         raise Exception("Juju State is empty!")
     juju = JujuState(StringIO(juju.decode('ascii')))
 
-    # Login to MAAS
     maas = None
-    if auth and not auth.is_logged_in:
+    if MULTI_SYSTEM:
+        # Login to MAAS
+        auth = MaasAuth()
         auth.get_api_key('root')
         auth.login()
 
@@ -206,23 +204,41 @@ def parse_state(juju, maas=None):
             # to distinguish those in the API currently, so we just add everything.
             results.append(d)
 
-    for container, (charms, units) in juju.containers.items():
-        machine_no, _, lxc_id = container.split('/')
-        try:
-            fqdn = juju.container(machine_no, lxc_id)['dns-name']
-        except:
-            fqdn = 'Pending ...'
-        d = {
-            "fqdn": fqdn,
-            "memory": "LXC",
-            "cpu_count": "LXC",
-            "storage": "LXC",
-            "machine_no": container,
-            "agent_state": "LXC",
-            "charms": charms,
-            "units": units,
-        }
-        results.append(d)
+    if MULTI_SYSTEM:
+        for container, (charms, units) in juju.containers.items():
+            machine_no, _, lxc_id = container.split('/')
+            try:
+                fqdn = juju.container(machine_no, lxc_id)['dns-name']
+            except:
+                fqdn = 'Pending ...'
+            d = {
+                "fqdn": fqdn,
+                "memory": "LXC",
+                "cpu_count": "LXC",
+                "storage": "LXC",
+                "machine_no": container,
+                "agent_state": "LXC",
+                "charms": charms,
+                "units": units,
+            }
+            results.append(d)
+    if SINGLE_SYSTEM:
+        for machine in juju.machines:
+
+            if '0' in machine.machine_id:
+                continue
+
+            d = {
+                "fqdn": machine.dns_name,
+                "memory": machine.mem,
+                "cpu_count": machine.cpu_cores,
+                "storage": machine.storage,
+                "machine_no": machine.machine_id,
+                "agent_state": machine.agent_state,
+                "charms": machine.charms,
+                "units": machine.units
+            }
+            results.append(d)
     return results
 
 
