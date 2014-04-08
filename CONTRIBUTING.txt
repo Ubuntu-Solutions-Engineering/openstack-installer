@@ -10,10 +10,10 @@ Function names with opening/closing braces on newlines.
 
 funcname()
 {
-  return;
+	return;
 }
 
-### Spacing
+### Style
 
 #### Shell scripts
 
@@ -23,5 +23,11 @@ funcname()
 
 #### Python
 
-- Follow DEP-8 style guide.
+- Follow PEP-8 style guide.
   http://www.python.org/dev/peps/pep-0008/
+
+- Coding guidelines based off with a few differences
+  http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+
+  - Documenting code differences
+    We use the default sphinx style for documenting classes, functions, methods.
