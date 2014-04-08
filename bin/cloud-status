@@ -25,7 +25,6 @@ import os
 from cloudinstall import gui
 from cloudinstall import pegasus
 from cloudinstall import utils
-from cloudinstall.maas.auth import MaasAuth
 
 # TODO: Why does this crash?
 # pegasus.wait_for_services()
@@ -39,12 +38,8 @@ for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
 
 def get_data():
     """ Starts the polling routine.
-
-    This initiates both maas and juju states, however, we only
-    utilize maas if multi installation.
     """
-    auth = MaasAuth() if not pegasus.SINGLE_SYSTEM else None
-    return pegasus.poll_state(auth)
+    return pegasus.poll_state()
 
 if __name__ == '__main__':
     gui = gui.PegasusGUI(get_data)

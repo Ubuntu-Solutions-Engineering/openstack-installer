@@ -23,7 +23,139 @@ import yaml
 from collections import defaultdict
 
 
+class JujuMachine:
+    """ Represents a single machine state """
+
+    def __init__(self, machine_id, machine):
+        self.machine_id = machine_id
+        self.machine = machine
+
+    @property
+    def is_machine_0(self):
+        """ Checks if machine is bootstrapped node
+
+        :rtype: bool
+        """
+        return "0" in self.machine_id
+
+    @property
+    def cpu_cores(self):
+        """ Return number of cpu-cores
+
+        :returns: number of cpus
+        :rtype: str
+        """
+        return self.hardware('cpu-cores')
+
+    @property
+    def arch(self):
+        """ Return architecture
+
+        :returns: architecture type
+        :rtype: str
+        """
+        return self.hardware('arch')
+
+    @property
+    def storage(self):
+        """ Return storage
+
+        :returns: storage size
+        :rtype: str
+        """
+        try:
+            _storage_in_gb = int(self.hardware('root-disk')[:-1]) / 1024
+        except ValueError:
+            return "Error in storage size."
+        return "{size}G".format(size=str(_storage_in_gb))
+
+    @property
+    def mem(self):
+        """ Return memory
+
+        :returns: memory size
+        :rtype: str
+        """
+        try:
+            _mem = int(self.hardware('mem')[:-1])
+        except ValueError:
+            return "Error in mem size."
+        if _mem > 1024:
+            _mem = _mem / 1024
+            return "{size}G".format(size=str(_mem))
+        else:
+            return "{size}M".format(size=str(_mem))
+
+    def hardware(self, spec):
+        """ Get hardware information
+
+        :param spec: a hardware specification
+        :type spec: str
+        :returns: hardware of spec
+        :rtype: str
+        """
+        _machine = self.machine.get('hardware', None)
+        if _machine:
+            _hardware_list = _machine.split(' ')
+            for item in _hardware_list:
+                k, v = item.split('=')
+                if k in spec:
+                    return v
+        return 'N/A'
+
+    @property
+    def instance_id(self):
+        """ Returns instance-id of a machine
+
+        :param machine_id: machine number
+        :type machine_id: int
+        :returns: instance-id of machine
+        :rtype: str
+        """
+        return self.machine['instance-id']
+
+    @property
+    def dns_name(self):
+        """ Returns dns-name
+
+        :rtype: str
+        """
+        return self.machine.get('dns-name', '')
+
+    @property
+    def agent_state(self):
+        """ Returns agent-state
+
+        :rtype: str
+        """
+        return self.machine.get('agent-state', '')
+
+    @property
+    def charms(self):
+        """ Returns charms for machine
+
+        :rtype: str
+        """
+        def charm_name(charm):
+            return charm.split("/")[0]
+
+        _charm_list = []
+        for k in self.machine.get('units', []):
+            _charm_list.append(charm_name(k))
+        return _charm_list
+
+    @property
+    def units(self):
+        """ Return units for machine
+
+        :rtype: str
+        """
+        return self.machine.get('units', [])
+
+
 class JujuState:
+    """ Represents a global Juju state """
+
     def __init__(self, raw_yaml):
         """ Builds a JujuState from a file-like object containing the raw
         output from __juju status__
@@ -32,15 +164,17 @@ class JujuState:
         """
         self._yaml = yaml.load(raw_yaml)
 
-    def id_for_machine_no(self, no):
-        """ Returns id of a machine
+    def machine(self, instance_id):
+        """ Return single machine state
 
-        :param no: machine number
-        :type no: int
-        :returns: instance-id of machine
-        :rtype: str
+        :param instance_id: machine instance_id
+        :type instance_id: str
+        :returns: machine
+        :rtype: .. py:class:: JujuMachine
         """
-        return self._yaml['machines'][no]['instance-id']
+        for m in self.machines:
+            if m.instance_id == instance_id:
+                return m
 
     @property
     def machines(self):
@@ -49,32 +183,73 @@ class JujuState:
         :returns: machines known to juju
         :rtype: list
         """
-        return self._yaml['machines'].items()
+        results = []
+        for machine_id, machine in self._yaml['machines'].items():
+            machine_units = {}
+            for name in self.services:
+                for k,v in self.units(name):
+                    if machine_id in v.get('machine', '-1'):
+                        machine_units[k] = v
+            # Add units for machine
+            machine['units'] = machine_units
+            results.append(JujuMachine(machine_id, machine))
+        return results
 
-    def machine(self, id):
-        """ Returns instance-id of machine
+    @property
+    def machines_allocated(self):
+        """ Machines allocated property
 
-        :param id: machine id
-        :type id: int
-        :returns: instance-id
-        :rtype: str
+        :returns: Machines in an allocated state
+        :rtype: list
         """
-        for no, m in self.machines:
-            if m['instance-id'] == id:
-                m['machine_no'] = no
-                return m
+        allocated = []
+        for m in self.machines:
+            if m.agent_state in ['started', 'pending', 'down'] and \
+               not '0' in m.machine_id:
+                allocated.append(m)
+        return allocated
+
+    @property
+    def machines_unallocated(self):
+        """ Machines unallocated property
+
+        :returns: Machines in an unallocated state
+        :rtype: list
+        """
+        unallocated = []
+        for m in self.machines:
+            if m.agent_state not in ['started', 'pending', 'down']:
+                unallocated.append(m)
+        return unallocated
+
+    def units(self, name):
+        """ Juju units property
+
+        :param name: service/charm name
+        :type name: str
+        :returns: units for service
+        :rtype: dict_items
+        """
+        return self.service(name).get('units', {}).items()
+
+    def service(self, name):
+        """ Return a single service entry
+
+        :param name: service/charm name
+        :type name: str
+        :returns: a service entry
+        :rtype: dict
+        """
+        return self.services.get(name, {})
 
     @property
     def services(self):
         """ Juju services property
 
-        :returns: list of {servicename: nodecount}
-        :rtype: list
+        :returns: all loaded services
+        :rtype: dict
         """
-        ret = {}
-        for svc, contents in self._yaml.get('services', {}).items():
-            ret[svc] = len(contents.get('units', []))
-        return ret
+        return self._yaml.get('services', {})
 
     def _build_unit_map(self, compute_id, allow_id):
         """ Return a map of compute_id(unit): ([charm name], [unit name]),
