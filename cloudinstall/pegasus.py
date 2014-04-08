@@ -39,7 +39,7 @@ GLANCE = 'glance'
 KEYSTONE = 'keystone'
 OPENSTACK_DASHBOARD = 'openstack-dashboard'
 NOVA_COMPUTE = 'nova-compute'
-SWIFT = 'swift'
+SWIFT = 'swift-storage'
 CEPH = 'ceph'
 
 CONTROLLER = "Controller"
