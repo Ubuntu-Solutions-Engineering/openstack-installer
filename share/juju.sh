@@ -29,6 +29,7 @@ configMaasEnvironment()
 		    admin-secret: $3
 		    default-series: precise
 		    authorized-keys-path: ~/.ssh/id_rsa.pub
+		    apt-http-proxy: 'http://$1:8000/'
 		EOF
 }
 
