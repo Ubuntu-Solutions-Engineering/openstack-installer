@@ -1,3 +1,9 @@
+cloud-installer (0.13+git20140408-0ubuntu1) trusty; urgency=low
+
+  * Support for single bootstrap and initial deploy of status screen
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 08 Apr 2014 20:44:56 -0400
+
 cloud-installer (0.13+git20140401-0ubuntu1) trusty; urgency=low
 
   * New build
