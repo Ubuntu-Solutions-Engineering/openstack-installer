@@ -28,6 +28,7 @@ import urllib
 
 from cloudinstall import utils
 from cloudinstall.maas import MaasState
+from cloudinstall.maas.auth import MaasAuth
 from cloudinstall.juju import JujuState
 from cloudinstall.maas.client import MaasClient
 
