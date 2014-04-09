@@ -32,7 +32,7 @@ import urwid
 from cloudinstall import pegasus
 from cloudinstall import utils
 
-TITLE_TEXT = "Pegasus - your cloud's scout (q to quit)"
+TITLE_TEXT = "Ubuntu Cloud Installer (q to quit)"
 
 #- Properties -----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
@@ -483,7 +483,7 @@ class NodeViewMode(urwid.Frame):
             self.target = self
             for n in new_data:
                 if n.is_horizon:
-                    url = "http://{name}/horizon"
+                    url = "Access your dashboard: http://{name}/horizon"
                     self.url.set_text(url.format(name=n.name))
 
         if pegasus.SINGLE_SYSTEM:

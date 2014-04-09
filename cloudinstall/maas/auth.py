@@ -110,7 +110,9 @@ class MaasAuth:
     def login(self):
         """ Login to MAAS api server
 
-        TODO: Deprecate once MAAS api matures (http://pad.lv/1058137)
+        .. todo::
+
+            Deprecate once MAAS api matures (http://pad.lv/1058137)
         """
         if not self.api_key:
             raise Exception('No api_key was found, please run '
