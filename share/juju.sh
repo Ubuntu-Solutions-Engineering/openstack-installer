@@ -66,6 +66,8 @@ jujuBootstrap()
 	lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
 	sed -e "s/^lxc.network.link.*$/lxc.network.link = br0/" -i \
 	    /var/lib/lxc/juju-bootstrap/config
+	printf "\n%s\n%s\n" "# Autostart on reboot" "lxc.start.auto = 1" \
+	    >> /var/lib/lxc/juju-bootstrap/config
 	# lxc has to look like vanilla maas ubuntu for juju cloud-init script
 	# to run
 	rm /var/lib/lxc/juju-bootstrap/rootfs/etc/network/interfaces.d/eth0.cfg
