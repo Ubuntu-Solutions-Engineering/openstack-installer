@@ -66,7 +66,7 @@ class JujuMachine:
         try:
             _storage_in_gb = int(self.hardware('root-disk')[:-1]) / 1024
         except ValueError:
-            return "Error in storage size."
+            return "N/A"
         return "{size}G".format(size=str(_storage_in_gb))
 
     @property
@@ -79,7 +79,7 @@ class JujuMachine:
         try:
             _mem = int(self.hardware('mem')[:-1])
         except ValueError:
-            return "Error in mem size."
+            return "N/A"
         if _mem > 1024:
             _mem = _mem / 1024
             return "{size}G".format(size=str(_mem))
