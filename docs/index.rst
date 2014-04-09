@@ -5,9 +5,11 @@ Ubuntu Cloud Installer
 
 .. todo::
 
-   * Document single, multi, and landscape install guides.
+   This is work in progress and some information will be
+   missing. Please consult the source code or file a bug at the Github
+   project page.
 
-   * Expand examples for all documented classes, methods, and functions.
+   Contributions are welcomed.
 
 Guides
 ^^^^^^
@@ -17,6 +19,7 @@ Guides
 
    developers
    single-installer.guide
+   multi-installer.guide
 
 
 Reference
