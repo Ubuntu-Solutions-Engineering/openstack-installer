@@ -190,7 +190,7 @@ class JujuState:
         :param instance_id: machine instance_id
         :type instance_id: str
         :returns: machine
-        :rtype: .. py:class:: JujuMachine
+        :rtype: JujuMachine()
         """
         for m in self.machines:
             if m.instance_id == instance_id:
