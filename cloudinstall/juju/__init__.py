@@ -148,9 +148,29 @@ class JujuMachine:
     def units(self):
         """ Return units for machine
 
-        :rtype: str
+        :rtype: list
         """
         return self.machine.get('units', [])
+
+    @property
+    def containers(self):
+        """ Return containers for machine
+
+        :rtype: list
+        """
+        return self.machine.get('containers', [])
+
+    def container(self, container_id):
+        """ Inspect a container
+
+        :param container_id: lxc container id
+        :type container_id: int
+        :returns: Returns a dictionary of the container information for
+                  specific machine and lxc id.
+        :rtype: dict
+        """
+        lxc = "%s/lxc/%s" % (self.machine_id, container_id)
+        return JujuMachine(lxc, self.containers.get(lxc, {}))
 
 
 class JujuState:
@@ -281,30 +301,3 @@ class JujuState:
             return 'lxc' not in id_
         return self._build_unit_map(by_instance_id, not_lxc)
 
-    @property
-    def containers(self):
-        """ A map of container-ids
-
-        :returns: [{"1/lxc/0": ([charm name], [unit name])]
-        :rtype: list
-        """
-        def by_machine_name(unit):
-            return unit['machine']
-
-        def is_lxc(id_):
-            return 'lxc' in id_
-        return self._build_unit_map(by_machine_name, allow_id=is_lxc)
-
-    def container(self, machine, id_):
-        """ Inspect a container
-
-        :param machine: id of machine to inspect
-        :type machine: int
-        :param id_: lxc container id
-        :type id_: int
-        :returns: Returns a dictionary of the container information for
-                  specific machine and lxc id.
-        :rtype: dict
-        """
-        lxc = "%s/lxc/%s" % (machine, id_)
-        return self._yaml["machines"][machine]["containers"][lxc]

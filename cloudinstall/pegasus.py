@@ -167,9 +167,9 @@ def parse_state(juju, maas=None):
     """ Parses the current state of juju containers and maas nodes
 
     :param juju: juju polled state
-    :type juju: JujuState()
+    :type juju: .. class:: JujuState()
     :param maas: maas polled state
-    :type mass: MaasState()
+    :type mass: .. class:: MaasState()
     :return: nodes/containers
     :rtype: list
     """
@@ -205,23 +205,19 @@ def parse_state(juju, maas=None):
             results.append(d)
 
     if MULTI_SYSTEM:
-        for container, (charms, units) in juju.containers.items():
-            machine_no, _, lxc_id = container.split('/')
-            try:
-                fqdn = juju.container(machine_no, lxc_id)['dns-name']
-            except:
-                fqdn = 'Pending ...'
-            d = {
-                "fqdn": fqdn,
-                "memory": "LXC",
-                "cpu_count": "LXC",
-                "storage": "LXC",
-                "machine_no": container,
-                "agent_state": "LXC",
-                "charms": charms,
-                "units": units,
-            }
-            results.append(d)
+        for machine in juju.machines:
+            for container in machine.containers:
+                d = {
+                    "fqdn": container.dns_name,
+                    "memory": "LXC",
+                    "cpu_count": "LXC",
+                    "storage": "LXC",
+                    "machine_no": container.machine_id,
+                    "agent_state": "LXC",
+                    "charms": container.charms,
+                    "units": container.units,
+                }
+                results.append(d)
     if SINGLE_SYSTEM:
         for machine in juju.machines:
 
@@ -243,7 +239,12 @@ def parse_state(juju, maas=None):
 
 
 def wait_for_services():
-    """ Wait for services to be in ready state """
+    """ Wait for services to be in ready state
+
+    .. todo::
+
+    Is this still needed?
+    """
     services = [
         'maas-region-celery',
         'maas-cluster-celery',
