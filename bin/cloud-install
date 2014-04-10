@@ -20,6 +20,7 @@
 set -ex
 
 . /usr/share/cloud-installer/common/common.sh
+. /usr/share/cloud-installer/common/display.sh
 . /usr/share/cloud-installer/common/maas.sh
 . /usr/share/cloud-installer/common/juju.sh
 . /usr/share/cloud-installer/common/configure.sh
