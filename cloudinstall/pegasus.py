@@ -154,13 +154,13 @@ def poll_state():
         auth.login()
 
         # Load Client routines
-        m_client = MaasClient(auth=auth)
+        c = MaasClient(auth)
 
         # Capture Maas state
-        maas = MaasState(m_client.nodes)
-        m_client.tag_fpi(maas)
-        m_client.nodes_accept_all()
-        m_client.tag_name(maas)
+        maas = MaasState(c.nodes)
+        c.tag_fpi(maas)
+        c.nodes_accept_all()
+        c.tag_name(maas)
     return parse_state(juju, maas), juju
 
 
