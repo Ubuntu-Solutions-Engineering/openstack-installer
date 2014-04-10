@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from subprocess import check_output, check_call, DEVNULL
+import os
 import requests
 import yaml
 import sys
@@ -64,17 +65,22 @@ class MaasAuth:
         """
         return self.api_key.split(':')[2] if self.api_key else None
 
-    def get_api_key(self, username):
+    def get_api_key(self, username='root'):
         """ MAAS api key
 
-        :param username: MAAS user to query for credentials
+        :param username: (optional) MAAS user to query for credentials
         :type username: str
         """
-        self.api_key = check_output(['sudo',
-                                     'maas-region-admin',
-                                     'apikey',
-                                     '--username',
-                                     username]).decode('ascii').rstrip('\n')
+        maas_creds_file = os.path.expanduser('~/.cloudinstall/maas-creds')
+        if os.path.isfile(maas_creds_file):
+            with open(maas_creds_file, 'r') as f:
+                self.api_key = f.read().rstrip('\n')
+        else:
+            self.api_key = check_output(['sudo',
+                                         'maas-region-admin',
+                                         'apikey',
+                                         '--username',
+                                         username]).decode('ascii').rstrip('\n')
 
     def read_config(self, url, creds):
         """Read cloud-init config from given `url` into `creds` dict.
