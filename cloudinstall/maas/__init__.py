@@ -16,8 +16,144 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from cloudinstall.machine import Machine
+
+class MaasMachine(Machine):
+    """ Single maas machine """
+
+    @property
+    def hostname(self):
+        """ Query hostname reported by MaaS
+
+        :returns: hostname
+        :rtype: str
+        """
+        return self.machine.get('hostname', '')
+
+    @property
+    def status(self):
+        """ Status of machine state
+
+        Those statuses are defined as follows:
+        DECLARED = 0
+        COMMISSIONING = 1
+        FAILED_TESTS = 2
+        MISSING = 3
+        READY = 4
+        RESERVED = 5
+        ALLOCATED = 6
+        RETIRED = 7
+
+        :returns: status
+        :rtype: int
+        """
+        return self.machine.get('status', 0)
+
+    @property
+    def zone(self):
+        """ Zone information
+
+        :returns: zone information
+        :rtype: dict
+        """
+        return self.machine.get('zone', {})
+
+    @property
+    def cpu_cores(self):
+        """ Returns number of cpu-cores
+
+        :returns: number of cpus
+        :rtype: str
+        """
+        return self.machine.get('cpu_count', '0')
+
+    @property
+    def storage(self):
+        """ Return storage
+
+        :returns: storage size
+        :rtype: str
+        """
+        try:
+            _storage_in_gb = int(self.machine.get('storage')) / 1024
+        except ValueError:
+            return "N/A"
+        return "{size}G".format(size=str(_storage_in_gb))
+
+    @property
+    def arch(self):
+        """ Return architecture
+
+        :returns: architecture type
+        :rtype: str
+        """
+        return self.machine.get('architecture')
+
+    @property
+    def mem(self):
+        """ Return memory
+
+        :returns: memory size
+        :rtype: str
+        """
+        try:
+            _mem = int(self.machine.get('memory'))
+        except ValueError:
+            return "N/A"
+        if _mem > 1024:
+            _mem = _mem / 1024
+            return "{size}G".format(size=str(_mem))
+        else:
+            return "{size}M".format(size=str(_mem))
+
+    @property
+    def power_type(self):
+        """ Machine power type
+
+        :returns: machines power type
+        :rtype: str
+        """
+        return self.machine.get('power_type', 'None')
+
+    @property
+    def instance_id(self):
+        """ Returns instance-id of a machine
+
+        :returns: instance-id of machine
+        :rtype: str
+        """
+        return self.machine.get('resource_uri', '')
+
+    @property
+    def system_id(self):
+        """ Returns system id of a maas machine
+
+        :returns: system id of machine
+        :rtype: str
+        """
+        return self.machine.get('system_id', '')
+
+    @property
+    def ip_addresses(self):
+        """ Ip addresses for machine
+
+        :returns: ip addresses
+        :rtype: list
+        """
+        return self.machine.get('ip_addresses', [])
+
+    @property
+    def mac_address(self):
+        """ Macaddress set of maas machine
+
+        :returns: mac_address and resource_uri
+        :rtype: dict
+        """
+        return self.machine.get('macaddress_set', {})
 
 class MaasState:
+    """ Represents global MaaS state """
+
     DECLARED = 0
     COMMISSIONING = 1
     FAILED_TESTS = 2
@@ -28,31 +164,34 @@ class MaasState:
     RETIRED = 7
 
     def __init__(self, maas):
-        self._maas = maas
+        self.maas = maas
 
     def __iter__(self):
-        return iter(self._maas)
+        return iter(self.maas)
 
-    def hostname_for_instance_id(self, id):
-        """ Query hostname by instance id
+    def machine(self, instance_id):
+        """ Return single machine state
 
-        :param id: id of machine
-        :type id: int
-        :returns: hostname
-        :rtype: str
+        :param instance_id: machine instance_id
+        :type instance_id: str
+        :returns: machine
+        :rtype: cloudinstall.maas.MaasMachine()
         """
-        for machine in self:
-            if machine['resource_uri'] == id:
-                return machine['hostname']
+        for m in self.machines:
+            if m.instance_id == instance_id:
+                return m
 
     @property
     def machines(self):
-        """ Machines property
+        """ Maas Machines
 
-        :returns: number of machines known to maas
-        :rtype: int
+        :returns: machines known to maas
+        :rtype: list
         """
-        return len(self._maas)
+        results = []
+        for machine in self.maas:
+            results.append(MaasMachine(0, machine))
+        return results
 
     def num_in_state(self, state):
         """ Number of machines in a particular state
@@ -62,5 +201,5 @@ class MaasState:
         :returns: number of machines in `status`
         :rtype: int
         """
-        return len(list(filter(lambda m: int(m["status"]) == state,
-                               self._maas)))
+        return len(list(filter(lambda m: int(m.status) == state,
+                               self.machines)))
