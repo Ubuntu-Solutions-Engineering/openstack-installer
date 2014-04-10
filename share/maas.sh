@@ -62,7 +62,7 @@ configureDns()
 configureMaasImages()
 {
 	# don't sync the i386 images
-	sed -i -e '/- i386/d'
+	sed -i -e '/- i386/d' /etc/maas/bootresources.yaml
 }
 
 configureMaasInterfaces()
