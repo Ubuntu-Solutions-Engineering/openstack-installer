@@ -56,6 +56,7 @@ multiInstall()
 			gateway=$(ipAddress br0)
 			configureNat $(ipNetwork br0)
 			enableIpForwarding
+			configureMaasServices $gateway
 		fi
 
 		# Retrieve dhcp-range
