@@ -42,6 +42,7 @@ case $WHAT in
   esac
 
 # these may or may not be installed, so we list them all individually
+sudo apt-get -yy purge '.*juju.*'
 sudo apt-get -q -yy purge cloud-install-single
 sudo apt-get -q -yy purge cloud-install-multi
 sudo apt-get -q -yy purge cloud-install-landscape
