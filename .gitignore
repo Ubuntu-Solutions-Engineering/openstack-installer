@@ -12,3 +12,4 @@ debian/cloud-installer/
 debian/cloud-install-single/
 debian/cloud-install-multi/
 debian/cloud-install-landscape/
+*.swp
