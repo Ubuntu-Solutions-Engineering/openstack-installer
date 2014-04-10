@@ -149,7 +149,12 @@ class Machine:
 
         :rtype: list
         """
-        return self.machine.get('containers', [])
+        results = []
+        _containers = self.machine.get('containers', {}).items()
+        for container_id, container in _containers:
+            lxc = "%s/lxc/%s" % (self.machine_id, container_id)
+            results.append(Machine(lxc, container))
+        return results
 
     def container(self, container_id):
         """ Inspect a container
