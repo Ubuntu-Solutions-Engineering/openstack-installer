@@ -151,6 +151,16 @@ class MaasMachine(Machine):
         """
         return self.machine.get('macaddress_set', {})
 
+    @property
+    def tag_names(self):
+        """ Tag names for machine
+
+        :returns: tags associated with machine
+        :rtype: list
+        """
+        return self.machine.get('tag_names', [])
+
+
 class MaasState:
     """ Represents global MaaS state """
 
