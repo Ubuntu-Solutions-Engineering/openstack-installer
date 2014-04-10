@@ -21,8 +21,6 @@ from requests_oauthlib import OAuth1
 import requests
 import json
 
-from subprocess import check_call, CalledProcessError, DEVNULL
-
 
 class MaasClient:
     """ Client Class
@@ -98,19 +96,12 @@ class MaasClient:
 
         :returns: Status
         :rtype: bool
-
-        .. todo::
-        .. code::
-
-            res = self.post('/nodes/', dict(op='accept_all'))
-            if res.ok:
-                return True
-            return False
         """
-        try:
-            check_call(['maas', 'maas', 'nodes', 'accept-all'])
-        except CalledProcessError:
-            pass
+
+        res = self.post('/nodes/', dict(op='accept_all'))
+        if res.ok:
+            return True
+        return False
 
     def node_commission(self, system_id):
         """ (Re)commission a node
@@ -175,25 +166,12 @@ class MaasClient:
 
         :param tag: Tag name
         :returns: Success/Fail boolean
-
-        .. todo::
-        .. code::
-
-            # Make use of rest api
-
-            tags = {tagmd['name'] for tagmd in self.tags}
-            if tag not in tags:
-                res = self.post('/tags/', dict(op='new',name=tag))
-                return res.ok
-            return False
         """
-        try:
-            check_call(['maas', 'maas', 'tags',
-                        'new', 'name=' + tag],
-                       stdout=DEVNULL,
-                       stderr=DEVNULL)
-        except CalledProcessError:
-            pass
+        tags = {tagmd['name'] for tagmd in self.tags}
+        if tag not in tags:
+            res = self.post('/tags/', dict(op='new',name=tag))
+            return res.ok
+        return False
 
     def tag_delete(self, tag):
         """ Delete a tag
@@ -217,25 +195,15 @@ class MaasClient:
         :type system_id: str
         :returns: Success or Fail
         :rtype: bool
-
-        .. todo::
-        .. code::
-
-            # Make use of rest api
-            res = self.post('/tags/%s/' % (tag,),
-                            dict(op='update_nodes',
-                                 add=system_id))
-            if res.ok:
-                return True
-            return False
         """
-        try:
-            check_call(['maas', 'maas', 'tag', 'update-nodes',
-                        tag, 'add=' + system_id],
-                       stdout=DEVNULL,
-                       stderr=DEVNULL)
-        except CalledProcessError:
-            pass
+
+        # Make use of rest api
+        res = self.post('/tags/%s/' % (tag,),
+                        dict(op='update_nodes',
+                             add=system_id))
+        if res.ok:
+            return True
+        return False
 
     def tag_name(self, maas):
         """ Tag each node as its hostname.
