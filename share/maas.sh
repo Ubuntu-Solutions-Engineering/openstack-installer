@@ -212,15 +212,3 @@ waitForNodeStatus()
 		sleep 5
 	done
 }
-
-waitForBootImages()
-{
-	while true; do
-		image_count=$(maas maas boot-images read $uuid \
-		    | python3 -c 'import json; import sys; print(len(json.load(sys.stdin)))')
-		if [ $image_count -ne 0 ]; then
-			break
-		fi
-		sleep 5
-	done
-}

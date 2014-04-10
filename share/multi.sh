@@ -71,8 +71,8 @@ multiInstall()
 		fi
 
 		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
-			maas maas node-groups import-boot-images
-			waitForBootImages
+			http_proxy=$MAAS_HTTP_PROXY HTTP_PROXY=$MAAS_HTTP_PROXY maas-import-pxe-files
+			$maas_report_boot_images
 		fi
 
 		gaugePrompt 60 "Configuring Juju"
