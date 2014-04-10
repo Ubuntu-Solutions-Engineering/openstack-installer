@@ -177,28 +177,24 @@ def parse_state(juju, maas=None):
     results = []
 
     if maas:
-        for machine in maas:
-            m = juju.machine(machine['resource_uri']) or \
+        for machine in maas.machines:
+            m = juju.machine(machine.instance_id) or \
                 {"machine_no": -1, "agent-state": "unallocated"}
 
-            if machine['hostname'].startswith('juju-bootstrap'):
+            if machine.hostname.startswith('juju-bootstrap'):
                 continue
 
             d = {
-                "fqdn": machine['hostname'],
-                "memory": machine['memory'],
-                "cpu_count": machine['cpu_count'],
-                "storage": str(int(machine['storage']) / 1024),  # MB => GB
-                "tag": machine['system_id'],
-                "machine_no": m["machine_no"],
-                "agent_state": m["agent-state"],
+                "fqdn": machine.hostname,
+                "memory": machine.mem,
+                "cpu_count": machine.cpu_cores,
+                "storage": machine.storage,
+                "tag": machine.system_id,
+                "machine_no": m.machine_id,
+                "agent_state": m.agent_state,
+                "charms": m.charms,
+                "units": m.units
             }
-            charms, units = juju.assignments.get(machine['resource_uri'], ([], []))
-            if charms:
-                d['charms'] = charms
-            if units:
-                d['units'] = units
-
             # We only want to list nodes that are already assigned to our juju
             # instance or that could be assigned to our juju instance; nodes
             # allocated to other users should be ignored, however, we have no way
@@ -207,6 +203,10 @@ def parse_state(juju, maas=None):
 
     if MULTI_SYSTEM:
         for machine in juju.machines:
+
+            if machine.is_machine_0:
+                continue
+
             for container in machine.containers:
                 d = {
                     "fqdn": container.dns_name,
@@ -222,7 +222,7 @@ def parse_state(juju, maas=None):
     if SINGLE_SYSTEM:
         for machine in juju.machines:
 
-            if '0' in machine.machine_id:
+            if machine.is_machine_0:
                 continue
 
             d = {
