@@ -4,6 +4,7 @@ bin/ip_range.py                        usr/share/cloud-installer/bin
 bin/wait-for-landscape                 usr/share/cloud-installer/bin
 share/common.sh                        usr/share/cloud-installer/common
 share/configure.sh                     usr/share/cloud-installer/common
+share/display.sh                       usr/share/cloud-installer/common
 share/juju.sh                          usr/share/cloud-installer/common
 share/landscape.sh                     usr/share/cloud-installer/common
 share/maas.sh                          usr/share/cloud-installer/common

@@ -26,33 +26,31 @@ multiInstall()
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
 
-	mkfifo -m 0600 $TMP/fifo
+	mkfifo -m 0600 "$TMP/gauge"
 	whiptail --title "Installing" --backtitle "$BACKTITLE" \
-	    --gauge "Please wait" 8 60 0 < $TMP/fifo &
+	    --gauge "Please wait" 8 70 0 < "$TMP/gauge" &
 	gauge_pid=$!
 	{
-		gaugePrompt 2 "Installing packages"
-		# Use MaaS version closer to Trusty release (MaaS 1.5)
-		apt-get update
-		DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -f -q -y cloud-install-multi </dev/null
+		dialogAptInstall 2 18 cloud-install-multi
+
 		service lxc-net stop || true
 		sed -e 's/^USE_LXC_BRIDGE="true"/USE_LXC_BRIDGE="false"/' -i \
 		    /etc/default/lxc-net
 
-		gaugePrompt 4 "Generating SSH keys"
+		gaugePrompt 22 "Generating SSH keys"
 		generateSshKeys
 
-		gaugePrompt 6 "Creating MAAS super user"
+		gaugePrompt 24 "Creating MAAS super user"
 		createMaasSuperUser
-		echo 8
+		echo 25
 		maas_creds=$(maas-region-admin apikey --username root)
 		saveMaasCreds $maas_creds
 		maasLogin $maas_creds
-		gaugePrompt 10 "Waiting for MAAS cluster registration"
+		gaugePrompt 26 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 
 		createMaasBridge $interface
-		gaugePrompt 15 "Configuring MAAS networking"
+		gaugePrompt 30 "Configuring MAAS networking"
 
 		if [ -n "$bridge_interface" ]; then
 			gateway=$(ipAddress br0)
@@ -63,9 +61,9 @@ multiInstall()
 		# Retrieve dhcp-range
 		configureMaasNetworking $uuid br0 $gateway \
 		    ${dhcp_range%-*} ${dhcp_range#*-}
-		gaugePrompt 18 "Configuring DNS"
+		gaugePrompt 35 "Configuring DNS"
 		configureDns
-		gaugePrompt 20 "Importing MAAS boot images"
+		gaugePrompt 40 "Importing MAAS boot images"
 		configureMaasImages
 
 		if [ -n "$MAAS_HTTP_PROXY" ]; then
@@ -89,8 +87,9 @@ multiInstall()
 
 		gaugePrompt 100 "Installation complete"
 		sleep 2
-	} > $TMP/fifo
+	} > "$TMP/gauge"
 	wait $gauge_pid
+	rm -f "$TMP/gauge"
 }
 
 saveMaasCreds()
