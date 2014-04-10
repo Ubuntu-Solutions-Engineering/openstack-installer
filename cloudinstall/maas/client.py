@@ -217,9 +217,9 @@ class MaasClient:
 
         :param maas: MAAS object representing all managed nodes
         """
-        for machine in maas:
+        for machine in maas.machines:
             tag = machine.system_id
-            if 'tag_names' not in machine or tag not in machine.tag_names:
+            if 'tag_names' not in machine.tag_names or tag not in machine.tag_names:
                 self.tag_new(tag)
                 self.tag_machine(tag, tag)
 
