@@ -1,40 +1,66 @@
 [
     {
-        "status": 4,
+        "status": 6, 
         "macaddress_set": [
             {
-                "resource_uri": "/MAAS/api/1.0/nodes/node-4c49e73e-e8b8-11e2-ac16-5254002cb1d6/macs/52:54:00:42:a3:06/",
-                "mac_address": "52:54:00:42:a3:06"
+                "resource_uri": "/MAAS/api/1.0/nodes/node-8e9debfc-c059-11e3-9fc4-52540096c280/macs/00%3A16%3A3e%3A93%3A0d%3A9a/", 
+                "mac_address": "00:16:3e:93:0d:9a"
             }
-        ],
-        "netboot": true,
-        "hostname": "slave1.local",
-        "power_type": "",
-        "system_id": "node-4c49e73e-e8b8-11e2-ac16-5254002cb1d6",
-        "architecture": "amd64/generic",
-        "cpu_count": "4",
-        "memory": "8096",
-        "storage": "102400",
-        "tag_names": [],
-        "resource_uri": "/MAAS/api/1.0/nodes/node-4c49e73e-e8b8-11e2-ac16-5254002cb1d6/"
-    },
+        ], 
+        "hostname": "juju-bootstrap.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": null, 
+        "netboot": true, 
+        "cpu_count": 0, 
+        "storage": 0, 
+        "owner": "root", 
+        "system_id": "node-8e9debfc-c059-11e3-9fc4-52540096c280", 
+        "architecture": "amd64/generic", 
+        "memory": 0, 
+        "power_type": "virsh", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-8e9debfc-c059-11e3-9fc4-52540096c280"
+        ], 
+        "ip_addresses": [
+            "192.168.100.151"
+        ], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-8e9debfc-c059-11e3-9fc4-52540096c280/"
+    }, 
     {
-        "status": 6,
+        "status": 1, 
         "macaddress_set": [
             {
-                "resource_uri": "/MAAS/api/1.0/nodes/node-5fb74ba0-e8c1-11e2-b109-5254002cb1d6/macs/52:54:00:5f:1a:9e/",
-                "mac_address": "52:54:00:5f:1a:9e"
+                "resource_uri": "/MAAS/api/1.0/nodes/node-f63668f6-c05a-11e3-9fc4-52540096c280/macs/52%3A54%3A00%3Ab3%3Aea%3Ae1/", 
+                "mac_address": "52:54:00:b3:ea:e1"
             }
-        ],
-        "netboot": false,
-        "hostname": "slave2.local",
-        "power_type": "",
-        "system_id": "node-5fb74ba0-e8c1-11e2-b109-5254002cb1d6",
-        "architecture": "amd64/generic",
-        "cpu_count": "4",
-        "memory": "8096",
-        "storage": "102400",
-        "tag_names": [],
-        "resource_uri": "/MAAS/api/1.0/nodes/node-5fb74ba0-e8c1-11e2-b109-5254002cb1d6/"
+        ], 
+        "hostname": "4jq9g.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": null, 
+        "netboot": true, 
+        "cpu_count": 1, 
+        "storage": 8096, 
+        "owner": null, 
+        "system_id": "node-f63668f6-c05a-11e3-9fc4-52540096c280", 
+        "architecture": "amd64/generic", 
+        "memory": 512, 
+        "power_type": "virsh", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-f63668f6-c05a-11e3-9fc4-52540096c280"
+        ], 
+        "ip_addresses": [
+            "192.168.100.152"
+        ], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-f63668f6-c05a-11e3-9fc4-52540096c280/"
     }
 ]
