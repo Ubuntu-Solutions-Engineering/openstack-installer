@@ -28,8 +28,9 @@ Reference
 .. toctree::
    :maxdepth: 2
 
-   pegasus
-   gui
-   utils
    cloudinstall.juju
    cloudinstall.maas
+   gui
+   machine
+   pegasus
+   utils
