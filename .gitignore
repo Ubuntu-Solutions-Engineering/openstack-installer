@@ -3,3 +3,12 @@ build
 dist
 *.egg-info
 *pyc
+*.log
+*.substvars
+*.debhelper
+*.pybuild
+debian/files
+debian/cloud-installer/
+debian/cloud-install-single/
+debian/cloud-install-multi/
+debian/cloud-install-landscape/
