@@ -61,9 +61,8 @@ configureDns()
 
 configureMaasImages()
 {
-	cp /usr/share/cloud-installer/maas-data/* /etc/maas
-	chmod 0640 /etc/maas/pserv.yaml
-	chown :maas /etc/maas/pserv.yaml
+	# don't sync the i386 images
+	sed -i -e '/- i386/d'
 }
 
 configureMaasInterfaces()
