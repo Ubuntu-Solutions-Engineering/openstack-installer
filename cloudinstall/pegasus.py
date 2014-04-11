@@ -178,71 +178,45 @@ def parse_state(juju, maas=None):
     """
     results = []
 
-    if maas:
-        for machine in maas.machines:
-            m = juju.machine(machine.instance_id)
+    # if maas:
+    #     for machine in maas.machines:
+    #         m = juju.machine(machine.instance_id)
 
-            log.debug('Maas machine: %s' % (m,))
-            if machine.hostname.startswith('juju-bootstrap'):
-                continue
+    #         log.debug('Maas machine: %s' % (m,))
+    #         if machine.hostname.startswith('juju-bootstrap'):
+    #             continue
 
-            # Only list nodes created by our user 'root'
-            if machine.owner and 'root' not in machine.owner:
-                continue
+    #         # Only list nodes created by our user 'root'
+    #         if machine.owner and 'root' not in machine.owner:
+    #             continue
 
-            d = {
-                "fqdn": machine.hostname,
-                "memory": machine.mem,
-                "cpu_count": machine.cpu_cores,
-                "storage": machine.storage,
-                "tag": machine.system_id,
-                "machine_no": machine.machine_id,
-                "agent_state": machine.agent_state,
-                "charms": machine.charms,
-                "units": machine.units
-            }
-            results.append(d)
+    #         d = {
+    #             "fqdn": machine.hostname,
+    #             "memory": machine.mem,
+    #             "cpu_count": machine.cpu_cores,
+    #             "storage": machine.storage,
+    #             "tag": machine.system_id,
+    #             "machine_no": machine.machine_id,
+    #             "agent_state": machine.agent_state,
+    #             "charms": machine.charms,
+    #             "units": machine.units
+    #         }
+    #         results.append(d)
 
-    if MULTI_SYSTEM:
-        for machine in juju.machines:
+    for machine in juju.machines():
 
-            if machine.is_machine_0:
-                continue
+        if machine.is_machine_0:
+            continue
 
-            # Query our maas machine to capture some of the
-            # hardware specifications.
+        # Query our maas machine to capture some of the
+        # hardware specifications.
+        if maas:
             maas_machine = maas.machine(machine.instance_id)
-            for container in machine.containers:
-                d = {
-                    "fqdn": container.dns_name,
-                    "memory": maas_machine.mem,
-                    "cpu_count": maas_machine.cpu_cores,
-                    "storage": maas_machine.storage,
-                    "machine_no": container.machine_id,
-                    "agent_state": container.agent_state,
-                    "charms": container.charms,
-                    "units": container.units,
-                }
-                results.append(d)
-
-    if SINGLE_SYSTEM:
-        for machine in juju.machines:
-
-            if machine.is_machine_0:
-                continue
-
-            d = {
-                "fqdn": machine.dns_name,
-                "memory": machine.mem,
-                "cpu_count": machine.cpu_cores,
-                "storage": machine.storage,
-                "machine_no": machine.machine_id,
-                "agent_state": machine.agent_state,
-                "charms": machine.charms,
-                "units": machine.units
-            }
-            results.append(d)
-    log.debug("Machines found: %s" % (len(results),))
+            machine.mem = maas_machine.mem
+            machine.cpu_cores = maas_machine.cpu_cores
+            machine.storage = maas_machine.storage
+            log.debug("Updated machine properties: %s" % (machine,))
+        results.append(machine)
     return results
 
 
