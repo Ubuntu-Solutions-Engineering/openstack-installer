@@ -44,11 +44,10 @@ class JujuState:
         :returns: machine
         :rtype: cloudinstall.machine.Machine()
         """
-        for m in self.machines:
-            if m.instance_id == instance_id:
+        for m in self.machines():
+            if m.instancd_id == instance_id:
                 return m
-        return Machine(-1, {'agent-state': 'unallocated',
-                            'dns-name': 'unallocated'})
+        return Machine(-1, {})
 
     def machines(self):
         """ Machines property

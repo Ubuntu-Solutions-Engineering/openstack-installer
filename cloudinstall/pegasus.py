@@ -179,7 +179,7 @@ def parse_state(juju, maas=None):
     results = []
 
     # if maas:
-    #     for machine in maas.machines:
+    #     for machine in maas.machines():
     #         m = juju.machine(machine.instance_id)
 
     #         log.debug('Maas machine: %s' % (m,))
@@ -210,6 +210,7 @@ def parse_state(juju, maas=None):
 
         # Query our maas machine to capture some of the
         # hardware specifications.
+        # FIXME: why isn't storage being applied here?
         if maas:
             maas_machine = maas.machine(machine.instance_id)
             machine.mem = maas_machine.mem
