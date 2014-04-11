@@ -45,6 +45,8 @@ class JujuState:
         for m in self.machines:
             if m.instance_id == instance_id:
                 return m
+        return Machine(-1, {'agent-state': 'unallocated',
+                            'dns-name': 'unallocated'})
 
     @property
     def machines(self):
@@ -55,6 +57,8 @@ class JujuState:
         """
         results = []
         for machine_id, machine in self._yaml['machines'].items():
+            if '0' in machine_id:
+                continue
             machine_units = {}
             for name in self.services:
                 for k,v in self.units(name):
@@ -75,7 +79,7 @@ class JujuState:
         allocated = []
         for m in self.machines:
             if m.agent_state in ['started', 'pending', 'down'] and \
-               not '0' in m.machine_id:
+               not m.is_machine_0:
                 allocated.append(m)
         return allocated
 
@@ -88,7 +92,9 @@ class JujuState:
         """
         unallocated = []
         for m in self.machines:
-            if m.agent_state not in ['started', 'pending', 'down']:
+            if not m.agent_state or \
+               'unallocated' in m.agent_state or \
+                  m.agent_state not in ['started', 'pending', 'down']:
                 unallocated.append(m)
         return unallocated
 
