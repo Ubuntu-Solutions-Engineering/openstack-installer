@@ -81,16 +81,14 @@ def get_network_interfaces():
     """ Get network interfaces
 
     :returns: available interfaces and their properties
-    :rtype: list
+    :rtype: generator
     """
-    interfaces = []
     (status, output, runtime) = get_command_output('ifconfig -s')
     _ifconfig = output.split('\n')[1:-1]
     for i in _ifconfig:
         name = i.split(' ')[0]
         if 'lo' not in name:
-            interfaces.append({name: get_network_interface(name)})
-    return interfaces
+            yield {name: get_network_interface(name)}
 
 
 def partition(pred, iterable):
