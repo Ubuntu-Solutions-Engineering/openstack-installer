@@ -160,6 +160,24 @@ class MaasMachine(Machine):
         """
         return self.machine.get('tag_names', [])
 
+    @property
+    def tag(self):
+        """ Machine tag
+
+        :returns: tag defined
+        :rtype: str
+        """
+        return self.machine.get('tag', '')
+
+    @property
+    def owner(self):
+        """ Machine owner
+
+        :returns: owner
+        :rtype: str
+        """
+        return self.machine.get('owner', 'root')
+
 
 class MaasState:
     """ Represents global MaaS state """
