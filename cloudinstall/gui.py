@@ -29,14 +29,17 @@ import re
 import threading
 import urwid
 
+from cloudinstall.log import logger
+from cloudinstall.machine import Machine
 from cloudinstall import pegasus
 from cloudinstall import utils
+
+log = logger.getLogger(__name__)
 
 TITLE_TEXT = "Ubuntu Cloud Installer (q to quit)"
 
 #- Properties -----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
-LOG_FILE = expanduser('~/.cloud-install/commands.log')
 
 # Time to lock in seconds
 LOCK_TIME = 120
@@ -114,7 +117,9 @@ class ControllerOverlay(TextOverlay):
 
     def _process(self, data):
         allocated = data.machines_allocated
+        log.debug("Allocated machines: %s" % (allocated,))
         unallocated = data.machines_unallocated
+        log.debug("Unallocated machines: %s" % (unallocated,))
         for machine in allocated:
             if pegasus.NOVA_CLOUD_CONTROLLER in machine.charms:
                 return False
@@ -135,8 +140,6 @@ class ControllerOverlay(TextOverlay):
 
             for charm in pending:
                 # If multi system install into lxc containers on machine
-                # TODO: Decide if we want to still keep this since single
-                # installs deploy all charms into the machine itself.
                 if pegasus.MULTI_SYSTEM:
                     id_ = 'lxc:%s' % (machine.machine_id,)
                 else:
@@ -156,13 +159,13 @@ def _wrap_focus(widgets, unfocused=None):
 
 
 class ChangeStateDialog(urwid.Overlay):
-    def __init__(self, underlying, metadata, on_success, on_cancel):
-        self.metadata = metadata
+    def __init__(self, underlying, machine, on_success, on_cancel):
 
         self.boxes = []
         start_states = []
-        if 'charms' in metadata:
-            start_states = _allocation_for_charms(metadata['charms'])
+        log.debug("ChangeStateDialog.__init__: %s" % (machine,))
+        if machine.charms:
+            start_states = _allocation_for_charms(machine.charms)
 
         self.boxes = []
         first_index = 0
@@ -205,54 +208,45 @@ class ChangeStateDialog(urwid.Overlay):
 
 
 class Node(urwid.Text):
-    """ Metadata is a dict with the following:
-        charm: the charm name of this node, if it has one,
-        fqdn: fully qualified domain name,
-        cpu_count, memory (in MB), storage (in GB),
-        id: the MAAS resource_uri/juju instance-id
+    """ A single ui node representation
     """
-    def __init__(self, metadata, open_dialog):
+    def __init__(self, machine):
+        """
+        Initialize Node
+
+        :param machine: juju machine state
+        :type machine: Machine()
+        """
         urwid.Text.__init__(self, "")
-        self.allocated = 'charms' in metadata
+        self.machine = self.open_dialog = machine
+        log.debug("Node.__init__: %s" % (self.machine,))
+        self.allocated = self.machine.charms
         if self.allocated:
-            self._selectable = metadata['charms'] not in pegasus.CONTROLLER_CHARMS
+            self._selectable = self.machine.charms not in pegasus.CONTROLLER_CHARMS
         else:
             self._selectable = True
-        self.metadata = metadata
-        self.open_dialog = open_dialog
+        self.set_text(NODE_FORMAT.format(tags=', '.join(self.machine.charms),
+                                         fqdn=self.machine.dns_name,
+                                         cpu_count=self.machine.cpu_cores,
+                                         memory=self.machine.mem,
+                                         storage=self.machine.storage,
+                                         agent_state=self.machine.agent_state))
 
     @property
     def is_horizon(self):
         return self.allocated and \
-            pegasus.OPENSTACK_DASHBOARD in self.metadata['charms']
+            pegasus.OPENSTACK_DASHBOARD in self.machine.charms
 
     @property
     def is_compute(self):
         return self.allocated and \
-            pegasus.NOVA_COMPUTE in self.metadata['charms']
+            pegasus.NOVA_COMPUTE in self.machine.charms
 
-    @property
-    def metadata(self):
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, val):
-        self._metadata = val
-        md = self._metadata.copy()
-        tags = ''
-        if 'charms' in self._metadata:
-            tags = ', '.join(self._metadata['charms'])
-        self.set_text(NODE_FORMAT.format(tags=tags, **md))
-        return self._metadata
-
-    @property
-    def name(self):
-        return self.metadata['fqdn']
 
     def keypress(self, size, key):
         # can't change node state on single system
         if key == 'enter' and not pegasus.SINGLE_SYSTEM:
-            self.open_dialog(self.metadata)
+            self.open_dialog(self.machine)
         return key
 
 
@@ -295,12 +289,6 @@ class CommandRunner(urwid.ListBox):
             return txt
 
         txt = add_to_f8(command, output)
-        try:
-            with open(LOG_FILE, "a") as f:
-                f.write(txt + "\n")
-        except IOError as e:
-            add_to_f8('log writer:',
-                      'Problem accessing %s:\n%s' % (LOG_FILE, e))
 
     def _run(self, command):
         self.to_run.append(command)
@@ -336,39 +324,46 @@ class CommandRunner(urwid.ListBox):
                 remaining.append((relation, cmd))
         self.to_add = remaining
 
-    def change_allocation(self, new_states, metadata):
+    def change_allocation(self, new_states, machine):
+        log.debug("CommandRunner.change_allocation: " \
+                  "new_states: %s" % (new_states,))
         try:
-            for charm, unit in zip(metadata['charms'], metadata['units']):
+            for charm, unit in zip(machine.charms, machine.units):
                 if charm not in new_states:
                     self._run("juju remove-unit {unit}".format(unit=unit))
         except KeyError:
             pass
 
         if len(new_states) == 0:
-            cmd = "juju terminate-machine {id}"
-            self._run(cmd.format(id=metadata['machine_no']))
+            cmd = "juju terminate-machine {id}".format(id=machine.machine_id)
+            log.debug("Terminating machine: %s" % (cmd,))
+            self._run(cmd)
 
         state_to_charm = {v: k for k, v in pegasus.ALLOCATION.items()}
-        for state in set(new_states) - set(metadata.get('charms', [])):
+        for state in set(new_states) - set(machine.charms):
             charm = state_to_charm[state]
             new_service = charm not in self.services
             if new_service:
                 if pegasus.SINGLE_SYSTEM:
-                    self.deploy(charm, id='kvm:1')
+                    self.deploy(charm, id='1')
                 else:
-                    self.deploy(charm, tag=metadata['tag'])
+                    self.deploy(charm, tag=machine.tag)
             else:
                 # TODO: we should make this a bit nicer, and do the
                 # SINGLE_SYSTEM test a little higher up.
                 if pegasus.SINGLE_SYSTEM:
-                    cmd = "juju add-unit --to lxc:1 " \
-                          "{charm}".format(to=to, charm=charm)
+                    cmd = "juju add-unit --to 1 " \
+                          "{charm}".format(charm=charm)
+                    log.debug("Adding unit: %s" % (cmd,))
                     self._run(cmd)
                 else:
                     constraints = "juju set-constraints --service " \
                                   "{charm} tags={{tag}}".format(charm=charm)
-                    self._run(constraints.format(tag=metadata['tag']))
-                    self._run("juju add-unit {charm}".format(charm=charm))
+                    log.debug("Setting constraints: %s" % (constraints,))
+                    self._run(constraints.format(tag=machine.tag))
+                    cmd = "juju add-unit {charm}".format(charm=charm)
+                    log.debug("Adding unit: %s" % (cmd,))
+                    self._run(cmd)
                     self._run(constraints.format(tag=''))
 
     def update(self, juju_state):
@@ -418,8 +413,6 @@ class NodeViewMode(urwid.Frame):
                              footer=footer)
         self.controller_overlay = ControllerOverlay(self, self.cr)
         self._target = self.controller_overlay
-        self.logged_in = False
-        self._old_focus = None
 
     # TODO: get rid of this shim.
     @property
@@ -440,7 +433,7 @@ class NodeViewMode(urwid.Frame):
     def total_nodes(self):
         return len(self.nodes._contents)
 
-    def open_dialog(self, metadata):
+    def open_dialog(self, machine):
         def destroy():
             self.loop.widget = self
 
@@ -452,52 +445,47 @@ class NodeViewMode(urwid.Frame):
                     # Here we just boot the KVM, the polling process will
                     # automatically allocate new kvms to nova-compute.
                     self.cr.add_machine()
-                self.cr.change_allocation(other, metadata)
+                self.cr.change_allocation(other, machine)
             else:
-                self.cr.change_allocation(new_states, metadata)
+                self.cr.change_allocation(new_states, machine)
             destroy()
-        self.loop.widget = ChangeStateDialog(self, metadata, ok, destroy)
+        self.loop.widget = ChangeStateDialog(self, machine, ok, destroy)
 
-    def _check_login_get_data(self):
-        try:
-            self.logged_in = True
-            return self.get_data()
-        except pegasus.MaasLoginFailure:
-            self.logged_in = False
-            return []
+    def refresh_states(self):
+        """ Refresh states
 
-    def do_update(self, data_and_juju_state):
-        data, juju = data_and_juju_state
-        new_data = [Node(t, self.open_dialog) for t in data]
+        Make a call to refresh both juju and maas machine states
+
+        :returns: data from the polling of services and the juju state
+        :rtype: tuple (parse_state(), Machine())
+        """
+        return self.get_data()
+
+    def do_update(self, machine_states):
+        machines, juju = machine_states
+        nodes = [Node(t) for t in juju.machines]
         prev_total = len(self.nodes._contents)
-
-        if not self.logged_in:
-            self._old_focus = self.target
-            self.target = TextOverlay(pegasus.MaasLoginFailure.MESSAGE, self)
-        elif self._old_focus:
-            self.target = self._old_focus
-            self._old_focus = None
 
         if self.target == self.controller_overlay and \
                 not self.controller_overlay.process(juju):
             self.target = self
-            for n in new_data:
+            for n in nodes:
                 if n.is_horizon:
                     url = "Access your dashboard: http://{name}/horizon"
-                    self.url.set_text(url.format(name=n.name))
+                    self.url.set_text(url.format(name=n.machine.dns_name))
 
         if pegasus.SINGLE_SYSTEM:
             # For single installs, all new 'unallocated' nodes are
             # automatically allocated to nova-compute. We process the rest of
             # the nodes normally.
-            unallocated, new_data = utils.partition(
-                lambda n: n.is_compute, new_data)
+            unallocated_nodes, allocated_nodes = utils.partition(
+                lambda n: n.is_compute, nodes)
 
-            for node in unallocated:
+            for node in unallocated_nodes:
                 self.cr.change_allocation([pegasus.NOVA_COMPUTE],
-                                          node.metadata)
+                                          node.machine)
 
-        self.nodes.update(new_data)
+        self.nodes.update(nodes)
         self.cr.update(juju)
 
     def tick(self):
@@ -507,7 +495,7 @@ class NodeViewMode(urwid.Frame):
             def update_and_redraw(data):
                 self.do_update(data)
                 self.loop.draw_screen()
-            self.loop.run_async(self._check_login_get_data, update_and_redraw)
+            self.loop.run_async(self.refresh_states, update_and_redraw)
         self.timer.set_text("Poll in %d seconds (%d)"
                             % (self.ticks_left,
                                threading.active_count()))
@@ -518,7 +506,7 @@ class NodeViewMode(urwid.Frame):
             self.ticks_left = 0
         if key == 'f6' and pegasus.SINGLE_SYSTEM:
             empty_metadata = {"charms": [], "units": []}
-            self.open_dialog({})
+            self.open_dialog(Machine(-1, {}))
         return urwid.Frame.keypress(self, size, key)
 
 
@@ -611,12 +599,6 @@ class PegasusGUI(urwid.MainLoop):
         self.tick()
         with utils.console_blank():
             urwid.MainLoop.run(self)
-
-        try:
-            with open(LOG_FILE, 'a+') as f:
-                f.write('----- Session closed at %s -----\n' % time())
-        except IOError:
-            pass
 
     def run_async(self, f, callback):
         """ This is a little bit goofy. The urwid API is based on select(), and
