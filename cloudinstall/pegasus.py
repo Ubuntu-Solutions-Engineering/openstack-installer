@@ -187,7 +187,7 @@ def parse_state(juju, maas=None):
                 continue
 
             # Only list nodes created by our user 'root'
-            if 'root' not in machine.owner:
+            if machine.owner and 'root' not in machine.owner:
                 continue
 
             d = {
