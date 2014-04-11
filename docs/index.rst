@@ -34,3 +34,4 @@ Reference
    machine
    pegasus
    utils
+   log

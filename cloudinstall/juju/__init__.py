@@ -22,6 +22,9 @@ import yaml
 
 from collections import defaultdict
 from cloudinstall.machine import Machine
+from cloudinstall.log import logger
+
+log = logger.getLogger(__name__)
 
 class JujuState:
     """ Represents a global Juju state """
@@ -37,8 +40,7 @@ class JujuState:
     def machine(self, instance_id):
         """ Return single machine state
 
-        :param instance_id: machine instance_id
-        :type instance_id: str
+        :param str instance_id: machine instance_id
         :returns: machine
         :rtype: cloudinstall.machine.Machine()
         """
@@ -48,14 +50,12 @@ class JujuState:
         return Machine(-1, {'agent-state': 'unallocated',
                             'dns-name': 'unallocated'})
 
-    @property
     def machines(self):
         """ Machines property
 
         :returns: machines known to juju
-        :rtype: list
+        :rtype: generator
         """
-        results = []
         for machine_id, machine in self._yaml['machines'].items():
             if '0' in machine_id:
                 continue
@@ -66,43 +66,35 @@ class JujuState:
                         machine_units[k] = v
             # Add units for machine
             machine['units'] = machine_units
-            results.append(Machine(machine_id, machine))
-        return results
+            yield Machine(machine_id, machine)
 
-    @property
     def machines_allocated(self):
         """ Machines allocated property
 
         :returns: Machines in an allocated state
-        :rtype: list
+        :rtype: generator
         """
-        allocated = []
-        for m in self.machines:
+        for m in self.machines():
             if m.agent_state in ['started', 'pending', 'down'] and \
                not m.is_machine_0:
-                allocated.append(m)
-        return allocated
+                yield m
 
-    @property
     def machines_unallocated(self):
         """ Machines unallocated property
 
         :returns: Machines in an unallocated state
         :rtype: list
         """
-        unallocated = []
-        for m in self.machines:
+        for m in self.machines():
             if not m.agent_state or \
                'unallocated' in m.agent_state or \
                   m.agent_state not in ['started', 'pending', 'down']:
-                unallocated.append(m)
-        return unallocated
+                yield m
 
     def units(self, name):
         """ Juju units property
 
-        :param name: service/charm name
-        :type name: str
+        :param str name: service/charm name
         :returns: units for service
         :rtype: dict_items
         """
@@ -111,8 +103,7 @@ class JujuState:
     def service(self, name):
         """ Return a single service entry
 
-        :param name: service/charm name
-        :type name: str
+        :param str name: service/charm name
         :returns: a service entry
         :rtype: dict
         """

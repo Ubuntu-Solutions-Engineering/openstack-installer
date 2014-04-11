@@ -200,34 +200,31 @@ class MaasState:
     def machine(self, instance_id):
         """ Return single machine state
 
-        :param instance_id: machine instance_id
-        :type instance_id: str
+        :param str instance_id: machine instance_id
         :returns: machine
-        :rtype: cloudinstall.maas.MaasMachine()
+        :rtype: cloudinstall.maas.MaasMachine
         """
-        for m in self.machines:
+        for m in self.machines():
             if m.instance_id == instance_id:
                 return m
 
-    @property
     def machines(self):
         """ Maas Machines
 
         :returns: machines known to maas
-        :rtype: list
+        :rtype: generator
         """
-        results = []
         for machine in self.maas:
-            results.append(MaasMachine(0, machine))
-        return results
+            if 'juju-bootstrap.maas' in machine['hostname']:
+                continue
+            yield MaasMachine(-1, machine)
 
     def num_in_state(self, state):
         """ Number of machines in a particular state
 
-        :param state: a machine state
-        :type state: str
+        :param str state: a machine state
         :returns: number of machines in `status`
         :rtype: int
         """
         return len(list(filter(lambda m: int(m.status) == state,
-                               self.machines)))
+                               self.machines())))

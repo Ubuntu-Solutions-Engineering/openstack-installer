@@ -16,13 +16,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Logging interface
+
+Simply exports `logger` variable
+"""
+
 import logging
-from os.path import expanduser
+from os.path import expanduser, isfile
 
-LOG_FILE = expanduser('~/.cloud-install/commands.log')
-
-logging.basicConfig(filename=LOG_FILE, filemode='w',
-                    level=logging.DEBUG, datefmt='%m-%d %H:%M',
-                    format='%(asctime)s * %(name)s - %(message)s')
+LOG_FILE = "~/.cloud-install/commands.log"
+if isfile(LOG_FILE):
+    LOG_FILE = expanduser(LOG_FILE)
+    logging.basicConfig(filename=LOG_FILE, filemode='w',
+                        level=logging.DEBUG, datefmt='%m-%d %H:%M',
+                        format='%(asctime)s * %(name)s - %(message)s')
 
 logger = logging
