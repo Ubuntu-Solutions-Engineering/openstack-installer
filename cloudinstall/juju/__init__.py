@@ -40,8 +40,7 @@ class JujuState:
     def machine(self, instance_id):
         """ Return single machine state
 
-        :param instance_id: machine instance_id
-        :type instance_id: str
+        :param str instance_id: machine instance_id
         :returns: machine
         :rtype: cloudinstall.machine.Machine()
         """
@@ -95,8 +94,7 @@ class JujuState:
     def units(self, name):
         """ Juju units property
 
-        :param name: service/charm name
-        :type name: str
+        :param str name: service/charm name
         :returns: units for service
         :rtype: dict_items
         """
@@ -105,8 +103,7 @@ class JujuState:
     def service(self, name):
         """ Return a single service entry
 
-        :param name: service/charm name
-        :type name: str
+        :param str name: service/charm name
         :returns: a service entry
         :rtype: dict
         """

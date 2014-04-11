@@ -200,10 +200,9 @@ class MaasState:
     def machine(self, instance_id):
         """ Return single machine state
 
-        :param instance_id: machine instance_id
-        :type instance_id: str
+        :param str instance_id: machine instance_id
         :returns: machine
-        :rtype: cloudinstall.maas.MaasMachine()
+        :rtype: cloudinstall.maas.MaasMachine
         """
         for m in self.machines():
             if m.instance_id == instance_id:
@@ -223,8 +222,7 @@ class MaasState:
     def num_in_state(self, state):
         """ Number of machines in a particular state
 
-        :param state: a machine state
-        :type state: str
+        :param str state: a machine state
         :returns: number of machines in `status`
         :rtype: int
         """
