@@ -1,3 +1,21 @@
+#
+# display.sh - display routines for cloud-install
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 dialogAptInstall()
 {
 	download_start=$1
@@ -31,4 +49,42 @@ dialogAptInstall()
 	done < "$TMP/apt-status"
 	wait $!
 	rm -f "$TMP/apt-status"
+}
+
+dialogInput()
+{
+	whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox "$2" $3 $4 \
+	    "$5" 3>&1 1>/dev/tty 2>&3 || true
+}
+
+dialogMenu()
+{
+	title=$1
+	text=$2
+	height=$3
+	width=$4
+	menu_height=$5
+	shift 5
+	for item; do
+		echo "\"$item\""
+		echo '""'
+	done | xargs whiptail --title "$title" --backtitle "$BACKTITLE" --menu \
+	    "$text" $height $width $menu_height 3>&1 1>/dev/tty 2>&3 || true
+}
+
+dialogMsgBox()
+{
+	whiptail --title "$1" --backtitle "$BACKTITLE" --ok-button "$2" \
+	    --msgbox "$3" $4 $5
+}
+
+dialogPassword()
+{
+	whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox "$2" $3 \
+	    $4 3>&1 1>/dev/tty 2>&3 || true
+}
+
+dialogYesNo()
+{
+	whiptail --title "$1" --backtitle "$BACKTITLE" --yesno "$2" $3 $4
 }
