@@ -15,7 +15,7 @@ Build-Depends: debhelper (>= 9),
                python3-urwid,
                python3-ws4py,
                python3-yaml
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Homepage: https://launchpad.net/cloud-installer
 X-Python3-Version: >= 3.3
 Vcs-Browser: https://bazaar.launchpad.net/~solutions-engineering/cloud-installer/master
