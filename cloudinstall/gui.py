@@ -116,10 +116,10 @@ class ControllerOverlay(TextOverlay):
         return continue_
 
     def _process(self, data):
-        allocated = data.machines_allocated
-        log.debug("Allocated machines: %s" % (allocated,))
-        unallocated = data.machines_unallocated
-        log.debug("Unallocated machines: %s" % (unallocated,))
+        allocated = list(data.machines_allocated())
+        log.debug("Allocated machines: {machines}".format(machines=allocated))
+        unallocated = list(data.machines_unallocated())
+        log.debug("Unallocated machines: {machines}".format(machines=unallocated))
         for machine in allocated:
             if pegasus.NOVA_CLOUD_CONTROLLER in machine.charms:
                 return False
@@ -141,7 +141,7 @@ class ControllerOverlay(TextOverlay):
             for charm in pending:
                 # If multi system install into lxc containers on machine
                 if pegasus.MULTI_SYSTEM:
-                    id_ = 'lxc:%s' % (machine.machine_id,)
+                    id_ = 'lxc:{machine_id}'.format(machine_id=machine.machine_id)
                 else:
                     id_ = machine.machine_id
                 # Deploy any remaining charms onto machine
@@ -163,7 +163,8 @@ class ChangeStateDialog(urwid.Overlay):
 
         self.boxes = []
         start_states = []
-        log.debug("ChangeStateDialog.__init__: %s" % (machine,))
+        log.debug("ChangeStateDialog.__init__: " \
+                  "{machine}".format(machine=machine))
         if machine.charms:
             start_states = _allocation_for_charms(machine.charms)
 
@@ -219,7 +220,6 @@ class Node(urwid.Text):
         """
         urwid.Text.__init__(self, "")
         self.machine = self.open_dialog = machine
-        log.debug("Node.__init__: %s" % (self.machine,))
         self.allocated = self.machine.charms
         if self.allocated:
             self._selectable = self.machine.charms not in pegasus.CONTROLLER_CHARMS
@@ -283,7 +283,9 @@ class CommandRunner(urwid.ListBox):
     def _add(self, command, output):
 
         def add_to_f8(command, output):
-            txt = "%s> %s\n%s" % (time(), command, output)
+            txt = "{time}> {cmd}\n{output}".format(time=time(),
+                                                   cmd=command,
+                                                   output=output)
             self._contents.append(urwid.Text(txt))
             self._contents[:] = self._contents[:200]
             return txt
@@ -326,7 +328,7 @@ class CommandRunner(urwid.ListBox):
 
     def change_allocation(self, new_states, machine):
         log.debug("CommandRunner.change_allocation: " \
-                  "new_states: %s" % (new_states,))
+                  "new_states: {states}".format(states=new_states))
         try:
             for charm, unit in zip(machine.charms, machine.units):
                 if charm not in new_states:
@@ -336,7 +338,7 @@ class CommandRunner(urwid.ListBox):
 
         if len(new_states) == 0:
             cmd = "juju terminate-machine {id}".format(id=machine.machine_id)
-            log.debug("Terminating machine: %s" % (cmd,))
+            log.debug("Terminating machine: {cmd}".format(cmd=cmd))
             self._run(cmd)
 
         state_to_charm = {v: k for k, v in pegasus.ALLOCATION.items()}
@@ -354,15 +356,16 @@ class CommandRunner(urwid.ListBox):
                 if pegasus.SINGLE_SYSTEM:
                     cmd = "juju add-unit --to 1 " \
                           "{charm}".format(charm=charm)
-                    log.debug("Adding unit: %s" % (cmd,))
+                    log.debug("Adding unit: {cmd}".format(cmd=cmd))
                     self._run(cmd)
                 else:
                     constraints = "juju set-constraints --service " \
                                   "{charm} tags={{tag}}".format(charm=charm)
-                    log.debug("Setting constraints: %s" % (constraints,))
+                    log.debug("Setting constraints: " \
+                              "{constraints}".format(constraints=constraints))
                     self._run(constraints.format(tag=machine.tag))
                     cmd = "juju add-unit {charm}".format(charm=charm)
-                    log.debug("Adding unit: %s" % (cmd,))
+                    log.debug("Adding unit: {cmd}".format(cmd=cmd))
                     self._run(cmd)
                     self._run(constraints.format(tag=''))
 
@@ -378,7 +381,8 @@ class CommandRunner(urwid.ListBox):
 
 
 def _make_header(rest):
-    header = urwid.Text("%s %s" % (TITLE_TEXT, rest))
+    header = urwid.Text("{title} {rest}".format(title=TITLE_TEXT,
+                                                rest=rest))
     return urwid.AttrWrap(header, "border")
 
 
@@ -396,7 +400,7 @@ class ConsoleMode(urwid.Frame):
 class NodeViewMode(urwid.Frame):
     def __init__(self, loop, get_data, command_runner):
         f6 = ', f6 to add another node' if pegasus.SINGLE_SYSTEM else ''
-        header = _make_header("(f8 switches to console mode%s)" % f6)
+        header = _make_header("(f8 switches to console mode{f6})".format(f6=f6))
 
         self.timer = urwid.Text("", align="right")
         self.url = urwid.Text("")
@@ -461,9 +465,9 @@ class NodeViewMode(urwid.Frame):
         """
         return self.get_data()
 
-    def do_update(self, machine_states):
-        machines, juju = machine_states
-        nodes = [Node(t) for t in juju.machines]
+    def do_update(self, machines):
+        nodes, juju = machines
+        nodes = [Node(t) for t in nodes]
         prev_total = len(self.nodes._contents)
 
         if self.target == self.controller_overlay and \
@@ -496,9 +500,9 @@ class NodeViewMode(urwid.Frame):
                 self.do_update(data)
                 self.loop.draw_screen()
             self.loop.run_async(self.refresh_states, update_and_redraw)
-        self.timer.set_text("Poll in %d seconds (%d)"
-                            % (self.ticks_left,
-                               threading.active_count()))
+        self.timer.set_text("Poll in {secs} seconds " \
+                            "({t_count}) ".format(secs=self.ticks_left,
+                                               t_count=threading.active_count()))
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
@@ -516,9 +520,9 @@ class LockScreen(urwid.Overlay):
 
     INVALID = ("error", "Invalid password.")
 
-    IOERROR = ("error", "Problem accessing %s. Please make sure it contains "
-               "exactly one line that is the lock password."
-               % pegasus.PASSWORD_FILE)
+    IOERROR = ("error", "Problem accessing {pwd}. Please make sure " \
+               "it contains exactly one line that is the lock " \
+               "password.".format(pwd=pegasus.PASSWORD_FILE))
 
     def __init__(self, underlying, unlock):
         self.unlock = unlock
