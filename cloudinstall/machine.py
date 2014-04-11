@@ -103,7 +103,7 @@ class Machine:
         :returns: instance-id of machine
         :rtype: str
         """
-        return self.machine['instance-id']
+        return self.machine.get('instance-id', '')
 
     @property
     def dns_name(self):
@@ -125,7 +125,7 @@ class Machine:
     def charms(self):
         """ Returns charms for machine
 
-        :rtype: str
+        :rtype: list
         """
         def charm_name(charm):
             return charm.split("/")[0]
@@ -167,3 +167,9 @@ class Machine:
         """
         lxc = "%s/lxc/%s" % (self.machine_id, container_id)
         return Machine(lxc, self.containers.get(lxc, {}))
+
+    def __str__(self):
+        return "id: {machine_id}, state: {state}, " \
+            "dns-name: {dns_name}".format(machine_id=self.machine_id,
+                                          dns_name=self.dns_name,
+                                          state=self.agent_state)
