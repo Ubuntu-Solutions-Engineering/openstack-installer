@@ -107,44 +107,6 @@ generateSshKeys()
 	fi
 }
 
-dialogInput()
-{
-	whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox "$2" $3 $4 \
-	    "$5" 3>&1 1>/dev/tty 2>&3 || true
-}
-
-dialogMenu()
-{
-	title=$1
-	text=$2
-	height=$3
-	width=$4
-	menu_height=$5
-	shift 5
-	for item; do
-		echo "\"$item\""
-		echo '""'
-	done | xargs whiptail --title "$title" --backtitle "$BACKTITLE" --menu \
-	    "$text" $height $width $menu_height 3>&1 1>/dev/tty 2>&3 || true
-}
-
-dialogYesNo()
-{
-	whiptail --title "$1" --backtitle "$BACKTITLE" --yesno "$2" $3 $4
-}
-
-dialogMsgBox()
-{
-	whiptail --title "$1" --backtitle "$BACKTITLE" --ok-button "$2" \
-	    --msgbox "$3" $4 $5
-}
-
-dialogPassword()
-{
-	whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox "$2" $3 \
-	    $4 3>&1 1>/dev/tty 2>&3 || true
-}
-
 getInterfaces()
 {
 	ifconfig -s | egrep -v 'Iface|lo' | egrep -o '^[a-zA-Z0-9]+' | paste -sd ' '
