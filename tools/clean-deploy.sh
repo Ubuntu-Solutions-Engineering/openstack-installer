@@ -48,6 +48,12 @@ sudo apt-get -q -yy purge cloud-install-multi
 sudo apt-get -q -yy purge cloud-install-landscape
 sudo apt-get -q -yy purge cloud-installer
 
+# just make sure juju-mongodb died. LP#1306315
+MONGOD=$(pgrep mongod)
+if [ ${MONGOD} -gt 0 ]; then
+  sudo kill -9 ${MONGOD}
+fi
+
 sudo rm -rf ~/.juju ~/.cloud-install || true
 sudo rm /etc/.cloud-installed || true
 
