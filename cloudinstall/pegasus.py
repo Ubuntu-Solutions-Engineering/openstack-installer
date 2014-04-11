@@ -27,11 +27,13 @@ import re
 import urllib
 
 from cloudinstall import utils
+from cloudinstall.log import logger
 from cloudinstall.maas import MaasState
 from cloudinstall.maas.auth import MaasAuth
 from cloudinstall.juju import JujuState
 from cloudinstall.maas.client import MaasClient
 
+log = logger.getLogger(__name__)
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
 MYSQL = 'mysql'
@@ -168,9 +170,9 @@ def parse_state(juju, maas=None):
     """ Parses the current state of juju containers and maas nodes
 
     :param juju: juju polled state
-    :type juju: .. class:: JujuState()
+    :type juju: JujuState()
     :param maas: maas polled state
-    :type mass: .. class:: MaasState()
+    :type mass: MaasState()
     :return: nodes/containers
     :rtype: list
     """
@@ -178,10 +180,14 @@ def parse_state(juju, maas=None):
 
     if maas:
         for machine in maas.machines:
-            m = juju.machine(machine.instance_id) or \
-                {"machine_no": -1, "agent-state": "unallocated"}
+            m = juju.machine(machine.instance_id)
 
+            log.debug('Maas machine: %s' % (m,))
             if machine.hostname.startswith('juju-bootstrap'):
+                continue
+
+            # Only list nodes created by our user 'root'
+            if 'root' not in machine.owner:
                 continue
 
             d = {
@@ -190,15 +196,11 @@ def parse_state(juju, maas=None):
                 "cpu_count": machine.cpu_cores,
                 "storage": machine.storage,
                 "tag": machine.system_id,
-                "machine_no": m.machine_id,
-                "agent_state": m.agent_state,
-                "charms": m.charms,
-                "units": m.units
+                "machine_no": machine.machine_id,
+                "agent_state": machine.agent_state,
+                "charms": machine.charms,
+                "units": machine.units
             }
-            # We only want to list nodes that are already assigned to our juju
-            # instance or that could be assigned to our juju instance; nodes
-            # allocated to other users should be ignored, however, we have no way
-            # to distinguish those in the API currently, so we just add everything.
             results.append(d)
 
     if MULTI_SYSTEM:
@@ -207,18 +209,22 @@ def parse_state(juju, maas=None):
             if machine.is_machine_0:
                 continue
 
+            # Query our maas machine to capture some of the
+            # hardware specifications.
+            maas_machine = maas.machine(machine.instance_id)
             for container in machine.containers:
                 d = {
                     "fqdn": container.dns_name,
-                    "memory": "LXC",
-                    "cpu_count": "LXC",
-                    "storage": "LXC",
+                    "memory": maas_machine.mem,
+                    "cpu_count": maas_machine.cpu_cores,
+                    "storage": maas_machine.storage,
                     "machine_no": container.machine_id,
-                    "agent_state": "LXC",
+                    "agent_state": container.agent_state,
                     "charms": container.charms,
                     "units": container.units,
                 }
                 results.append(d)
+
     if SINGLE_SYSTEM:
         for machine in juju.machines:
 
@@ -236,6 +242,7 @@ def parse_state(juju, maas=None):
                 "units": machine.units
             }
             results.append(d)
+    log.debug("Machines found: %s" % (len(results),))
     return results
 
 
