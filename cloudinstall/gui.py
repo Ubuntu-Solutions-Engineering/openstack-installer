@@ -211,7 +211,7 @@ class ChangeStateDialog(urwid.Overlay):
 class Node(urwid.Text):
     """ A single ui node representation
     """
-    def __init__(self, machine):
+    def __init__(self, machine, open_dialog):
         """
         Initialize Node
 
@@ -219,7 +219,8 @@ class Node(urwid.Text):
         :type machine: Machine()
         """
         urwid.Text.__init__(self, "")
-        self.machine = self.open_dialog = machine
+        self.machine = machine
+        self.open_dialog = open_dialog
         self.allocated = self.machine.charms
         if self.allocated:
             self._selectable = self.machine.charms not in pegasus.CONTROLLER_CHARMS
@@ -467,8 +468,7 @@ class NodeViewMode(urwid.Frame):
 
     def do_update(self, machines):
         nodes, juju = machines
-        nodes = [Node(t) for t in nodes]
-        prev_total = len(self.nodes._contents)
+        nodes = [Node(t, self.open_dialog) for t in nodes]
 
         if self.target == self.controller_overlay and \
                 not self.controller_overlay.process(juju):
@@ -510,7 +510,7 @@ class NodeViewMode(urwid.Frame):
             self.ticks_left = 0
         if key == 'f6' and pegasus.SINGLE_SYSTEM:
             empty_metadata = {"charms": [], "units": []}
-            self.open_dialog(Machine(-1, {}))
+            self.open_dialog(self.refresh_states()[1])
         return urwid.Frame.keypress(self, size, key)
 
 
