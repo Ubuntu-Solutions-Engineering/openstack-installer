@@ -1,6 +1,14 @@
 #!/bin/bash
 
-WHAT=$1
+if [ "$#" -eq 1 ]; then
+  WHAT=$1
+elif [ -f ~/.cloud-install/multi ]; then
+  WHAT=multi-system
+elif [ -f ~/.cloud-install/single ]; then
+  WHAT=single-system
+else
+  echo "could not determine install type"
+fi
 
 case $WHAT in
   multi-system)
