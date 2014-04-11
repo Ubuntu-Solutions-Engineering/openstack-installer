@@ -22,6 +22,9 @@ class Machine:
     def __init__(self, machine_id, machine):
         self.machine_id = machine_id
         self.machine = machine
+        self._cpu_cores = self.hardware('cpu-cores')
+        self._storage = self.hardware('root-disk')
+        self._mem = self.hardware('memory')
 
     @property
     def is_machine_0(self):
@@ -38,7 +41,11 @@ class Machine:
         :returns: number of cpus
         :rtype: str
         """
-        return self.hardware('cpu-cores')
+        return self._cpu_cores
+
+    @cpu_cores.setter
+    def cpu_cores(self, val):
+        self._cpu_cores = val
 
     @property
     def arch(self):
@@ -57,10 +64,14 @@ class Machine:
         :rtype: str
         """
         try:
-            _storage_in_gb = int(self.hardware('root-disk')[:-1]) / 1024
+            _storage_in_gb = int(self._storage[:-1]) / 1024
         except ValueError:
             return "N/A"
         return "{size}G".format(size=str(_storage_in_gb))
+
+    @storage.setter
+    def storage(self, val):
+        self._storage = val
 
     @property
     def mem(self):
@@ -70,7 +81,7 @@ class Machine:
         :rtype: str
         """
         try:
-            _mem = int(self.hardware('mem')[:-1])
+            _mem = int(self._mem[:-1])
         except ValueError:
             return "N/A"
         if _mem > 1024:
@@ -78,6 +89,10 @@ class Machine:
             return "{size}G".format(size=str(_mem))
         else:
             return "{size}M".format(size=str(_mem))
+
+    @mem.setter
+    def mem(self, val):
+        self._mem = val
 
     def hardware(self, spec):
         """ Get hardware information
@@ -152,8 +167,8 @@ class Machine:
         results = []
         _containers = self.machine.get('containers', {}).items()
         for container_id, container in _containers:
-            lxc = "%s/lxc/%s" % (self.machine_id, container_id)
-            results.append(Machine(lxc, container))
+            # lxc = "%s/lxc/%s" % (self.machine_id, container_id)
+            results.append(Machine(container_id, container))
         return results
 
     def container(self, container_id):
@@ -165,11 +180,27 @@ class Machine:
                   specific machine and lxc id.
         :rtype: dict
         """
-        lxc = "%s/lxc/%s" % (self.machine_id, container_id)
-        return Machine(lxc, self.containers.get(lxc, {}))
+        for m in self.containers:
+            if m.machine_id == container_id:
+                return m
+        return Machine('0/lxc/0', {'agent-state': 'unallocated',
+                                   'dns-name': 'unallocated'})
 
     def __str__(self):
         return "id: {machine_id}, state: {state}, " \
-            "dns-name: {dns_name}".format(machine_id=self.machine_id,
-                                          dns_name=self.dns_name,
-                                          state=self.agent_state)
+            "dns-name: {dns_name}, mem: {mem}, " \
+            "storage: {storage}, " \
+            "cpus: {cpus}".format(machine_id=self.machine_id,
+                                  dns_name=self.dns_name,
+                                  state=self.agent_state,
+                                  mem=self.mem,
+                                  storage=self.storage,
+                                  cpus=self.cpu_cores)
+
+    def __repr__(self):
+        return "<Machine({dns_name},{state},{mem}," \
+            "{storage},{cpus})>".format(dns_name=self.dns_name,
+                                        state=self.agent_state,
+                                        mem=self.mem,
+                                        storage=self.storage,
+                                        cpus=self.cpu_cores)
