@@ -17,6 +17,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ ! $(id -u) = 0 ]; then
+    echo "Installing a cloud requires root privileges. Rerun with sudo."
+    exit 1
+fi
+
 set -ex
 
 . /usr/share/cloud-installer/common/common.sh
@@ -34,6 +39,7 @@ trap exitInstall EXIT
 trap "" PIPE
 
 #disableBlank
+
 
 if [ ! -e /etc/.cloud-installed ]; then
 	configureInstall
