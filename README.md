@@ -1,52 +1,15 @@
 # Ubuntu Cloud Installer
 
+[![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer)
+
 ## Developers
 
-### Pre-reqs
+* [Read the developers guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/developers.html)
 
-* debhelper
-* dh-python
-* python3-all
-* python3-mock
-* python3-nose
-* python3-oauthlib
-* python3-passlib
-* python3-requests
-* python3-requests-oauthlib
-* python3-setuptools
-* python3-urwid
-* python3-ws4py
-* python3-yaml
+## Users
 
-### Running tests
-
-`$ nosetests3 test`
-
-### Building a package
-
-`$ make deb`
-
-This will build a package for the current host system. If you wish to
-build for other releases please checkout
-[sbuild](https://wiki.ubuntu.com/SimpleSbuild)
-
-### Building the tarball only
-
-`$ make tarball`
-
-### Cleaning
-
-`$ make clean`
-
-## Installing
-
-### PPA
-
-`$ sudo apt-add-repository ppa:cloud-installer/ppa`
-
-### Running
-
-`$ sudo cloud-install`
+* [Single Installer guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/single-installer.guide.html)
+* [Multi Installer guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/multi-installer.guide.html)
 
 # Copyright
 
