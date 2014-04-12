@@ -20,6 +20,7 @@ install-dependencies:
 clean:
 	@debian/rules clean
 	@rm -rf debian/cloud-install
+	@rm -rf docs/_build/*
 
 deb-src: clean update_version tarball
 	@debuild -S -us -uc
