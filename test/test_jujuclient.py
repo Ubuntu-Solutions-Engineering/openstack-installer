@@ -23,15 +23,14 @@
 
 import unittest
 import os
-from pprint import pprint
 import sys
 sys.path.insert(0, '../cloudinstall')
 
 from cloudinstall.juju.client import JujuClient
 from cloudinstall.utils import randomString
 
-JUJU_PASS = os.environ['JUJU_PASS'] if os.environ['JUJU_PASS'] else randomString()
-JUJU_URL = os.environ['JUJU_URL'] if os.environ['JUJU_URL'] else 'wss://juju-bootstrap.master:17070/'
+JUJU_PASS = os.environ.get('JUJU_PASS', randomString())
+JUJU_URL = os.environ.get('JUJU_URL', 'wss://juju-bootstrap.master:17070/')
 JUJU_INSTALLED = os.path.exists(os.path.join(os.path.expanduser('~'),
                                              '.juju/environments.yaml'))
 

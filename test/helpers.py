@@ -1,7 +1,5 @@
 import contextlib
 from cloudinstall import pegasus
-from cloudinstall.juju.state import JujuState
-from cloudinstall.maas.state import MaasState
 
 def load_status(fname, cons):
     def wrap(f):
@@ -13,12 +11,12 @@ def load_status(fname, cons):
         return new_f
     return wrap
 
-def parse_output(name):
-    with open('juju-output/%s.out' % name) as juju_out:
-        with open('maas-output/%s.out' % name) as maas_out:
-            maas = MaasState(maas_out)
-            juju = JujuState(juju_out.read())
-            return pegasus.parse_state(juju, maas)
+# def parse_output(name):
+#     with open('juju-output/%s.out' % name) as juju_out:
+#         with open('maas-output/%s.out' % name) as maas_out:
+#             maas = MaasState(maas_out)
+#             juju = JujuState(juju_out.read())
+#             return pegasus.parse_state(juju, maas)
 
 @contextlib.contextmanager
 def set_single_system(setting):
