@@ -216,6 +216,7 @@ def parse_state(juju, maas=None):
             machine.mem = maas_machine.mem
             machine.cpu_cores = maas_machine.cpu_cores
             machine.storage = maas_machine.storage
+            machine.tag = maas_machine.tag
             log.debug("Updated machine properties: %s" % (machine,))
         results.append(machine)
     return results

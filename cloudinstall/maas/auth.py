@@ -22,6 +22,9 @@ import requests
 import yaml
 import sys
 
+from cloudinstall.log import logger
+
+log = logger.getLogger(__name__)
 
 class MaasAuth:
     """ MAAS Authorization class
@@ -76,6 +79,7 @@ class MaasAuth:
             with open(maas_creds_file, 'r') as f:
                 self.api_key = f.read().rstrip('\n')
         else:
+            log.debug("Could not find credentials, attempting to login.")
             self.api_key = check_output(['sudo',
                                          'maas-region-admin',
                                          'apikey',
