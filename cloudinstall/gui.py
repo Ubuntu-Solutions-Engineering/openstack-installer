@@ -245,8 +245,18 @@ class Node(urwid.Text):
 
 
     def keypress(self, size, key):
+        """ Signal binding for Node
+
+        Keys:
+
+        * Enter - Opens node state change dialog
+        * F6 - Opens charm deployments dialog
+        """
         # can't change node state on single system
         if key == 'enter' and not pegasus.SINGLE_SYSTEM:
+            self.open_dialog(self.machine)
+        if key == 'f6' and pegasus.SINGLE_SYSTEM:
+            empty_metadata = {"charms": [], "units": []}
             self.open_dialog(self.machine)
         return key
 
@@ -348,7 +358,7 @@ class CommandRunner(urwid.ListBox):
             new_service = charm not in self.services
             if new_service:
                 if pegasus.SINGLE_SYSTEM:
-                    self.deploy(charm, id='1')
+                    self.deploy(charm, id=machine.machine_id)
                 else:
                     self.deploy(charm, tag=machine.tag)
             else:
@@ -361,7 +371,8 @@ class CommandRunner(urwid.ListBox):
                     self._run(cmd)
                 else:
                     constraints = "juju set-constraints --service " \
-                                  "{charm} tags={{tag}}".format(charm=charm)
+                                  "{charm} tags={{tag}}".format(charm=charm,
+                                                                tag=machine.tag)
                     log.debug("Setting constraints: " \
                               "{constraints}".format(constraints=constraints))
                     self._run(constraints.format(tag=machine.tag))
@@ -372,6 +383,7 @@ class CommandRunner(urwid.ListBox):
 
     def update(self, juju_state):
         self.services = set(juju_state.services.keys())
+        log.debug("Services keys: {services}".format(services=self.services))
 
     def poll(self):
         if self.running and self.running.poll() is not None:
@@ -506,11 +518,14 @@ class NodeViewMode(urwid.Frame):
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
+        """ Signal binding for NodeViewMode
+
+        Keys:
+
+        * F5 - Refreshes the node list
+        """
         if key == 'f5':
             self.ticks_left = 0
-        if key == 'f6' and pegasus.SINGLE_SYSTEM:
-            empty_metadata = {"charms": [], "units": []}
-            self.open_dialog(self.refresh_states()[1])
         return urwid.Frame.keypress(self, size, key)
 
 
