@@ -253,10 +253,11 @@ class Node(urwid.Text):
         * F6 - Opens charm deployments dialog
         """
         # can't change node state on single system
-        if key == 'enter' and not pegasus.SINGLE_SYSTEM:
-            self.open_dialog(self.machine)
-        if key == 'f6' and pegasus.SINGLE_SYSTEM:
-            empty_metadata = {"charms": [], "units": []}
+        # FIXME: Can we make F6 apply to both single and
+        # multi install systems?
+        # if key == 'enter' and not pegasus.SINGLE_SYSTEM:
+        #    self.open_dialog(self.machine)
+        if key == 'f6':
             self.open_dialog(self.machine)
         return key
 
