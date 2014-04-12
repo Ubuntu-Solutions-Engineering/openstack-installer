@@ -10,6 +10,24 @@ Base system
 Development and testing is done on Ubuntu and using a release of
 **Trusty** or later.
 
+Needed packages
+^^^^^^^^^^^^^^^
+
+* debhelper
+* dh-python
+* python3-all
+* python3-mock
+* python3-nose
+* python3-oauthlib
+* python3-passlib
+* python3-requests
+* python3-requests-oauthlib
+* python3-setuptools
+* python3-urwid
+* python3-ws4py
+* python3-yaml
+
+
 Building cloud installer
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -44,3 +62,25 @@ where your cloud-installer project is kept.
 .. code::
 
    $ ls ../*.deb
+
+Building documentation
+^^^^^^^^^^^^^^^^^^^^^^
+
+Documentation will be built in **docs/_build/html**, and requires **Sphinx** to build.
+
+.. code::
+
+   $ cd docs && make html
+
+
+Running Tests
+^^^^^^^^^^^^^
+
+Tests can be ran against a set of exported data(**default**) or a live machine. In
+order to test against live data the following environment variable is
+used.
+
+
+.. code::
+
+   $ JUJU_LIVE=1 nosetests3 test
