@@ -71,10 +71,6 @@ def _allocation_for_charms(charms):
     return list(filter(lambda x: x, als))
 
 
-def time():
-    return strftime('%Y-%m-%d %H:%M')
-
-
 class TextOverlay(urwid.Overlay):
     def __init__(self, text, underlying):
         w = urwid.LineBox(urwid.Filler(urwid.Text(text)))
@@ -118,8 +114,10 @@ class ControllerOverlay(TextOverlay):
     def _process(self, data):
         allocated = list(data.machines_allocated())
         log.debug("Allocated machines: {machines}".format(machines=allocated))
-        unallocated = list(data.machines_unallocated())
-        log.debug("Unallocated machines: {machines}".format(machines=unallocated))
+        if pegasus.MULTI_SYSTEM:
+            unallocated = list(data.machines_unallocated())
+            log.debug("Unallocated machines: {machines}".format(machines=unallocated))
+
         for machine in allocated:
             if pegasus.NOVA_CLOUD_CONTROLLER in machine.charms:
                 return False
@@ -295,7 +293,7 @@ class CommandRunner(urwid.ListBox):
     def _add(self, command, output):
 
         def add_to_f8(command, output):
-            txt = "{time}> {cmd}\n{output}".format(time=time(),
+            txt = "{time}> {cmd}\n{output}".format(time=utils.time(),
                                                    cmd=command,
                                                    output=output)
             self._contents.append(urwid.Text(txt))
@@ -448,6 +446,7 @@ class NodeViewMode(urwid.Frame):
         if not isinstance(self.loop.widget, LockScreen):
             self.loop.widget = val
 
+    # FIXME: what is this used for?
     def total_nodes(self):
         return len(self.nodes._contents)
 

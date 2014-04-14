@@ -157,3 +157,12 @@ def randomString(size=6, chars=string.ascii_uppercase + string.digits):
     :rtype: str
     """
     return ''.join(random.choice(chars) for x in range(size))
+
+
+def time():
+    """ Time helper
+
+    :returns: formatted current time string
+    :rtype: str
+    """
+    return strftime('%Y-%m-%d %H:%M')
