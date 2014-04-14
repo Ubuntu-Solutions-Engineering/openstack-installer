@@ -22,13 +22,44 @@ Simply exports `logger` variable
 """
 
 import logging
-from os.path import expanduser, isfile
+import logging.handlers
+import os
 
-LOG_FILE = "~/.cloud-install/commands.log"
-if isfile(LOG_FILE):
-    LOG_FILE = expanduser(LOG_FILE)
-    logging.basicConfig(filename=LOG_FILE, filemode='w',
-                        level=logging.DEBUG, datefmt='%m-%d %H:%M',
-                        format='%(asctime)s * %(name)s - %(message)s')
+def logger(name='ubuntu-cloud-installer'):
+    """ setup logging
 
-logger = logging
+    Overridding the default log level(**debug**) can be done via an environment variable `UCI_LOGLEVEL`
+
+    Available levels:
+
+    * CRITICAL
+    * ERROR
+    * WARNING
+    * INFO
+    * DEBUG
+
+    .. code::
+
+    # Running cloud-status from cli
+    $ UCI_LOGLEVEL=INFO cloud-status
+
+    :params str name: logger name
+    :returns: a log object
+    """
+    commandslog = logging.FileHandler(os.path.expanduser('~/.cloud-install/commands.log'))
+    commandslog.setFormatter(logging.Formatter(
+        '%(asctime)s %(pathname)s [%(process)d] * ' \
+        '%(levelname)s %(name)s - %(message)s'))
+
+    syslog = logging.handlers.SysLogHandler(address='/dev/log')
+    syslog.setLevel(logging.WARNING)
+    syslog.setFormatter(logging.Formatter(
+        '%(pathname)s [%(process)d]: %(levelname)s %(message)s'))
+
+    logger = logging.getLogger(name)
+    env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
+    logger.setLevel(env)
+    logger.addHandler(commandslog)
+    logger.addHandler(syslog)
+
+    return logger
