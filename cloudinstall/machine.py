@@ -140,15 +140,14 @@ class Machine:
     def charms(self):
         """ Returns charms for machine
 
-        :rtype: list
+        :returns: charms for machine
+        :rtype: generator
         """
         def charm_name(charm):
             return charm.split("/")[0]
 
-        _charm_list = []
-        for k in self.machine.get('units', []):
-            _charm_list.append(charm_name(k))
-        return _charm_list
+        for unit in self.units:
+            yield charm_name(unit.unit_name)
 
     @property
     def units(self):

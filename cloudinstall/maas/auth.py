@@ -24,7 +24,7 @@ import sys
 
 from cloudinstall.log import logger
 
-log = logger.getLogger(__name__)
+log = logger(__name__)
 
 class MaasAuth:
     """ MAAS Authorization class

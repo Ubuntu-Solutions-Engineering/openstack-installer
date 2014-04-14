@@ -34,7 +34,7 @@ from cloudinstall.machine import Machine
 from cloudinstall import pegasus
 from cloudinstall import utils
 
-log = logger.getLogger(__name__)
+log = logger(__name__)
 
 TITLE_TEXT = "Ubuntu Cloud Installer (q to quit)"
 
@@ -383,8 +383,8 @@ class CommandRunner(urwid.ListBox):
                     self._run(constraints.format(tag=''))
 
     def update(self, juju_state):
-        self.services = set(juju_state.services.keys())
-        log.debug("Services keys: {services}".format(services=self.services))
+        self.services = set(juju_state.services)
+        log.debug("Services: {services}".format(services=self.services))
 
     def poll(self):
         if self.running and self.running.poll() is not None:
@@ -480,6 +480,10 @@ class NodeViewMode(urwid.Frame):
         return self.get_data()
 
     def do_update(self, machines):
+        """ Updating node states
+
+        :params list machines: list of known machines
+        """
         nodes, juju = machines
         nodes = [Node(t, self.open_dialog) for t in nodes]
 

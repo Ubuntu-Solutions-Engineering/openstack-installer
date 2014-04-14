@@ -33,7 +33,7 @@ from cloudinstall.maas.auth import MaasAuth
 from cloudinstall.juju import JujuState
 from cloudinstall.maas.client import MaasClient
 
-log = logger.getLogger(__name__)
+log = logger(__name__)
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
 MYSQL = 'mysql'
