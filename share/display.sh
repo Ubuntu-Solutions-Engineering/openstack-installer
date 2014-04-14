@@ -45,10 +45,29 @@ dialogAptInstall()
 			exit 1
 			;;
 		esac
-		gaugePrompt $p "$message"
+		dialogGaugePrompt $p "$message"
 	done < "$TMP/apt-status"
 	wait $!
 	rm -f "$TMP/apt-status"
+}
+
+dialogGaugePrompt()
+{
+	printf "%s\n%s\n%s\n%s\n" XXX $1 "$2" XXX
+}
+
+dialogGaugeStart()
+{
+	mkfifo -m 0600 "$TMP/gauge"
+	whiptail --title "$1" --backtitle "$BACKTITLE" --gauge "$2" $3 $4 $5 \
+	    < "$TMP/gauge" &
+	gauge_pid=$!
+}
+
+dialogGaugeStop()
+{
+	wait $gauge_pid
+	rm -f "$TMP/gauge"
 }
 
 dialogInput()
