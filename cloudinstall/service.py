@@ -35,22 +35,30 @@ class Unit:
         """
         return self.unit.get('agent-state', 'unknown')
 
+    @property
+    def machine_id(self):
+        """ Associate machine for unit
+
+        :returns: machine id
+        :rtype: str
+        """
+        return self.unit.get('machine', '-1')
+
+    @property
+    def public_address(self):
+        """ Public address of unit
+
+        :returns: address of unit
+        :rtype: str
+        """
+        return self.unit.get('public-address', '0.0.0.0')
 
 class Relation:
     """ Relation class """
 
-    def __init__(self, relation_name, relation):
+    def __init__(self, relation_name, charms):
         self.relation_name = relation_name
-        self.relation = relation
-
-    def charms(self, name):
-        """ Charms for relation
-
-        :param str name: name of relation
-        :returns: list of charms
-        :rtype: list
-        """
-        return self.relation.get(name, [])
+        self.charms = charms
 
 
 class Service:
@@ -77,6 +85,18 @@ class Service:
         :rtype: bool
         """
 
+    def unit(self, name):
+        """ Single unit entry
+
+        :params str name: name of unit
+        :returns: a Unit entry
+        :rtype: Unit()
+        """
+        u = list(filter(lambda u: u.unit_name == name, self.units))[0]
+        if u:
+            return u
+        return Unit('unknown', [])
+
     @property
     def units(self):
         """ Service units
@@ -84,8 +104,8 @@ class Service:
         :returns: list associated units for service
         :rtype: Unit()
         """
-        for unit_name, unit in self.service.get('units', {}).items():
-            yield Unit(unit_name, unit)
+        for unit_name, units in self.service.get('units', {}).items():
+            yield Unit(unit_name, units)
 
 
     @property
