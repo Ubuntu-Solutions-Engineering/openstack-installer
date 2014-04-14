@@ -19,6 +19,7 @@
 """ Represents a juju status """
 
 import yaml
+import itertools
 
 from collections import defaultdict
 from cloudinstall.machine import Machine
@@ -37,6 +38,14 @@ class JujuState:
         :param raw_yaml: YAML object
         """
         self._yaml = yaml.load(raw_yaml)
+        self.valid_states = ['pending', 'started', 'down']
+
+    def __validate_allocation(self, machine):
+        """ Private function to test if machine is in an allocated
+        state.
+        """
+        return not machine.is_machine_0 and \
+            machine.agent_state in self.valid_states
 
     def machine(self, instance_id):
         """ Return single machine state
@@ -45,11 +54,8 @@ class JujuState:
         :returns: machine
         :rtype: cloudinstall.machine.Machine()
         """
-        m = list(filter(lambda x: x.instance_id == instance_id,
-                        self.machines))[0]
-        if m:
-            return m
-        return Machine(-1, {})
+        return next(filter(lambda x: x.instance_id == instance_id,
+                           self.machines())) or Machine(-1, {})
 
     def machines(self):
         """ Machines property
@@ -73,24 +79,18 @@ class JujuState:
         """ Machines allocated property
 
         :returns: Machines in an allocated state
-        :rtype: generator
+        :rtype: iter
         """
-        for m in self.machines():
-            if m.agent_state in ['started', 'pending', 'down'] and \
-               not m.is_machine_0:
-                yield m
+        return filter(self.__validate_allocation, self.machines())
 
     def machines_unallocated(self):
         """ Machines unallocated property
 
         :returns: Machines in an unallocated state
-        :rtype: list
+        :rtype: iter
         """
-        for m in self.machines():
-            if not m.agent_state or \
-               'unallocated' in m.agent_state or \
-                  m.agent_state not in ['started', 'pending', 'down']:
-                yield m
+        return itertools.filterfalse(self.__validate_allocation,
+                                          self.machines())
 
     def service(self, name):
         """ Return a single service entry
@@ -99,10 +99,9 @@ class JujuState:
         :returns: a service entry
         :rtype: Service()
         """
-        s = list(filter(lambda x: x.service_name == name, self.services))[0]
-        if s:
-            return s
-        return Service('unknown', {})
+        return next(filter(s for s in self.services if \
+                            s.service_name == name)) or \
+                    Service('unknown', {})
 
     @property
     def services(self):
@@ -113,34 +112,3 @@ class JujuState:
         """
         for name, service in self._yaml.get('services', {}).items():
             yield Service(name, service)
-
-    def _build_unit_map(self, compute_id, allow_id):
-        """ Return a map of compute_id(unit): ([charm name], [unit name]),
-        useful for defining maps between properties of units and what is
-        deployed to them. """
-        charms = defaultdict(lambda: ([], []))
-        for name, service in self._yaml.get('services', {}).items():
-            for unit_name, unit in service.get('units', {}).items():
-                if 'machine' not in unit or not allow_id(str(unit['machine'])):
-                    continue
-                cs, us = charms[compute_id(unit)]
-                cs.append(name)
-                us.append(unit_name)
-        return charms
-
-    @property
-    def assignments(self):
-        """ Return a map of instance-ids and its charm/unit names,
-        useful for figuring out what is deployed where. Note that
-        these are physical machines, and containers are not included.
-
-        :returns: [{instance-id: ([charm name], [unit name])}]
-        :rtype: list
-        """
-        def by_instance_id(unit):
-            return self._yaml['machines'][unit['machine']]['instance-id']
-
-        def not_lxc(id_):
-            return 'lxc' not in id_
-        return self._build_unit_map(by_instance_id, not_lxc)
-

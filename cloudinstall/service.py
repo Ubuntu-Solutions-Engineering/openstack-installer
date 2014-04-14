@@ -53,6 +53,12 @@ class Unit:
         """
         return self.unit.get('public-address', '0.0.0.0')
 
+    def __repr__(self):
+        return "<Unit: {name} " \
+            "Machine: {machine}>".format(name=self.unit_name,
+                                         machine=self.machine_id)
+
+
 class Relation:
     """ Relation class """
 
@@ -118,3 +124,9 @@ class Service:
         for relation_name, relation in \
             self.service.get('relations', {}).items():
             yield Relation(relation_name, relation)
+
+
+    def __repr__(self):
+        return "<Service: {name} " \
+            "Units: {units}>".format(name=self.service_name,
+                                     units=list(self.units))
