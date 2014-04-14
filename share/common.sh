@@ -71,9 +71,8 @@ enableIpForwarding()
 
 error()
 {
-	whiptail --title "[!] An error has occurred" --backtitle "$BACKTITLE" \
-	    --ok-button Continue \
-	    --msgbox "Installation aborted\n\nSee /var/log/cloud-install.log for details." \
+	dialogMsgBox "[!] An error has occurred" Continue \
+	    "Installation aborted\n\nSee /var/log/cloud-install.log for details." \
 	    10 60
 }
 
@@ -87,11 +86,6 @@ exitInstall()
 	fi
 	enableBlank
 	rm -rf $TMP
-}
-
-gaugePrompt()
-{
-	printf "%s\n%s\n%s\n%s\n" XXX $1 "$2" XXX
 }
 
 generateSshKeys()

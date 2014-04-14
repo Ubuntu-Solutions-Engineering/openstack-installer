@@ -26,10 +26,7 @@ multiInstall()
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
 
-	mkfifo -m 0600 "$TMP/gauge"
-	whiptail --title "Installing" --backtitle "$BACKTITLE" \
-	    --gauge "Please wait" 8 70 0 < "$TMP/gauge" &
-	gauge_pid=$!
+	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
 		dialogAptInstall 2 18 cloud-install-multi
 
@@ -37,20 +34,20 @@ multiInstall()
 		sed -e 's/^USE_LXC_BRIDGE="true"/USE_LXC_BRIDGE="false"/' -i \
 		    /etc/default/lxc-net
 
-		gaugePrompt 22 "Generating SSH keys"
+		dialogGaugePrompt 22 "Generating SSH keys"
 		generateSshKeys
 
-		gaugePrompt 24 "Creating MAAS super user"
+		dialogGaugePrompt 24 "Creating MAAS super user"
 		createMaasSuperUser
 		echo 25
 		maas_creds=$(maas-region-admin apikey --username root)
 		saveMaasCreds $maas_creds
 		maasLogin $maas_creds
-		gaugePrompt 26 "Waiting for MAAS cluster registration"
+		dialogGaugePrompt 26 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 
 		createMaasBridge $interface
-		gaugePrompt 30 "Configuring MAAS networking"
+		dialogGaugePrompt 30 "Configuring MAAS networking"
 
 		if [ -n "$bridge_interface" ]; then
 			gateway=$(ipAddress br0)
@@ -62,9 +59,9 @@ multiInstall()
 		# Retrieve dhcp-range
 		configureMaasNetworking $uuid br0 $gateway \
 		    ${dhcp_range%-*} ${dhcp_range#*-}
-		gaugePrompt 35 "Configuring DNS"
+		dialogGaugePrompt 35 "Configuring DNS"
 		configureDns
-		gaugePrompt 40 "Importing MAAS boot images"
+		dialogGaugePrompt 40 "Importing MAAS boot images"
 		configureMaasImages
 
 		if [ -n "$MAAS_HTTP_PROXY" ]; then
@@ -76,21 +73,20 @@ multiInstall()
 			$maas_report_boot_images
 		fi
 
-		gaugePrompt 60 "Configuring Juju"
+		dialogGaugePrompt 60 "Configuring Juju"
 		address=$(ipAddress br0)
 		admin_secret=$(pwgen -s 32)
 		configureJuju configMaasEnvironment $address $maas_creds $admin_secret
-		gaugePrompt 75 "Bootstrapping Juju"
+		dialogGaugePrompt 75 "Bootstrapping Juju"
 		jujuBootstrap $uuid
 		echo 99
 		maas maas tags new name=use-fastpath-installer definition="true()"
 		maasLogout
 
-		gaugePrompt 100 "Installation complete"
+		dialogGaugePrompt 100 "Installation complete"
 		sleep 2
 	} > "$TMP/gauge"
-	wait $gauge_pid
-	rm -f "$TMP/gauge"
+	dialogGaugeStop
 }
 
 saveMaasCreds()

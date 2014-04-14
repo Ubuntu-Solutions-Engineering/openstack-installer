@@ -26,17 +26,14 @@ singleInstall()
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
 
-	mkfifo -m 0600 $TMP/fifo
-	whiptail --title "Installing" --backtitle "$BACKTITLE" \
-	    --gauge "Please wait" 8 60 0 < $TMP/fifo &
+	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
-		gaugePrompt 2 "Installing packages"
-		apt-get -y install cloud-install-single
+		dialogAptInstall 2 18 cloud-install-single
 
-		gaugePrompt 4 "Generating SSH keys"
+		dialogGaugePrompt 22 "Generating SSH keys"
 		generateSshKeys
 
-		gaugePrompt 80 "Bootstrapping Juju"
+		dialogGaugePrompt 80 "Bootstrapping Juju"
 		configureJuju configLocalEnvironment
                 (
                   cd "/home/$INSTALL_USER"
@@ -45,8 +42,8 @@ singleInstall()
                 )
 		echo 99
 
-		gaugePrompt 100 "Installation complete"
+		dialogGaugePrompt 100 "Installation complete"
 		sleep 2
-	} > $TMP/fifo
-	wait $!
+	} > "$TMP/gauge"
+	dialogGaugeStop
 }
