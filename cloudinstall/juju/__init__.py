@@ -22,9 +22,10 @@ import yaml
 
 from collections import defaultdict
 from cloudinstall.machine import Machine
+from cloudinstall.service import Service
 from cloudinstall.log import logger
 
-log = logger.getLogger(__name__)
+log = logger(__name__)
 
 class JujuState:
     """ Represents a global Juju state """
@@ -44,9 +45,10 @@ class JujuState:
         :returns: machine
         :rtype: cloudinstall.machine.Machine()
         """
-        for m in self.machines():
-            if m.instancd_id == instance_id:
-                return m
+        m = list(filter(lambda x: x.instance_id == instance_id,
+                        self.machines))[0]
+        if m:
+            return m
         return Machine(-1, {})
 
     def machines(self):
@@ -58,13 +60,13 @@ class JujuState:
         for machine_id, machine in self._yaml['machines'].items():
             if '0' in machine_id:
                 continue
-            machine_units = {}
-            for name in self.services:
-                for k,v in self.units(name):
-                    if machine_id in v.get('machine', '-1'):
-                        machine_units[k] = v
+
             # Add units for machine
-            machine['units'] = machine_units
+            machine['units'] = []
+            for svc in self.services:
+                for unit in svc.units:
+                    if machine_id == unit.machine_id:
+                        machine['units'].append(unit)
             yield Machine(machine_id, machine)
 
     def machines_allocated(self):
@@ -90,32 +92,27 @@ class JujuState:
                   m.agent_state not in ['started', 'pending', 'down']:
                 yield m
 
-    def units(self, name):
-        """ Juju units property
-
-        :param str name: service/charm name
-        :returns: units for service
-        :rtype: dict_items
-        """
-        return self.service(name).get('units', {}).items()
-
     def service(self, name):
         """ Return a single service entry
 
         :param str name: service/charm name
         :returns: a service entry
-        :rtype: dict
+        :rtype: Service()
         """
-        return self.services.get(name, {})
+        s = list(filter(lambda x: x.service_name == name, self.services))[0]
+        if s:
+            return s
+        return Service('unknown', {})
 
     @property
     def services(self):
         """ Juju services property
 
-        :returns: all loaded services
-        :rtype: dict
+        :returns: Service() of all loaded services
+        :rtype: generator
         """
-        return self._yaml.get('services', {})
+        for name, service in self._yaml.get('services', {}).items():
+            yield Service(name, service)
 
     def _build_unit_map(self, compute_id, allow_id):
         """ Return a map of compute_id(unit): ([charm name], [unit name]),
