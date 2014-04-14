@@ -21,6 +21,8 @@ clean:
 	@debian/rules clean
 	@rm -rf debian/cloud-install
 	@rm -rf docs/_build/*
+	@rm -rf ../cloud-*.deb ../cloud-*.tar.gz ../cloud-*.dsc ../cloud-*.changes \
+		../cloud-*.build
 
 deb-src: clean update_version tarball
 	@debuild -S -us -uc
