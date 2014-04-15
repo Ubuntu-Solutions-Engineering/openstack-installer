@@ -22,7 +22,7 @@ import os
 import re
 import string
 import random
-#from time import strftime
+from time import strftime
 
 # String with number of minutes, or None.
 blank_len = None
