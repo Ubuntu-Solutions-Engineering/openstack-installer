@@ -16,6 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Install packages via apt-get displaying progress within an existing gauge
+#
+# dialogAptInstall percent range
+#
+# See dialogGaugeStart
+#
 dialogAptInstall()
 {
 	download_start=$1
@@ -33,11 +39,11 @@ dialogAptInstall()
 	while IFS=: read status pkg percent description; do
 		case $status in
 		dlstatus)
-			message="Downloading packages...$description"
+			text="Downloading packages...$description"
 			p=$((download_start + ((${percent%.*} * download_range) / 100)))
 			;;
 		pmstatus)
-			message="Installing packages...$description"
+			text="Installing packages...$description"
 			p=$((install_start + ((${percent%.*} * install_range) / 100)))
 			;;
 		*)
@@ -45,17 +51,29 @@ dialogAptInstall()
 			exit 1
 			;;
 		esac
-		dialogGaugePrompt $p "$message"
+		dialogGaugePrompt $p "$text"
 	done < "$TMP/apt-status"
 	wait $!
 	rm -f "$TMP/apt-status"
 }
 
+# Update a progress gauge
+#
+# dialogGaugePrompt percent text
+#
+# See dialogGaugeStart
+#
 dialogGaugePrompt()
 {
 	printf "%s\n%s\n%s\n%s\n" XXX $1 "$2" XXX
 }
 
+# Start a progress gauge
+#
+# dialogGaugeStart title text height width percent
+#
+# See dialogGaugePrompt, dialogGaugeStop
+#
 dialogGaugeStart()
 {
 	mkfifo -m 0600 "$TMP/gauge"
@@ -64,18 +82,34 @@ dialogGaugeStart()
 	gauge_pid=$!
 }
 
+# Stop a progress gauge
+#
+# See dialogGaugeStart
+#
 dialogGaugeStop()
 {
 	wait $gauge_pid
 	rm -f "$TMP/gauge"
 }
 
+# Display an input box
+#
+# dialogInput title text height width input-text
+#
+# writes text entry to stdout, empty string if user cancels
+#
 dialogInput()
 {
 	whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox "$2" $3 $4 \
 	    "$5" 3>&1 1>/dev/tty 2>&3 || true
 }
 
+# Display a menu
+#
+# dialogMenu title text height width menu-height menu-item...
+#
+# writes menu selection to stdout, empty string if user cancels
+#
 dialogMenu()
 {
 	title=$1
@@ -91,18 +125,34 @@ dialogMenu()
 	    "$text" $height $width $menu_height 3>&1 1>/dev/tty 2>&3 || true
 }
 
+# Display a message
+#
+# dialogMsgBox title button-text text height width
+#
 dialogMsgBox()
 {
 	whiptail --title "$1" --backtitle "$BACKTITLE" --ok-button "$2" \
 	    --msgbox "$3" $4 $5
 }
 
+# Display a password box
+#
+# dialogPassword title text height width
+#
+# writes text entry to stdout, empty string if user cancels
+#
 dialogPassword()
 {
 	whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox "$2" $3 \
 	    $4 3>&1 1>/dev/tty 2>&3 || true
 }
 
+# Display a yes/no choice
+#
+# dialogYesNo title text height width
+#
+# exit 0 on yes, 1 on no
+#
 dialogYesNo()
 {
 	whiptail --title "$1" --backtitle "$BACKTITLE" --yesno "$2" $3 $4
