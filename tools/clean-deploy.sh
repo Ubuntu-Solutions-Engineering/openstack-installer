@@ -18,7 +18,7 @@ case $WHAT in
 
     yes | juju destroy-environment --force maas
     rm -r ~/.maascli.db
-    sudo apt-get -yy purge '.*maas.*'
+    sudo apt-get -yy purge '.*maas.*' 'bind9'
     sudo lxc-stop -n juju-bootstrap
     sudo lxc-destroy -n juju-bootstrap
     sudo service apache2 stop
