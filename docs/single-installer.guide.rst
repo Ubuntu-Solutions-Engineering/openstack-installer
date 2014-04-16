@@ -1,5 +1,5 @@
 Single Installer Guide
-===============
+======================
 
 Pre-requisites
 ^^^^^^^^^^^^^^

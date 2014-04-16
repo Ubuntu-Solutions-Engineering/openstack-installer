@@ -1,8 +1,5 @@
-``cloudinstall.maas`` --- MaaS interface
-========================================
-
-This package contains modules necessary for communicating with the
-MaaS API server.
+``cloudinstall.maas`` --- Maas interface
+=========================================
 
 .. automodule:: cloudinstall.maas
     :members:
