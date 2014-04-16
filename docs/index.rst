@@ -31,7 +31,8 @@ Reference
    cloudinstall.juju
    cloudinstall.maas
    gui
+   log
    machine
    pegasus
+   service
    utils
-   log

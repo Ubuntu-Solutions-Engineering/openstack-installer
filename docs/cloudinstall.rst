@@ -17,10 +17,35 @@ cloudinstall Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`log` Module
+-----------------
+
+.. automodule:: cloudinstall.log
+    :noindex:
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`machine` Module
+---------------------
+
+.. automodule:: cloudinstall.machine
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`pegasus` Module
 ---------------------
 
 .. automodule:: cloudinstall.pegasus
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`service` Module
+---------------------
+
+.. automodule:: cloudinstall.service
     :members:
     :undoc-members:
     :show-inheritance:
@@ -33,11 +58,19 @@ cloudinstall Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
+:mod:`juju` Module
+-------------------
 
-.. toctree::
+.. automodule:: cloudinstall.juju
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-    cloudinstall.juju
-    cloudinstall.maas
+:mod:`maas` Module
+-------------------
 
+.. automodule:: cloudinstall.maas
+    :noindex:
+    :members:
+    :undoc-members:
+    :show-inheritance:

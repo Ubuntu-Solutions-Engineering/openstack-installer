@@ -40,13 +40,14 @@ def logger(name='ubuntu-cloud-installer'):
 
     .. code::
 
-    # Running cloud-status from cli
-    $ UCI_LOGLEVEL=INFO cloud-status
+        # Running cloud-status from cli
+        $ UCI_LOGLEVEL=INFO cloud-status
 
     :params str name: logger name
     :returns: a log object
     """
-    commandslog = logging.FileHandler(os.path.expanduser('~/.cloud-install/commands.log'))
+    LOGFILE = os.path.expanduser('~/.cloud-install/commands.log')
+    commandslog = logging.FileHandler(LOGFILE, 'w')
     commandslog.setFormatter(logging.Formatter(
         '%(asctime)s %(pathname)s [%(process)d] * ' \
         '%(levelname)s %(name)s - %(message)s'))
