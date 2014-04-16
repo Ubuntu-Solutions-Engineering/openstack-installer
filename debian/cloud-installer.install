@@ -11,3 +11,4 @@ share/landscape.sh                     usr/share/cloud-installer/common
 share/maas.sh                          usr/share/cloud-installer/common
 share/multi.sh                         usr/share/cloud-installer/common
 share/single.sh                        usr/share/cloud-installer/common
+tools/clean-deploy.sh                  usr/share/cloud-installer/tools
