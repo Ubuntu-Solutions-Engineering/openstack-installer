@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 #
 # cloud-install - Cloud installer
 #
@@ -17,13 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ ! $(id -u) = 0 ]; then
-    echo "Installing a cloud requires root privileges. Rerun with sudo."
-    exit 1
-fi
-
-set -ex
-
 . /usr/share/cloud-installer/common/display.sh
 . /usr/share/cloud-installer/common/common.sh
 . /usr/share/cloud-installer/common/maas.sh
@@ -33,13 +26,61 @@ set -ex
 . /usr/share/cloud-installer/common/single.sh
 . /usr/share/cloud-installer/common/landscape.sh
 
+OPT_HELP=h
+OPT_INSTALL=i
+OPTS=:${OPT_INSTALL}${OPT_HELP}
+USAGE="\
+cloud-install [-${OPT_INSTALL}${OPT_HELP}]
+
+Create an Ubuntu Cloud! (requires root privileges)
+
+Options:
+  -$OPT_INSTALL  install only (don't invoke cloud-status)
+  -$OPT_HELP  print this message"
+
+usage()
+{
+	echo "$USAGE"
+}
+
+usageError()
+{
+	echo "$1" >&2
+	usage >&2
+}
+
+while getopts $OPTS opt; do
+	case $opt in
+	$OPT_INSTALL)
+		install=true
+		;;
+	$OPT_HELP)
+		usage
+		exit 0
+		;;
+	\?)
+		usageError "Unknown argument: $OPTARG"
+		exit 1
+		;;
+	esac
+done
+shift $((OPTIND - 1))
+
+if [ $(id -u) -ne 0 ]; then
+	usageError "Installing a cloud requires root privileges. Rerun with sudo."
+	exit 1
+fi
+
+createTempDir
 startLog
 
 trap exitInstall EXIT
 trap "" PIPE
 
-#disableBlank
+# TODO add better logging
+set -x
 
+#disableBlank
 
 if [ ! -e /etc/.cloud-installed ]; then
 	configureInstall
@@ -62,5 +103,7 @@ if [ ! -e /etc/.cloud-installed ]; then
 else
 	echo "Cloud already installed."
 fi
-exitInstall
-cd "/home/$INSTALL_USER"; exec sudo -H -u "$INSTALL_USER" cloud-status
+if [ -z "$install" ]; then
+	exitInstall
+	cd "/home/$INSTALL_USER"; exec sudo -H -u "$INSTALL_USER" cloud-status
+fi
