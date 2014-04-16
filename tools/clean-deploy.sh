@@ -10,24 +10,38 @@ else
   echo "could not determine install type"
 fi
 
+apt_purge() {
+  DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
+}
+
 case $WHAT in
   multi-system)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Multi install cleansing.
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    yes | juju destroy-environment --force maas
+    juju destroy-environment --yes --force maas
     rm -r ~/.maascli.db
-    sudo apt-get -yy purge '.*maas.*' 'bind9'
-    sudo lxc-stop -n juju-bootstrap
-    sudo lxc-destroy -n juju-bootstrap
-    sudo service apache2 stop
+
+    apt-get -yy purge '.*maas.*' 'bind9'
+    # TODO: Sometimes the maas database doesn't actually get purged, even if
+    # you say yes to the package. We should drop the DB manually if possible
+    # here.
+
+    lxc-stop -n juju-bootstrap
+    lxc-destroy -n juju-bootstrap
+
+    # start lxcbr0 again
+    sed -e 's/^USE_LXC_BRIDGE="false"/USE_LXC_BRIDGE="true"/' -i \
+      /etc/default/lxc-net
+    service lxc-net start
+
     # clean up the networking
-    sudo rm /etc/network/interfaces.d/cloud-install.cfg
-    sudo sed -i -e '/source/d' /etc/network/interfaces
-    sudo ifconfig br0 down
-    sudo brctl delbr br0
-    sudo service networking restart
+    cp /etc/network/interfaces.cloud.bak /etc/network/interfaces
+    rm /etc/network/interfaces.d/cloud-install.cfg
+    ifconfig br0 down
+    brctl delbr br0
+    service networking restart
 
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo you might need to fix your /etc/resolv.conf
@@ -37,7 +51,7 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Single install cleansing.
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    yes | juju destroy-environment --force local
+    juju destroy-environment --yes --force local
     ;;
   *)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -50,21 +64,23 @@ case $WHAT in
   esac
 
 # these may or may not be installed, so we list them all individually
-sudo apt-get -yy purge '.*juju.*'
-sudo apt-get -q -yy purge cloud-install-single
-sudo apt-get -q -yy purge cloud-install-multi
-sudo apt-get -q -yy purge cloud-install-landscape
-sudo apt-get -q -yy purge cloud-installer
+apt_purge '.*juju.*'
+apt_purge cloud-install-single
+apt_purge cloud-install-multi
+apt_purge cloud-install-landscape
+apt_purge cloud-installer
+
+# Remove any extra packages that aren't needed after purging.
+apt-get -yy autoremove
 
 # just make sure juju-mongodb died. LP#1306315
 MONGOD=$(pgrep mongod)
 RET=$?
 if [ ${RET} -eq 0 ]; then
   if [ ${MONGOD} -gt 0 ]; then
-    sudo kill -9 ${MONGOD}
+    kill -9 ${MONGOD}
   fi
 fi
 
-sudo rm -rf ~/.juju ~/.cloud-install || true
-sudo rm /etc/.cloud-installed || true
-
+rm -rf ~/.juju ~/.cloud-install || true
+rm /etc/.cloud-installed || true

@@ -20,6 +20,8 @@ multiInstall()
 {
 	touch /home/$INSTALL_USER/.cloud-install/multi
 
+	cp /etc/network/interfaces /etc/network/interfaces.cloud.bak
+
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
 		dialogAptInstall 2 18 cloud-install-multi
