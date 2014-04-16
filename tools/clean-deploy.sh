@@ -23,10 +23,8 @@ case $WHAT in
     juju destroy-environment --yes --force maas
     rm -r ~/.maascli.db
 
-    apt-get -yy purge '.*maas.*' 'bind9'
-    # TODO: Sometimes the maas database doesn't actually get purged, even if
-    # you say yes to the package. We should drop the DB manually if possible
-    # here.
+    apt_purge '.*maas.*' 'bind9'
+    sudo -u postgres psql -c 'drop database maasdb;'
 
     lxc-stop -n juju-bootstrap
     lxc-destroy -n juju-bootstrap
