@@ -18,7 +18,6 @@
 
 BACKTITLE="Cloud install"
 LOG=/var/log/cloud-install.log
-TMP=$(mktemp -d /tmp/cloud-install.XXX)
 
 export PYTHONPATH=/usr/share/cloud-installer/common
 export PYTHONDONTWRITEBYTECODE=true
@@ -44,6 +43,11 @@ configureNat()
 	sed -e '/^iface lo inet loopback$/a\
 \	pre-up iptables-restore < /etc/network/iptables.rules' -i \
 	    /etc/network/interfaces
+}
+
+createTempDir()
+{
+	TMP=$(mktemp -d /tmp/cloud-install.XXX)
 }
 
 disableBlank()
@@ -85,7 +89,7 @@ exitInstall()
 		error
 	fi
 	enableBlank
-	rm -rf $TMP
+	removeTempDir
 }
 
 generateSshKeys()
@@ -131,6 +135,13 @@ ipNetwork()
 	ip addr show $1 | awk '/^    inet / { print $2 }'
 }
 
+removeTempDir()
+{
+	if [ -n "$TMP" ]; then
+		rm -rf "$TMP"
+	fi
+}
+
 startLog()
 {
 	(umask 0077; touch "$LOG")
@@ -143,10 +154,12 @@ startLog()
 
 stopLog()
 {
-	exec 2>&1
-	wait $log_pid
-	rm -f "$TMP/log"
-	printf "Cloud installation finished %s\n" "$(date)" >> "$LOG"
+	if [ -n "$log_pid" ]; then
+		exec 2>&1
+		wait $log_pid
+		rm -f "$TMP/log"
+		printf "Cloud installation finished %s\n" "$(date)" >> "$LOG"
+	fi
 }
 
 ts()
