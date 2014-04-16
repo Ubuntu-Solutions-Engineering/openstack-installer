@@ -55,7 +55,7 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Please run with either single-system or multi-system as an argument.
     echo Example:
-    echo   ./clean-deploy.sh single-system
+    echo   sudo cloud-uninstall single-system
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     exit 1
     ;;
