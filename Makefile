@@ -13,9 +13,8 @@ tarball: $(NAME)_$(VERSION).orig.tar.gz
 
 .PHONY: install-dependencies
 install-dependencies:
-	sudo apt-get install debhelper python3-setuptools python3-requests \
-		python3-requests-oauthlib python3-urwid python3-yaml python3-ws4py \
-		python3-mock python3-nose devscripts python3-all python3-passlib
+	sudo apt-get install devscripts equivs
+	sudo mk-build-deps -i debian/control
 
 clean:
 	@debian/rules clean
