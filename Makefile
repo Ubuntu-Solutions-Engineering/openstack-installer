@@ -46,4 +46,12 @@ update_version:
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
 
+# sudo make run type=multi proxy=http://localhost:3128/
+.PHONY: run
+run: deb
+	-dpkg -i ../cloud-installer*deb
+	-dpkg -i ../cloud-install-${type}*deb
+	apt-get install -f
+	MAAS_HTTP_PROXY=${proxy} cloud-install
+
 all: deb
