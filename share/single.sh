@@ -18,13 +18,7 @@
 
 singleInstall()
 {
-
-	mkdir -m 0700 "/home/$INSTALL_USER/.cloud-install" || true
-
-        touch /home/$INSTALL_USER/.cloud-install/single
-	echo "$openstack_password" > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
-	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
-	chown -R "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.cloud-install"
+	touch /home/$INSTALL_USER/.cloud-install/single
 
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
