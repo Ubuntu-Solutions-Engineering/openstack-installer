@@ -20,6 +20,15 @@ singleInstall()
 {
 	touch /home/$INSTALL_USER/.cloud-install/single
 
+	memory=$(head -n 1 /proc/meminfo | awk '/[0-9]/ {print $2}')
+
+	# we require 8gb for the single install
+	if [ "$memory" -lt $((8 * 1024 * 1024)) ] && [ -z "$force_install" ]; then
+		dialogMsgBox "Insufficient Memory!" "Abort" \
+		    "You need at least 8GB of memory to run the single machine install." 10 60
+		return 0
+	fi
+
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
 		dialogAptInstall 2 18 cloud-install-single
