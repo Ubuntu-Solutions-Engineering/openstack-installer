@@ -103,16 +103,16 @@ _OMIT_CONFIG = [
 # TODO: Use trusty + icehouse
 CONFIG_TEMPLATE = dedent("""\
     glance:
-        openstack-origin: cs:trusty
+        openstack-origin: cs:icehouse
     keystone:
-        openstack-origin: cs:trusty
+        openstack-origin: cs:icehouse
         admin-password: {password}
     nova-cloud-controller:
-        openstack-origin: cs:trusty
+        openstack-origin: cs:icehouse
     nova-compute:
-        openstack-origin: cs:trusty
+        openstack-origin: cs:icehouse
     openstack-dashboard:
-        openstack-origin: cs:trusty
+        openstack-origin: cs:icehouse
 """).format(password=OPENSTACK_PASSWORD)
 
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
@@ -143,8 +143,11 @@ def poll_state():
     # Capture Juju state
     ret, juju, _ = utils.get_command_output('juju status')
     if ret:
-        raise Exception("Juju State is empty!")
-    juju = JujuState(StringIO(juju))
+        log.debug("Juju state unknown, will re-poll in " \
+                  "case bootstrap is taking a little longer to come up.")
+        return
+    else:
+        juju = JujuState(StringIO(juju))
 
     maas = None
     if MULTI_SYSTEM:
