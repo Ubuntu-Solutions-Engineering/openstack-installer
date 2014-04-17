@@ -22,6 +22,9 @@ import os
 import time
 
 from cloudinstall.utils import get_command_output
+from cloudinstall.log import logger
+
+log = logger(__name__)
 
 class JujuWS(WebSocketClient):
     def opened(self):
@@ -131,6 +134,7 @@ class JujuClient:
             if opts:
                 cmd = "{cmd} --constraints {opts}".format(cmd=cmd,
                                                           opts=" ".join(opts))
+        log.debug("Add machine: {cmd}".format(cmd=cmd))
         ret, out, rtime = get_command_output(cmd)
         return out
 
