@@ -4,6 +4,8 @@ Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-python,
+               python-all,
+               python-setuptools,
                python3-all,
                python3-mock,
                python3-nose,
@@ -16,6 +18,7 @@ Build-Depends: debhelper (>= 9),
                python3-yaml
 Standards-Version: 3.9.5
 Homepage: https://launchpad.net/cloud-installer
+X-Python-Version: >= 2.7
 X-Python3-Version: >= 3.3
 Vcs-Browser: https://bazaar.launchpad.net/~solutions-engineering/cloud-installer/master
 Vcs-Bzr: lp:cloud-installer
@@ -36,7 +39,8 @@ Depends: gawk,
          python3-ws4py,
          python3-yaml,
          ${misc:Depends},
-         ${python3:Depends}
+         ${python3:Depends},
+         ${python:Depends}
 Description: Ubuntu Cloud installer
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
@@ -50,7 +54,7 @@ Description: Ubuntu Cloud installer
 Package: cloud-install-multi
 Section: admin
 Architecture: any
-Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, ${misc:Depends}
+Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, ${misc:Depends},
 Description: Ubuntu Cloud installer (multi-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of

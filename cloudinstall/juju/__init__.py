@@ -45,7 +45,8 @@ class JujuState:
         state.
         """
         return not machine.is_machine_0 and \
-            machine.agent_state in self.valid_states
+            machine.agent_state in self.valid_states or \
+            any(c for c in machine.charms)
 
     def machine(self, instance_id):
         """ Return single machine state
@@ -96,12 +97,14 @@ class JujuState:
         """ Return a single service entry
 
         :param str name: service/charm name
-        :returns: a service entry
+        :returns: a service entry or None
         :rtype: Service()
         """
-        return next(filter(s for s in self.services if \
-                            s.service_name == name)) or \
-                    Service('unknown', {})
+        try:
+            return next(filter(lambda s: s.service_name == name,
+                               self.services))
+        except StopIteration:
+            return None
 
     @property
     def services(self):

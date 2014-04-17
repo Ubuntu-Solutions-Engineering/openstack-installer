@@ -178,31 +178,6 @@ def parse_state(juju, maas=None):
     """
     results = []
 
-    # if maas:
-    #     for machine in maas.machines():
-    #         m = juju.machine(machine.instance_id)
-
-    #         log.debug('Maas machine: %s' % (m,))
-    #         if machine.hostname.startswith('juju-bootstrap'):
-    #             continue
-
-    #         # Only list nodes created by our user 'root'
-    #         if machine.owner and 'root' not in machine.owner:
-    #             continue
-
-    #         d = {
-    #             "fqdn": machine.hostname,
-    #             "memory": machine.mem,
-    #             "cpu_count": machine.cpu_cores,
-    #             "storage": machine.storage,
-    #             "tag": machine.system_id,
-    #             "machine_no": machine.machine_id,
-    #             "agent_state": machine.agent_state,
-    #             "charms": machine.charms,
-    #             "units": machine.units
-    #         }
-    #         results.append(d)
-
     for machine in juju.machines():
 
         if machine.is_machine_0:
