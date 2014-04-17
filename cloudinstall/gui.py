@@ -177,7 +177,7 @@ class AddComputeDialog(urwid.Overlay):
         self.w = urwid.LineBox(self.w)
         self.w = urwid.AttrWrap(self.w, "dialog")
         urwid.Overlay.__init__(self, self.w, self.underlying,
-                               'center', 60, 'middle', 8)
+                               'center', 45, 'middle', 4)
 
     def yes(self, button):
         log.info("Deploying a new nova compute machine")
@@ -340,7 +340,6 @@ class CommandRunner(urwid.ListBox):
         :param dict constraints: (optional) machine specs
         """
         out = self.client.add_machine(constraints)
-        log.debug("Add Machine output: {out}".format(out=out))
         return out
 
     def deploy(self, charm, machine_id=None, constraints=None):
@@ -504,7 +503,6 @@ class NodeViewMode(urwid.Frame):
                                                  self.destroy)
         else:
             self.loop.widget = AddComputeDialog(self,
-                                                self.juju,
                                                 self.destroy,
                                                 self.cr)
 
