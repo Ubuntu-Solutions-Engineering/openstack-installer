@@ -41,12 +41,16 @@ setup(name='cloud-installer',
       author='Robert Ayres',
       author_email='robert.ayres@ubuntu.com',
       url='https://launchpad.net/cloud-installer',
-      license="GPLv3+",
+      license="AGPLv3+",
       scripts=['bin/cloud-install', 'bin/cloud-status'],
       packages=['cloudinstall', 'cloudinstall.maas', 'cloudinstall.juju'],
       requires=['PyYAML',
                 'six',
                 'urwid',
                 'requests_oauthlib',
-                'requests']
+                'requests'],
+      data_files=[
+          ('share/man/man1', ['man/en/cloud-status.1',
+                              'man/en/cloud-install.1'])
+          ],
      )

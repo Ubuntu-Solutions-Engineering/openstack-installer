@@ -18,7 +18,6 @@ Needed packages
 * python3-all
 * python3-mock
 * python3-nose
-* python3-oauthlib
 * python3-passlib
 * python3-requests
 * python3-requests-oauthlib

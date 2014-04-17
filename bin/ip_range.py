@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     args = len(argv)
     if args == 1:
-        print("Missing arguments", file=sys.stderr)
+        print("Missing arguments")
         sys.exit(1)
 
     network = ip_network(argv[1], strict=False)
