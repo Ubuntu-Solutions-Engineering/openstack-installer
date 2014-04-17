@@ -44,9 +44,16 @@ class JujuState:
         """ Private function to test if machine is in an allocated
         state.
         """
-        return not machine.is_machine_0 and \
-            machine.agent_state in self.valid_states or \
-            any(c for c in machine.charms)
+        return machine.is_machine_1 and \
+            (machine.is_cloud_controller or \
+             machine.agent_state in self.valid_states)
+
+    def __validate_unallocation(self, machine):
+        """ Private function to test if machine is in an unallocated
+        state.
+        """
+        return not machine.is_machine_1 and \
+            not machine.is_compute
 
     def machine(self, instance_id):
         """ Return single machine state
@@ -82,7 +89,8 @@ class JujuState:
         :returns: Machines in an allocated state
         :rtype: iter
         """
-        return filter(self.__validate_allocation, self.machines())
+        return filter(self.__validate_allocation,
+                      self.machines())
 
     def machines_unallocated(self):
         """ Machines unallocated property
@@ -90,8 +98,8 @@ class JujuState:
         :returns: Machines in an unallocated state
         :rtype: iter
         """
-        return itertools.filterfalse(self.__validate_allocation,
-                                          self.machines())
+        return filter(self.__validate_unallocation,
+                      self.machines())
 
     def service(self, name):
         """ Return a single service entry
