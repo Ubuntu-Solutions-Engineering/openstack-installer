@@ -136,12 +136,15 @@ def juju_config_arg(charm):
 
 def poll_state():
     """ Polls current state of Juju and MAAS
+
+    :returns: list of Machine() and the Juju state
+    :rtype: list, JujuState()
     """
     # Capture Juju state
-    juju = utils._run('juju status')
-    if not juju:
+    ret, juju, _ = utils.get_command_output('juju status')
+    if ret:
         raise Exception("Juju State is empty!")
-    juju = JujuState(StringIO(juju.decode('ascii')))
+    juju = JujuState(StringIO(juju))
 
     maas = None
     if MULTI_SYSTEM:
