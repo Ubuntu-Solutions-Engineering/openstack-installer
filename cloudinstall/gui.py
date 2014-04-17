@@ -31,6 +31,7 @@ import urwid
 
 from cloudinstall.log import logger
 from cloudinstall.machine import Machine
+from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
 from cloudinstall import utils
 
@@ -48,10 +49,10 @@ NODE_FORMAT = "|".join(["{fqdn:<20}", "{cpu_count:>6}", "{memory:>10}",
                         "{storage:>12}", "{agent_state:<12}", "{tags}"])
 NODE_HEADER = "|".join(["{fqdn:<20}", "{cpu_count:<6}", "{memory:<10}",
                         "{storage:<12}", "{agent_state:<12}",
-                        "{tags}"]).format(fqdn="Hostname",
+                        "{tags}"]).format(fqdn="Hostname/IP",
                                           cpu_count="# CPUs",
-                                          memory="RAM (MB)",
-                                          storage="Storage (GB)",
+                                          memory="RAM",
+                                          storage="Storage",
                                           agent_state="State",
                                           tags="Charms")
 
@@ -72,10 +73,10 @@ def _allocation_for_charms(charms):
 
 
 class TextOverlay(urwid.Overlay):
-    def __init__(self, text, underlying):
+    def __init__(self, text, underlying, width=60, height=5):
         w = urwid.LineBox(urwid.Filler(urwid.Text(text)))
         w = urwid.AttrWrap(w, "dialog")
-        urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 5)
+        urwid.Overlay.__init__(self, w, underlying, 'center', width, 'middle', height)
 
 
 class ControllerOverlay(TextOverlay):
@@ -114,9 +115,8 @@ class ControllerOverlay(TextOverlay):
     def _process(self, data):
         allocated = list(data.machines_allocated())
         log.debug("Allocated machines: {machines}".format(machines=allocated))
-        if pegasus.MULTI_SYSTEM:
-            unallocated = list(data.machines_unallocated())
-            log.debug("Unallocated machines: {machines}".format(machines=unallocated))
+        unallocated = list(data.machines_unallocated())
+        log.debug("Unallocated machines: {machines}".format(machines=unallocated))
 
         for machine in allocated:
             if pegasus.NOVA_CLOUD_CONTROLLER in machine.charms:
@@ -129,6 +129,7 @@ class ControllerOverlay(TextOverlay):
             if pegasus.MULTI_SYSTEM and len(unallocated) > 0:
                 self.command_runner.add_machine()
             elif pegasus.SINGLE_SYSTEM:
+                TextOverlay("Adding a machine, please wait ...", self.underlying)
                 self.command_runner.add_machine()
         elif len(allocated) > 0:
             machine = allocated[0]
@@ -155,6 +156,32 @@ def _wrap_focus(widgets, unfocused=None):
     except TypeError:
         return urwid.AttrMap(widgets, unfocused, "focus")
 
+
+class AddComputeDialog(urwid.Overlay):
+    """ Dialog for adding new compute nodes """
+
+    def __init__(self, underlying, destroy, command_runner=None):
+        self.cr = command_runner
+        self.underlying = underlying
+        self.destroy = destroy
+        self._buttons = [urwid.Button("Yes", self.yes),
+                         urwid.Button("No", self.no)]
+        self.wrapped_buttons = _wrap_focus(self._buttons)
+        self.buttons = urwid.Columns(self.wrapped_buttons)
+        self.root = urwid.Text("Would you like to add a compute node?")
+        self.w = urwid.ListBox([self.root, self.buttons])
+        self.w = urwid.LineBox(self.w)
+        self.w = urwid.AttrWrap(self.w, "dialog")
+        urwid.Overlay.__init__(self, self.w, self.underlying,
+                               'center', 60, 'middle', 8)
+
+    def yes(self, button):
+        log.info("Deploying a new nova compute machine")
+        self.cr.add_machine("mem=2G")
+        self.destroy()
+
+    def no(self, button):
+        self.destroy()
 
 class ChangeStateDialog(urwid.Overlay):
     def __init__(self, underlying, machine, on_success, on_cancel):
@@ -209,7 +236,7 @@ class ChangeStateDialog(urwid.Overlay):
 class Node(urwid.Text):
     """ A single ui node representation
     """
-    def __init__(self, machine, open_dialog):
+    def __init__(self, machine=None, open_dialog=None):
         """
         Initialize Node
 
@@ -250,11 +277,6 @@ class Node(urwid.Text):
         * Enter - Opens node state change dialog
         * F6 - Opens charm deployments dialog
         """
-        # can't change node state on single system
-        # FIXME: Can we make F6 apply to both single and
-        # multi install systems?
-        # if key == 'enter' and not pegasus.SINGLE_SYSTEM:
-        #    self.open_dialog(self.machine)
         if key == 'f6':
             self.open_dialog(self.machine)
         return key
@@ -282,6 +304,7 @@ class CommandRunner(urwid.ListBox):
         self.running = None
         self.services = set()
         self.to_add = []
+        self.client = JujuClient
 
     def keypress(self, size, key):
         if key.lower() == "ctrl u":
@@ -316,8 +339,16 @@ class CommandRunner(urwid.ListBox):
                 self.running = None
                 self._add(cmd, str(e))
 
-    def add_machine(self):
-        self._run("juju add-machine")
+    def add_machine(self, **kwds):
+        """ Add a machine with optional constraints
+
+        :param dict kwds: (optional) machine specs
+        """
+        ret, out, _ = self.client.add_machine(kwds)
+        if ret:
+            log.debug("Failed to add machine: {out}".format(out=out))
+        else:
+            log.info("Added machine: {out}".format(out=out))
 
     def deploy(self, charm, id=None, tag=None):
         config = pegasus.juju_config_arg(charm)
@@ -337,37 +368,38 @@ class CommandRunner(urwid.ListBox):
         self.to_add = remaining
 
     def change_allocation(self, new_states, machine):
+        """ Changes state allocation of machine
+
+        .. note::
+
+            This only applies to multi-system installs.
+
+        :param list new_states: machine states
+        :param machine: Machine()
+        """
         log.debug("CommandRunner.change_allocation: " \
                   "new_states: {states}".format(states=new_states))
-        try:
-            for charm, unit in zip(machine.charms, machine.units):
-                if charm not in new_states:
-                    self._run("juju remove-unit {unit}".format(unit=unit))
-        except KeyError:
-            pass
 
-        if len(new_states) == 0:
-            cmd = "juju terminate-machine {id}".format(id=machine.machine_id)
-            log.debug("Terminating machine: {cmd}".format(cmd=cmd))
-            self._run(cmd)
+        if pegasus.MULTI_SYSTEM:
+            try:
+                log.debug("Validating charm in state: {charms}".format(charms=machine))
+                for charm, unit in zip(machine.charms, machine.units):
+                    if charm not in new_states:
+                        self._run("juju remove-unit {unit}".format(unit=unit.unit_name))
+            except KeyError:
+                pass
 
-        state_to_charm = {v: k for k, v in pegasus.ALLOCATION.items()}
-        for state in set(new_states) - set(machine.charms):
-            charm = state_to_charm[state]
-            new_service = charm not in self.services
-            if new_service:
-                if pegasus.SINGLE_SYSTEM:
-                    self.deploy(charm, id=machine.machine_id)
-                else:
+            if len(new_states) == 0:
+                cmd = "juju terminate-machine {id}".format(id=machine.machine_id)
+                log.debug("Terminating machine: {cmd}".format(cmd=cmd))
+                self._run(cmd)
+
+            state_to_charm = {v: k for k, v in pegasus.ALLOCATION.items()}
+            for state in set(new_states) - set(machine.charms):
+                charm = state_to_charm[state]
+                new_service = charm not in self.services
+                if new_service:
                     self.deploy(charm, tag=machine.tag)
-            else:
-                # TODO: we should make this a bit nicer, and do the
-                # SINGLE_SYSTEM test a little higher up.
-                if pegasus.SINGLE_SYSTEM:
-                    cmd = "juju add-unit --to 1 " \
-                          "{charm}".format(charm=charm)
-                    log.debug("Adding unit: {cmd}".format(cmd=cmd))
-                    self._run(cmd)
                 else:
                     constraints = "juju set-constraints --service " \
                                   "{charm} tags={{tag}}".format(charm=charm,
@@ -382,7 +414,6 @@ class CommandRunner(urwid.ListBox):
 
     def update(self, juju_state):
         self.services = set(juju_state.services)
-        log.debug("Services: {services}".format(services=self.services))
 
     def poll(self):
         if self.running and self.running.poll() is not None:
@@ -450,23 +481,19 @@ class NodeViewMode(urwid.Frame):
     def total_nodes(self):
         return len(self.nodes._contents)
 
-    def open_dialog(self, machine):
-        def destroy():
-            self.loop.widget = self
+    def destroy(self):
+        """ Hides Overlaying dialogs """
+        self.loop.widget = self
 
+    def open_dialog(self, machine):
         def ok(new_states):
-            if pegasus.SINGLE_SYSTEM:
-                compute, other = utils.partition(
-                    lambda c: c == pegasus.NOVA_COMPUTE, new_states)
-                if compute:
-                    # Here we just boot the KVM, the polling process will
-                    # automatically allocate new kvms to nova-compute.
-                    self.cr.add_machine()
-                self.cr.change_allocation(other, machine)
-            else:
-                self.cr.change_allocation(new_states, machine)
-            destroy()
-        self.loop.widget = ChangeStateDialog(self, machine, ok, destroy)
+            self.cr.change_allocation(new_states, machine)
+            self.destroy()
+        if pegasus.MULTI_SYSTEM:
+            self.loop.widget = ChangeStateDialog(self, machine, ok, self.destroy)
+        else:
+            self.loop.widget = AddComputeDialog(self, self.get_data[1],
+                                                self.destroy, self.cr)
 
     def refresh_states(self):
         """ Refresh states
@@ -498,12 +525,23 @@ class NodeViewMode(urwid.Frame):
             # For single installs, all new 'unallocated' nodes are
             # automatically allocated to nova-compute. We process the rest of
             # the nodes normally.
-            unallocated_nodes, allocated_nodes = utils.partition(
-                lambda n: n.is_compute, nodes)
+            unallocated = list(juju.machines_unallocated())
+            for node in unallocated:
 
-            for node in unallocated_nodes:
-                self.cr.change_allocation([pegasus.NOVA_COMPUTE],
-                                          node.machine)
+                # nova-compute should not go on our cloud-controller
+                if node.is_machine_1:
+                    continue
+
+                log.debug("Adding compute node " \
+                          "to {machine}".format(machine=node))
+                compute_exists = juju.service(pegasus.NOVA_COMPUTE)
+                if not compute_exists:
+                    self.cr.deploy(pegasus.NOVA_COMPUTE,
+                                   id=node.machine_id)
+                else:
+                    cmd = "juju add-unit {compute} --to {machine}"
+                    self.cr._run(cmd.format(compute=pegasus.NOVA_COMPUTE,
+                                            machine=node.machine_id))
 
         self.nodes.update(nodes)
         self.cr.update(juju)

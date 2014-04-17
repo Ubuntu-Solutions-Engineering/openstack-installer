@@ -75,11 +75,6 @@ RELATIONS = {
 }
 
 
-class MaasLoginFailure(Exception):
-    MESSAGE = "Could not read login credentials. Please run: " \
-              "maas-get-user-creds root > ~/.cloud-install/maas-creds"
-
-
 def get_charm_relations(charm):
     """ Return a list of (relation, command) of relations to add. """
     for rel in RELATIONS.get(charm, []):
@@ -108,16 +103,16 @@ _OMIT_CONFIG = [
 # TODO: Use trusty + icehouse
 CONFIG_TEMPLATE = dedent("""\
     glance:
-        openstack-origin: cloud:precise-grizzly
+        openstack-origin: cs:trusty
     keystone:
-        openstack-origin: cloud:precise-grizzly
+        openstack-origin: cs:trusty
         admin-password: {password}
     nova-cloud-controller:
-        openstack-origin: cloud:precise-grizzly
+        openstack-origin: cs:trusty
     nova-compute:
-        openstack-origin: cloud:precise-grizzly
+        openstack-origin: cs:trusty
     openstack-dashboard:
-        openstack-origin: cloud:precise-grizzly
+        openstack-origin: cs:trusty
 """).format(password=OPENSTACK_PASSWORD)
 
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
@@ -177,31 +172,6 @@ def parse_state(juju, maas=None):
     :rtype: list
     """
     results = []
-
-    # if maas:
-    #     for machine in maas.machines():
-    #         m = juju.machine(machine.instance_id)
-
-    #         log.debug('Maas machine: %s' % (m,))
-    #         if machine.hostname.startswith('juju-bootstrap'):
-    #             continue
-
-    #         # Only list nodes created by our user 'root'
-    #         if machine.owner and 'root' not in machine.owner:
-    #             continue
-
-    #         d = {
-    #             "fqdn": machine.hostname,
-    #             "memory": machine.mem,
-    #             "cpu_count": machine.cpu_cores,
-    #             "storage": machine.storage,
-    #             "tag": machine.system_id,
-    #             "machine_no": machine.machine_id,
-    #             "agent_state": machine.agent_state,
-    #             "charms": machine.charms,
-    #             "units": machine.units
-    #         }
-    #         results.append(d)
 
     for machine in juju.machines():
 

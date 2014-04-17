@@ -29,9 +29,9 @@
 OPT_HELP=h
 OPT_INSTALL=i
 OPT_FORCE=f
-OPTS=:${OPT_INSTALL}${OPT_HELP}
+OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_FORCE}
 USAGE="\
-cloud-install [-${OPT_INSTALL}${OPT_HELP}]
+cloud-install [-${OPT_INSTALL}${OPT_HELP}${OPT_FORCE}]
 
 Create an Ubuntu Cloud! (requires root privileges)
 
