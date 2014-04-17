@@ -29,7 +29,7 @@ singleInstall()
 
 		# Clean up after ourselves since we failed.
 		rm -rf /home/$INSTALL_USER/.cloud-install
-		return 0
+		exit 0
 	fi
 
 	dialogGaugeStart Installing "Please wait" 8 70 0
