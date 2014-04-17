@@ -52,15 +52,9 @@ def logger(name='ubuntu-cloud-installer'):
         '%(asctime)s %(pathname)s [%(process)d] * ' \
         '%(levelname)s %(name)s - %(message)s'))
 
-    syslog = logging.handlers.SysLogHandler(address='/dev/log')
-    syslog.setLevel(logging.WARNING)
-    syslog.setFormatter(logging.Formatter(
-        '%(pathname)s [%(process)d]: %(levelname)s %(message)s'))
-
     logger = logging.getLogger(name)
     env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
     logger.setLevel(env)
     logger.addHandler(commandslog)
-    logger.addHandler(syslog)
 
     return logger

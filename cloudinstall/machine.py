@@ -35,6 +35,18 @@ class Machine:
         return "0" in self.machine_id
 
     @property
+    def is_machine_1(self):
+        """ Checks if machine is first machine
+
+        This holds the openstack services needed
+        to manage your cloud. Everything except
+        nova-compute should be deployed here.
+
+        :rtype: bool
+        """
+        return "1" in self.machine_id
+
+    @property
     def cpu_cores(self):
         """ Return number of cpu-cores
 
