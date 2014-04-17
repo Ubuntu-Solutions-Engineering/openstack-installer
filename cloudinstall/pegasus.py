@@ -103,16 +103,16 @@ _OMIT_CONFIG = [
 # TODO: Use trusty + icehouse
 CONFIG_TEMPLATE = dedent("""\
     glance:
-        openstack-origin: cs:icehouse
+        openstack-origin: distro
     keystone:
-        openstack-origin: cs:icehouse
+        openstack-origin: distro
         admin-password: {password}
     nova-cloud-controller:
-        openstack-origin: cs:icehouse
+        openstack-origin: distro
     nova-compute:
-        openstack-origin: cs:icehouse
+        openstack-origin: distro
     openstack-dashboard:
-        openstack-origin: cs:icehouse
+        openstack-origin: distro
 """).format(password=OPENSTACK_PASSWORD)
 
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
@@ -127,9 +127,8 @@ def juju_config_arg(charm):
     :rtype: str
     """
     path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
-    if not exists(path):
-        with open(path, 'wb') as f:
-            f.write(bytes(CONFIG_TEMPLATE, 'utf-8'))
+    with open(path, 'wb') as f:
+        f.write(bytes(CONFIG_TEMPLATE, 'utf-8'))
     config = "" if charm in _OMIT_CONFIG else "--config {path}"
     return config.format(path=path)
 
