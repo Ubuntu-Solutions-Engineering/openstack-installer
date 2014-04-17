@@ -16,6 +16,16 @@ install-dependencies:
 	sudo apt-get install devscripts equivs
 	sudo mk-build-deps -i debian/control
 
+.PHONY: uninstall-dependencies
+uninstall-dependencies:
+	sudo apt-get remove cloud-installer-build-deps
+
+# sudo make uninstall type=single-system
+# (or just sudo make uninstall)
+.PHONY: uninstall
+uninstall: uninstall-dependencies
+	sudo tools/cloud-uninstall ${type}
+
 clean:
 	@debian/rules clean
 	@rm -rf debian/cloud-install
