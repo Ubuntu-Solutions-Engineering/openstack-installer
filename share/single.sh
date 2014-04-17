@@ -26,6 +26,9 @@ singleInstall()
 	if [ "$memory" -lt $((8 * 1024 * 1024)) ] && [ -z "$force_install" ]; then
 		dialogMsgBox "Insufficient Memory!" "Abort" \
 		    "You need at least 8GB of memory to run the single machine install." 10 60
+
+		# Clean up after ourselves since we failed.
+		rm -rf /home/$INSTALL_USER/.cloud-install
 		return 0
 	fi
 
