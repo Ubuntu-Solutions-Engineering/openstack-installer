@@ -115,20 +115,22 @@ class JujuClient:
     #                           Request="EnvironmentSet",
     #                           Params=dict(Config=config)))
 
-    def add_machine(self, **kwds):
+    def add_machine(self, constraints=None):
         """ Allocate new machine
 
-        :param dict kwds: (optional) machine parameters
+        :param dict constraints: (optional) machine parameters
         :returns: True on success, False on fail
         :rtype: bool
         """
         # return self.add_machines(machine)
         cmd = "juju add-machine"
         opts = []
-        for k,v in kwds.items():
-            opts.append("--{k} {v}".format(k=k, v=v))
-        if opts:
-            cmd = "{cmd} {opts}".format(cmd=cmd, opts=" ".join(opts))
+        if constraints:
+            for k,v in constraints.items():
+                opts.append("{k}={v}".format(k=k, v=v))
+            if opts:
+                cmd = "{cmd} --constraints {opts}".format(cmd=cmd,
+                                                          opts=" ".join(opts))
         ret, out, rtime = get_command_output(cmd)
         return out
 
