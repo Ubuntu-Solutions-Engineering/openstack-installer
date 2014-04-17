@@ -510,6 +510,7 @@ class NodeViewMode(urwid.Frame):
 
         :params list machines: list of known machines
         """
+        log.debug(machines)
         nodes, juju = machines
         nodes = [Node(t, self.open_dialog) for t in nodes]
 
@@ -633,22 +634,27 @@ class PegasusGUI(urwid.MainLoop):
             raise urwid.ExitMainLoop()
 
     def tick(self, unused_loop=None, unused_data=None):
+        # FIXME: Build problems with nonlocal keyword
+        # see comment under unlock()
         # Only lock when we are in TTY mode.
         if not self.locked and IS_TTY:
             if self.lock_ticks == 0:
                 self.locked = True
-                old = self.widget
+                old = {'res' : self.widget}
 
                 def unlock():
                     # If the controller overlay finished its work while we were
                     # locked, bypass it.
-                    nonlocal old
-                    if isinstance(old, ControllerOverlay) and old.done:
-                        old = self.node_view
-                    self.widget = old
+                    # FIXME: syntax error complains in debian building
+                    # probably has something to do with the mixture of
+                    # py2 and py3 in our stack.
+                    # nonlocal old
+                    if isinstance(old['res'], ControllerOverlay) and old['res'].done:
+                        old['res'] = self.node_view
+                    self.widget = old['res']
                     self.lock_ticks = LOCK_TIME
                     self.locked = False
-                self.widget = LockScreen(old, unlock)
+                self.widget = LockScreen(old['res'], unlock)
             else:
                 self.lock_ticks = self.lock_ticks - 1
 
@@ -671,14 +677,14 @@ class PegasusGUI(urwid.MainLoop):
         FIXME: Once https://github.com/wardi/urwid/pull/57 is implemented.
         """
 
-        result = None
+        result = {'res' : None}
 
         # Here again things are a little weird: we own write_fd, but the urwid
         # API makes things a bit awkward since we end up needing mutually
         # recursive values, so we abuse python's scoping rules.
         def done(unused):
             try:
-                callback(result)
+                callback(result['res'])
             except Exception as e:
                 self.console.command_runner._add("Status thread:",
                                                  format_exc())
@@ -689,9 +695,13 @@ class PegasusGUI(urwid.MainLoop):
         write_fd = self.watch_pipe(done)
 
         def run_f():
-            nonlocal result
+            # FIXME: Because we are putting a dependency on python2
+            # for whatever reason using nonlocal is turning into a
+            # syntax error. I can only assume it has to do with the
+            # packaging somehow.
+            #nonlocal result
             try:
-                result = f()
+                result['res'] = f()
             except Exception as e:
                 self.console.command_runner._add("Status thread:",
                                                  format_exc())
