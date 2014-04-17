@@ -45,7 +45,7 @@ class JujuState:
         state.
         """
         return not machine.is_machine_0 and \
-            machine.agent_state in self.valid_states and \
+            machine.agent_state in self.valid_states or \
             any(c for c in machine.charms)
 
     def machine(self, instance_id):

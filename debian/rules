@@ -12,6 +12,10 @@ export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/cloud-installer/ \
 %:
 	dh $@ --with python2,python3 --buildsystem=pybuild
 
+override_dh_python2:
+	dh_python2 --ignore-shebangs -X cloudinstall\.gui
+override_dh_python3:
+	dh_python3 --ignore-shebangs
 override_dh_installinit:
 	dh_installinit --no-start
 
