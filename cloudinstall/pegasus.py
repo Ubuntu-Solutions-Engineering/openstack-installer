@@ -144,7 +144,8 @@ def poll_state():
     if ret:
         log.debug("Juju state unknown, will re-poll in " \
                   "case bootstrap is taking a little longer to come up.")
-        return
+        # Stub out a juju status for now
+        juju = JujuState('environment: local')
     else:
         juju = JujuState(StringIO(juju))
 
