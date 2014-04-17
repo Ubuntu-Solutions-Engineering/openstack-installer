@@ -194,6 +194,33 @@ class Machine:
         return Machine('0/lxc/0', {'agent-state': 'unallocated',
                                    'dns-name': 'unallocated'})
 
+    @property
+    def is_compute(self):
+        """ Is machine a compute node?
+
+        :returns: True/False
+        :rtype: bool
+        """
+        return 'nova-compute' in self.charms
+
+    @property
+    def is_horizon(self):
+        """ Is machine housing the dashboard?
+
+        :returns: True/False
+        :rtype: bool
+        """
+        return 'openstack-dashboard' in self.charms
+
+    @property
+    def is_cloud_controller(self):
+        """ Is machine housing the cloud-controller?
+
+        :returns: True/False
+        :rtype: bool
+        """
+        return 'nova-cloud-controller' in self.charms
+
     def __str__(self):
         return "id: {machine_id}, state: {state}, " \
             "dns-name: {dns_name}, mem: {mem}, " \
