@@ -350,6 +350,10 @@ class CommandRunner(urwid.ListBox):
         :param dict constraints: (optional) machine constraints
         """
         cmd = "juju deploy"
+        # FIXME: May not be needed any longer on trusty
+        # Otherwise the format is
+        # nova-cloud-controller:
+        #    openstack-origin: distro
         config = pegasus.juju_config_arg(charm)
         cmd = "{cmd} {config}".format(cmd=cmd, config=config)
         if machine_id:
