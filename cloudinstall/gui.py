@@ -45,16 +45,21 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 # Time to lock in seconds
 LOCK_TIME = 120
 
-NODE_FORMAT = "|".join(["{fqdn:<20}", "{cpu_count:>6}", "{memory:>10}",
-                        "{storage:>12}", "{agent_state:<12}", "{tags}"])
-NODE_HEADER = "|".join(["{fqdn:<20}", "{cpu_count:<6}", "{memory:<10}",
-                        "{storage:<12}", "{agent_state:<12}",
-                        "{tags}"]).format(fqdn="Hostname/IP",
-                                          cpu_count="# CPUs",
-                                          memory="RAM",
-                                          storage="Storage",
-                                          agent_state="State",
-                                          tags="Charms")
+NODE_FORMAT = "|".join([
+    "{fqdn:<20}", "{cpu_count:>6}", "{memory:>10}",
+    "{storage:>12}", "{agent_state:<12}", "{charms:<25}"
+])
+NODE_HEADER = "|".join([
+    "{fqdn:<20}", "{cpu_count:<6}", "{memory:<10}",
+    "{storage:<12}", "{agent_state:<12}",
+    "{charms:<25}",
+]).format(fqdn="Hostname/IP",
+          cpu_count="# CPUs",
+          memory="RAM",
+          storage="Storage",
+          agent_state="State",
+          charms="Charms",
+          charm_status="Charm Status")
 
 STYLES = [
     ('body',         'white',      'black',),
@@ -129,7 +134,6 @@ class ControllerOverlay(TextOverlay):
             if pegasus.MULTI_SYSTEM and len(unallocated) > 0:
                 self.command_runner.add_machine()
             elif pegasus.SINGLE_SYSTEM:
-                TextOverlay("Adding a machine, please wait ...", self.underlying)
                 self.command_runner.add_machine()
         elif len(allocated) > 0:
             machine = allocated[0]
@@ -144,7 +148,7 @@ class ControllerOverlay(TextOverlay):
                 else:
                     id_ = machine.machine_id
                 # Deploy any remaining charms onto machine
-                self.command_runner.deploy(charm, id=id_)
+                self.command_runner.deploy(charm, machine_id=id_)
         else:
             TextOverlay(self.NODE_SETUP, self.underlying)
         return True
@@ -177,7 +181,7 @@ class AddComputeDialog(urwid.Overlay):
 
     def yes(self, button):
         log.info("Deploying a new nova compute machine")
-        self.cr.add_machine("mem=2G")
+        self.cr.add_machine(dict(mem='2G'))
         self.destroy()
 
     def no(self, button):
@@ -251,22 +255,12 @@ class Node(urwid.Text):
             self._selectable = self.machine.charms not in pegasus.CONTROLLER_CHARMS
         else:
             self._selectable = True
-        self.set_text(NODE_FORMAT.format(tags=', '.join(self.machine.charms),
+        self.set_text(NODE_FORMAT.format(charms="\n".join(self.machine.charms),
                                          fqdn=self.machine.dns_name,
                                          cpu_count=self.machine.cpu_cores,
                                          memory=self.machine.mem,
                                          storage=self.machine.storage,
                                          agent_state=self.machine.agent_state))
-
-    @property
-    def is_horizon(self):
-        return self.allocated and \
-            pegasus.OPENSTACK_DASHBOARD in self.machine.charms
-
-    @property
-    def is_compute(self):
-        return self.allocated and \
-            pegasus.NOVA_COMPUTE in self.machine.charms
 
 
     def keypress(self, size, key):
@@ -324,6 +318,7 @@ class CommandRunner(urwid.ListBox):
             return txt
 
         txt = add_to_f8(command, output)
+        log.debug("CommandRunner output: {output}".format(output=txt))
 
     def _run(self, command):
         self.to_run.append(command)
@@ -339,23 +334,36 @@ class CommandRunner(urwid.ListBox):
                 self.running = None
                 self._add(cmd, str(e))
 
-    def add_machine(self, **kwds):
+    def add_machine(self, constraints=None):
         """ Add a machine with optional constraints
 
-        :param dict kwds: (optional) machine specs
+        :param dict constraints: (optional) machine specs
         """
-        ret, out, _ = self.client.add_machine(kwds)
-        if ret:
-            log.debug("Failed to add machine: {out}".format(out=out))
-        else:
-            log.info("Added machine: {out}".format(out=out))
+        out = self.client.add_machine(constraints)
+        log.debug("Add Machine output: {out}".format(out=out))
+        return out
 
-    def deploy(self, charm, id=None, tag=None):
+    def deploy(self, charm, machine_id=None, constraints=None):
+        """ Deploy a charm to an instance
+
+        :param str charm: charm to deploy
+        :param str machine_id: (optional) machine id
+        :param dict constraints: (optional) machine constraints
+        """
+        cmd = "juju deploy"
         config = pegasus.juju_config_arg(charm)
-        to = "" if id is None else "--to " + str(id)
-        constraints = "" if tag is None else "--constraints tags=" + tag
-        cmd = "juju deploy {config} {to} {constraints} {charm}".format(
-            config=config, to=to, constraints=constraints, charm=charm)
+        cmd = "{cmd} {config}".format(cmd=cmd, config=config)
+        if machine_id:
+            cmd = "{cmd} --to {machine_id}".format(cmd=cmd,
+                                                   machine_id=str(machine_id))
+        if constraints:
+            opts = []
+            for k,v in constraints.items():
+                opts.append("{k}={v}".format(k=k, v=v))
+            if opts:
+                cmd = "{cmd} --constraints {opts}".format(cmd=cmd,
+                                                          opts=" ".join(opts))
+        cmd = "{cmd} {charm}".format(cmd=cmd, charm=charm)
         self._run(cmd)
         self.services.add(charm)
         self.to_add.extend(pegasus.get_charm_relations(charm))
@@ -399,7 +407,7 @@ class CommandRunner(urwid.ListBox):
                 charm = state_to_charm[state]
                 new_service = charm not in self.services
                 if new_service:
-                    self.deploy(charm, tag=machine.tag)
+                    self.deploy(charm, constraints=dict(tags=machine.tag))
                 else:
                     constraints = "juju set-constraints --service " \
                                   "{charm} tags={{tag}}".format(charm=charm,
@@ -441,7 +449,7 @@ class ConsoleMode(urwid.Frame):
 
 
 class NodeViewMode(urwid.Frame):
-    def __init__(self, loop, get_data, command_runner):
+    def __init__(self, loop, state, command_runner):
         f6 = ', f6 to add another node' if pegasus.SINGLE_SYSTEM else ''
         header = _make_header("(f8 switches to console mode{f6})".format(f6=f6))
 
@@ -451,7 +459,7 @@ class NodeViewMode(urwid.Frame):
         footer = urwid.AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
-        self.get_data = get_data
+        self.state, self.juju = state
         self.nodes = ListWithHeader(NODE_HEADER)
         self.loop = loop
 
@@ -490,10 +498,15 @@ class NodeViewMode(urwid.Frame):
             self.cr.change_allocation(new_states, machine)
             self.destroy()
         if pegasus.MULTI_SYSTEM:
-            self.loop.widget = ChangeStateDialog(self, machine, ok, self.destroy)
+            self.loop.widget = ChangeStateDialog(self,
+                                                 machine,
+                                                 ok,
+                                                 self.destroy)
         else:
-            self.loop.widget = AddComputeDialog(self, self.get_data[1],
-                                                self.destroy, self.cr)
+            self.loop.widget = AddComputeDialog(self,
+                                                self.juju,
+                                                self.destroy,
+                                                self.cr)
 
     def refresh_states(self):
         """ Refresh states
@@ -503,22 +516,21 @@ class NodeViewMode(urwid.Frame):
         :returns: data from the polling of services and the juju state
         :rtype: tuple (parse_state(), Machine())
         """
-        return self.get_data()
+        return pegasus.poll_state()
 
-    def do_update(self, machines):
+    def do_update(self, state):
         """ Updating node states
 
         :params list machines: list of known machines
         """
-        log.debug(machines)
-        nodes, juju = machines
+        nodes, juju = state
         nodes = [Node(t, self.open_dialog) for t in nodes]
 
         if self.target == self.controller_overlay and \
                 not self.controller_overlay.process(juju):
             self.target = self
             for n in nodes:
-                if n.is_horizon:
+                if n.machine.is_horizon:
                     url = "Access your dashboard: http://{name}/horizon"
                     self.url.set_text(url.format(name=n.machine.dns_name))
 
@@ -533,12 +545,16 @@ class NodeViewMode(urwid.Frame):
                 if node.is_machine_1:
                     continue
 
-                log.debug("Adding compute node " \
-                          "to {machine}".format(machine=node))
+                # dont deploy to machines with nova-compute already installed
+                if node.is_compute:
+                    continue
+
                 compute_exists = juju.service(pegasus.NOVA_COMPUTE)
                 if not compute_exists:
+                    log.debug("Adding compute node " \
+                              "to {machine}".format(machine=node))
                     self.cr.deploy(pegasus.NOVA_COMPUTE,
-                                   id=node.machine_id)
+                                   machine_id=node.machine_id)
                 else:
                     cmd = "juju add-unit {compute} --to {machine}"
                     self.cr._run(cmd.format(compute=pegasus.NOVA_COMPUTE,
@@ -551,8 +567,8 @@ class NodeViewMode(urwid.Frame):
         if self.ticks_left == 0:
             self.ticks_left = self.poll_interval
 
-            def update_and_redraw(data):
-                self.do_update(data)
+            def update_and_redraw(state):
+                self.do_update(state)
                 self.loop.draw_screen()
             self.loop.run_async(self.refresh_states, update_and_redraw)
         self.timer.set_text("Poll in {secs} seconds " \
@@ -606,9 +622,11 @@ class LockScreen(urwid.Overlay):
 
 
 class PegasusGUI(urwid.MainLoop):
-    def __init__(self, get_data):
+    """ Pegasus Entry class """
+    def __init__(self, state=None):
+        self.state = state
         self.console = ConsoleMode()
-        self.node_view = NodeViewMode(self, get_data,
+        self.node_view = NodeViewMode(self, self.state,
                                       self.console.command_runner)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
