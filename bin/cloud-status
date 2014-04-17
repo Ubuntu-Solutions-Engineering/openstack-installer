@@ -26,9 +26,6 @@ from cloudinstall import gui
 from cloudinstall import pegasus
 from cloudinstall import utils
 
-# TODO: Why does this crash?
-# pegasus.wait_for_services()
-
 def sig_handler(signum, frame):
     utils.reset_blanking()
     sys.exit(1)
@@ -36,12 +33,7 @@ def sig_handler(signum, frame):
 for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
     signal.signal(sig, sig_handler)
 
-def get_data():
-    """ Starts the polling routine.
-    """
-    return pegasus.poll_state()
-
 if __name__ == '__main__':
-    gui = gui.PegasusGUI(get_data)
+    gui = gui.PegasusGUI(pegasus.poll_state())
     sys.exit(gui.run())
 
