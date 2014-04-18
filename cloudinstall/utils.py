@@ -22,6 +22,7 @@ import os
 import re
 import string
 import random
+import inspect
 from time import strftime
 
 # String with number of minutes, or None.
@@ -167,3 +168,79 @@ def time():
     :rtype: str
     """
     return strftime('%Y-%m-%d %H:%M')
+
+
+def import_module(module_fqname, superclasses=None):
+    """Imports the module module_fqname and returns a list of defined classes
+    from that module. If superclasses is defined then the classes returned will
+    be subclasses of the specified superclass or superclasses. If superclasses
+    is plural it must be a tuple of classes.
+
+    .. note::
+
+        Taken from: https://github.com/sosreport/sos/blob/master/sos/utilities.py
+
+    :param str module_fqname: module path
+    :param superclasses: subclasses of defined class
+    """
+    module_name = module_fqname.rpartition(".")[-1]
+    module = __import__(module_fqname, globals(), locals(), [module_name])
+    modules = [class_ for cname, class_ in
+               inspect.getmembers(module, inspect.isclass)
+               if class_.__module__ == module_fqname]
+    if superclasses:
+        modules = [m for m in modules if issubclass(m, superclasses)]
+
+    return modules
+
+
+class ImporterHelper(object):
+    """ Provides a list of modules that can be imported in a package.
+    Importable modules are located along the module __path__ list and modules
+    are files that end in .py.
+
+
+    .. note::
+
+        Taken from: https://github.com/sosreport/sos/blob/master/sos/utilities.py
+    """
+
+    def __init__(self, package):
+        """package is a package module
+        import my.package.module
+        helper = ImporterHelper(my.package.module)"""
+        self.package = package
+
+    def _plugin_name(self, path):
+        "Returns the plugin module name given the path"
+        base = os.path.basename(path)
+        name, ext = os.path.splitext(base)
+        return name
+
+    def _get_plugins_from_list(self, list_):
+        plugins = [self._plugin_name(plugin)
+                for plugin in list_
+                if "__init__" not in plugin
+                and plugin.endswith(".py")]
+        plugins.sort()
+        return plugins
+
+    def _find_plugins_in_dir(self, path):
+        if os.path.exists(path):
+            py_files = list(find("*.py", path))
+            pnames = self._get_plugins_from_list(py_files)
+            if pnames:
+                return pnames
+            else:
+                return []
+
+    def get_modules(self):
+        "Returns the list of importable modules in the configured python package."
+        plugins = []
+        for path in self.package.__path__:
+            if os.path.isdir(path) or path == '':
+                plugins.extend(self._find_plugins_in_dir(path))
+            else:
+                plugins.extend(self._find_plugins_in_zipfile(path))
+
+        return plugins
