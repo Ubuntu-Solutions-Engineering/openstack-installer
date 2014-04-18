@@ -114,6 +114,18 @@ class Service:
             yield Unit(unit_name, units)
 
 
+    def relation(self, name):
+        """ Single relation entry
+
+        :params str name: name of relation
+        :returns: a Relation entry
+        :rtype: Relation()
+        """
+        r = list(filter(lambda r: r.relation_name == name, self.relations))[0]
+        if r:
+            return r
+        return Relation('unknown', [])
+
     @property
     def relations(self):
         """ Service relations
