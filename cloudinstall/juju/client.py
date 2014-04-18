@@ -22,9 +22,7 @@ import os
 import time
 
 from cloudinstall.utils import get_command_output
-from cloudinstall.log import logger
-
-log = logger(__name__)
+from cloudinstall.log import log
 
 class JujuWS(WebSocketClient):
     def opened(self):
@@ -125,16 +123,18 @@ class JujuClient:
         :returns: True on success, False on fail
         :rtype: bool
         """
-        # return self.add_machines(machine)
         cmd = "juju add-machine"
         opts = []
         if constraints:
+            log.debug("Machine has constraints " \
+                      "({constraints}), " \
+                      "setting those".format(constraints=constraints))
             for k,v in constraints.items():
                 opts.append("{k}={v}".format(k=k, v=v))
             if opts:
                 cmd = "{cmd} --constraints {opts}".format(cmd=cmd,
                                                           opts=" ".join(opts))
-        log.debug("Add machine: {cmd}".format(cmd=cmd))
+        log.debug("Machine added -> {cmd}".format(cmd=cmd))
         ret, out, rtime = get_command_output(cmd)
         return out
 

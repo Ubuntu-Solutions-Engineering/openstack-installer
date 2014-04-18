@@ -24,9 +24,7 @@ import itertools
 from collections import defaultdict
 from cloudinstall.machine import Machine
 from cloudinstall.service import Service
-from cloudinstall.log import logger
-
-log = logger(__name__)
+from cloudinstall.log import log
 
 class JujuState:
     """ Represents a global Juju state """
