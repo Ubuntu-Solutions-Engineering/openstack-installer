@@ -22,8 +22,11 @@ singleInstall()
 
 	memory=$(head -n 1 /proc/meminfo | awk '/[0-9]/ {print $2}')
 
-	# we require 8gb for the single install
-	if [ "$memory" -lt $((8 * 1024 * 1024)) ] && [ -z "$force_install" ]; then
+  # We require 8GB of RAM for the single install. However, /proc/meminfo often
+  # doesn't have exactly 8GB in it, but some smaller amount of RAM (potentially
+  # due to kernel reserved memory or something)? 7 GB is probably good enough,
+  # and avoids any sort of off-by-1024 errors, so we use that instead.
+	if [ "$memory" -lt $((7 * 1024 * 1024)) ] && [ -z "$force_install" ]; then
 		dialogMsgBox "Insufficient Memory!" "Abort" \
 		    "You need at least 8GB of memory to run the single machine install." 10 60
 
