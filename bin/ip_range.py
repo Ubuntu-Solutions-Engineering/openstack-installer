@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from ipaddress import ip_address, ip_network
+import sys
 
 def ip_range(network):
     """Return tuple of low, high IP address for given network"""
@@ -71,7 +72,7 @@ if __name__ == "__main__":
 
     args = len(argv)
     if args == 1:
-        print("Missing arguments")
+        sys.stderr.write("Missing arguments")
         sys.exit(1)
 
     network = ip_network(argv[1], strict=False)
