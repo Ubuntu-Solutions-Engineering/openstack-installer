@@ -118,7 +118,7 @@ if [ ! -e /etc/.cloud-installed ]; then
 else
 	echo "Cloud already installed."
 fi
-if [ -z "$install" ]; then
+if [ -z "$install" ] && [ "$install_type" != "Landscape managed"]; then
 	exitInstall
 	cd "/home/$INSTALL_USER"; exec sudo -H -u "$INSTALL_USER" cloud-status
 fi
