@@ -27,13 +27,11 @@ import re
 import urllib
 
 from cloudinstall import utils
-from cloudinstall.log import logger
+from cloudinstall.log import log
 from cloudinstall.maas import MaasState
 from cloudinstall.maas.auth import MaasAuth
 from cloudinstall.juju import JujuState
 from cloudinstall.maas.client import MaasClient
-
-log = logger(__name__)
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
 MYSQL = 'mysql'
@@ -75,6 +73,17 @@ RELATIONS = {
 }
 
 
+# Get openstack password, if failure use a default
+# 'password' as its credential.
+PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
+try:
+    with open(PASSWORD_FILE) as f:
+        OPENSTACK_PASSWORD = f.read().strip()
+except IOError:
+    OPENSTACK_PASSWORD = 'password'
+
+
+# Handle charm relations
 def get_charm_relations(charm):
     """ Return a list of (relation, command) of relations to add. """
     for rel in RELATIONS.get(charm, []):
@@ -85,53 +94,31 @@ def get_charm_relations(charm):
         cmd = "juju add-relation {charm} {relation}"
         yield (r, cmd.format(charm=c, relation=r))
 
-PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
-try:
-    with open(PASSWORD_FILE) as f:
-        OPENSTACK_PASSWORD = f.read().strip()
-except IOError:
-    OPENSTACK_PASSWORD = None
 
-# This is kind of a hack. juju deploy $foo rejects foo if it doesn't have a
-# config or there aren't any options in the declared config. So, we have to
-# babysit it and not tell it about configs when there aren't any.
-_OMIT_CONFIG = [
-    MYSQL,
-    RABBITMQ_SERVER,
-]
-
-# TODO: Use trusty + icehouse
-CONFIG_TEMPLATE = dedent("""\
-    glance:
-        openstack-origin: distro
-    keystone:
-        openstack-origin: distro
-        admin-password: {password}
-    nova-cloud-controller:
-        openstack-origin: distro
-    nova-compute:
-        openstack-origin: distro
-    openstack-dashboard:
-        openstack-origin: distro
-""").format(password=OPENSTACK_PASSWORD)
-
+# Determine installation type
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
 MULTI_SYSTEM = exists(expanduser('~/.cloud-install/multi'))
 
-def juju_config_arg(charm):
-    """ Query configuration parameters for openstack charms
-
-    :param charm: name of charm
-    :type charm: str
-    :return: path of openstack configuration
-    :rtype: str
-    """
-    path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
-    with open(path, 'wb') as f:
-        f.write(bytes(CONFIG_TEMPLATE, 'utf-8'))
-    config = "" if charm in _OMIT_CONFIG else "--config {path}"
-    return config.format(path=path)
-
+###############################################################################
+# FIXME: With addition of Openstack charms to Trusty
+# we shouldn't need to use a configuration file for specifying
+# the openstack-origin as it will default to 'distro' which
+# in this case is Trusty's openstack charms.
+#
+# def juju_config_arg(charm):
+#     """ Query configuration parameters for openstack charms
+#
+#     :param charm: name of charm
+#     :type charm: str
+#     :return: path of openstack configuration
+#     :rtype: str
+#     """
+#     path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
+#     with open(path, 'wb') as f:
+#         f.write(bytes(CONFIG_TEMPLATE, 'utf-8'))
+#     config = "" if charm in _OMIT_CONFIG else "--config {path}"
+#     return config.format(path=path)
+###############################################################################
 
 def poll_state():
     """ Polls current state of Juju and MAAS
@@ -184,9 +171,9 @@ def parse_state(juju, maas=None):
         if machine.is_machine_0:
             continue
 
-        # Query our maas machine to capture some of the
-        # hardware specifications.
+        #######################################################################
         # FIXME: why isn't storage being applied here?
+        #######################################################################
         if maas:
             maas_machine = maas.machine(machine.instance_id)
             machine.mem = maas_machine.mem
