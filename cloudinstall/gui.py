@@ -29,13 +29,11 @@ import re
 import threading
 import urwid
 
-from cloudinstall.log import logger
+from cloudinstall.log import log
 from cloudinstall.machine import Machine
 from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
 from cloudinstall import utils
-
-log = logger(__name__)
 
 TITLE_TEXT = "Ubuntu Cloud Installer (q to quit)"
 
@@ -134,7 +132,7 @@ class ControllerOverlay(TextOverlay):
             if pegasus.MULTI_SYSTEM and len(unallocated) > 0:
                 self.command_runner.add_machine()
             elif pegasus.SINGLE_SYSTEM:
-                self.command_runner.add_machine()
+                self.command_runner.add_machine(dict(mem='2G'))
         elif len(allocated) > 0:
             machine = allocated[0]
             pending = set(pegasus.CONTROLLER_CHARMS) - set(machine.charms)
@@ -298,7 +296,7 @@ class CommandRunner(urwid.ListBox):
         self.running = None
         self.services = set()
         self.to_add = []
-        self.client = JujuClient
+        self.client = JujuClient()
 
     def keypress(self, size, key):
         if key.lower() == "ctrl u":
@@ -310,7 +308,7 @@ class CommandRunner(urwid.ListBox):
     def _add(self, command, output):
 
         def add_to_f8(command, output):
-            txt = "{time}> {cmd}\n{output}".format(time=utils.time(),
+            txt = "[{time}] {cmd}\n{output}".format(time=utils.time(),
                                                    cmd=command,
                                                    output=output)
             self._contents.append(urwid.Text(txt))
@@ -318,7 +316,9 @@ class CommandRunner(urwid.ListBox):
             return txt
 
         txt = add_to_f8(command, output)
-        log.debug("CommandRunner output: {output}".format(output=txt))
+        log.debug("Running command: {cmd}".format(cmd=command))
+        if output:
+            log.debug("Result: {output}".format(output=output.rstrip()))
 
     def _run(self, command):
         self.to_run.append(command)
@@ -350,12 +350,11 @@ class CommandRunner(urwid.ListBox):
         :param dict constraints: (optional) machine constraints
         """
         cmd = "juju deploy"
-        # FIXME: May not be needed any longer on trusty
-        # Otherwise the format is
-        # nova-cloud-controller:
-        #    openstack-origin: distro
-        config = pegasus.juju_config_arg(charm)
-        cmd = "{cmd} {config}".format(cmd=cmd, config=config)
+        #######################################################################
+        # FIXME: Remove after more testing
+        #######################################################################
+        # config = pegasus.juju_config_arg(charm)
+        # cmd = "{cmd} {config}".format(cmd=cmd, config=config)
         if machine_id:
             cmd = "{cmd} --to {machine_id}".format(cmd=cmd,
                                                    machine_id=str(machine_id))
@@ -377,6 +376,11 @@ class CommandRunner(urwid.ListBox):
             else:
                 remaining.append((relation, cmd))
         self.to_add = remaining
+
+        # Set keystone password
+        if pegasus.KEYSTONE == charm:
+            cmd = "juju set {charm} admin-password={password}"
+            self._run(cmd.format(charm=charm, password=pegasus.OPENSTACK_PASSWORD))
 
     def change_allocation(self, new_states, machine):
         """ Changes state allocation of machine
@@ -561,6 +565,12 @@ class NodeViewMode(urwid.Frame):
                     cmd = "juju add-unit {compute} --to {machine}"
                     self.cr._run(cmd.format(compute=pegasus.NOVA_COMPUTE,
                                             machine=node.machine_id))
+                if compute_exists and \
+                   not pegasus.NOVA_CLOUD_CONTROLLER in \
+                   compute_exists.relation('cloud-compute').charms:
+                    cmd = "juju add-relation {endpoint_a} {endpoint_b}"
+                    self.cr._run(cmd.format(endpoint_a=pegasus.NOVA_COMPUTE,
+                                            endpoint_b=pegasus.NOVA_CLOUD_CONTROLLER))
 
         self.nodes.update(nodes)
         self.cr.update(juju)
@@ -654,8 +664,10 @@ class PegasusGUI(urwid.MainLoop):
             raise urwid.ExitMainLoop()
 
     def tick(self, unused_loop=None, unused_data=None):
+        #######################################################################
         # FIXME: Build problems with nonlocal keyword
         # see comment under unlock()
+        #######################################################################
         # Only lock when we are in TTY mode.
         if not self.locked and IS_TTY:
             if self.lock_ticks == 0:
@@ -663,11 +675,13 @@ class PegasusGUI(urwid.MainLoop):
                 old = {'res' : self.widget}
 
                 def unlock():
-                    # If the controller overlay finished its work while we were
-                    # locked, bypass it.
+                    ###########################################################
                     # FIXME: syntax error complains in debian building
                     # probably has something to do with the mixture of
                     # py2 and py3 in our stack.
+                    ###########################################################
+                    # If the controller overlay finished its work while we were
+                    # locked, bypass it.
                     # nonlocal old
                     if isinstance(old['res'], ControllerOverlay) and old['res'].done:
                         old['res'] = self.node_view
@@ -715,11 +729,13 @@ class PegasusGUI(urwid.MainLoop):
         write_fd = self.watch_pipe(done)
 
         def run_f():
+            ###################################################################
             # FIXME: Because we are putting a dependency on python2
             # for whatever reason using nonlocal is turning into a
             # syntax error. I can only assume it has to do with the
             # packaging somehow.
-            #nonlocal result
+            # nonlocal result
+            ###################################################################
             try:
                 result['res'] = f()
             except Exception as e:
