@@ -25,7 +25,7 @@ import logging
 import logging.handlers
 import os
 
-def logger(name='ubuntu-cloud-installer'):
+def setup_logger(name='cloud-installer'):
     """ setup logging
 
     Overridding the default log level(**debug**) can be done via an environment variable `UCI_LOGLEVEL`
@@ -49,8 +49,9 @@ def logger(name='ubuntu-cloud-installer'):
     LOGFILE = os.path.expanduser('~/.cloud-install/commands.log')
     commandslog = logging.FileHandler(LOGFILE, 'w')
     commandslog.setFormatter(logging.Formatter(
-        '%(asctime)s %(pathname)s [%(process)d] * ' \
-        '%(levelname)s %(name)s - %(message)s'))
+        '%(asctime)s [PID:%(process)d] * ' \
+        '%(levelname)-9s %(name)s - %(message)s',
+        datefmt='%m-%d %H:%M'))
 
     logger = logging.getLogger(name)
     env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
@@ -58,3 +59,4 @@ def logger(name='ubuntu-cloud-installer'):
     logger.addHandler(commandslog)
 
     return logger
+log = setup_logger()
