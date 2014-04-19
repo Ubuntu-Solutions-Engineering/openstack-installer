@@ -26,6 +26,8 @@ from cloudinstall.machine import Machine
 from cloudinstall.service import Service
 from cloudinstall.log import log
 
+log.name = 'cloudinstall.juju'
+
 class JujuState:
     """ Represents a global Juju state """
 
