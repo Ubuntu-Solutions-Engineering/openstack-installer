@@ -33,6 +33,8 @@ from cloudinstall.maas.auth import MaasAuth
 from cloudinstall.juju import JujuState
 from cloudinstall.maas.client import MaasClient
 
+log.name = __name__
+
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
 MYSQL = 'mysql'
 RABBITMQ_SERVER = 'rabbitmq-server'
@@ -72,27 +74,26 @@ RELATIONS = {
     OPENSTACK_DASHBOARD: [KEYSTONE],
 }
 
+###############################################################################
+# TODO: Remove since charm relations are handled per charm class
+# Handle charm relations
+# def get_charm_relations(charm):
+#     """ Return a list of (relation, command) of relations to add. """
+#     for rel in RELATIONS.get(charm, []):
+#         if charm == NOVA_COMPUTE and rel == RABBITMQ_SERVER:
+#             c, r = (NOVA_COMPUTE + ":amqp", RABBITMQ_SERVER + ":amqp")
+#         else:
+#             c, r = (charm, rel)
+#         cmd = "juju add-relation {charm} {relation}"
+#         yield (r, cmd.format(charm=c, relation=r))
+###############################################################################
 
-# Get openstack password, if failure use a default
-# 'password' as its credential.
 PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
 try:
     with open(PASSWORD_FILE) as f:
         OPENSTACK_PASSWORD = f.read().strip()
 except IOError:
     OPENSTACK_PASSWORD = 'password'
-
-
-# Handle charm relations
-def get_charm_relations(charm):
-    """ Return a list of (relation, command) of relations to add. """
-    for rel in RELATIONS.get(charm, []):
-        if charm == NOVA_COMPUTE and rel == RABBITMQ_SERVER:
-            c, r = (NOVA_COMPUTE + ":amqp", RABBITMQ_SERVER + ":amqp")
-        else:
-            c, r = (charm, rel)
-        cmd = "juju add-relation {charm} {relation}"
-        yield (r, cmd.format(charm=c, relation=r))
 
 
 # Determine installation type
@@ -132,7 +133,7 @@ def poll_state():
         log.debug("Juju state unknown, will re-poll in " \
                   "case bootstrap is taking a little longer to come up.")
         # Stub out a juju status for now
-        juju = JujuState('environment: local')
+        juju = JujuState('environment: local\nmachines:')
     else:
         juju = JujuState(StringIO(juju))
 
