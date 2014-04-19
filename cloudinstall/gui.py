@@ -35,7 +35,9 @@ from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
 from cloudinstall import utils
 
-TITLE_TEXT = "Ubuntu Cloud Installer (q to quit)"
+log.name = __name__
+
+TITLE_TEXT = "Ubuntu Cloud Installer\n(q) Quit"
 
 #- Properties -----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
@@ -116,13 +118,17 @@ class ControllerOverlay(TextOverlay):
         return continue_
 
     def _process(self, data):
+        import cloudinstall.charms
+        helper = utils.ImporterHelper(cloudinstall.charms)
+        charms = helper.get_modules()
+
         allocated = list(data.machines_allocated())
         log.debug("Allocated machines: {machines}".format(machines=allocated))
         unallocated = list(data.machines_unallocated())
         log.debug("Unallocated machines: {machines}".format(machines=unallocated))
 
         for machine in allocated:
-            if pegasus.NOVA_CLOUD_CONTROLLER in machine.charms:
+            if machine.is_cloud_controller:
                 return False
 
         # Regardless of install type (single, multi) we always
@@ -135,18 +141,23 @@ class ControllerOverlay(TextOverlay):
                 self.command_runner.add_machine(dict(mem='2G'))
         elif len(allocated) > 0:
             machine = allocated[0]
-            pending = set(pegasus.CONTROLLER_CHARMS) - set(machine.charms)
-            if len(pending) == 0:
-                return False
+            for charm in charms:
+                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
 
-            for charm in pending:
+                # charm is loaded, decide whether to run it
+                if charm_.name() in machine.charms:
+                    continue
+
+                log.debug("Processing {charm}".format(charm=charm_.name()))
+
                 # If multi system install into lxc containers on machine
                 if pegasus.MULTI_SYSTEM:
-                    id_ = 'lxc:{machine_id}'.format(machine_id=machine.machine_id)
-                else:
-                    id_ = machine.machine_id
+                    machine.machine_id = 'lxc:{_id}'.format(_id=machine.machine_id)
                 # Deploy any remaining charms onto machine
-                self.command_runner.deploy(charm, machine_id=id_)
+                if 'nova-compute' not in charm_.name():
+                    charm_(machine).setup()
+                    charm_(machine).set_relations()
+
         else:
             TextOverlay(self.NODE_SETUP, self.underlying)
         return True
@@ -414,7 +425,7 @@ class CommandRunner(urwid.ListBox):
                 charm = state_to_charm[state]
                 new_service = charm not in self.services
                 if new_service:
-                    self.deploy(charm, constraints=dict(tags=machine.tag))
+                    self.client.deploy(charm, constraints=dict(tags=machine.tag))
                 else:
                     constraints = "juju set-constraints --service " \
                                   "{charm} tags={{tag}}".format(charm=charm,
@@ -447,7 +458,7 @@ def _make_header(rest):
 # TODO: This and CommandRunner should really be merged
 class ConsoleMode(urwid.Frame):
     def __init__(self):
-        header = _make_header("(f8 switches to node view mode)")
+        header = _make_header("(F8) Nodes")
         self.command_runner = CommandRunner()
         urwid.Frame.__init__(self, header=header, body=self.command_runner)
 
@@ -457,8 +468,8 @@ class ConsoleMode(urwid.Frame):
 
 class NodeViewMode(urwid.Frame):
     def __init__(self, loop, state, command_runner):
-        f6 = ', f6 to add another node' if pegasus.SINGLE_SYSTEM else ''
-        header = _make_header("(f8 switches to console mode{f6})".format(f6=f6))
+        f6 = '(F6) Add compute node' if pegasus.SINGLE_SYSTEM else ''
+        header = _make_header("{f6} (F8) Console".format(f6=f6))
 
         self.timer = urwid.Text("", align="right")
         self.url = urwid.Text("")
@@ -537,7 +548,7 @@ class NodeViewMode(urwid.Frame):
             self.target = self
             for n in nodes:
                 if n.machine.is_horizon:
-                    url = "Access your dashboard: http://{name}/horizon"
+                    url = "Access your dashboard:\nhttp://{name}/horizon"
                     self.url.set_text(url.format(name=n.machine.dns_name))
 
         if pegasus.SINGLE_SYSTEM:
@@ -545,32 +556,31 @@ class NodeViewMode(urwid.Frame):
             # automatically allocated to nova-compute. We process the rest of
             # the nodes normally.
             unallocated = list(juju.machines_unallocated())
-            for node in unallocated:
+            for machine in unallocated:
 
                 # nova-compute should not go on our cloud-controller
-                if node.is_machine_1:
+                if machine.is_machine_1:
                     continue
 
                 # dont deploy to machines with nova-compute already installed
-                if node.is_compute:
+                if machine.is_compute:
                     continue
 
-                compute_exists = juju.service(pegasus.NOVA_COMPUTE)
+                compute_charm = utils.import_module('cloudinstall.charms.compute')[0]
+                compute_exists = juju.service(compute_charm.name())
                 if not compute_exists:
                     log.debug("Adding compute node " \
-                              "to {machine}".format(machine=node))
-                    self.cr.deploy(pegasus.NOVA_COMPUTE,
-                                   machine_id=node.machine_id)
+                              "to machine: " \
+                              "{machine}".format(machine=machine.machine_id))
+                    compute_charm(machine).setup()
+                    compute_charm(machine).set_relations()
                 else:
-                    cmd = "juju add-unit {compute} --to {machine}"
-                    self.cr._run(cmd.format(compute=pegasus.NOVA_COMPUTE,
-                                            machine=node.machine_id))
-                if compute_exists and \
-                   not pegasus.NOVA_CLOUD_CONTROLLER in \
-                   compute_exists.relation('cloud-compute').charms:
-                    cmd = "juju add-relation {endpoint_a} {endpoint_b}"
-                    self.cr._run(cmd.format(endpoint_a=pegasus.NOVA_COMPUTE,
-                                            endpoint_b=pegasus.NOVA_CLOUD_CONTROLLER))
+                    # TODO: just juju client api
+                    log.debug("Adding additional compute " \
+                              "unit to machine: " \
+                              "{machine}".format(machine=machine.machine_id))
+                    self.client.add_unit(compute_charm.name(),
+                                         machine.machine_id)
 
         self.nodes.update(nodes)
         self.cr.update(juju)
@@ -635,6 +645,7 @@ class LockScreen(urwid.Overlay):
 
 class PegasusGUI(urwid.MainLoop):
     """ Pegasus Entry class """
+
     def __init__(self, state=None):
         self.state = state
         self.console = ConsoleMode()
