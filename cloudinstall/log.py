@@ -17,15 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """ Logging interface
-
-Simply exports `logger` variable
 """
 
 import logging
-import logging.handlers
 import os
 
-def setup_logger(name='cloud-installer'):
+def setup_logger(name=__name__):
     """ setup logging
 
     Overridding the default log level(**debug**) can be done via an environment variable `UCI_LOGLEVEL`
@@ -46,14 +43,17 @@ def setup_logger(name='cloud-installer'):
     :params str name: logger name
     :returns: a log object
     """
-    LOGFILE = os.path.expanduser('~/.cloud-install/commands.log')
+    HOME = os.getenv('HOME')
+    CONFIG_DIR = '.cloud-install'
+    CONFIG_PATH = os.path.join(HOME, CONFIG_DIR)
+    LOGFILE = os.path.join(CONFIG_PATH, 'commands.log')
     commandslog = logging.FileHandler(LOGFILE, 'w')
     commandslog.setFormatter(logging.Formatter(
-        '%(asctime)s [PID:%(process)d] * ' \
-        '%(levelname)-9s %(name)s - %(message)s',
-        datefmt='%m-%d %H:%M'))
+        '%(levelname)-9s * %(asctime)s [PID:%(process)d] * %(name)s * ' \
+        '%(message)s',
+        datefmt='%m-%d %H:%M:%S'))
 
-    logger = logging.getLogger(name)
+    logger = logging.getLogger('')
     env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
     logger.setLevel(env)
     logger.addHandler(commandslog)

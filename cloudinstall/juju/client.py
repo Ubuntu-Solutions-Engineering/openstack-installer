@@ -20,11 +20,11 @@ from ws4py.client.threadedclient import WebSocketClient
 import json
 import os
 import time
+import logging
 
 from cloudinstall.utils import get_command_output
-from cloudinstall.log import log
 
-log.name = 'cloudinstall.juju.client'
+log  = logging.getLogger(__name__)
 
 class JujuWS(WebSocketClient):
     def opened(self):

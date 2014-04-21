@@ -28,14 +28,14 @@ from traceback import format_exc
 import re
 import threading
 import urwid
+import logging
 
-from cloudinstall.log import log
 from cloudinstall.machine import Machine
 from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
 from cloudinstall import utils
 
-log.name = __name__
+log = logging.getLogger(__name__)
 
 TITLE_TEXT = "Ubuntu Cloud Installer\n(q) Quit"
 

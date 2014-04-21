@@ -18,12 +18,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup
+"""
+cloud-installer
+===============
+
+Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+simple way to install, deploy and scale an openstack cloud on top of
+Ubuntu server. Initial configurations are available for single
+physical system deployments as well as multiple physical system
+deployments.
+
+Documentation
+-------------
+`Located at ReadTheDocs<http://ubuntu-cloud-installer.rtfd.org>`_
+"""
+
+from setuptools import setup, find_packages
 
 import os
 import sys
 
 import cloudinstall
+
+REQUIREMENTS = [
+    "urwid",
+    "PyYAML",
+    "six",
+    "requests",
+    "requests_oauthlib"
+]
+
+TEST_REQUIREMENTS = list(REQUIREMENTS)
+TEST_REQUIREMENTS.extend(["mock", "nose"])
 
 if sys.argv[-1] == 'clean':
     print("Cleaning up ...")
@@ -32,24 +58,14 @@ if sys.argv[-1] == 'clean':
 
 setup(name='cloud-installer',
       version=cloudinstall.__version__,
-      description="""Ubuntu Cloud installer is a metal to cloud
-      image that provides an extremely simple way to install, deploy
-      and scale an openstack cloud on top of Ubuntu server. Initial
-      configurations are available for single physical system
-      deployments as well as multiple physical system deployments.
-      """,
-      author='Robert Ayres',
-      author_email='robert.ayres@ubuntu.com',
-      url='https://launchpad.net/cloud-installer',
+      description="Openstack private cloud with Ubuntu Cloud installer",
+      long_description=__doc__,
+      author='Canonical Solutions Engineering',
+      author_email='ubuntu-dev@lists.ubuntu.com',
+      url='https://github.com/Ubuntu-Solutions-Engineering/cloud-installer',
       license="AGPLv3+",
       scripts=['bin/cloud-install', 'bin/cloud-status'],
-      packages=['cloudinstall', 'cloudinstall.maas',
-                'cloudinstall.juju', 'cloudinstall.charms'],
-      requires=['PyYAML',
-                'six',
-                'urwid',
-                'requests_oauthlib',
-                'requests'],
+      packages=find_packages(exclude=["test"]),
       data_files=[
           ('share/man/man1', ['man/en/cloud-status.1',
                               'man/en/cloud-install.1'])
