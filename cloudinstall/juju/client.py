@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from ws4py.client.threadedclient import WebSocketClient
+# TODO: Make use of python3-websocket once
+# https://github.com/liris/websocket-client/pull/76 is merged.
+# from ws4py.client.threadedclient import WebSocketClient
 import json
 import os
 import time
@@ -26,25 +28,25 @@ from cloudinstall.utils import get_command_output
 
 log  = logging.getLogger(__name__)
 
-class JujuWS(WebSocketClient):
-    def opened(self):
-        creds = {'Type': 'Admin',
-                 'Request': 'Login',
-                 'RequestId': 1,
-                 'Params' : { 'AuthTag' : 'user-admin',
-                              'Password' : self.juju_pass}}
-        self.send(json.dumps(creds))
+# class JujuWS(WebSocketClient):
+#     def opened(self):
+#         creds = {'Type': 'Admin',
+#                  'Request': 'Login',
+#                  'RequestId': 1,
+#                  'Params' : { 'AuthTag' : 'user-admin',
+#                               'Password' : self.juju_pass}}
+#         self.send(json.dumps(creds))
 
-    def received_message(self, m):
-        json.loads(m.data.decode('utf-8'))
+#     def received_message(self, m):
+#         json.loads(m.data.decode('utf-8'))
 
-    @property
-    def juju_pass(self):
-        return self._juju_pass
+#     @property
+#     def juju_pass(self):
+#         return self._juju_pass
 
-    @juju_pass.setter
-    def juju_pass(self, password):
-        self._juju_pass = password
+#     @juju_pass.setter
+#     def juju_pass(self, password):
+#         self._juju_pass = password
 
 class JujuClient:
     """ Juju client class """

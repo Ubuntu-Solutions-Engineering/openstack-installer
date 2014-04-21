@@ -174,8 +174,10 @@ def time():
 def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
     """generator function to find files recursively. Usage:
 
-    for filename in find("*.properties", "/var/log/foobar"):
-        print filename
+    .. code::
+
+        for filename in find("*.properties", "/var/log/foobar"):
+            print filename
     """
     if max_depth:
         base_depth = os.path.dirname(top_dir).count(os.path.sep)
