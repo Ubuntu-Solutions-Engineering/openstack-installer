@@ -246,31 +246,45 @@ class ChangeStateDialog(urwid.Overlay):
         return urwid.Overlay.keypress(self, size, key)
 
 
-class Node(urwid.Text):
+class Node(urwid.WidgetWrap):
     """ A single ui node representation
     """
-    def __init__(self, machine=None, open_dialog=None):
+    def __init__(self, machine=None, state=None, open_dialog=None):
         """
         Initialize Node
 
         :param machine: juju machine state
+        :param state: global juju state
         :type machine: Machine()
         """
-        urwid.Text.__init__(self, "")
         self.machine = machine
+        self.state = state
         self.open_dialog = open_dialog
         self.allocated = self.machine.charms
         if self.allocated:
             self._selectable = self.machine.charms not in pegasus.CONTROLLER_CHARMS
         else:
             self._selectable = True
-        self.set_text(NODE_FORMAT.format(charms="\n".join(self.machine.charms),
-                                         fqdn=self.machine.dns_name,
-                                         cpu_count=self.machine.cpu_cores,
-                                         memory=self.machine.mem,
-                                         storage=self.machine.storage,
-                                         agent_state=self.machine.agent_state))
 
+        # machines
+        m = []
+        m.append("{fqdn:<20}".format(fqdn=self.machine.dns_name))
+        m.append("{cpu_count:>6}".format(cpu_count=self.machine.cpu_cores))
+        m.append("{memory:>10}".format(memory=self.machine.mem))
+        m.append("{storage:>12}".format(storage=self.machine.storage))
+        m.append("{agent_state:<12}".format(agent_state=self.machine.agent_state))
+        m = urwid.Text("|".join(m))
+        # charms
+        c = []
+        for charm in self.machine.charms:
+            svc = self.state.service(charm)
+            unit = svc.unit(svc.service_name)
+            c.append("{charm}".format(charm=charm))
+            c.append(" State: {state}".format(state=unit.agent_state))
+            c.append(" Public-Addres: {ip}".format(ip=unit.public_address))
+        c = urwid.Text("\n".join(c))
+        cols = urwid.Columns([m, c])
+        self.__super.__init__(cols)
 
     def keypress(self, size, key):
         """ Signal binding for Node
@@ -541,7 +555,7 @@ class NodeViewMode(urwid.Frame):
         :params list machines: list of known machines
         """
         nodes, juju = state
-        nodes = [Node(t, self.open_dialog) for t in nodes]
+        nodes = [Node(t, juju, self.open_dialog) for t in nodes]
 
         if self.target == self.controller_overlay and \
                 not self.controller_overlay.process(juju):
