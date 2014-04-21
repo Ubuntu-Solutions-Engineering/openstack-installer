@@ -98,10 +98,15 @@ class Service:
         :returns: a Unit entry
         :rtype: Unit()
         """
-        u = list(filter(lambda u: u.unit_name == name, self.units))[0]
-        if u:
-            return u
-        return Unit('unknown', [])
+        def _match(unit):
+            if name in unit.unit_name:
+                return True
+            return False
+
+        try:
+            return next(filter(_match, self.units))
+        except StopIteration:
+            return Unit('unknown', [])
 
     @property
     def units(self):
