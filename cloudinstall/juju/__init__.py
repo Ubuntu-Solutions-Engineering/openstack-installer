@@ -18,15 +18,15 @@
 
 """ Represents a juju status """
 
+import logging
 import yaml
 import itertools
 
 from collections import defaultdict
 from cloudinstall.machine import Machine
 from cloudinstall.service import Service
-from cloudinstall.log import log
 
-log.name = 'cloudinstall.juju'
+log = logging.getLogger(__name__)
 
 class JujuState:
     """ Represents a global Juju state """
