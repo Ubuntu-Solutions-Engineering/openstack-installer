@@ -63,6 +63,7 @@ pep8:
 	-pep8 cloudinstall
 
 test:
+	mkdir -p $(HOME)/.cloud-install
 	nosetests -v --with-cover --cover-package=cloudinstall --cover-html test
 
 status:
