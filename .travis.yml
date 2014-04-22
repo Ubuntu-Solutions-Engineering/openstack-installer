@@ -3,6 +3,9 @@ python:
   - 3.3
 notifications:
   email: false
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y python3-nose pep8 pyflakes
 install:
   - "pip install -r requirements.txt --use-mirrors"
   - "python setup.py install"
