@@ -32,6 +32,7 @@ class CharmKeystone(CharmBase):
                 OPENSTACK_PASSWORD = f.read().strip()
         except IOError:
             OPENSTACK_PASSWORD = 'password'
+        return OPENSTACK_PASSWORD
 
     def setup(self):
         super(CharmKeystone, self).setup()
