@@ -4,9 +4,12 @@ Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-python,
+               pep8,
+               pyflakes,
                python-all,
                python-setuptools,
                python3-all,
+               python3-coverage,
                python3-mock,
                python3-nose,
                python3-passlib,
