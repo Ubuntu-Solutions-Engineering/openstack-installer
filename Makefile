@@ -57,7 +57,7 @@ update_version:
 ci-test: pyflakes pep8 test
 
 pyflakes:
-	pyflakes3 cloudinstall
+	python3 `which pyflakes` cloudinstall
 
 pep8:
 	-pep8 cloudinstall
