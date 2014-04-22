@@ -325,7 +325,7 @@ class JujuClient:
         log.debug("Adding additional {name} " \
                   "unit to machine: " \
                   "{machine}".format(name=service_name,
-                                     machine=machine.machine_id))
+                                     machine=machine_id))
         ret, out, _ = get_command_output(cmd.format(name=service_name,
                                                     machine=machine_id))
         if ret:
