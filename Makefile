@@ -52,6 +52,19 @@ update_version:
 	wrap-and-sort
 	@sed -i -r "s/(^__version__\s=\s)(.*)/\1\"$(VERSION)\"/" cloudinstall/__init__.py
 
+
+.PHONY: ci-test pyflakes pep8 test
+ci-test: pyflakes pep8 test
+
+pyflakes:
+	-pyflakes3 cloudinstall
+
+pep8:
+	-pep8 cloudinstall
+
+test:
+	nosetests3 -v --with-cover --cover-package=cloudinstall --cover-html test
+
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
 

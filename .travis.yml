@@ -6,5 +6,5 @@ notifications:
 install:
   - "pip install -r requirements.txt --use-mirrors"
   - "python setup.py install"
-script:
-  - "nosetests -v --with-cover --cover-package=cloudinstall --cover-html test"
+script: make ci-test
+
