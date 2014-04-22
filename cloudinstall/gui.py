@@ -593,8 +593,8 @@ class NodeViewMode(urwid.Frame):
                     log.debug("Adding additional compute " \
                               "unit to machine: " \
                               "{machine}".format(machine=machine.machine_id))
-                    self.client.add_unit(compute_charm.name(),
-                                         machine.machine_id)
+                    self.cr.client.add_unit(compute_charm.name(),
+                                            machine.machine_id)
 
         self.nodes.update(nodes)
         self.cr.update(juju)
