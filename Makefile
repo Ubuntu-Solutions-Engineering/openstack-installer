@@ -62,12 +62,8 @@ pyflakes:
 pep8:
 	-pep8 cloudinstall
 
-CFGDIR=$(HOME)/.cloud-install
-
-$(CFGDIR):
-	mkdir -p $(CFGDIR)
-
-test: | $(CFGDIR)
+test:
+	mkdir -p $(HOME)/.cloud-install
 	nosetests -v --with-cover --cover-package=cloudinstall --cover-html test
 
 status:
