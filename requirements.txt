@@ -10,3 +10,5 @@ urwid
 nose
 nose-cov
 readthedocs-sphinx-ext
+pyflakes>=0.8.1
+pep8>=1.5.6
