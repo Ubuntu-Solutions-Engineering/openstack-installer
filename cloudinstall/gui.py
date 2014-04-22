@@ -19,18 +19,14 @@
 """ Pegasus - gui interface to Ubuntu Cloud Installer """
 
 from collections import deque
-from errno import ENOENT
 from os import write, close
-from os.path import expanduser
-from subprocess import check_call, Popen, PIPE, STDOUT
-from time import strftime
+from subprocess import Popen, PIPE, STDOUT
 from traceback import format_exc
 import re
 import threading
 import urwid
 import logging
 
-from cloudinstall.machine import Machine
 from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
 from cloudinstall import utils
@@ -217,7 +213,6 @@ class ChangeStateDialog(urwid.Overlay):
         wrapped_boxes = _wrap_focus(self.boxes)
 
         def ok(button):
-            states = map(lambda b: b.get_state(), self.boxes)
             selected = filter(lambda r: r.get_state(), self.boxes)
             on_success([s.text_label for s in selected])
 
@@ -338,9 +333,8 @@ class CommandRunner(urwid.ListBox):
                                                    output=output)
             self._contents.append(urwid.Text(txt))
             self._contents[:] = self._contents[:200]
-            return txt
 
-        txt = add_to_f8(command, output)
+        add_to_f8(command, output)
         log.debug("Running command: {cmd}".format(cmd=command))
         if output:
             log.debug("Result: {output}".format(output=output.rstrip()))
@@ -744,7 +738,7 @@ class PegasusGUI(urwid.MainLoop):
         def done(unused):
             try:
                 callback(result['res'])
-            except Exception as e:
+            except Exception:
                 self.console.command_runner._add("Status thread:",
                                                  format_exc())
             finally:
@@ -763,7 +757,7 @@ class PegasusGUI(urwid.MainLoop):
             ###################################################################
             try:
                 result['res'] = f()
-            except Exception as e:
+            except Exception:
                 self.console.command_runner._add("Status thread:",
                                                  format_exc())
             write(write_fd, bytes('done', 'ascii'))

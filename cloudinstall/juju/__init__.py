@@ -20,9 +20,7 @@
 
 import logging
 import yaml
-import itertools
 
-from collections import defaultdict
 from cloudinstall.machine import Machine
 from cloudinstall.service import Service
 

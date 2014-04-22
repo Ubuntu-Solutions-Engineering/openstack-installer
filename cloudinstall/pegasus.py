@@ -17,14 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from io import StringIO
-from collections import defaultdict
-import os
 from os.path import expanduser, exists
-from subprocess import check_call, DEVNULL
-from textwrap import dedent
-import tempfile
-import re
-import urllib
+from subprocess import check_call
 
 from cloudinstall import utils
 from cloudinstall.log import log
