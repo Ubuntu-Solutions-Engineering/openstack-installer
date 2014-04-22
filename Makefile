@@ -57,13 +57,13 @@ update_version:
 ci-test: pyflakes pep8 test
 
 pyflakes:
-	pyflakes3 cloudinstall
+	python3 `which pyflakes` cloudinstall
 
 pep8:
 	-pep8 cloudinstall
 
 test:
-	nosetests3 -v --with-cover --cover-package=cloudinstall --cover-html test
+	nosetests -v --with-cover --cover-package=cloudinstall --cover-html test
 
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
