@@ -76,6 +76,49 @@ class MaasClient:
         return requests.delete(url=self.auth.api_url + url,
                                auth=self._oauth())
 
+
+    ###########################################################################
+    # Boot Images API
+    ###########################################################################
+    def boot_images(self, uuid):
+        """ Query boot images list
+
+        :param str uuid: uuid of cluster
+        :returns: list of boot images
+        :rtype: list
+        """
+        _url = "/nodegroups/{uuid}/boot-images/".format(uuid=uuid)
+        res = self.get(_url)
+        if res.ok:
+            return json.loads(res.text)
+        return []
+
+    def import_boot_images(self):
+        """ Import boot images on all accepted controllers
+
+        :returns: true on success, false on failure
+        :rtype: bool
+        """
+        _url = "/nodegroups/"
+        res = self.post(_url, dict(op='import_boot_images'))
+        if res.ok:
+            return True
+        return False
+
+    def report_boot_images(self, uuid):
+        """ Describe imported images
+
+        :param str uuid: uuid of cluster
+        :returns: information on import images
+        :rtype: dict
+        """
+        _url = "/nodegroups/{uuid}/boot-images".format(uuid=uuid)
+        res = self.post(_url, dict(op='report_boot_images'))
+        if res.ok:
+            return json.loads(res.text)
+        return {}
+
+
     ###########################################################################
     # Node API
     ###########################################################################
@@ -146,6 +189,34 @@ class MaasClient:
         if res.ok:
             return True
         return False
+
+    ###########################################################################
+    # Nodegroups API
+    ###########################################################################
+    @property
+    def nodegroups(self):
+        """ List nodegroups
+
+        :returns: List of nodegroups
+        :rtype list:
+        """
+        res = self.get('/nodegroups/', dict(op='list'))
+        if res.ok:
+            return json.loads(res.text)
+        return []
+
+    def nodegroups_download_progress(self, uuid):
+        """ Report download progress for a cluster controller
+
+        :param str uuid: uuid of controller
+        :returns: file information
+        :rtype: dict
+        """
+        _url = "/nodegroups/{uuid}/".format(uuid=uuid)
+        res = self.post(_url, dict(op='report_download_progress'))
+        if res.ok:
+            return json.loads(res.text)
+        return {}
 
     ###########################################################################
     # Tag API
