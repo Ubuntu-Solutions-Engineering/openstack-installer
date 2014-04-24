@@ -16,23 +16,43 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 from cloudinstall.juju.client import JujuClient
 
+log = logging.getLogger('cloudinstall.charms')
 
 class CharmBase:
     """ Base charm class """
 
     charm_name = None
+    related = []
 
-    def __init__(self, machine):
+    def __init__(self, state=None, machine=None):
         """ initialize
 
-        :param Machine() machine: Machine to deploy charm to
+        :param state: :class:JujuState
+        :param machine: :class:Machine
         """
         self.charm_path = None
         self.exposed = False
+        self.state = state
         self.machine = machine
         self.client = JujuClient()
+
+    def is_related(self, charm, relations):
+        """ test for existence of charm relation
+
+        :param str charm: charm to verify
+        :param list relations: related charms
+        :returns: True if existing relation found, False otherwise
+        :rtype: bool
+        """
+        try:
+            list(filter(lambda r: charm in r.charms,
+                        relations))[0]
+            return True
+        except IndexError:
+            return False
 
     @classmethod
     def name(class_):
@@ -51,16 +71,22 @@ class CharmBase:
         The default should be sufficient but if more functionality
         is needed this should be overridden.
         """
-        self.client.deploy(charm=self.charm_name,
-                           machine_id=self.machine.machine_id)
-
+        _id = None
+        if self.machine:
+            _id = self.machine.machine_id
+        self.client.deploy(charm=self.charm_name, machine_id=_id)
 
     def set_relations(self):
         """ Setup charm relations
 
         Override in charm specific.
         """
-        pass
+        if len(self.related) > 0:
+            services = self.state.service(self.charm_name)
+            for charm in self.related:
+                if not self.is_related(charm, services.relations):
+                    self.client.add_relation(self.charm_name,
+                                             charm)
 
     def __repr__(self):
         return self.name()

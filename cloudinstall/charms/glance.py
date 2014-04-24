@@ -23,10 +23,4 @@ class CharmGlance(CharmBase):
     """ Openstack Glance directives """
 
     charm_name = 'glance'
-
-    def set_relations(self):
-        for c in ['mysql', 'keystone', 'rabbitmq-server']:
-            self.client.add_relation(endpoint_a=self.charm_name,
-                                     endpoint_b=c)
-
-
+    related = ['mysql', 'keystone', 'rabbitmq-server']

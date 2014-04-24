@@ -23,9 +23,4 @@ class CharmHorizon(CharmBase):
     """ Openstack Horizon directives """
 
     charm_name = 'openstack-dashboard'
-
-    def set_relations(self):
-        for c in ['keystone']:
-            self.client.add_relation(endpoint_a=self.charm_name,
-                                     endpoint_b=c)
-
+    related = ['keystone']
