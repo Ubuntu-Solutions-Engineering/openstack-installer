@@ -41,21 +41,14 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 # Time to lock in seconds
 LOCK_TIME = 120
 
-NODE_FORMAT = "|".join([
-    "{fqdn:<20}", "{cpu_count:>6}", "{memory:>10}",
-    "{storage:>12}", "{agent_state:<12}", "{charms:<25}"
-])
-NODE_HEADER = "|".join([
-    "{fqdn:<20}", "{cpu_count:<6}", "{memory:<10}",
-    "{storage:<12}", "{agent_state:<12}",
-    "{charms:<25}",
-]).format(fqdn="Hostname/IP",
-          cpu_count="# CPUs",
-          memory="RAM",
-          storage="Storage",
-          agent_state="State",
-          charms="Charms",
-          charm_status="Charm Status")
+NODE_HEADER = [
+    urwid.AttrMap(urwid.Text("Hostname"), "list_title"),
+    urwid.AttrMap(urwid.Text("# CPUS"), "list_title"),
+    urwid.AttrMap(urwid.Text("RAM (GB)"), "list_title"),
+    urwid.AttrMap(urwid.Text("Storage"), "list_title"),
+    urwid.AttrMap(urwid.Text("State"), "list_title"),
+    ('weight', 2, urwid.AttrMap(urwid.Text("Charms"), "list_title"))
+]
 
 STYLES = [
     ('body',         'white',      'black',),
@@ -118,45 +111,56 @@ class ControllerOverlay(TextOverlay):
         helper = utils.ImporterHelper(cloudinstall.charms)
         charms = helper.get_modules()
 
-        allocated = list(data.machines_allocated())
-        log.debug("Allocated machines: {machines}".format(machines=allocated))
-        unallocated = list(data.machines_unallocated())
-        log.debug("Unallocated machines: {machines}".format(machines=unallocated))
+        # allocated and unallocated only apply to
+        # multi install
+        if pegasus.MULTI_SYSTEM:
+            allocated = list(data.machines_allocated())
+            log.debug("Allocated machines: {machines}".format(machines=allocated))
+            unallocated = list(data.machines_unallocated())
+            log.debug("Unallocated machines: {machines}".format(machines=unallocated))
 
-        for machine in allocated:
-            if machine.is_cloud_controller:
-                return False
-
-        # Regardless of install type (single, multi) we always
-        # create at least 1 machine to deploy our cloud-controller
-        # on
-        if len(allocated) == 0:
-            if pegasus.MULTI_SYSTEM and len(unallocated) > 0:
+            if len(allocated) == 0 and len(unallocated) > 0:
                 self.command_runner.add_machine()
-            elif pegasus.SINGLE_SYSTEM:
-                self.command_runner.add_machine(dict(mem='2G'))
-        elif len(allocated) > 0:
-            machine = allocated[0]
+            elif len(allocated) > 0:
+                machine = allocated[0]
+                for charm in charms:
+                    charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
+
+                    # charm is loaded, decide whether to run it
+                    if charm_.name() in machine.charms:
+                        continue
+
+                    log.debug("Processing {charm}".format(charm=charm_.name()))
+
+                    machine.machine_id = 'lxc:{_id}'.format(_id=machine.machine_id)
+
+                    # Deploy any remaining charms onto machine except
+                    # for nova-compute which would live on a separate
+                    # bare-metal machine
+                    if 'nova-compute' not in charm_.name():
+                        charm_(machine=machine).setup()
+                for charm in charms:
+                    charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
+                    charm_(state=data).set_relations()
+                return False
+        elif pegasus.SINGLE_SYSTEM:
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
 
                 # charm is loaded, decide whether to run it
-                if charm_.name() in machine.charms:
+                if charm_.name() in [s.service_name for s in data.services]:
                     continue
 
                 log.debug("Processing {charm}".format(charm=charm_.name()))
-
-                # If multi system install into lxc containers on machine
-                if pegasus.MULTI_SYSTEM:
-                    machine.machine_id = 'lxc:{_id}'.format(_id=machine.machine_id)
-                # Deploy any remaining charms onto machine
-                if 'nova-compute' not in charm_.name():
-                    charm_(machine).setup()
-                    charm_(machine).set_relations()
-
+                charm_(state=data).setup()
+            for charm in charms:
+                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
+                charm_(state=data).set_relations()
+            return False
         else:
-            TextOverlay(self.NODE_SETUP, self.underlying)
-        return True
+            return True
+        #TextOverlay(self.NODE_SETUP, self.underlying)
+        #return True
 
 
 def _wrap_focus(widgets, unfocused=None):
@@ -186,7 +190,7 @@ class AddComputeDialog(urwid.Overlay):
 
     def yes(self, button):
         log.info("Deploying a new nova compute machine")
-        self.cr.add_machine(dict(mem='2G'))
+        self.cr.add_machine()
         self.destroy()
 
     def no(self, button):
@@ -262,13 +266,13 @@ class Node(urwid.WidgetWrap):
             self._selectable = True
 
         # machines
-        m = []
-        m.append("{fqdn:<20}".format(fqdn=self.machine.dns_name))
-        m.append("{cpu_count:>6}".format(cpu_count=self.machine.cpu_cores))
-        m.append("{memory:>10}".format(memory=self.machine.mem))
-        m.append("{storage:>12}".format(storage=self.machine.storage))
-        m.append("{agent_state:<12}".format(agent_state=self.machine.agent_state))
-        m = urwid.Text("|".join(m))
+        m = [
+            urwid.Text(self.machine.dns_name),
+            urwid.Text(self.machine.cpu_cores),
+            urwid.Text(self.machine.mem),
+            urwid.Text(self.machine.storage),
+            urwid.Text(self.machine.agent_state)
+        ]
         # charms
         c = []
         for charm in self.machine.charms:
@@ -276,9 +280,12 @@ class Node(urwid.WidgetWrap):
             unit = svc.unit(svc.service_name)
             c.append("{charm}".format(charm=charm))
             c.append(" State: {state}".format(state=unit.agent_state))
-            c.append(" Public-Addres: {ip}".format(ip=unit.public_address))
+            if unit.agent_state_info:
+                c.append(" State-Info: {info}".format(info=unit.agent_state_info))
+            c.append(" Public-Address: {ip}".format(ip=unit.public_address))
         c = urwid.Text("\n".join(c))
-        cols = urwid.Columns([m, c])
+        m.append(('weight', 2, c))
+        cols = urwid.Columns(m)
         self.__super.__init__(cols)
 
     def keypress(self, size, key):
@@ -296,10 +303,9 @@ class Node(urwid.WidgetWrap):
 
 class ListWithHeader(urwid.Frame):
     def __init__(self, header_text):
-        header = urwid.AttrMap(urwid.Text(header_text), "list_title")
         self._contents = urwid.SimpleListWalker([])
         body = urwid.ListBox(self._contents)
-        urwid.Frame.__init__(self, header=header, body=body)
+        urwid.Frame.__init__(self, header=urwid.Columns(header_text), body=body)
 
     def selectable(self):
         return len(self._contents) > 0
@@ -546,7 +552,7 @@ class NodeViewMode(urwid.Frame):
     def do_update(self, state):
         """ Updating node states
 
-        :params list machines: list of known machines
+        :params list state: :class:JujuState
         """
         nodes, juju = state
         nodes = [Node(t, juju, self.open_dialog) for t in nodes]
@@ -559,36 +565,34 @@ class NodeViewMode(urwid.Frame):
                     url = "Access your dashboard:\nhttp://{name}/horizon"
                     self.url.set_text(url.format(name=n.machine.dns_name))
 
-        if pegasus.SINGLE_SYSTEM:
-            # For single installs, all new 'unallocated' nodes are
-            # automatically allocated to nova-compute. We process the rest of
-            # the nodes normally.
-            unallocated = list(juju.machines_unallocated())
-            for machine in unallocated:
+        # FIXME: Is this needed since single systems don't have a state of
+        # 'unallocated' ?
+        # if pegasus.SINGLE_SYSTEM:
+        #     # For single installs, all new 'unallocated' nodes are
+        #     # automatically allocated to nova-compute. We process the rest of
+        #     # the nodes normally.
+        #     unallocated = list(juju.machines_unallocated())
+        #     for machine in unallocated:
 
-                # nova-compute should not go on our cloud-controller
-                if machine.is_machine_1:
-                    continue
+        #         # dont deploy to machines with charms already installed
+        #         if len(list(machine.charms)) > 0:
+        #             continue
 
-                # dont deploy to machines with nova-compute already installed
-                if machine.is_compute:
-                    continue
-
-                compute_charm = utils.import_module('cloudinstall.charms.compute')[0]
-                compute_exists = juju.service(compute_charm.name())
-                if not compute_exists:
-                    log.debug("Adding compute node " \
-                              "to machine: " \
-                              "{machine}".format(machine=machine.machine_id))
-                    compute_charm(machine).setup()
-                    compute_charm(machine).set_relations()
-                else:
-                    # TODO: just juju client api
-                    log.debug("Adding additional compute " \
-                              "unit to machine: " \
-                              "{machine}".format(machine=machine.machine_id))
-                    self.cr.client.add_unit(compute_charm.name(),
-                                            machine.machine_id)
+        #         compute_charm = utils.import_module('cloudinstall.charms.compute')[0]
+        #         compute_exists = juju.service(compute_charm.name())
+        #         if not compute_exists:
+        #             log.debug("Adding compute node " \
+        #                       "to machine: " \
+        #                       "{machine}".format(machine=machine.machine_id))
+        #             compute_charm(machine=machine).setup()
+        #             compute_charm(machine=machine).set_relations()
+        #         else:
+        #             # TODO: just juju client api
+        #             log.debug("Adding additional compute " \
+        #                       "unit to machine: " \
+        #                       "{machine}".format(machine=machine.machine_id))
+        #             self.cr.client.add_unit(compute_charm.name(),
+        #                                     machine.machine_id)
 
         self.nodes.update(nodes)
         self.cr.update(juju)
