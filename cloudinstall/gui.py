@@ -31,7 +31,7 @@ from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
 from cloudinstall import utils
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('cloudinstall.gui')
 
 TITLE_TEXT = "Ubuntu Cloud Installer\n(q) Quit"
 

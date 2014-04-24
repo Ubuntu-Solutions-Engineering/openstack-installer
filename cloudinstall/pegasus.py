@@ -16,18 +16,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 from io import StringIO
 from os.path import expanduser, exists
 from subprocess import check_call
 
 from cloudinstall import utils
-from cloudinstall.log import log
 from cloudinstall.maas import MaasState
 from cloudinstall.maas.auth import MaasAuth
 from cloudinstall.juju import JujuState
 from cloudinstall.maas.client import MaasClient
 
-log.name = __name__
+log = logging.getLogger('cloudinstall.pegasus')
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
 MYSQL = 'mysql'
