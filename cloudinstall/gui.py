@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 
 TITLE_TEXT = "Ubuntu Cloud Installer\n(q) Quit"
 
-#- Properties -----------------------------------------------------------------
+# - Properties -----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 
 # Time to lock in seconds
@@ -61,6 +61,7 @@ STYLES = [
 
 RADIO_STATES = list(pegasus.ALLOCATION.values())
 
+
 def _allocation_for_charms(charms):
     als = [pegasus.ALLOCATION.get(c, '') for c in charms]
     return list(filter(lambda x: x, als))
@@ -70,15 +71,21 @@ class TextOverlay(urwid.Overlay):
     def __init__(self, text, underlying, width=60, height=5):
         w = urwid.LineBox(urwid.Filler(urwid.Text(text)))
         w = urwid.AttrWrap(w, "dialog")
-        urwid.Overlay.__init__(self, w, underlying, 'center', width, 'middle', height)
+        urwid.Overlay.__init__(self,
+                               w,
+                               underlying,
+                               'center',
+                               width,
+                               'middle',
+                               height)
 
 
 class ControllerOverlay(TextOverlay):
     PXE_BOOT = "You need one node to act as the cloud controller. " \
                "Please PXE boot the node you would like to use."
 
-    NODE_WAIT = "Please wait while the cloud controller is installed on your " \
-               "host system."
+    NODE_WAIT = "Please wait while the cloud controller is " \
+                "installed on your host system."
 
     NODE_SETUP = "Your node has been correctly detected. " \
                  "Please wait until setup is complete "
@@ -88,7 +95,9 @@ class ControllerOverlay(TextOverlay):
         self.allocated = None
         self.command_runner = command_runner
         self.done = False
-        self.start_text = self.NODE_WAIT if pegasus.SINGLE_SYSTEM else self.PXE_BOOT
+        self.start_text = self.NODE_WAIT \
+                          if pegasus.SINGLE_SYSTEM \
+                             else self.PXE_BOOT
         TextOverlay.__init__(self, self.start_text, self.underlying)
 
     def process(self, data):
@@ -115,9 +124,11 @@ class ControllerOverlay(TextOverlay):
         # multi install
         if pegasus.MULTI_SYSTEM:
             allocated = list(data.machines_allocated())
-            log.debug("Allocated machines: {machines}".format(machines=allocated))
+            log.debug("Allocated machines: " \
+                      "{machines}".format(machines=allocated))
             unallocated = list(data.machines_unallocated())
-            log.debug("Unallocated machines: {machines}".format(machines=unallocated))
+            log.debug("Unallocated machines: " \
+                      "{machines}".format(machines=unallocated))
 
             if len(allocated) == 0 and len(unallocated) > 0:
                 self.command_runner.add_machine()
@@ -159,8 +170,8 @@ class ControllerOverlay(TextOverlay):
             return False
         else:
             return True
-        #TextOverlay(self.NODE_SETUP, self.underlying)
-        #return True
+        # TextOverlay(self.NODE_SETUP, self.underlying)
+        # return True
 
 
 def _wrap_focus(widgets, unfocused=None):
@@ -405,7 +416,8 @@ class CommandRunner(urwid.ListBox):
         # Set keystone password
         if pegasus.KEYSTONE == charm:
             cmd = "juju set {charm} admin-password={password}"
-            self._run(cmd.format(charm=charm, password=pegasus.OPENSTACK_PASSWORD))
+            self._run(cmd.format(charm=charm,
+                                 password=pegasus.OPENSTACK_PASSWORD))
 
     def change_allocation(self, new_states, machine):
         """ Changes state allocation of machine
@@ -422,15 +434,18 @@ class CommandRunner(urwid.ListBox):
 
         if pegasus.MULTI_SYSTEM:
             try:
-                log.debug("Validating charm in state: {charms}".format(charms=machine))
+                log.debug("Validating charm in state: " \
+                          "{charms}".format(charms=machine))
                 for charm, unit in zip(machine.charms, machine.units):
                     if charm not in new_states:
-                        self._run("juju remove-unit {unit}".format(unit=unit.unit_name))
+                        self._run("juju remove-unit " \
+                                  "{unit}".format(unit=unit.unit_name))
             except KeyError:
                 pass
 
             if len(new_states) == 0:
-                cmd = "juju terminate-machine {id}".format(id=machine.machine_id)
+                cmd = "juju terminate-machine " \
+                      "{id}".format(id=machine.machine_id)
                 log.debug("Terminating machine: {cmd}".format(cmd=cmd))
                 self._run(cmd)
 
@@ -439,11 +454,13 @@ class CommandRunner(urwid.ListBox):
                 charm = state_to_charm[state]
                 new_service = charm not in self.services
                 if new_service:
-                    self.client.deploy(charm, constraints=dict(tags=machine.tag))
+                    self.client.deploy(charm,
+                                       constraints=dict(tags=machine.tag))
                 else:
                     constraints = "juju set-constraints --service " \
-                                  "{charm} tags={{tag}}".format(charm=charm,
-                                                                tag=machine.tag)
+                                  "{charm} " \
+                                  "tags={{tag}}".format(charm=charm,
+                                                        tag=machine.tag)
                     log.debug("Setting constraints: " \
                               "{constraints}".format(constraints=constraints))
                     self._run(constraints.format(tag=machine.tag))
