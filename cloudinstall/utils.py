@@ -24,7 +24,10 @@ import string
 import random
 import inspect
 import fnmatch
+import logging
 from time import strftime
+
+log = logging.getLogger('cloudinstall.utils')
 
 # String with number of minutes, or None.
 blank_len = None
@@ -93,6 +96,35 @@ def get_network_interfaces():
         if 'lo' not in name:
             yield {name: get_network_interface(name)}
 
+
+def get_host_mem():
+    """ Get host memory
+
+    Mostly used as a backup if no data can be pulled from
+    the normal means in :class:Machine
+    """
+    _, out, _ = get_command_output('head -n1 /proc/meminfo')
+    out = out.rstrip()
+    regex = re.compile('^MemTotal:\s+(\d+)\skB')
+    match = re.match(regex, out)
+    if match:
+        mem = match.group(1)
+        mem = int(mem) / 1024 / 1024 + 1
+        return int(mem)
+    else:
+        return 0
+
+def get_host_cpu_cores():
+    """ Get host cpu-cores
+
+    A backup if no data can be pulled from
+    :class:Machine
+    """
+    _, out, _ = get_command_output('nproc')
+    if out:
+        return out.strip()
+    else:
+        return 'N/A'
 
 def partition(pred, iterable):
     """ Returns tuple of allocated and unallocated systems
