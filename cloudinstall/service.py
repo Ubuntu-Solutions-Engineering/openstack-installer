@@ -18,6 +18,9 @@
 
 """ Represents a Juju service """
 
+import logging
+
+log = logging.getLogger('c.service')
 
 class Unit:
     """ Unit class """
@@ -53,6 +56,16 @@ class Unit:
         """
         return self.unit.get('public-address', '0.0.0.0')
 
+    @property
+    def agent_state_info(self):
+        """ Gets unit state info
+
+        Usually prints a error message if unit failed to deploy
+        :returns: error
+        :rtype: str
+        """
+        return self.unit.get('agent-state-info', None)
+
     def __repr__(self):
         return "<Unit: {name} " \
             "Machine: {machine}>".format(name=self.unit_name,
@@ -66,6 +79,13 @@ class Relation:
         self.relation_name = relation_name
         self.charms = charms
 
+    def is_relation(self, charm):
+        """ Is a charm already related? """
+        return charm in self.charms
+
+    def __repr__(self):
+        return "<Relation: {name}, {charms}>".format(name=self.relation_name,
+                                                       charms=self.charms)
 
 class Service:
     """ Service class """
@@ -126,10 +146,11 @@ class Service:
         :returns: a Relation entry
         :rtype: Relation()
         """
-        r = list(filter(lambda r: r.relation_name == name, self.relations))[0]
-        if r:
+        try:
+            r = list(filter(lambda r: r.relation_name == name, self.relations))[0]
             return r
-        return Relation('unknown', [])
+        except IndexError:
+            return Relation('unknown', [])
 
     @property
     def relations(self):
