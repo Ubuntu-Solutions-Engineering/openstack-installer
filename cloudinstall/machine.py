@@ -75,11 +75,13 @@ class Machine:
         :returns: storage size
         :rtype: str
         """
+        if "N/A" in self._storage:
+            return self._storage
         try:
-            _storage_in_gb = int(self._storage[:-1]) / 1024
-        except ValueError:
+            self._storage = int(self._storage[:-1]) / 1024
+            return "{size}G".format(size=str(self._storage))
+        except:
             return "N/A"
-        return "{size}G".format(size=str(_storage_in_gb))
 
     @storage.setter
     def storage(self, val):
@@ -92,15 +94,7 @@ class Machine:
         :returns: memory size
         :rtype: str
         """
-        try:
-            _mem = int(self._mem[:-1])
-        except ValueError:
-            return "N/A"
-        if _mem > 1024:
-            _mem = _mem / 1024
-            return "{size}G".format(size=str(_mem))
-        else:
-            return "{size}M".format(size=str(_mem))
+        return "{size}".format(size=str(self._mem))
 
     @mem.setter
     def mem(self, val):
@@ -121,7 +115,7 @@ class Machine:
                 k, v = item.split('=')
                 if k in spec:
                     return v
-        return 'N/A'
+        return "N/A"
 
     @property
     def instance_id(self):
