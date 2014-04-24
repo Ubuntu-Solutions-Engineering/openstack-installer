@@ -28,6 +28,7 @@ Reference
 .. toctree::
    :maxdepth: 2
 
+   charms
    cloudinstall.juju
    cloudinstall.maas
    gui

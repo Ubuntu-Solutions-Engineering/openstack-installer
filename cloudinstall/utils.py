@@ -101,7 +101,7 @@ def get_host_mem():
     """ Get host memory
 
     Mostly used as a backup if no data can be pulled from
-    the normal means in :class:Machine
+    the normal means in Machine()
     """
     _, out, _ = get_command_output('head -n1 /proc/meminfo')
     out = out.rstrip()
@@ -118,7 +118,7 @@ def get_host_cpu_cores():
     """ Get host cpu-cores
 
     A backup if no data can be pulled from
-    :class:Machine
+    Machine()
     """
     _, out, _ = get_command_output('nproc')
     if out:
