@@ -23,12 +23,20 @@ class CharmNovaCompute(CharmBase):
     """ Openstack Nova Compute directives """
 
     charm_name = 'nova-compute'
+    related = ['mysql', 'rabbitmq-server', 'glance', 'nova-cloud-controller']
+
+    def setup(self):
+        super(CharmNovaCompute, self).setup()
+        self.client.set_config(self.charm_name,
+                               {'virt-type': 'lxc'})
 
     def set_relations(self):
-        for c in ['mysql', 'rabbitmq-server', 'glance', 'nova-cloud-controller']:
-            self.client.add_relation(endpoint_a=self.charm_name,
-                                     endpoint_b=c)
-        self.client.add_relation("{c}:amqp".format(c=self.charm_name),
-                                 "rabbitmq-server:amqp")
+        super(CharmNovaCompute, self).set_relations()
+        services = self.state.service(self.charm_name)
+        for charm in self.related:
+            if not self.is_related(charm, services.relations) \
+               and 'rabbitmq-server' in charm:
+                self.client.add_relation("{c}:amqp".format(c=self.charm_name),
+                                         "rabbitmq-server:amqp")
 
 

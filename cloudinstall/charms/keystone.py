@@ -24,6 +24,7 @@ class CharmKeystone(CharmBase):
     """ Openstack Keystone directives """
 
     charm_name = 'keystone'
+    related = ['mysql']
 
     def __openstack_password(self):
         PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
@@ -37,10 +38,5 @@ class CharmKeystone(CharmBase):
     def setup(self):
         super(CharmKeystone, self).setup()
         self.client.set_config(self.charm_name,
-                               {'admin-password': self.__openstack_password()})
-
-    def set_relations(self):
-        self.client.add_relation(self.charm_name,
-                                 'mysql')
-
-
+                               {'admin-password': self.__openstack_password(),
+                                'admin-user': 'admin'})

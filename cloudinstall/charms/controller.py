@@ -23,10 +23,4 @@ class CharmNovaCloudController(CharmBase):
     """ Openstack Nova Cloud Controller directives """
 
     charm_name = 'nova-cloud-controller'
-
-    def set_relations(self):
-        for c in ['mysql', 'rabbitmq-server', 'glance', 'keystone']:
-            self.client.add_relation(endpoint_a=self.charm_name,
-                                     endpoint_b=c)
-
-
+    related = ['mysql', 'rabbitmq-server', 'glance', 'keystone']
