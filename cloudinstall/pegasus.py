@@ -166,9 +166,10 @@ def parse_state(juju, maas=None):
         if machine.is_machine_0:
             continue
 
-        #######################################################################
-        # FIXME: why isn't storage being applied here?
-        #######################################################################
+        if SINGLE_SYSTEM:
+            machine.mem = utils.get_host_mem()
+            machine.cpu_cores = utils.get_host_cpu_cores()
+
         if maas:
             maas_machine = maas.machine(machine.instance_id)
             machine.mem = maas_machine.mem
