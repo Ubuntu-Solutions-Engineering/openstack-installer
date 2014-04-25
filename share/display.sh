@@ -149,11 +149,12 @@ dialogPassword()
 
 # Display a yes/no choice
 #
-# dialogYesNo title text height width
+# dialogYesNo title yes-text no-text text height width
 #
 # exit 0 on yes, 1 on no
 #
 dialogYesNo()
 {
-	whiptail --title "$1" --backtitle "$BACKTITLE" --yesno "$2" $3 $4
+	whiptail --title "$1" --backtitle "$BACKTITLE" --yes-button "$2" \
+	    --no-button "$3" --yesno "$4" $5 $6
 }

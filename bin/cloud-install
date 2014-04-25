@@ -28,17 +28,15 @@
 
 OPT_HELP=h
 OPT_INSTALL=i
-OPT_FORCE=f
-OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_FORCE}
+OPTS=:${OPT_INSTALL}${OPT_HELP}
 USAGE="\
-cloud-install [-${OPT_INSTALL}${OPT_HELP}${OPT_FORCE}]
+cloud-install [-${OPT_INSTALL}${OPT_HELP}]
 
 Create an Ubuntu Cloud! (requires root privileges)
 
 Options:
   -$OPT_INSTALL  install only (don't invoke cloud-status)
-  -$OPT_HELP  print this message
-  -$OPT_FORCE  bypass any sanity checks"
+  -$OPT_HELP  print this message"
 
 usage()
 {
@@ -59,9 +57,6 @@ while getopts $OPTS opt; do
 	$OPT_HELP)
 		usage
 		exit 0
-		;;
-	$OPT_FORCE)
-		force_install=true
 		;;
 	\?)
 		usageError "Unknown argument: $OPTARG"
@@ -86,10 +81,6 @@ trap "" PIPE
 set -x
 
 #disableBlank
-
-if [ -d /home/$INSTALL_USER/.juju ] && [ -z "$force_install" ]; then
-	echo "You've already got juju configured! Aborting..." && exit 0
-fi
 
 if [ ! -e /etc/.cloud-installed ]; then
 	configureInstall
