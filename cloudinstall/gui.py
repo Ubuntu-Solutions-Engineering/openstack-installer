@@ -113,6 +113,7 @@ class ControllerOverlay(TextOverlay):
         continue_ = self._process(data)
         if not continue_:
             self.done = True
+            log.debug("ControllerOverlay process() is done")
         return continue_
 
     def _process(self, data):
@@ -154,6 +155,9 @@ class ControllerOverlay(TextOverlay):
                     charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
                     charm_(state=data).set_relations()
                 return False
+            else:
+                log.debug("No machines, waiting.")
+                return True
         elif pegasus.SINGLE_SYSTEM:
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
