@@ -173,6 +173,7 @@ class ControllerOverlay(TextOverlay):
                 charm_(state=data).set_relations()
             return False
         else:
+            log.warning("neither of pegasus.SINGLE_SYSTEM or pegasus.MULTI_SYSTEM are true.")
             return True
         # TextOverlay(self.NODE_SETUP, self.underlying)
         # return True
