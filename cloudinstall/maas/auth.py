@@ -74,7 +74,7 @@ class MaasAuth:
         :param username: (optional) MAAS user to query for credentials
         :type username: str
         """
-        maas_creds_file = os.path.expanduser('~/.cloudinstall/maas-creds')
+        maas_creds_file = os.path.expanduser('~/.cloud-install/maas-creds')
         if os.path.isfile(maas_creds_file):
             with open(maas_creds_file, 'r') as f:
                 self.api_key = f.read().rstrip('\n')
