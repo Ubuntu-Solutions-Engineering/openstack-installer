@@ -25,6 +25,7 @@ import os
 from cloudinstall import gui
 from cloudinstall import pegasus
 from cloudinstall import utils
+from cloudinstall import log
 
 def sig_handler(signum, frame):
     utils.reset_blanking()
