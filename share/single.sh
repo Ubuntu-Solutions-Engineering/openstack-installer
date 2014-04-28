@@ -16,15 +16,27 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+setupSingleInstall()
+{
+	mkdir -m 0700 -p "/home/$INSTALL_USER/.cloud-install"
+	touch "/home/$INSTALL_USER/.cloud-install/single"
+	echo "$openstack_password" \
+	    > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	chown -R "$INSTALL_USER:$INSTALL_USER" \
+	    "/home/$INSTALL_USER/.cloud-install"
+}
+
 singleInstall()
 {
-	touch /home/$INSTALL_USER/.cloud-install/single
-
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
-		dialogAptInstall 2 18 cloud-install-single
+		dialogGaugePrompt 2 "Setting up install"
+		setupSingleInstall
 
-		dialogGaugePrompt 22 "Generating SSH keys"
+		dialogAptInstall 4 40 cloud-install-single
+
+		dialogGaugePrompt 42 "Generating SSH keys"
 		generateSshKeys
 
 		dialogGaugePrompt 80 "Bootstrapping Juju"
