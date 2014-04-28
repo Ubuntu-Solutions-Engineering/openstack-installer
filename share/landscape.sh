@@ -74,7 +74,7 @@ landscapeInstall()
 
 	# The landscape install needs a fully working juju bootstrap environment,
 	# just like the multi install with no status screen does.
-	multiInstall
+	multiInstall cloud-install-landscape
 
 	# For now, we assume that the install user has the landscape charm with the
 	# right licensing configs cloned into their home directory; we can fix this

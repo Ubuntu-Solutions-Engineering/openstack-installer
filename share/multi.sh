@@ -25,7 +25,7 @@ multiInstall()
 		dialogGaugePrompt 2 "Setting up install"
 		setupMultiInstall
 
-		dialogAptInstall 4 20 cloud-install-multi
+		dialogAptInstall 4 20 ${1:-cloud-install-multi}
 
 		service lxc-net stop || true
 		sed -e 's/^USE_LXC_BRIDGE="true"/USE_LXC_BRIDGE="false"/' -i \
