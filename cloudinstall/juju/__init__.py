@@ -43,25 +43,26 @@ class JujuState:
         state.
         """
         return machine.is_machine_1 and \
-            (machine.is_cloud_controller or \
-             machine.agent_state in self.valid_states)
+             machine.agent_state in self.valid_states
 
     def __validate_unallocation(self, machine):
         """ Private function to test if machine is in an unallocated
         state.
         """
-        return not machine.is_machine_1 and \
-            not machine.is_compute
+        return not machine.is_machine_1
 
-    def machine(self, instance_id):
+    def machine(self, machine_id):
         """ Return single machine state
 
-        :param str instance_id: machine instance_id
+        :param str machine_id: machine machine_id
         :returns: machine
         :rtype: cloudinstall.machine.Machine()
         """
-        return next(filter(lambda x: x.instance_id == instance_id,
-                           self.machines())) or Machine(-1, {})
+        try:
+            return next(filter(lambda x: x.machine_id == machine_id,
+                               self.machines()))
+        except StopIteration:
+            return Machine(-1, {})
 
     def machines(self):
         """ Machines property
@@ -72,13 +73,6 @@ class JujuState:
         for machine_id, machine in self._yaml['machines'].items():
             if '0' in machine_id:
                 continue
-
-            # Add units for machine
-            machine['units'] = []
-            for svc in self.services:
-                for unit in svc.units:
-                    if machine_id == unit.machine_id:
-                        machine['units'].append(unit)
             yield Machine(machine_id, machine)
 
     def machines_allocated(self):
