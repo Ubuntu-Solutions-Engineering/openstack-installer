@@ -1,0 +1,6 @@
+auto eth0
+iface eth0 inet manual
+
+auto lxcbr0
+iface lxcbr0 inet dhcp
+    bridge_ports eth0

@@ -20,6 +20,7 @@ from cloudinstall.charms import CharmBase
 
 
 class CharmJujuGui(CharmBase):
-    """ MYSQL directives """
+    """ Juju gui directives """
 
     charm_name = 'juju-gui'
+    display_name = 'Juju GUI'

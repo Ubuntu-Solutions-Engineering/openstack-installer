@@ -23,3 +23,4 @@ class CharmMysql(CharmBase):
     """ MYSQL directives """
 
     charm_name = 'mysql'
+    display_name = 'MySQL'

@@ -25,7 +25,10 @@ class CharmBase:
     """ Base charm class """
 
     charm_name = None
+    display_name = None
     related = []
+    isolate = False
+    constraints = None
 
     def __init__(self, state=None, machine=None):
         """ initialize
@@ -65,16 +68,17 @@ class CharmBase:
             return class_.charm_name
         return class_.__name__.lower()
 
-    def setup(self):
+    def setup(self, _id=None):
         """ Deploy charm and configuration options
 
         The default should be sufficient but if more functionality
         is needed this should be overridden.
         """
-        _id = None
-        if self.machine:
-            _id = self.machine.machine_id
-        self.client.deploy(charm=self.charm_name, machine_id=_id)
+        if self.isolate:
+            _id = None
+            self.client.add_machine(constraints=self.constraints)
+        self.client.deploy(charm=self.charm_name,
+                           machine_id=_id)
 
     def set_relations(self):
         """ Setup charm relations
@@ -84,9 +88,19 @@ class CharmBase:
         if len(self.related) > 0:
             services = self.state.service(self.charm_name)
             for charm in self.related:
-                if not self.is_related(charm, services.relations):
+                if not self.is_related(charm, services.relations) \
+                   and len(list(services.relations)) != 0:
                     self.client.add_relation(self.charm_name,
                                              charm)
+
+    def post_proc(self):
+        """ Perform any post processing
+
+        i.e. setting configuration variables for a charm
+
+        Override in charm classes
+        """
+        pass
 
     def __repr__(self):
         return self.name()
