@@ -42,12 +42,8 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 LOCK_TIME = 120
 
 NODE_HEADER = [
-    urwid.AttrMap(urwid.Text("Hostname"), "list_title"),
-    urwid.AttrMap(urwid.Text("# CPUS"), "list_title"),
-    urwid.AttrMap(urwid.Text("RAM (GB)"), "list_title"),
-    urwid.AttrMap(urwid.Text("Storage"), "list_title"),
-    urwid.AttrMap(urwid.Text("State"), "list_title"),
-    ('weight', 2, urwid.AttrMap(urwid.Text("Charms"), "list_title"))
+    (30, urwid.AttrMap(urwid.Text("Service"), "list_title")),
+    urwid.AttrMap(urwid.Text("Status"), "list_title"),
 ]
 
 STYLES = [
@@ -121,12 +117,11 @@ class ControllerOverlay(TextOverlay):
         helper = utils.ImporterHelper(cloudinstall.charms)
         charms = helper.get_modules()
 
-        # allocated and unallocated only apply to
-        # multi install
+        allocated = list(data.machines_allocated())
+        log.debug("Allocated machines: " \
+                  "{machines}".format(machines=allocated))
+
         if pegasus.MULTI_SYSTEM:
-            allocated = list(data.machines_allocated())
-            log.debug("Allocated machines: " \
-                      "{machines}".format(machines=allocated))
             unallocated = list(data.machines_unallocated())
             log.debug("Unallocated machines: " \
                       "{machines}".format(machines=unallocated))
@@ -137,6 +132,7 @@ class ControllerOverlay(TextOverlay):
                 machine = allocated[0]
                 for charm in charms:
                     charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
+                    charm_ = charm_(state=self.state[1])
 
                     # charm is loaded, decide whether to run it
                     if charm_.name() in machine.charms:
@@ -159,19 +155,50 @@ class ControllerOverlay(TextOverlay):
                 log.debug("No machines, waiting.")
                 return True
         elif pegasus.SINGLE_SYSTEM:
+            if len(allocated) == 0:
+                self.command_runner.add_machine(constraints={'mem':'4G',
+                                                             'root-disk': '20G'})
+            else:
+                machine = allocated[0]
+                if machine.is_machine_1 \
+                   and 'started' in machine.agent_state:
+                    # Ok we're up lets upload our lxc-host-only template
+                    # and reboot so any containers will be deployed with
+                    # the proper subnet
+                    ret = utils._run("scp -oStrictHostKeyChecking=no " \
+                                     "/usr/share/cloud-installer/templates/lxc-host-only " \
+                                     "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
+                    cmds = []
+                    cmds.append("sudo mv /tmp/lxc-host-only /etc/network/interfaces.d/lxcbr0.cfg")
+                    cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
+                    cmds.append("sudo reboot")
+                    utils._run("ssh -oStrictHostKeyChecking=no " \
+                               "ubuntu@{host} {cmds}".format(host=machine.dns_name,
+                                                             cmds=" && ".join(cmds)))
+                else:
+                    # machine still hasn't started wait for the loop
+                    # to come back around.
+                    log.debug("waiting for machine 1 to start")
+
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
+                charm_ = charm_(state=data)
 
                 # charm is loaded, decide whether to run it
                 if charm_.name() in [s.service_name for s in data.services]:
                     continue
 
                 log.debug("Processing {charm}".format(charm=charm_.name()))
-                charm_(state=data).setup()
+
+                # Hardcode lxc on machine 1 as they are
+                # created on-demand.
+                charm_.setup(_id='lxc:1')
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                charm_(state=data).set_relations()
-            return False
+                charm_ = charm_(state=data)
+                charm_.set_relations()
+                charm_.post_proc()
+
         else:
             log.warning("neither of pegasus.SINGLE_SYSTEM or pegasus.MULTI_SYSTEM are true.")
             return True
@@ -264,45 +291,44 @@ class ChangeStateDialog(urwid.Overlay):
 class Node(urwid.WidgetWrap):
     """ A single ui node representation
     """
-    def __init__(self, machine=None, state=None, open_dialog=None):
+    def __init__(self, service=None, state=None, open_dialog=None):
         """
         Initialize Node
 
-        :param machine: juju machine state
-        :param state: global juju state
-        :type machine: Machine()
+        :param service: charm service
+        :param type: Service()
         """
-        self.machine = machine
+        self.service = service
         self.state = state
+        self.units = (self.service.units)
         self.open_dialog = open_dialog
-        self.allocated = self.machine.charms
-        if self.allocated:
-            self._selectable = self.machine.charms not in pegasus.CONTROLLER_CHARMS
-        else:
-            self._selectable = True
+
+        unit_info = []
+        for u in self.units:
+            m_id = None
+            unit_info.append((30,
+                              urwid.Text("address: " \
+                                         "{addr}".format(addr=u.public_address))))
+            unit_state = "{unit_name} " \
+                         "({status})".format(unit_name=u.unit_name,
+                                             status=u.agent_state)
+            if 'error' in u.agent_state:
+                unit_state = "{unit_state}\n" \
+                             "  * {err}".format(unit_state=unit_state,
+                                                err=u.agent_state_info.lstrip())
+            unit_info.append(('weight', 2, urwid.Text(unit_state)))
 
         # machines
         m = [
-            urwid.Text(self.machine.dns_name),
-            urwid.Text(self.machine.cpu_cores),
-            urwid.Text(self.machine.mem),
-            urwid.Text(self.machine.storage),
-            urwid.Text(self.machine.agent_state)
+            (30, urwid.Text(self.service.service_name)),
+            urwid.Columns(unit_info)
         ]
-        # charms
-        c = []
-        for charm in self.machine.charms:
-            svc = self.state.service(charm)
-            unit = svc.unit(svc.service_name)
-            c.append("{charm}".format(charm=charm))
-            c.append(" State: {state}".format(state=unit.agent_state))
-            if unit.agent_state_info:
-                c.append(" State-Info: {info}".format(info=unit.agent_state_info))
-            c.append(" Public-Address: {ip}".format(ip=unit.public_address))
-        c = urwid.Text("\n".join(c))
-        m.append(('weight', 2, c))
+
         cols = urwid.Columns(m)
         self.__super.__init__(cols)
+
+    def selectable(self):
+        return True
 
     def keypress(self, size, key):
         """ Signal binding for Node
@@ -313,7 +339,7 @@ class Node(urwid.WidgetWrap):
         * F6 - Opens charm deployments dialog
         """
         if key == 'f6':
-            self.open_dialog(self.machine)
+            self.open_dialog()
         return key
 
 
@@ -417,12 +443,6 @@ class CommandRunner(urwid.ListBox):
             else:
                 remaining.append((relation, cmd))
         self.to_add = remaining
-
-        # Set keystone password
-        if pegasus.KEYSTONE == charm:
-            cmd = "juju set {charm} admin-password={password}"
-            self._run(cmd.format(charm=charm,
-                                 password=pegasus.OPENSTACK_PASSWORD))
 
     def change_allocation(self, new_states, machine):
         """ Changes state allocation of machine
@@ -547,7 +567,7 @@ class NodeViewMode(urwid.Frame):
         """ Hides Overlaying dialogs """
         self.loop.widget = self
 
-    def open_dialog(self, machine):
+    def open_dialog(self, machine=None):
         def ok(new_states):
             self.cr.change_allocation(new_states, machine)
             self.destroy()
@@ -574,50 +594,27 @@ class NodeViewMode(urwid.Frame):
     def do_update(self, state):
         """ Updating node states
 
-        :params list state: :class:JujuState
+        :params list state: JujuState()
         """
-        nodes, juju = state
-        nodes = [Node(t, juju, self.open_dialog) for t in nodes]
-
+        _machines, _state = state
+        nodes = [Node(s, _state, self.open_dialog) \
+                 for s in _state.services]
+        url = []
         if self.target == self.controller_overlay and \
-                not self.controller_overlay.process(juju):
+                not self.controller_overlay.process(_state):
             self.target = self
-            for n in nodes:
-                if n.machine.is_horizon:
-                    url = "Access your dashboard:\nhttp://{name}/horizon"
-                    self.url.set_text(url.format(name=n.machine.dns_name))
-
-        # FIXME: Is this needed since single systems don't have a state of
-        # 'unallocated' ?
-        # if pegasus.SINGLE_SYSTEM:
-        #     # For single installs, all new 'unallocated' nodes are
-        #     # automatically allocated to nova-compute. We process the rest of
-        #     # the nodes normally.
-        #     unallocated = list(juju.machines_unallocated())
-        #     for machine in unallocated:
-
-        #         # dont deploy to machines with charms already installed
-        #         if len(list(machine.charms)) > 0:
-        #             continue
-
-        #         compute_charm = utils.import_module('cloudinstall.charms.compute')[0]
-        #         compute_exists = juju.service(compute_charm.name())
-        #         if not compute_exists:
-        #             log.debug("Adding compute node " \
-        #                       "to machine: " \
-        #                       "{machine}".format(machine=machine.machine_id))
-        #             compute_charm(machine=machine).setup()
-        #             compute_charm(machine=machine).set_relations()
-        #         else:
-        #             # TODO: just juju client api
-        #             log.debug("Adding additional compute " \
-        #                       "unit to machine: " \
-        #                       "{machine}".format(machine=machine.machine_id))
-        #             self.cr.client.add_unit(compute_charm.name(),
-        #                                     machine.machine_id)
+            for n in _state.services:
+                for i in n.units:
+                    if i.is_horizon:
+                        url.append("Horizon: " \
+                                   "http://{name}/horizon".format(name=i.public_address))
+                    if i.is_jujugui:
+                        url.append("Juju-GUI: " \
+                                   "http://{name}/".format(name=i.public_address))
+            self.url.set_text(" | ".join(url))
 
         self.nodes.update(nodes)
-        self.cr.update(juju)
+        self.cr.update(_state)
 
     def tick(self):
         if self.ticks_left == 0:
