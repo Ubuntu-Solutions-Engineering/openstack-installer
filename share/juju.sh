@@ -41,6 +41,7 @@ configLocalEnvironment()
 		environments:
 		  local:
 		    type: local
+		    container: kvm
 		EOF
 }
 
