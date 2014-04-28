@@ -167,8 +167,10 @@ def parse_state(juju, maas=None):
             continue
 
         if SINGLE_SYSTEM:
-            machine.mem = utils.get_host_mem()
-            machine.cpu_cores = utils.get_host_cpu_cores()
+            for c in machine.containers:
+                c.mem = utils.get_host_mem()
+                c.cpu_cores = utils.get_host_cpu_cores()
+                c.storage = utils.get_host_storage()
 
         if maas:
             maas_machine = maas.machine(machine.instance_id)
@@ -176,7 +178,6 @@ def parse_state(juju, maas=None):
             machine.cpu_cores = maas_machine.cpu_cores
             machine.storage = maas_machine.storage
             machine.tag = maas_machine.tag
-            log.debug("Updated machine properties: %s" % (machine,))
         results.append(machine)
     return results
 
