@@ -80,6 +80,7 @@ landscapeInstall()
 	# right licensing configs cloned into their home directory; we can fix this
 	# later when the landscape charm deploys with a free license.
 	cd "/home/$INSTALL_USER/landscape-charm/config" && \
+	    sudo -H -u "$INSTALL_USER" \
 	    juju-deployer -Wdv -c landscape-deployments.yaml landscape-dense-maas
 
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
