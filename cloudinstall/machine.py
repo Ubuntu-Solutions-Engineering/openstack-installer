@@ -75,8 +75,6 @@ class Machine:
         :returns: storage size
         :rtype: str
         """
-        if "N/A" in self._storage:
-            return self._storage
         try:
             self._storage = int(self._storage[:-1]) / 1024
             return "{size}G".format(size=str(self._storage))
@@ -143,27 +141,6 @@ class Machine:
         return self.machine.get('agent-state', '')
 
     @property
-    def charms(self):
-        """ Returns charms for machine
-
-        :returns: charms for machine
-        :rtype: generator
-        """
-        def charm_name(charm):
-            return charm.split("/")[0]
-
-        for unit in self.units:
-            yield charm_name(unit.unit_name)
-
-    @property
-    def units(self):
-        """ Return units for machine
-
-        :rtype: list
-        """
-        return self.machine.get('units', [])
-
-    @property
     def containers(self):
         """ Return containers for machine
 
@@ -187,33 +164,6 @@ class Machine:
                 return m
         return Machine('0/lxc/0', {'agent-state': 'unallocated',
                                    'dns-name': 'unallocated'})
-
-    @property
-    def is_compute(self):
-        """ Is machine a compute node?
-
-        :returns: True/False
-        :rtype: bool
-        """
-        return 'nova-compute' in self.charms
-
-    @property
-    def is_horizon(self):
-        """ Is machine housing the dashboard?
-
-        :returns: True/False
-        :rtype: bool
-        """
-        return 'openstack-dashboard' in self.charms
-
-    @property
-    def is_cloud_controller(self):
-        """ Is machine housing the cloud-controller?
-
-        :returns: True/False
-        :rtype: bool
-        """
-        return 'nova-cloud-controller' in self.charms
 
     def __str__(self):
         return "id: {machine_id}, state: {state}, " \
