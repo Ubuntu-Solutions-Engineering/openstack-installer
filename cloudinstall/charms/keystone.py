@@ -24,6 +24,7 @@ class CharmKeystone(CharmBase):
     """ Openstack Keystone directives """
 
     charm_name = 'keystone'
+    display_name = 'Keystone'
     related = ['mysql']
 
     def __openstack_password(self):
@@ -35,8 +36,7 @@ class CharmKeystone(CharmBase):
             OPENSTACK_PASSWORD = 'password'
         return OPENSTACK_PASSWORD
 
-    def setup(self):
-        super(CharmKeystone, self).setup()
+    def post_proc(self):
         self.client.set_config(self.charm_name,
                                {'admin-password': self.__openstack_password(),
                                 'admin-user': 'admin'})

@@ -23,4 +23,5 @@ class CharmGlance(CharmBase):
     """ Openstack Glance directives """
 
     charm_name = 'glance'
+    display_name = 'Glance'
     related = ['mysql', 'keystone', 'rabbitmq-server']

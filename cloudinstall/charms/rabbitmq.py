@@ -22,3 +22,4 @@ class CharmRabbitMQ(CharmBase):
     """ RabbitMQ directives """
 
     charm_name = 'rabbitmq-server'
+    display_name = 'RabbitMQ Server'

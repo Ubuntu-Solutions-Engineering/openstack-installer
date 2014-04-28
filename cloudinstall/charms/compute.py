@@ -23,12 +23,10 @@ class CharmNovaCompute(CharmBase):
     """ Openstack Nova Compute directives """
 
     charm_name = 'nova-compute'
+    display_name = 'Nova Compute Node'
     related = ['mysql', 'rabbitmq-server', 'glance', 'nova-cloud-controller']
-
-    def setup(self):
-        super(CharmNovaCompute, self).setup()
-        self.client.set_config(self.charm_name,
-                               {'virt-type': 'lxc'})
+    isolate = True
+    constraints = dict(mem='2G')
 
     def set_relations(self):
         super(CharmNovaCompute, self).set_relations()
@@ -38,5 +36,3 @@ class CharmNovaCompute(CharmBase):
                and 'rabbitmq-server' in charm:
                 self.client.add_relation("{c}:amqp".format(c=self.charm_name),
                                          "rabbitmq-server:amqp")
-
-
