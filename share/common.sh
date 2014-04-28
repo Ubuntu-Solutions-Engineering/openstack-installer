@@ -19,7 +19,7 @@
 BACKTITLE="Cloud install"
 LOG=/var/log/cloud-install.log
 
-export PYTHONPATH=/usr/share/cloud-installer/common
+export PYTHONPATH=/usr/share/cloud-installer:$PYTHONPATH
 export PYTHONDONTWRITEBYTECODE=true
 
 configIptablesNat()
