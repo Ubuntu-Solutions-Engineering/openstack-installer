@@ -114,6 +114,17 @@ def get_host_mem():
     else:
         return 0
 
+def get_host_storage():
+    """ Get host storage
+
+    LXC doesn't report storage so we pull from host
+    """
+    ret, out, _ = get_command_output('df -B G --total -l --output=avail -x devtmpfs -x tmpfs | tail -n 1 | tr -d "G"')
+    if not ret:
+        return out.lstrip()
+    else:
+        return 0
+
 def get_host_cpu_cores():
     """ Get host cpu-cores
 
