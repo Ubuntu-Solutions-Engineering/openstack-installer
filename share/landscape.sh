@@ -76,6 +76,9 @@ landscapeInstall()
 	# just like the multi install with no status screen does.
 	multiInstall cloud-install-landscape
 
+	# work around LP 1288685
+	sleep 10
+
 	# For now, we assume that the install user has the landscape charm with the
 	# right licensing configs cloned into their home directory; we can fix this
 	# later when the landscape charm deploys with a free license.
