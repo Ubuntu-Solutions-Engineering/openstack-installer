@@ -74,7 +74,7 @@ status:
 run: deb
 	-dpkg -i ../cloud-installer*deb
 	-dpkg -i ../cloud-install-${type}*deb
-	apt-get install -f
+	apt-get -yy install -f
 	MAAS_HTTP_PROXY=${proxy} cloud-install
 
 # sudo make landscape proxy=http://localhost:3128/
@@ -83,7 +83,7 @@ landscape: deb
 	-dpkg -i ../cloud-installer*deb
 	-dpkg -i ../cloud-install-multi*deb
 	-dpkg -i ../cloud-install-landscape*deb
-	apt-get install -f
+	apt-get -yy install -f
 	MAAS_HTTP_PROXY=${proxy} cloud-install
 
 all: deb
