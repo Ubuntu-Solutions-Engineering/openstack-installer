@@ -80,7 +80,7 @@ trap "" PIPE
 # TODO add better logging
 set -x
 
-#disableBlank
+disableBlank
 
 if [ ! -e /etc/.cloud-installed ]; then
 	configureInstall
