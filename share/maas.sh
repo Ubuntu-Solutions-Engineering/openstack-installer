@@ -61,8 +61,7 @@ configureDns()
 
 configureMaasImages()
 {
-	# don't sync the i386 images
-	sed -i -e '/- i386/d' /etc/maas/bootresources.yaml
+	cp /usr/share/cloud-installer/data/bootresources.yaml /etc/maas/bootresources.yaml
 }
 
 configureMaasServices()

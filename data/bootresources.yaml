@@ -1,0 +1,51 @@
+### NOTE: this bootresources.yaml is provided by the cloud installer; it
+### imports only the amd64 trusty based ephemeral images.
+
+##
+## Boot image download configuration.
+##
+#
+# Items in this configuration:
+#
+# boot - the root for these settings.
+#
+#   storage - location on the filesystem where boot images are stored.
+#
+# These images can get quite large: some files are hundreds of megabytes,
+# and you may need multiple copies for different architectures, OS releases,
+# etc.
+#
+#   sources - one or more sources of downloadable boot images.
+#
+# Each source downloads from one simplestreams URL, though it is possible to
+# have multiple sources using the same URL.
+#
+#     path - for each source, the path to its (online) Simplestreams data.
+#
+#     keyring - for each source, a GPG keyring to verify images' signatures.
+#
+#     selections - for each source, one or more sets of constraints for images.
+#
+# From each source, only those images are imported which match at least one of
+# the source's selections.  A selection can specify an OS release, a CPU
+# architecture, and so on.
+#
+# Be careful: the items in a selection will multiply.  For example if you
+# specify architectures "i386" and "amd64", and subarchitectures "generic",
+# "hwe-s", and "hwe-t", the import script will need to import 6 images, for
+# each possible combination.  If you only want some of those combinations,
+# keep them as separate sources and/or selections.
+
+boot:
+  sources:
+  - keyring: /usr/share/keyrings/ubuntu-cloudimage-keyring.gpg
+    path: http://maas.ubuntu.com/images/ephemeral-v2/releases/
+    selections:
+    - arches:
+      - amd64
+      labels:
+      - release
+      release: trusty
+      subarches:
+      - generic
+  storage: /var/lib/maas/boot-resources/
