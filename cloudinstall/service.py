@@ -39,6 +39,15 @@ class Unit:
         return self.unit.get('agent-state', 'unknown')
 
     @property
+    def agent_state_info(self):
+        """ Unit's agent state
+
+        :returns: agent state
+        :rtype: str
+        """
+        return self.unit.get('agent-state-info', 'unknown')
+
+    @property
     def machine_id(self):
         """ Associate machine for unit
 
@@ -65,6 +74,42 @@ class Unit:
         :rtype: str
         """
         return self.unit.get('agent-state-info', None)
+
+    @property
+    def is_compute(self):
+        """ Is machine a compute node?
+
+        :returns: True/False
+        :rtype: bool
+        """
+        return 'nova-compute' in self.unit_name
+
+    @property
+    def is_horizon(self):
+        """ Is machine housing the dashboard?
+
+        :returns: True/False
+        :rtype: bool
+        """
+        return 'openstack-dashboard' in self.unit_name
+
+    @property
+    def is_jujugui(self):
+        """ Is machine juju-gui?
+
+        :returns: True/False
+        :rtype: bool
+        """
+        return 'juju-gui' in self.unit_name
+
+    @property
+    def is_cloud_controller(self):
+        """ Is machine housing the cloud-controller?
+
+        :returns: True/False
+        :rtype: bool
+        """
+        return 'nova-cloud-controller' in self.unit_name
 
     def __repr__(self):
         return "<Unit: {name} " \
