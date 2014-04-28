@@ -18,32 +18,33 @@
 
 multiInstall()
 {
-	touch /home/$INSTALL_USER/.cloud-install/multi
-
 	cp /etc/network/interfaces /etc/network/interfaces.cloud.bak
 
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
-		dialogAptInstall 2 18 cloud-install-multi
+		dialogGaugePrompt 2 "Setting up install"
+		setupMultiInstall
+
+		dialogAptInstall 4 20 cloud-install-multi
 
 		service lxc-net stop || true
 		sed -e 's/^USE_LXC_BRIDGE="true"/USE_LXC_BRIDGE="false"/' -i \
 		    /etc/default/lxc-net
 
-		dialogGaugePrompt 22 "Generating SSH keys"
+		dialogGaugePrompt 26 "Generating SSH keys"
 		generateSshKeys
 
-		dialogGaugePrompt 24 "Creating MAAS super user"
+		dialogGaugePrompt 28 "Creating MAAS super user"
 		createMaasSuperUser
-		echo 25
+		echo 30
 		maas_creds=$(maas-region-admin apikey --username root)
 		saveMaasCreds $maas_creds
 		maasLogin $maas_creds
-		dialogGaugePrompt 26 "Waiting for MAAS cluster registration"
+		dialogGaugePrompt 32 "Waiting for MAAS cluster registration"
 		waitForClusterRegistration
 
 		createMaasBridge $interface
-		dialogGaugePrompt 30 "Configuring MAAS networking"
+		dialogGaugePrompt 34 "Configuring MAAS networking"
 
 		if [ -n "$bridge_interface" ]; then
 			gateway=$(ipAddress br0)
@@ -55,7 +56,7 @@ multiInstall()
 		# Retrieve dhcp-range
 		configureMaasNetworking $uuid br0 $gateway \
 		    ${dhcp_range%-*} ${dhcp_range#*-}
-		dialogGaugePrompt 35 "Configuring DNS"
+		dialogGaugePrompt 36 "Configuring DNS"
 		configureDns
 		dialogGaugePrompt 40 "Importing MAAS boot images"
 		configureMaasImages
@@ -91,4 +92,15 @@ saveMaasCreds()
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/maas-creds"
 	chown "$INSTALL_USER:$INSTALL_USER" \
 	    "/home/$INSTALL_USER/.cloud-install/maas-creds"
+}
+
+setupMultiInstall()
+{
+	mkdir -m 0700 -p "/home/$INSTALL_USER/.cloud-install"
+	touch "/home/$INSTALL_USER/.cloud-install/multi"
+	echo "$openstack_password" \
+	    > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	chown -R "$INSTALL_USER:$INSTALL_USER" \
+	    "/home/$INSTALL_USER/.cloud-install"
 }
