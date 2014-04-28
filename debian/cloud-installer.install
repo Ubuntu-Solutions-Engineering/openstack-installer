@@ -13,3 +13,4 @@ share/multi.sh                         usr/share/cloud-installer/common
 share/single.sh                        usr/share/cloud-installer/common
 tools/cloud-uninstall                  usr/share/cloud-installer/tools
 share/templates/lxc-host-only          usr/share/cloud-installer/templates
+data/bootresources.yaml                usr/share/cloud-installer/data
