@@ -76,9 +76,12 @@ class CharmBase:
         """
         if self.isolate:
             _id = None
-            self.client.add_machine(constraints=self.constraints)
-        self.client.deploy(charm=self.charm_name,
-                           machine_id=_id)
+            self.client.deploy(charm=self.charm_name,
+                               instances=1,
+                               constraints=self.constraints)
+        else:
+            self.client.deploy(charm=self.charm_name,
+                               machine_id=_id)
 
     def set_relations(self):
         """ Setup charm relations
