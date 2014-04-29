@@ -18,7 +18,7 @@
 
 """ Pegasus - gui interface to Ubuntu Cloud Installer """
 
-from os import write, close
+from os import write, close, path
 from traceback import format_exc
 import re
 import threading
@@ -438,21 +438,20 @@ class ConsoleMode(Frame):
                   AttrWrap(Text('(Q) Quit'), "border"),
                   AttrWrap(Text('(F8) Node list'), "border")]
         header = Columns(header)
-        self.command_runner = CommandRunner()
-        Frame.__init__(self, header=header, body=self.command_runner)
-
-    def tick(self):
-        pass
+        with open(path.expanduser('~/.cloud-install/commands.log')) as f:
+            body = f.readlines()
+        body = ListBox([Text(x) for x in body])
+        Frame.__init__(self, header=header, body=body)
 
 
 class NodeViewMode(Frame):
-    def __init__(self, loop, state, command_runner):
+    def __init__(self, loop, state):
         header = [AttrWrap(Text(TITLE_TEXT), "border"),
                   AttrWrap(Text('(Q) Quit'), "border"),
                   AttrWrap(Text('(F5) Refresh'), "border"),
                   AttrWrap(Text('(F8) Console'), "border")]
         if pegasus.SINGLE_SYSTEM:
-            header.append(AttrWrap(Text('(F6) Add compute node'), "border"))
+            header.insert(3, AttrWrap(Text('(F6) Add compute node'), "border"))
         header = Columns(header)
         self.timer = Text("", align="right")
         self.horizon_url = Text("")
@@ -467,7 +466,7 @@ class NodeViewMode(Frame):
         self.nodes = ListWithHeader(NODE_HEADER)
         self.loop = loop
 
-        self.cr = command_runner
+        self.cr = CommandRunner()
         Frame.__init__(self, header=header, body=self.nodes,
                              footer=footer)
         self.controller_overlay = ControllerOverlay(self, self.cr)
@@ -608,8 +607,7 @@ class PegasusGUI(MainLoop):
     def __init__(self, state=None):
         self.state = state
         self.console = ConsoleMode()
-        self.node_view = NodeViewMode(self, self.state,
-                                      self.console.command_runner)
+        self.node_view = NodeViewMode(self, self.state)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
         MainLoop.__init__(self, self.node_view.target, STYLES,
@@ -662,7 +660,6 @@ class PegasusGUI(MainLoop):
             else:
                 self.lock_ticks = self.lock_ticks - 1
 
-        self.console.tick()
         self.node_view.tick()
         self.set_alarm_in(1.0, self.tick)
 
