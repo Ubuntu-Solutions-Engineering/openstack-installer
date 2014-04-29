@@ -136,7 +136,7 @@ def poll_state():
         # Login to MAAS
         auth = MaasAuth()
         auth.get_api_key('root')
-        auth.login()
+        # auth.login()
 
         # Load Client routines
         c = MaasClient(auth)
