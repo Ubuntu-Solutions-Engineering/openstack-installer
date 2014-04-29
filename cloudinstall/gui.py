@@ -125,30 +125,26 @@ class ControllerOverlay(TextOverlay):
             log.debug("Unallocated machines: " \
                       "{machines}".format(machines=unallocated))
 
-            if len(allocated) == 0 and len(unallocated) > 0:
+            if len(allocated) == 0:
                 self.command_runner.add_machine()
+                return True
             elif len(allocated) > 0:
                 machine = allocated[0]
                 for charm in charms:
                     charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                    charm_ = charm_(state=self.state[1])
+                    charm_ = charm_(state=data)
 
                     # charm is loaded, decide whether to run it
-                    if charm_.name() in machine.charms:
+                    if charm_.name() in [s.service_name for s in data.services]:
                         continue
 
                     log.debug("Processing {charm}".format(charm=charm_.name()))
-
-                    machine.machine_id = 'lxc:{_id}'.format(_id=machine.machine_id)
-
-                    # Deploy any remaining charms onto machine except
-                    # for nova-compute which would live on a separate
-                    # bare-metal machine
-                    if 'nova-compute' not in charm_.name():
-                        charm_(machine=machine).setup()
+                    charm_.setup(_id='lxc:1')
                 for charm in charms:
                     charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                    charm_(state=data).set_relations()
+                    charm_ = charm_(state=data)
+                    charm_.set_relations()
+                    charm_.post_proc()
                 return False
             else:
                 log.debug("No machines, waiting.")

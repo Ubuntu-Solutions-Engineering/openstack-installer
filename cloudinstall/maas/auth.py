@@ -129,7 +129,7 @@ class MaasAuth:
                             '`cloud-install maas-creds -u root`')
             sys.exit(1)
 
-        check_call('maas login maas http://localhost/MAAS/api/1.0 '
+        check_call('sudo maas login maas http://localhost/MAAS/api/1.0 '
                    '%s' % (self.api_key,),
                    shell=True,
                    stderr=DEVNULL,
