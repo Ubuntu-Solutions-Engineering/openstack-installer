@@ -314,24 +314,20 @@ class JujuClient:
     #     return self.call(dict(Type="Client",
     #                           Request="AddServiceUnits",
     #                           Params=dict(MachineSpec=machine_spec)))
-    def add_unit(self, service_name, machine_id):
+    def add_unit(self, service_name, machine_id=None):
         """ Add unit to machine
 
         :param str service_name: service/charm name
         :param str machine_id: machine id
         """
-        cmd = "juju add-unit {name} --to {machine}"
-        log.debug("Adding additional {name} " \
-                  "unit to machine: " \
-                  "{machine}".format(name=service_name,
-                                     machine=machine_id))
-        ret, out, _ = get_command_output(cmd.format(name=service_name,
-                                                    machine=machine_id))
+        cmd = "juju add-unit {name}".format(name=service_name)
+        if machine_id:
+            cmd = "{cmd} --to {_id}".format(cmd=cmd, _id=machine_id)
+        log.debug("Adding additional {name}".format(name=service_name))
+        ret, out, _ = get_command_output(cmd)
         if ret:
             log.warning("Problem adding {name} " \
-                        "to machine {machine}: " \
                         "{out}".format(name=service_name,
-                                       machine=machine_id,
                                        out=out))
 
     # def remove_unit(self, unit_names):
