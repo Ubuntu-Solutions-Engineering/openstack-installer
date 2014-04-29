@@ -62,12 +62,12 @@ multiInstall()
 		configureMaasImages
 
 		if [ -n "$MAAS_HTTP_PROXY" ]; then
-			maas maas maas set-config name=http_proxy value="$MAAS_HTTP_PROXY"
+			maas maas maas set-config name=http_proxy value="$MAAS_HTTP_PROXY" > /dev/null
 		fi
 
 		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
-			http_proxy=$MAAS_HTTP_PROXY HTTP_PROXY=$MAAS_HTTP_PROXY maas-import-pxe-files
-			$maas_report_boot_images
+			http_proxy=$MAAS_HTTP_PROXY HTTP_PROXY=$MAAS_HTTP_PROXY maas-import-pxe-files > /dev/null
+			$maas_report_boot_images > /dev/null
 		fi
 
 		dialogGaugePrompt 60 "Configuring Juju"
@@ -76,12 +76,10 @@ multiInstall()
 		configureJuju configMaasEnvironment $address $maas_creds $admin_secret
 		dialogGaugePrompt 75 "Bootstrapping Juju"
 		jujuBootstrap $uuid
-		echo 99
 		maas maas tags new name=use-fastpath-installer definition="true()"
 		maasLogout
 
 		dialogGaugePrompt 100 "Installation complete"
-		sleep 2
 	} > "$TMP/gauge"
 	dialogGaugeStop
 }
