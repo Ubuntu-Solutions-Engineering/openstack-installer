@@ -134,10 +134,10 @@ class JujuClient:
             for k,v in constraints.items():
                 opts.append("{k}={v}".format(k=k, v=v))
             if opts:
-                cmd = "{cmd} --constraints {opts}".format(cmd=cmd,
+                cmd = "{cmd} --constraints \"{opts}\"".format(cmd=cmd,
                                                           opts=" ".join(opts))
-        log.debug("Machine added: {cmd}".format(cmd=cmd))
         ret, out, rtime = get_command_output(cmd)
+        log.debug("Machine added: {cmd} ({out})".format(cmd=cmd, out=out))
         return out
 
     # def add_machines(self, machines):
@@ -178,23 +178,28 @@ class JujuClient:
     #                                       Config=config,
     #                                       Constraints=constraints,
     #                                       ToMachineSpec=machine_spec)))
-    def deploy(self, charm, machine_id=None, constraints=None):
+    def deploy(self, charm, machine_id=None, instances=None, constraints=None):
         """ Deploy a charm to an instance
 
         :param str charm: charm to deploy
         :param str machine_id: (optional) machine id
+        :param str instances: (optional) number of instances to deploy
         :param dict constraints: (optional) machine constraints
         """
         cmd = "juju deploy"
         if machine_id:
             cmd = "{cmd} --to {machine_id}".format(cmd=cmd,
                                                    machine_id=str(machine_id))
+        if instances:
+            cmd = "{cmd} -n {instances}".format(cmd=cmd,
+                                                instances=instances)
+
         if constraints:
             opts = []
             for k,v in constraints.items():
                 opts.append("{k}={v}".format(k=k, v=v))
             if opts:
-                cmd = "{cmd} --constraints {opts}".format(cmd=cmd,
+                cmd = "{cmd} --constraints \"{opts}\"".format(cmd=cmd,
                                                           opts=" ".join(opts))
         cmd = "{cmd} {charm}".format(cmd=cmd, charm=charm)
         log.debug("Deploying {charm} -> {cmd}".format(charm=charm, cmd=cmd))
