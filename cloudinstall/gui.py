@@ -157,10 +157,12 @@ class ControllerOverlay(TextOverlay):
                 return True
         elif pegasus.SINGLE_SYSTEM:
             if len(allocated) == 0:
-                self.command_runner.add_machine(constraints={'mem':'4G',
+                log.debug("Adding machines")
+                self.command_runner.add_machine(constraints={'mem':'6G',
                                                              'root-disk': '20G'})
             else:
                 machine = allocated[0]
+                log.debug("Making sure {m} is ready".format(m=machine))
                 if machine.is_machine_1 \
                    and 'started' in machine.agent_state:
                     # Ok we're up lets upload our lxc-host-only template
