@@ -165,9 +165,9 @@ class ControllerOverlay(TextOverlay):
                     # Ok we're up lets upload our lxc-host-only template
                     # and reboot so any containers will be deployed with
                     # the proper subnet
-                    ret = utils._run("scp -oStrictHostKeyChecking=no " \
-                                     "/usr/share/cloud-installer/templates/lxc-host-only " \
-                                     "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
+                    utils._run("scp -oStrictHostKeyChecking=no " \
+                               "/usr/share/cloud-installer/templates/lxc-host-only " \
+                               "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
                     cmds = []
                     cmds.append("sudo mv /tmp/lxc-host-only /etc/network/interfaces.d/lxcbr0.cfg")
                     cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
@@ -305,7 +305,6 @@ class Node(urwid.WidgetWrap):
 
         unit_info = []
         for u in self.units:
-            m_id = None
             unit_info.append((30,
                               urwid.Text("address: " \
                                          "{addr}".format(addr=u.public_address))))
