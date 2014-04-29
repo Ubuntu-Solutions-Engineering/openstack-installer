@@ -1,5 +1,5 @@
-Developer Guide - Setup
-=======================
+Developer Guide
+===============
 
 The document walks you through installing the necessary packages and
 environment preparations in order to build the cloud installer.
