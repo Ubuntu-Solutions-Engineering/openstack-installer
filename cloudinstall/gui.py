@@ -156,8 +156,9 @@ class ControllerOverlay(TextOverlay):
         elif pegasus.SINGLE_SYSTEM:
             if len(allocated) == 0:
                 log.debug("Adding machines")
-                self.command_runner.add_machine(constraints={'mem':'6G',
+                self.command_runner.add_machine(constraints={'mem':'2G',
                                                              'root-disk': '20G'})
+                return True
             else:
                 machine = allocated[0]
                 log.debug("Making sure {m} is ready".format(m=machine))
@@ -180,7 +181,7 @@ class ControllerOverlay(TextOverlay):
                     # machine still hasn't started wait for the loop
                     # to come back around.
                     log.debug("waiting for machine 1 to start")
-
+                    return True
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
                 charm_ = charm_(state=data)
