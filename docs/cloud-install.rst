@@ -1,14 +1,13 @@
 
 .. code::
 
-   cloud-install [-ihf]
+   cloud-install [-ih]
 
    Create an Ubuntu Cloud! (requires root privileges)
 
    Options:
      -i    install only (don't invoke cloud-status)
      -h    print this message
-     -f    bypass any sanity checks
 
 
 DESCRIPTION
