@@ -25,12 +25,26 @@ import random
 import inspect
 import fnmatch
 import logging
+from threading import Thread
+from functools import wraps
 from time import strftime
 
 log = logging.getLogger('cloudinstall.utils')
 
 # String with number of minutes, or None.
 blank_len = None
+
+
+def async(func):
+    """
+    Decorator for executing a function in a separate :class:`threading.Thread`.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        thread = Thread(target=func, args=args, kwargs=kwargs)
+        thread.daemon = True
+        return thread.start()
+    return wrapper
 
 
 def get_command_output(command, timeout=300):
