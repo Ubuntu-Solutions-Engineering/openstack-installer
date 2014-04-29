@@ -17,7 +17,7 @@ Guides
 .. toctree::
    :maxdepth: 1
 
-   developers
+   developer.setup
    single-installer.guide
    multi-installer.guide
 
