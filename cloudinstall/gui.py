@@ -24,8 +24,13 @@ from subprocess import Popen, PIPE, STDOUT
 from traceback import format_exc
 import re
 import threading
-import urwid
 import logging
+
+from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
+                   ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
+                   SimpleListWalker, Edit, CheckBox,
+
+                   MainLoop, ExitMainLoop)
 
 from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
@@ -33,7 +38,7 @@ from cloudinstall import utils
 
 log = logging.getLogger('cloudinstall.gui')
 
-TITLE_TEXT = "Ubuntu Cloud Installer\n(q) Quit"
+TITLE_TEXT = "Ubuntu Cloud Installer"
 
 # - Properties -----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
@@ -42,8 +47,8 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 LOCK_TIME = 120
 
 NODE_HEADER = [
-    (30, urwid.AttrMap(urwid.Text("Service"), "list_title")),
-    urwid.AttrMap(urwid.Text("Status"), "list_title"),
+    (30, AttrMap(Text("Service"), "list_title")),
+    AttrMap(Text("Units"), "list_title"),
 ]
 
 STYLES = [
@@ -63,11 +68,11 @@ def _allocation_for_charms(charms):
     return list(filter(lambda x: x, als))
 
 
-class TextOverlay(urwid.Overlay):
+class TextOverlay(Overlay):
     def __init__(self, text, underlying, width=60, height=5):
-        w = urwid.LineBox(urwid.Filler(urwid.Text(text)))
-        w = urwid.AttrWrap(w, "dialog")
-        urwid.Overlay.__init__(self,
+        w = LineBox(Filler(Text(text)))
+        w = AttrWrap(w, "dialog")
+        Overlay.__init__(self,
                                w,
                                underlying,
                                'center',
@@ -102,10 +107,6 @@ class ControllerOverlay(TextOverlay):
         if self.done:
             return False
 
-        # Wait until the command runner is done to do any more processing
-        # steps.
-        if len(self.command_runner.to_run) > 0:
-            return True
         continue_ = self._process(data)
         if not continue_:
             self.done = True
@@ -202,44 +203,42 @@ class ControllerOverlay(TextOverlay):
         else:
             log.warning("neither of pegasus.SINGLE_SYSTEM or pegasus.MULTI_SYSTEM are true.")
             return True
-        # TextOverlay(self.NODE_SETUP, self.underlying)
-        # return True
 
 
 def _wrap_focus(widgets, unfocused=None):
     try:
-        return [urwid.AttrMap(w, unfocused, "focus") for w in widgets]
+        return [AttrMap(w, unfocused, "focus") for w in widgets]
     except TypeError:
-        return urwid.AttrMap(widgets, unfocused, "focus")
+        return AttrMap(widgets, unfocused, "focus")
 
 
-class AddComputeDialog(urwid.Overlay):
+class AddComputeDialog(Overlay):
     """ Dialog for adding new compute nodes """
 
-    def __init__(self, underlying, destroy, command_runner=None):
+    def __init__(self, underlying, state, destroy, command_runner=None):
         self.cr = command_runner
         self.underlying = underlying
         self.destroy = destroy
-        self._buttons = [urwid.Button("Yes", self.yes),
-                         urwid.Button("No", self.no)]
+        self._buttons = [Button("Yes", self.yes),
+                         Button("No", self.no)]
         self.wrapped_buttons = _wrap_focus(self._buttons)
-        self.buttons = urwid.Columns(self.wrapped_buttons)
-        self.root = urwid.Text("Would you like to add a compute node?")
-        self.w = urwid.ListBox([self.root, self.buttons])
-        self.w = urwid.LineBox(self.w)
-        self.w = urwid.AttrWrap(self.w, "dialog")
-        urwid.Overlay.__init__(self, self.w, self.underlying,
+        self.buttons = Columns(self.wrapped_buttons)
+        self.root = Text("Would you like to add a compute node?")
+        self.w = ListBox([self.root, self.buttons])
+        self.w = LineBox(self.w)
+        self.w = AttrWrap(self.w, "dialog")
+        Overlay.__init__(self, self.w, self.underlying,
                                'center', 45, 'middle', 4)
 
     def yes(self, button):
         log.info("Deploying a new nova compute machine")
-        self.cr.add_machine()
+        self.cr.add_unit('nova-compute')
         self.destroy()
 
     def no(self, button):
         self.destroy()
 
-class ChangeStateDialog(urwid.Overlay):
+class ChangeStateDialog(Overlay):
     def __init__(self, underlying, machine, on_success, on_cancel):
 
         self.boxes = []
@@ -254,7 +253,7 @@ class ChangeStateDialog(urwid.Overlay):
         for i, txt in enumerate(RADIO_STATES):
             if txt in start_states and not first_index:
                 first_index = i
-            r = urwid.CheckBox(txt, state=txt in start_states)
+            r = CheckBox(txt, state=txt in start_states)
             r.text_label = txt
             self.boxes.append(r)
         wrapped_boxes = _wrap_focus(self.boxes)
@@ -266,17 +265,17 @@ class ChangeStateDialog(urwid.Overlay):
         def cancel(button):
             on_cancel()
 
-        bs = [urwid.Button("Ok", ok), urwid.Button("Cancel", cancel)]
+        bs = [Button("Ok", ok), Button("Cancel", cancel)]
         wrapped_buttons = _wrap_focus(bs)
-        self.buttons = urwid.Columns(wrapped_buttons)
-        self.items = urwid.ListBox(wrapped_boxes)
+        self.buttons = Columns(wrapped_buttons)
+        self.items = ListBox(wrapped_boxes)
         self.items.set_focus(first_index)
-        ba = urwid.BoxAdapter(self.items, height=len(wrapped_boxes))
-        self.lb = urwid.ListBox([ba, urwid.Text(""), self.buttons])
-        root = urwid.LineBox(self.lb, title="Select new charm")
-        root = urwid.AttrMap(root, "dialog")
+        ba = BoxAdapter(self.items, height=len(wrapped_boxes))
+        self.lb = ListBox([ba, Text(""), self.buttons])
+        root = LineBox(self.lb, title="Select new charm")
+        root = AttrMap(root, "dialog")
 
-        urwid.Overlay.__init__(self, root, underlying, 'center', 30, 'middle',
+        Overlay.__init__(self, root, underlying, 'center', 30, 'middle',
                                len(wrapped_boxes) + 4)
 
     def keypress(self, size, key):
@@ -285,10 +284,10 @@ class ChangeStateDialog(urwid.Overlay):
                 self.keypress(size, 'page up')
             else:
                 self.keypress(size, 'page down')
-        return urwid.Overlay.keypress(self, size, key)
+        return Overlay.keypress(self, size, key)
 
 
-class Node(urwid.WidgetWrap):
+class Node(WidgetWrap):
     """ A single ui node representation
     """
     def __init__(self, service=None, state=None, open_dialog=None):
@@ -305,25 +304,25 @@ class Node(urwid.WidgetWrap):
 
         unit_info = []
         for u in self.units:
-            unit_info.append((30,
-                              urwid.Text("address: " \
-                                         "{addr}".format(addr=u.public_address))))
-            unit_state = "{unit_name} " \
-                         "({status})".format(unit_name=u.unit_name,
-                                             status=u.agent_state)
+            info = "{unit_name} " \
+                   "({status})".format(unit_name=u.unit_name,
+                                         status=u.agent_state)
+
+            info = "{info}\n  address: {address}".format(info=info,
+                                                         address=u.public_address)
             if 'error' in u.agent_state:
-                unit_state = "{unit_state}\n" \
-                             "  * {err}".format(unit_state=unit_state,
-                                                err=u.agent_state_info.lstrip())
-            unit_info.append(('weight', 2, urwid.Text(unit_state)))
+                info = "{info}\n  info: {state_info}".format(info=info,
+                                                             state_info=u.agent_state_info.lstrip())
+            info = "{info}\n\n".format(info=info)
+            unit_info.append(('weight', 2, Text(info)))
 
         # machines
         m = [
-            (30, urwid.Text(self.service.service_name)),
-            urwid.Columns(unit_info)
+            (30, Text(self.service.service_name)),
+            Columns(unit_info)
         ]
 
-        cols = urwid.Columns(m)
+        cols = Columns(m)
         self.__super.__init__(cols)
 
     def selectable(self):
@@ -336,17 +335,20 @@ class Node(urwid.WidgetWrap):
 
         * Enter - Opens node state change dialog
         * F6 - Opens charm deployments dialog
+        * i - Node info on highlighted service
         """
         if key == 'f6':
             self.open_dialog()
+        if key in ['i', 'I']:
+            log.debug(self._w)
         return key
 
 
-class ListWithHeader(urwid.Frame):
+class ListWithHeader(Frame):
     def __init__(self, header_text):
-        self._contents = urwid.SimpleListWalker([])
-        body = urwid.ListBox(self._contents)
-        urwid.Frame.__init__(self, header=urwid.Columns(header_text), body=body)
+        self._contents = SimpleListWalker([])
+        body = ListBox(self._contents)
+        Frame.__init__(self, header=Columns(header_text), body=body)
 
     def selectable(self):
         return len(self._contents) > 0
@@ -355,50 +357,11 @@ class ListWithHeader(urwid.Frame):
         self._contents[:] = _wrap_focus(nodes)
 
 
-class CommandRunner(urwid.ListBox):
+class CommandRunner(ListBox):
     def __init__(self):
-        self._contents = urwid.SimpleListWalker([])
-        urwid.ListBox.__init__(self, self._contents)
-        self.to_run = deque()
-        self.running = None
-        self.services = set()
-        self.to_add = []
+        self._contents = SimpleListWalker([])
+        ListBox.__init__(self, self._contents)
         self.client = JujuClient()
-
-    def keypress(self, size, key):
-        if key.lower() == "ctrl u":
-            key = 'page up'
-        if key.lower() == "ctrl d":
-            key = 'page down'
-        return urwid.ListBox.keypress(self, size, key)
-
-    def _add(self, command, output):
-
-        def add_to_f8(command, output):
-            txt = "[{time}] {cmd}\n{output}".format(time=utils.time(),
-                                                   cmd=command,
-                                                   output=output)
-            self._contents.append(urwid.Text(txt))
-            self._contents[:] = self._contents[:200]
-
-        add_to_f8(command, output)
-        log.debug("Running command: {cmd}".format(cmd=command))
-        if output:
-            log.debug("Result: {output}".format(output=output.rstrip()))
-
-    def _run(self, command):
-        self.to_run.append(command)
-        self._next()
-
-    def _next(self):
-        if not self.running and len(self.to_run) > 0:
-            cmd = self.to_run.popleft()
-            try:
-                self.running = Popen(cmd.split(), stdout=PIPE, stderr=STDOUT)
-                self.running.command = cmd
-            except (IOError, OSError) as e:
-                self.running = None
-                self._add(cmd, str(e))
 
     def add_machine(self, constraints=None):
         """ Add a machine with optional constraints
@@ -408,40 +371,14 @@ class CommandRunner(urwid.ListBox):
         out = self.client.add_machine(constraints)
         return out
 
-    def deploy(self, charm, machine_id=None, constraints=None):
-        """ Deploy a charm to an instance
+    def add_unit(self, service_name, machine_id=None):
+        """ Add a unit with optional machine id
 
-        :param str charm: charm to deploy
-        :param str machine_id: (optional) machine id
-        :param dict constraints: (optional) machine constraints
+        :param str service_name: name of charm
+        :param int machine_id: (optional) id of machine to deploy to
         """
-        cmd = "juju deploy"
-        #######################################################################
-        # FIXME: Remove after more testing
-        #######################################################################
-        # config = pegasus.juju_config_arg(charm)
-        # cmd = "{cmd} {config}".format(cmd=cmd, config=config)
-        if machine_id:
-            cmd = "{cmd} --to {machine_id}".format(cmd=cmd,
-                                                   machine_id=str(machine_id))
-        if constraints:
-            opts = []
-            for k,v in constraints.items():
-                opts.append("{k}={v}".format(k=k, v=v))
-            if opts:
-                cmd = "{cmd} --constraints {opts}".format(cmd=cmd,
-                                                          opts=" ".join(opts))
-        cmd = "{cmd} {charm}".format(cmd=cmd, charm=charm)
-        self._run(cmd)
-        self.services.add(charm)
-        self.to_add.extend(pegasus.get_charm_relations(charm))
-        remaining = []
-        for (relation, cmd) in self.to_add:
-            if relation in self.services:
-                self._run(cmd)
-            else:
-                remaining.append((relation, cmd))
-        self.to_add = remaining
+        out = self.client.add_unit(service_name, machine_id)
+        return out
 
     def change_allocation(self, new_states, machine):
         """ Changes state allocation of machine
@@ -493,51 +430,45 @@ class CommandRunner(urwid.ListBox):
                     self._run(cmd)
                     self._run(constraints.format(tag=''))
 
-    def update(self, juju_state):
-        self.services = set(juju_state.services)
-
-    def poll(self):
-        if self.running and self.running.poll() is not None:
-            out = self.running.stdout.read().decode('ascii')
-            self._add(self.running.command, out)
-            self.running = None
-            self._next()
-
-
-def _make_header(rest):
-    header = urwid.Text("{title} {rest}".format(title=TITLE_TEXT,
-                                                rest=rest))
-    return urwid.AttrWrap(header, "border")
-
 
 # TODO: This and CommandRunner should really be merged
-class ConsoleMode(urwid.Frame):
+class ConsoleMode(Frame):
     def __init__(self):
-        header = _make_header("(F8) Nodes")
+        header = [AttrWrap(Text(TITLE_TEXT), "border"),
+                  AttrWrap(Text('(Q) Quit'), "border"),
+                  AttrWrap(Text('(F8) Node list'), "border")]
+        header = Columns(header)
         self.command_runner = CommandRunner()
-        urwid.Frame.__init__(self, header=header, body=self.command_runner)
+        Frame.__init__(self, header=header, body=self.command_runner)
 
     def tick(self):
-        self.command_runner.poll()
+        pass
 
 
-class NodeViewMode(urwid.Frame):
+class NodeViewMode(Frame):
     def __init__(self, loop, state, command_runner):
-        f6 = '(F6) Add compute node' if pegasus.SINGLE_SYSTEM else ''
-        header = _make_header("{f6} (F8) Console".format(f6=f6))
-
-        self.timer = urwid.Text("", align="right")
-        self.url = urwid.Text("")
-        footer = urwid.Columns([self.url, self.timer])
-        footer = urwid.AttrWrap(footer, "border")
+        header = [AttrWrap(Text(TITLE_TEXT), "border"),
+                  AttrWrap(Text('(Q) Quit'), "border"),
+                  AttrWrap(Text('(F5) Refresh'), "border"),
+                  AttrWrap(Text('(F8) Console'), "border")]
+        if pegasus.SINGLE_SYSTEM:
+            header.append(AttrWrap(Text('(F6) Add compute node'), "border"))
+        header = Columns(header)
+        self.timer = Text("", align="right")
+        self.horizon_url = Text("")
+        self.jujugui_url = Text("")
+        footer = Columns([self.horizon_url,
+                                self.jujugui_url,
+                                self.timer])
+        footer = AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
-        self.state, self.juju = state
+        self.machines, self.state = state
         self.nodes = ListWithHeader(NODE_HEADER)
         self.loop = loop
 
         self.cr = command_runner
-        urwid.Frame.__init__(self, header=header, body=self.nodes,
+        Frame.__init__(self, header=header, body=self.nodes,
                              footer=footer)
         self.controller_overlay = ControllerOverlay(self, self.cr)
         self._target = self.controller_overlay
@@ -577,6 +508,7 @@ class NodeViewMode(urwid.Frame):
                                                  self.destroy)
         else:
             self.loop.widget = AddComputeDialog(self,
+                                                self.state,
                                                 self.destroy,
                                                 self.cr)
 
@@ -598,22 +530,21 @@ class NodeViewMode(urwid.Frame):
         _machines, _state = state
         nodes = [Node(s, _state, self.open_dialog) \
                  for s in _state.services]
-        url = []
         if self.target == self.controller_overlay and \
                 not self.controller_overlay.process(_state):
             self.target = self
             for n in _state.services:
                 for i in n.units:
                     if i.is_horizon:
-                        url.append("Horizon: " \
-                                   "http://{name}/horizon".format(name=i.public_address))
+                        _url = "Horizon: " \
+                               "http://{name}/horizon".format(name=i.public_address)
+                        self.horizon_url.set_text(_url)
                     if i.is_jujugui:
-                        url.append("Juju-GUI: " \
-                                   "http://{name}/".format(name=i.public_address))
-            self.url.set_text(" | ".join(url))
+                        _url = "Juju-GUI: " \
+                               "http://{name}/".format(name=i.public_address)
+                        self.jujugui_url.set_text(_url)
 
         self.nodes.update(nodes)
-        self.cr.update(_state)
 
     def tick(self):
         if self.ticks_left == 0:
@@ -623,9 +554,7 @@ class NodeViewMode(urwid.Frame):
                 self.do_update(state)
                 self.loop.draw_screen()
             self.loop.run_async(self.refresh_states, update_and_redraw)
-        self.timer.set_text("Poll in {secs} seconds " \
-                            "({t_count}) ".format(secs=self.ticks_left,
-                                               t_count=threading.active_count()))
+        self.timer.set_text("Refresh in {secs} (s)".format(secs=self.ticks_left))
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
@@ -637,10 +566,10 @@ class NodeViewMode(urwid.Frame):
         """
         if key == 'f5':
             self.ticks_left = 0
-        return urwid.Frame.keypress(self, size, key)
+        return Frame.keypress(self, size, key)
 
 
-class LockScreen(urwid.Overlay):
+class LockScreen(Overlay):
     LOCKED = "The screen is locked. Please enter a password (this is the " \
              "password you entered for OpenStack during installation). "
 
@@ -652,13 +581,13 @@ class LockScreen(urwid.Overlay):
 
     def __init__(self, underlying, unlock):
         self.unlock = unlock
-        self.password = urwid.Edit("Password: ", mask='*')
-        self.invalid = urwid.Text("")
-        w = urwid.ListBox([urwid.Text(self.LOCKED), self.invalid,
+        self.password = Edit("Password: ", mask='*')
+        self.invalid = Text("")
+        w = ListBox([Text(self.LOCKED), self.invalid,
                            self.password])
-        w = urwid.LineBox(w)
-        w = urwid.AttrWrap(w, "dialog")
-        urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 8)
+        w = LineBox(w)
+        w = AttrWrap(w, "dialog")
+        Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 8)
 
     def keypress(self, size, key):
         if key == 'enter':
@@ -670,10 +599,10 @@ class LockScreen(urwid.Overlay):
                 self.invalid.set_text(self.INVALID)
                 self.password.set_edit_text("")
         else:
-            return urwid.Overlay.keypress(self, size, key)
+            return Overlay.keypress(self, size, key)
 
 
-class PegasusGUI(urwid.MainLoop):
+class PegasusGUI(MainLoop):
     """ Pegasus Entry class """
 
     def __init__(self, state=None):
@@ -683,7 +612,7 @@ class PegasusGUI(urwid.MainLoop):
                                       self.console.command_runner)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
-        urwid.MainLoop.__init__(self, self.node_view.target, STYLES,
+        MainLoop.__init__(self, self.node_view.target, STYLES,
                                 unhandled_input=self._header_hotkeys)
 
     def _key_pressed(self, keys, raw):
@@ -702,7 +631,7 @@ class PegasusGUI(urwid.MainLoop):
             else:
                 self.widget = self.console
         if key in ['q', 'Q']:
-            raise urwid.ExitMainLoop()
+            raise ExitMainLoop()
 
     def tick(self, unused_loop=None, unused_data=None):
         #######################################################################
@@ -740,7 +669,7 @@ class PegasusGUI(urwid.MainLoop):
     def run(self):
         self.tick()
         with utils.console_blank():
-            urwid.MainLoop.run(self)
+            MainLoop.run(self)
 
     def run_async(self, f, callback):
         """ This is a little bit goofy. The urwid API is based on select(), and
@@ -761,8 +690,7 @@ class PegasusGUI(urwid.MainLoop):
             try:
                 callback(result['res'])
             except Exception:
-                self.console.command_runner._add("Status thread:",
-                                                 format_exc())
+                log.warning(format_exc())
             finally:
                 self.remove_watch_pipe(write_fd)
                 close(write_fd)
@@ -780,8 +708,7 @@ class PegasusGUI(urwid.MainLoop):
             try:
                 result['res'] = f()
             except Exception:
-                self.console.command_runner._add("Status thread:",
-                                                 format_exc())
+                log.debug(format_exc())
             write(write_fd, bytes('done', 'ascii'))
 
         threading.Thread(target=run_f).start()
