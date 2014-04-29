@@ -166,10 +166,10 @@ class Machine:
                                    'dns-name': 'unallocated'})
 
     def __str__(self):
-        return "id: {machine_id}, state: {state}, " \
-            "dns-name: {dns_name}, mem: {mem}, " \
-            "storage: {storage}, " \
-            "cpus: {cpus}".format(machine_id=self.machine_id,
+        return "id={machine_id} state={state}, " \
+            "dns-name={dns_name} mem={mem} " \
+            "storage={storage} " \
+            "cpus={cpus}".format(machine_id=self.machine_id,
                                   dns_name=self.dns_name,
                                   state=self.agent_state,
                                   mem=self.mem,

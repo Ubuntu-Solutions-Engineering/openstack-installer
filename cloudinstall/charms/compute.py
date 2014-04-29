@@ -26,7 +26,7 @@ class CharmNovaCompute(CharmBase):
     display_name = 'Nova Compute Node'
     related = ['mysql', 'rabbitmq-server', 'glance', 'nova-cloud-controller']
     isolate = True
-    constraints = {'mem' : '2G',
+    constraints = {'mem' : '3G',
                    'root-disk' : '10G'}
 
     def set_relations(self):
