@@ -236,14 +236,13 @@ class AddComputeDialog(Overlay):
         self.destroy()
 
 class ChangeStateDialog(Overlay):
-    def __init__(self, underlying, machine, on_success, on_cancel):
+    def __init__(self, underlying, state, on_success, on_cancel):
 
+        self.state = state
         self.boxes = []
         start_states = []
-        log.debug("ChangeStateDialog.__init__: " \
-                  "{machine}".format(machine=machine))
-        if machine.charms:
-            start_states = _allocation_for_charms(machine.charms)
+        log.debug("ChangeStateDialog {state}".format(state=list(self.state.services)))
+        start_states = _allocation_for_charms(list(self.state.services))
 
         self.boxes = []
         first_index = 0
@@ -499,7 +498,7 @@ class NodeViewMode(Frame):
             self.destroy()
         if pegasus.MULTI_SYSTEM:
             self.loop.widget = ChangeStateDialog(self,
-                                                 machine,
+                                                 self.state,
                                                  ok,
                                                  self.destroy)
         else:
