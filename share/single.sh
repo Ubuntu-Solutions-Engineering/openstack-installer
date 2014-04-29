@@ -44,7 +44,6 @@ singleInstall()
                 (
                   cd "/home/$INSTALL_USER"
                   sudo -H -u "$INSTALL_USER" juju bootstrap
-                  #sudo -H -u "$INSTALL_USER" juju set-constraints mem=2G
                 )
 		echo 99
 
