@@ -27,7 +27,7 @@ configMaasEnvironment()
 		    maas-server: 'http://$1/MAAS/'
 		    maas-oauth: '$2'
 		    admin-secret: $3
-		    default-series: precise
+		    default-series: trusty
 		    authorized-keys-path: ~/.ssh/id_rsa.pub
 		    apt-http-proxy: 'http://$1:8000/'
 		EOF
@@ -64,7 +64,7 @@ jujuBootstrap()
 {
 	cluster_uuid=$1
 
-	lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r precise
+	lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r trusty
 	sed -e "s/^lxc.network.link.*$/lxc.network.link = br0/" -i \
 	    /var/lib/lxc/juju-bootstrap/config
 	printf "\n%s\n%s\n" "# Autostart on reboot" "lxc.start.auto = 1" \
