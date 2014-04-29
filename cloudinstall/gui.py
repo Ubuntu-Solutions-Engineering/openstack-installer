@@ -18,9 +18,7 @@
 
 """ Pegasus - gui interface to Ubuntu Cloud Installer """
 
-from collections import deque
 from os import write, close
-from subprocess import Popen, PIPE, STDOUT
 from traceback import format_exc
 import re
 import threading
