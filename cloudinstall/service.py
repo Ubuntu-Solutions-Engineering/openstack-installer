@@ -39,15 +39,6 @@ class Unit:
         return self.unit.get('agent-state', 'unknown')
 
     @property
-    def agent_state_info(self):
-        """ Unit's agent state
-
-        :returns: agent state
-        :rtype: str
-        """
-        return self.unit.get('agent-state-info', 'unknown')
-
-    @property
     def machine_id(self):
         """ Associate machine for unit
 
