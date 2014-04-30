@@ -126,6 +126,7 @@ class ControllerOverlay(TextOverlay):
                       "{machines}".format(machines=unallocated))
 
             if len(allocated) == 0:
+                log.debug("no machines allocated to juju. adding a machine.")
                 self.command_runner.add_machine()
                 return True
             elif len(allocated) > 0:
@@ -138,8 +139,9 @@ class ControllerOverlay(TextOverlay):
                     if charm_.name() in [s.service_name for s in data.services]:
                         continue
 
-                    log.debug("Processing {charm}".format(charm=charm_.name()))
-                    charm_.setup(_id='lxc:1')
+                    log.debug("Calling charm.setup(_id='lxc:{mid}') for charm {charm}".format(charm=charm_.name(),
+                                                                                              mid=machine.machine_id))
+                    charm_.setup(_id='lxc:{mid}'.format(mid=machine.machine_id))
                 for charm in charms:
                     charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
                     charm_ = charm_(state=data)
@@ -364,6 +366,7 @@ class CommandRunner(ListBox):
 
         :param dict constraints: (optional) machine specs
         """
+        log.debug("adding machine with constraints={}".format(constraints))
         out = self.client.add_machine(constraints)
         return out
 
