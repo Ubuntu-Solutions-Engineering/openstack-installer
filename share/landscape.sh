@@ -68,6 +68,34 @@ getDictField() {
   python3 -c "d = $1; print(d['$2'])"
 }
 
+deployLandscape()
+{
+	end_percent=${1:-100}
+	mkfifo -m 0600 "$TMP/deployer-out"
+
+	# For now, we assume that the install user has the landscape charm with the
+	# right licensing configs cloned into their home directory; we can fix this
+	# later when the landscape charm deploys with a free license.
+	cd "/home/$INSTALL_USER/landscape-charm/config" && \
+	    sudo -H -u "$INSTALL_USER" \
+	    juju-deployer -Wdv -c landscape-deployments.yaml landscape-dense-maas \
+	    &> "$TMP/deployer-out" &
+
+	lines_seen=0
+	while IFS=: read unused; do
+		lines_seen=$(($lines_seen + 1))
+
+		# There are 77 lines in the juju-deployer output :-)
+		percent=$((($lines_seen * $end_percent) / 77))
+
+		# If someone suddenly starts spewing more output, just go to $end_percent
+		percent=$(($percent < $end_percent ? $percent : $end_percent))
+		dialogGaugePrompt $percent "Deploying Landscape" > "$TMP/gauge"
+	done < "$TMP/deployer-out"
+	wait $!
+	rm -f "$TMP/deployer-out"
+}
+
 landscapeInstall()
 {
 	configureLandscape
@@ -76,24 +104,23 @@ landscapeInstall()
 	# just like the multi install with no status screen does.
 	multiInstall cloud-install-landscape
 
+	dialogGaugeStart "Deploying Landscape" "Please wait" 8 70 0
+
 	# work around LP 1288685
 	sleep 10
 
-	# For now, we assume that the install user has the landscape charm with the
-	# right licensing configs cloned into their home directory; we can fix this
-	# later when the landscape charm deploys with a free license.
-	cd "/home/$INSTALL_USER/landscape-charm/config" && \
-	    sudo -H -u "$INSTALL_USER" \
-	    juju-deployer -Wdv -c landscape-deployments.yaml landscape-dense-maas
+	deployLandscape 95 > "$TMP/gauge"
 
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
 	# while to set up and deployer doesn't wait until they're finished (it has
 	# no way to, viz. LP #1254766), so we wait until everything is ok.
+	dialogGaugePrompt 96 "Waiting for Landscape" > "$TMP/gauge"
 	landscape_ip=$($wait_for_landscape)
 
 	certfile=~/.cloud-install/landscape-ca.pem
 	getLandscapeCert "$landscape_ip" > "$certfile"
 
+	dialogGaugePrompt 98 "Creating Landscape user" > "$TMP/gauge"
 	# landscape-api just prints a __repr__ of the response we get, which contains
 	# both LANDSCAPE_API_KEY and LANDSCAPE_API_SECRET for the user.
 	resp=$(landscape-api \
@@ -108,6 +135,7 @@ landscapeInstall()
 	landscape_api_key=$(getDictField "$resp" LANDSCAPE_API_KEY)
 	landscape_api_secret=$(getDictField "$resp" LANDSCAPE_API_SECRET)
 
+	dialogGaugePrompt 99 "Registering MAAS in Landscape" > "$TMP/gauge"
 	landscape-api \
 	    --key "$landscape_api_key" \
 	    --secret "$landscape_api_secret" \
@@ -116,6 +144,8 @@ landscapeInstall()
 	    register-maas-region-controller \
 	    endpoint="http://$(ipAddress br0)/MAAS" \
 	    credentials="$(cat /home/$INSTALL_USER/.cloud-install/maas-creds)"
+
+	dialogGaugeStop
 
 	echo "Your Landscape installation is complete!"
 	echo "Please go to http://$landscape_ip/account/standalone/openstack to"
