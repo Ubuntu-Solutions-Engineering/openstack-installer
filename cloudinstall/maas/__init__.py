@@ -207,6 +207,7 @@ class MaasState:
         for m in self.machines():
             if m.instance_id == instance_id:
                 return m
+        return None
 
     def machines(self):
         """ Maas Machines
