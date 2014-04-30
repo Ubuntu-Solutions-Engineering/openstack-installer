@@ -174,10 +174,13 @@ def parse_state(juju, maas=None):
 
         if maas:
             maas_machine = maas.machine(machine.instance_id)
-            machine.mem = maas_machine.mem
-            machine.cpu_cores = maas_machine.cpu_cores
-            machine.storage = maas_machine.storage
-            machine.tag = maas_machine.tag
+            if maas_machine is None:
+                log.debug("machine id='{iid}' not found in MaasState.".format(iid=machine.instance_id))
+            else:
+                machine.mem = maas_machine.mem
+                machine.cpu_cores = maas_machine.cpu_cores
+                machine.storage = maas_machine.storage
+                machine.tag = maas_machine.tag
         results.append(machine)
     return results
 
