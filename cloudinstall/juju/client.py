@@ -206,7 +206,7 @@ class JujuClient:
         ret, out, _ = get_command_output(cmd)
         log.debug("Deploy result: {out}".format(out=out))
         if ret:
-            log.warning("Deploy error ({cmd}): {out}".format(name=charm,
+            log.warning("Deploy error ({cmd}): {out}".format(cmd=cmd,
                                                              out=out))
 
     # def set_config(self, service_name, config_keys):
