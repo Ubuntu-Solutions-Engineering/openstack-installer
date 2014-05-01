@@ -24,3 +24,7 @@ class CharmMysql(CharmBase):
 
     charm_name = 'mysql'
     display_name = 'MySQL'
+
+    def post_proc(self):
+        self.client.set_config(self.charm_name,
+                               {'dataset-size': '512M'})
