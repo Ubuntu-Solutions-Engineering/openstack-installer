@@ -10,22 +10,6 @@ Base system
 Development and testing is done on Ubuntu and using a release of
 **Trusty** or later.
 
-Needed packages
-^^^^^^^^^^^^^^^
-
-* debhelper
-* dh-python
-* python3-all
-* python3-mock
-* python3-nose
-* python3-passlib
-* python3-requests
-* python3-requests-oauthlib
-* python3-setuptools
-* python3-urwid
-* python3-ws4py
-* python3-yaml
-
 
 Building cloud installer
 ^^^^^^^^^^^^^^^^^^^^^^^^
