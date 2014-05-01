@@ -19,7 +19,6 @@
 import logging
 from os.path import expanduser
 
-from cloudinstall import utils
 from cloudinstall.juju.client import JujuClient
 
 log = logging.getLogger('cloudinstall.charms')
