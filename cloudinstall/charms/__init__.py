@@ -103,14 +103,10 @@ class CharmBase:
         if len(self.related) > 0:
             services = self.state.service(self.charm_name)
             for charm in self.related:
-                try:
-                    if not self.is_related(charm, services.relations) \
-                       and len(list(services.relations)) != 0:
-                        self.client.add_relation(self.charm_name,
-                                                 charm)
-                except:
-                    log.debug("No relations "
-                              "found for {c}".format(c=self.charm_name))
+                if not self.is_related(charm, services.relations) \
+                   and len(list(services.relations)) != 0:
+                    self.client.add_relation(self.charm_name,
+                                             charm)
 
     def post_proc(self):
         """ Perform any post processing
