@@ -66,20 +66,7 @@ def _allocation_for_charms(charms):
     return list(filter(lambda x: x, als))
 
 
-class TextOverlay(Overlay):
-    def __init__(self, text, underlying, width=60, height=5):
-        w = LineBox(Filler(Text(text)))
-        w = AttrWrap(w, "dialog")
-        Overlay.__init__(self,
-                               w,
-                               underlying,
-                               'center',
-                               width,
-                               'middle',
-                               height)
-
-
-class ControllerOverlay(TextOverlay):
+class ControllerOverlay(Overlay):
     PXE_BOOT = "You need one node to act as the cloud controller. " \
                "Please PXE boot the node you would like to use."
 
@@ -94,10 +81,18 @@ class ControllerOverlay(TextOverlay):
         self.allocated = None
         self.command_runner = command_runner
         self.done = False
-        self.start_text = self.NODE_WAIT \
-                          if pegasus.SINGLE_SYSTEM \
-                             else self.PXE_BOOT
-        TextOverlay.__init__(self, self.start_text, self.underlying)
+        self.info_text = Text(self.NODE_WAIT
+                              if pegasus.SINGLE_SYSTEM
+                              else self.PXE_BOOT)
+        w = LineBox(Filler(self.info_text))
+        w = AttrWrap(w, "dialog")
+        Overlay.__init__(self,
+                         w,
+                         self.underlying,
+                         'center',
+                         60,
+                         'middle',
+                         5)
 
     def process(self, data):
         """ Process a node list. Returns True if the overlay still needs to be
@@ -126,8 +121,10 @@ class ControllerOverlay(TextOverlay):
                       "{machines}".format(machines=unallocated))
 
             if len(allocated) == 0:
-                log.debug("no machines allocated to juju. adding a machine.")
-                self.command_runner.add_machine()
+                err_msg = "No machines allocated to juju. " \
+                          "Please pxe boot a machine."
+                log.debug(err_msg)
+                self.info_text.set_text(err_msg)
                 return True
             elif len(allocated) > 0:
                 machine = allocated[0]
@@ -153,7 +150,7 @@ class ControllerOverlay(TextOverlay):
                 return True
         elif pegasus.SINGLE_SYSTEM:
             if len(allocated) == 0:
-                log.debug("Waiting for a machine to become ready")
+                self.info_text.set_text("Waiting for a machine to become ready ..")
                 return True
             else:
                 machine = allocated[0]
@@ -175,7 +172,9 @@ class ControllerOverlay(TextOverlay):
                 else:
                     # machine still hasn't started wait for the loop
                     # to come back around.
-                    log.debug("Waiting for an allocated machine to start")
+                    self.info_text.set_text("A machine is allocated, "
+                                            "waiting for it to start ...",
+                                            align="center")
                     return True
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
@@ -185,15 +184,19 @@ class ControllerOverlay(TextOverlay):
                 if charm_.name() in [s.service_name for s in data.services]:
                     continue
 
-                log.debug("Processing {charm}".format(charm=charm_.name()))
-
                 # Hardcode lxc on machine 1 as they are
                 # created on-demand.
                 charm_.setup(_id='lxc:1')
+                self.info_text.set_text("Deploying charms ...",
+                                        align='center')
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
                 charm_ = charm_(state=data)
+                self.info_text.set_text("Setting charm relations ...",
+                                        align='center')
                 charm_.set_relations()
+                self.info_text.set_text("Setting charm options ...",
+                                        align='center')
                 charm_.post_proc()
 
         else:
@@ -536,10 +539,12 @@ class NodeViewMode(Frame):
                         _url = "Horizon: " \
                                "http://{name}/horizon".format(name=i.public_address)
                         self.horizon_url.set_text(_url)
+                        self.loop.draw_screen()
                     if i.is_jujugui:
                         _url = "Juju-GUI: " \
                                "http://{name}/".format(name=i.public_address)
                         self.jujugui_url.set_text(_url)
+                        self.loop.draw_screen()
 
         self.nodes.update(nodes)
 
@@ -620,8 +625,6 @@ class PegasusGUI(MainLoop):
             return
         else:
             allocated = list(self.state[1].machines_allocated())
-            log.debug("Allocated machines: "
-                      "{machines}".format(machines=allocated))
             if len(allocated) == 0:
                 self.cr.add_machine(constraints={'mem': '3G',
                                                  'root-disk': '20G'})
