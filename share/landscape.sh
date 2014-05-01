@@ -79,7 +79,7 @@ deployLandscape()
 	cd "/home/$INSTALL_USER/landscape-charm/config" && \
 	    sudo -H -u "$INSTALL_USER" \
 	    juju-deployer -Wdv -c landscape-deployments.yaml landscape-dense-maas \
-	    &> "$TMP/deployer-out" &
+	    > "$TMP/deployer-out" 2>&1 &
 
 	lines_seen=0
 	while IFS=: read unused; do
@@ -109,7 +109,7 @@ landscapeInstall()
 	# work around LP 1288685
 	sleep 10
 
-	deployLandscape 95 > "$TMP/gauge"
+	deployLandscape 95
 
 	# Landscape isn't actually up when juju-deployer exits; the relations take a
 	# while to set up and deployer doesn't wait until they're finished (it has
