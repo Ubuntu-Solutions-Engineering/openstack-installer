@@ -173,8 +173,7 @@ class ControllerOverlay(Overlay):
                     # machine still hasn't started wait for the loop
                     # to come back around.
                     self.info_text.set_text("A machine is allocated, "
-                                            "waiting for it to start ...",
-                                            align="center")
+                                            "waiting for it to start ...")
                     return True
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
@@ -187,16 +186,13 @@ class ControllerOverlay(Overlay):
                 # Hardcode lxc on machine 1 as they are
                 # created on-demand.
                 charm_.setup(_id='lxc:1')
-                self.info_text.set_text("Deploying charms ...",
-                                        align='center')
+                self.info_text.set_text("Deploying charms ...")
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
                 charm_ = charm_(state=data)
-                self.info_text.set_text("Setting charm relations ...",
-                                        align='center')
+                self.info_text.set_text("Setting charm relations ...")
                 charm_.set_relations()
-                self.info_text.set_text("Setting charm options ...",
-                                        align='center')
+                self.info_text.set_text("Setting charm options ...")
                 charm_.post_proc()
 
         else:
@@ -455,11 +451,13 @@ class NodeViewMode(Frame):
             header.insert(3, AttrWrap(Text('(F6) Add compute node'), "border"))
         header = Columns(header)
         self.timer = Text("", align="right")
-        self.horizon_url = Text("")
-        self.jujugui_url = Text("")
-        footer = Columns([self.horizon_url,
-                                self.jujugui_url,
-                                self.timer])
+        self.status_info = Text("", align="left")
+        self.horizon_url = Text("", align="center")
+        self.jujugui_url = Text("", align="center")
+        footer = Columns([self.status_info,
+                          self.horizon_url,
+                          self.jujugui_url,
+                          self.timer])
         footer = AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
@@ -528,24 +526,11 @@ class NodeViewMode(Frame):
         :params list state: JujuState()
         """
         _machines, _state = state
-        nodes = [Node(s, _state, self.open_dialog) \
+        nodes = [Node(s, _state, self.open_dialog)
                  for s in _state.services]
         if self.target == self.controller_overlay and \
                 not self.controller_overlay.process(_state):
             self.target = self
-            for n in _state.services:
-                for i in n.units:
-                    if i.is_horizon:
-                        _url = "Horizon: " \
-                               "http://{name}/horizon".format(name=i.public_address)
-                        self.horizon_url.set_text(_url)
-                        self.loop.draw_screen()
-                    if i.is_jujugui:
-                        _url = "Juju-GUI: " \
-                               "http://{name}/".format(name=i.public_address)
-                        self.jujugui_url.set_text(_url)
-                        self.loop.draw_screen()
-
         self.nodes.update(nodes)
 
     def tick(self):
@@ -553,10 +538,26 @@ class NodeViewMode(Frame):
             self.ticks_left = self.poll_interval
 
             def update_and_redraw(state):
+                self.status_info.set_text("[INFO] Polling node availability")
                 self.do_update(state)
+                for n in state[1].services:
+                    for i in n.units:
+                        if i.is_horizon:
+                            _url = "Horizon: " \
+                                   "http://{name}/horizon".format(name=i.public_address)
+                            self.horizon_url.set_text(_url)
+                            if "0.0.0.0" in i.public_address:
+                                self.status_info.set_text("[INFO] Nodes are still deploying")
+                            else:
+                                self.status_info.set_text("[INFO] Yay! nodes are ready")
+                        if i.is_jujugui:
+                            _url = "Juju-GUI: " \
+                                   "http://{name}/".format(name=i.public_address)
+                            self.jujugui_url.set_text(_url)
                 self.loop.draw_screen()
             self.loop.run_async(self.refresh_states, update_and_redraw)
-        self.timer.set_text("Refresh in {secs} (s)".format(secs=self.ticks_left))
+        self.timer.set_text("Refresh in "
+                            "{secs} (s)".format(secs=self.ticks_left))
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
