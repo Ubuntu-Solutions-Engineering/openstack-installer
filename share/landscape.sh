@@ -90,7 +90,7 @@ deployLandscape()
 
 		# If someone suddenly starts spewing more output, just go to $end_percent
 		percent=$(($percent < $end_percent ? $percent : $end_percent))
-		dialogGaugePrompt $percent "Deploying Landscape" > "$TMP/gauge"
+		dialogGaugePrompt $percent "Deploying Landscape"
 	done < "$TMP/deployer-out"
 	wait $!
 	rm -f "$TMP/deployer-out"
@@ -105,46 +105,47 @@ landscapeInstall()
 	multiInstall cloud-install-landscape
 
 	dialogGaugeStart "Deploying Landscape" "Please wait" 8 70 0
+	{
+		# work around LP 1288685
+		sleep 10
 
-	# work around LP 1288685
-	sleep 10
+		deployLandscape 95
 
-	deployLandscape 95
+		# Landscape isn't actually up when juju-deployer exits; the relations take a
+		# while to set up and deployer doesn't wait until they're finished (it has
+		# no way to, viz. LP #1254766), so we wait until everything is ok.
+		dialogGaugePrompt 96 "Waiting for Landscape"
+		landscape_ip=$($wait_for_landscape)
 
-	# Landscape isn't actually up when juju-deployer exits; the relations take a
-	# while to set up and deployer doesn't wait until they're finished (it has
-	# no way to, viz. LP #1254766), so we wait until everything is ok.
-	dialogGaugePrompt 96 "Waiting for Landscape" > "$TMP/gauge"
-	landscape_ip=$($wait_for_landscape)
+		certfile=~/.cloud-install/landscape-ca.pem
+		getLandscapeCert "$landscape_ip" > "$certfile"
 
-	certfile=~/.cloud-install/landscape-ca.pem
-	getLandscapeCert "$landscape_ip" > "$certfile"
+		dialogGaugePrompt 98 "Creating Landscape user"
+		# landscape-api just prints a __repr__ of the response we get, which contains
+		# both LANDSCAPE_API_KEY and LANDSCAPE_API_SECRET for the user.
+		resp=$(landscape-api \
+		    --key anonymous --secret anonymous --uri "https://$landscape_ip/api/" \
+		    --ssl-ca-file "$certfile" \
+		    call BootstrapLDS \
+		    admin_email="$admin_email" \
+		    admin_password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd") \
+		    admin_name="$admin_name"
+		    root_url="https://$landscape_ip/" \
+		    system_email="$system_email")
+		landscape_api_key=$(getDictField "$resp" LANDSCAPE_API_KEY)
+		landscape_api_secret=$(getDictField "$resp" LANDSCAPE_API_SECRET)
 
-	dialogGaugePrompt 98 "Creating Landscape user" > "$TMP/gauge"
-	# landscape-api just prints a __repr__ of the response we get, which contains
-	# both LANDSCAPE_API_KEY and LANDSCAPE_API_SECRET for the user.
-	resp=$(landscape-api \
-	    --key anonymous --secret anonymous --uri "https://$landscape_ip/api/" \
-	    --ssl-ca-file "$certfile" \
-	    call BootstrapLDS \
-	    admin_email="$admin_email" \
-	    admin_password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd") \
-	    admin_name="$admin_name"
-	    root_url="https://$landscape_ip/" \
-	    system_email="$system_email")
-	landscape_api_key=$(getDictField "$resp" LANDSCAPE_API_KEY)
-	landscape_api_secret=$(getDictField "$resp" LANDSCAPE_API_SECRET)
-
-	dialogGaugePrompt 99 "Registering MAAS in Landscape" > "$TMP/gauge"
-	landscape-api \
-	    --key "$landscape_api_key" \
-	    --secret "$landscape_api_secret" \
-	    --uri "https://$landscape_ip/api/" \
-	    --ssl-ca-file "$certfile" \
-	    register-maas-region-controller \
-	    endpoint="http://$(ipAddress br0)/MAAS" \
-	    credentials="$(cat /home/$INSTALL_USER/.cloud-install/maas-creds)"
-
+		dialogGaugePrompt 99 "Registering MAAS in Landscape"
+		landscape-api \
+		    --key "$landscape_api_key" \
+		    --secret "$landscape_api_secret" \
+		    --uri "https://$landscape_ip/api/" \
+		    --ssl-ca-file "$certfile" \
+		    register-maas-region-controller \
+		    endpoint="http://$(ipAddress br0)/MAAS" \
+		    credentials="$(cat /home/$INSTALL_USER/.cloud-install/maas-creds)" \
+		    > /dev/null
+	} > "$TMP/gauge"
 	dialogGaugeStop
 
 	echo "Your Landscape installation is complete!"
