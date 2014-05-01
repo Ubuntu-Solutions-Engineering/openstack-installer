@@ -32,8 +32,9 @@ class CharmNovaCompute(CharmBase):
     def set_relations(self):
         super(CharmNovaCompute, self).set_relations()
         services = self.state.service(self.charm_name)
-        for charm in self.related:
-            if not self.is_related(charm, services.relations) \
-               and 'rabbitmq-server' in charm:
-                self.client.add_relation("{c}:amqp".format(c=self.charm_name),
-                                         "rabbitmq-server:amqp")
+        if services:
+            for charm in self.related:
+                if not self.is_related(charm, services.relations) \
+                   and 'rabbitmq-server' in charm:
+                    self.client.add_relation("{c}:amqp".format(c=self.charm_name),
+                                             "rabbitmq-server:amqp")

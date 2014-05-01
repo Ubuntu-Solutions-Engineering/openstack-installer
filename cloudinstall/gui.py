@@ -148,11 +148,14 @@ class ControllerOverlay(Overlay):
             started_machines = [m for m in allocated
                                 if m.agent_state == 'started']
             if len(started_machines) == 0:
-                self.info_text.set_text("Waiting for a machine to become ready.")
+                self.info_text.set_text("Waiting for a machine "
+                                        "to become ready.")
                 return True
 
             machine = started_machines[0]
-            log.debug("starting install on machine {mid}".format(mid=machine.machine_id))
+            self.info_text.set_text("Deploying charms")
+            log.debug("starting install "
+                      "on machine {mid}".format(mid=machine.machine_id))
 
             # Ok we're up lets upload our lxc-host-only template
             # and reboot so any containers will be deployed with
@@ -179,13 +182,13 @@ class ControllerOverlay(Overlay):
                 # Hardcode lxc on machine 1 as they are
                 # created on-demand.
                 charm_.setup(_id='lxc:1')
-                self.info_text.set_text("Deploying charms ...")
+
+            self.info_text.set_text("Setting charm relations ...")
             for charm in charms:
-                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
+                charm_ = utils.import_module('cloudinstall.charms.'
+                                             '{charm}'.format(charm=charm))[0]
                 charm_ = charm_(state=data)
-                self.info_text.set_text("Setting charm relations ...")
                 charm_.set_relations()
-                self.info_text.set_text("Setting charm options ...")
                 charm_.post_proc()
 
         else:
