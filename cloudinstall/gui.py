@@ -117,12 +117,12 @@ class ControllerOverlay(TextOverlay):
         charms = helper.get_modules()
 
         allocated = list(data.machines_allocated())
-        log.debug("Allocated machines: " \
+        log.debug("Allocated machines: "
                   "{machines}".format(machines=allocated))
 
         if pegasus.MULTI_SYSTEM:
             unallocated = list(data.machines_unallocated())
-            log.debug("Unallocated machines: " \
+            log.debug("Unallocated machines: "
                       "{machines}".format(machines=unallocated))
 
             if len(allocated) == 0:
@@ -157,26 +157,25 @@ class ControllerOverlay(TextOverlay):
                 return True
             else:
                 machine = allocated[0]
-                log.debug("Making sure {m} is ready".format(m=machine))
                 if machine.is_machine_1 \
                    and 'started' in machine.agent_state:
                     # Ok we're up lets upload our lxc-host-only template
                     # and reboot so any containers will be deployed with
                     # the proper subnet
-                    utils._run("scp -oStrictHostKeyChecking=no " \
-                               "/usr/share/cloud-installer/templates/lxc-host-only " \
+                    utils._run("scp -oStrictHostKeyChecking=no "
+                               "/usr/share/cloud-installer/templates/lxc-host-only "
                                "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
                     cmds = []
                     cmds.append("sudo mv /tmp/lxc-host-only /etc/network/interfaces.d/lxcbr0.cfg")
                     cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
                     cmds.append("sudo reboot")
-                    utils._run("ssh -oStrictHostKeyChecking=no " \
+                    utils._run("ssh -oStrictHostKeyChecking=no "
                                "ubuntu@{host} {cmds}".format(host=machine.dns_name,
                                                              cmds=" && ".join(cmds)))
                 else:
                     # machine still hasn't started wait for the loop
                     # to come back around.
-                    log.debug("waiting for machine 1 to start")
+                    log.debug("Waiting for an allocated machine to start")
                     return True
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
@@ -198,7 +197,8 @@ class ControllerOverlay(TextOverlay):
                 charm_.post_proc()
 
         else:
-            log.warning("neither of pegasus.SINGLE_SYSTEM or pegasus.MULTI_SYSTEM are true.")
+            log.warning("neither of pegasus.SINGLE_SYSTEM "
+                        "or pegasus.MULTI_SYSTEM are true.")
             return True
 
 
@@ -225,7 +225,7 @@ class AddComputeDialog(Overlay):
         self.w = LineBox(self.w)
         self.w = AttrWrap(self.w, "dialog")
         Overlay.__init__(self, self.w, self.underlying,
-                               'center', 45, 'middle', 4)
+                         'center', 45, 'middle', 4)
 
     def yes(self, button):
         log.info("Deploying a new nova compute machine")
@@ -234,6 +234,7 @@ class AddComputeDialog(Overlay):
 
     def no(self, button):
         self.destroy()
+
 
 class ChangeStateDialog(Overlay):
     def __init__(self, underlying, state, on_success, on_cancel):
@@ -272,7 +273,7 @@ class ChangeStateDialog(Overlay):
         root = AttrMap(root, "dialog")
 
         Overlay.__init__(self, root, underlying, 'center', 30, 'middle',
-                               len(wrapped_boxes) + 4)
+                         len(wrapped_boxes) + 4)
 
     def keypress(self, size, key):
         if key == 'tab':
@@ -302,7 +303,7 @@ class Node(WidgetWrap):
         for u in self.units:
             info = "{unit_name} " \
                    "({status})".format(unit_name=u.unit_name,
-                                         status=u.agent_state)
+                                       status=u.agent_state)
 
             info = "{info}\n  address: {address}".format(info=info,
                                                          address=u.public_address)
@@ -622,7 +623,7 @@ class PegasusGUI(MainLoop):
             log.debug("Allocated machines: "
                       "{machines}".format(machines=allocated))
             if len(allocated) == 0:
-                self.cr.add_machine(constraints={'mem': '2G',
+                self.cr.add_machine(constraints={'mem': '3G',
                                                  'root-disk': '20G'})
 
     def _key_pressed(self, keys, raw):
