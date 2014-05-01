@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from os.path import expanduser
+
 from cloudinstall import utils
 from cloudinstall.juju.client import JujuClient
 
@@ -42,6 +44,15 @@ class CharmBase:
         self.state = state
         self.machine = machine
         self.client = JujuClient()
+
+    def openstack_password(self):
+        PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
+        try:
+            with open(PASSWORD_FILE) as f:
+                OPENSTACK_PASSWORD = f.read().strip()
+        except IOError:
+            OPENSTACK_PASSWORD = 'password'
+        return OPENSTACK_PASSWORD
 
     def is_related(self, charm, relations):
         """ test for existence of charm relation

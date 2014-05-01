@@ -24,3 +24,7 @@ class CharmJujuGui(CharmBase):
 
     charm_name = 'juju-gui'
     display_name = 'Juju GUI'
+
+    def post_proc(self):
+        self.client.set_config(self.charm_name,
+                               {'password': self.openstack_password()})
