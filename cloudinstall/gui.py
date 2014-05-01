@@ -153,9 +153,7 @@ class ControllerOverlay(TextOverlay):
                 return True
         elif pegasus.SINGLE_SYSTEM:
             if len(allocated) == 0:
-                log.debug("Adding machines")
-                self.command_runner.add_machine(constraints={'mem':'2G',
-                                                             'root-disk': '20G'})
+                log.debug("Waiting for a machine to become ready")
                 return True
             else:
                 machine = allocated[0]
@@ -605,12 +603,27 @@ class PegasusGUI(MainLoop):
 
     def __init__(self, state=None):
         self.state = state
+        self.cr = CommandRunner()
         self.console = ConsoleMode()
         self.node_view = NodeViewMode(self, self.state)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
+        self.init_machine()
         MainLoop.__init__(self, self.node_view.target, STYLES,
-                                unhandled_input=self._header_hotkeys)
+                          unhandled_input=self._header_hotkeys)
+
+    @utils.async
+    def init_machine(self):
+        """ Handles intial deployment of a machine """
+        if pegasus.MULTI_SYSTEM:
+            return
+        else:
+            allocated = list(self.state[1].machines_allocated())
+            log.debug("Allocated machines: "
+                      "{machines}".format(machines=allocated))
+            if len(allocated) == 0:
+                self.cr.add_machine(constraints={'mem': '2G',
+                                                 'root-disk': '20G'})
 
     def _key_pressed(self, keys, raw):
         # We use this as an 'input filter' just to hook when keys are pressed;
@@ -639,7 +652,7 @@ class PegasusGUI(MainLoop):
         if not self.locked and IS_TTY:
             if self.lock_ticks == 0:
                 self.locked = True
-                old = {'res' : self.widget}
+                old = {'res': self.widget}
 
                 def unlock():
                     ###########################################################
