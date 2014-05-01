@@ -78,7 +78,6 @@ class ControllerOverlay(Overlay):
 
     def __init__(self, underlying, command_runner):
         self.underlying = underlying
-        self.allocated = None
         self.command_runner = command_runner
         self.done = False
         self.info_text = Text(self.NODE_WAIT
@@ -116,10 +115,6 @@ class ControllerOverlay(Overlay):
                   "{machines}".format(machines=allocated))
 
         if pegasus.MULTI_SYSTEM:
-            unallocated = list(data.machines_unallocated())
-            log.debug("Unallocated machines: "
-                      "{machines}".format(machines=unallocated))
-
             if len(allocated) == 0:
                 err_msg = "No machines allocated to juju. " \
                           "Please pxe boot a machine."
@@ -149,32 +144,30 @@ class ControllerOverlay(Overlay):
                 log.debug("No machines, waiting.")
                 return True
         elif pegasus.SINGLE_SYSTEM:
-            if len(allocated) == 0:
-                self.info_text.set_text("Waiting for a machine to become ready ..")
+            # wait for an allocated machine that is also started
+            started_machines = [m for m in allocated
+                                if machine.agent_state == 'started']
+            if len(started_machines) == 0:
+                self.info_text.set_text("Waiting for a machine to become ready.")
                 return True
-            else:
-                machine = allocated[0]
-                if machine.is_machine_1 \
-                   and 'started' in machine.agent_state:
-                    # Ok we're up lets upload our lxc-host-only template
-                    # and reboot so any containers will be deployed with
-                    # the proper subnet
-                    utils._run("scp -oStrictHostKeyChecking=no "
-                               "/usr/share/cloud-installer/templates/lxc-host-only "
-                               "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
-                    cmds = []
-                    cmds.append("sudo mv /tmp/lxc-host-only /etc/network/interfaces.d/lxcbr0.cfg")
-                    cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
-                    cmds.append("sudo reboot")
-                    utils._run("ssh -oStrictHostKeyChecking=no "
-                               "ubuntu@{host} {cmds}".format(host=machine.dns_name,
-                                                             cmds=" && ".join(cmds)))
-                else:
-                    # machine still hasn't started wait for the loop
-                    # to come back around.
-                    self.info_text.set_text("A machine is allocated, "
-                                            "waiting for it to start ...")
-                    return True
+
+            machine = started_machines[0]
+            log.debug("starting install on machine {mid}".format(mid=machine.machine_id))
+
+            # Ok we're up lets upload our lxc-host-only template
+            # and reboot so any containers will be deployed with
+            # the proper subnet
+            utils._run("scp -oStrictHostKeyChecking=no "
+                       "/usr/share/cloud-installer/templates/lxc-host-only "
+                       "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
+            cmds = []
+            cmds.append("sudo mv /tmp/lxc-host-only /etc/network/interfaces.d/lxcbr0.cfg")
+            cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
+            cmds.append("sudo reboot")
+            utils._run("ssh -oStrictHostKeyChecking=no "
+                       "ubuntu@{host} {cmds}".format(host=machine.dns_name,
+                                                     cmds=" && ".join(cmds)))
+
             for charm in charms:
                 charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
                 charm_ = charm_(state=data)
