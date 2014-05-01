@@ -146,7 +146,7 @@ class ControllerOverlay(Overlay):
         elif pegasus.SINGLE_SYSTEM:
             # wait for an allocated machine that is also started
             started_machines = [m for m in allocated
-                                if machine.agent_state == 'started']
+                                if m.agent_state == 'started']
             if len(started_machines) == 0:
                 self.info_text.set_text("Waiting for a machine to become ready.")
                 return True
