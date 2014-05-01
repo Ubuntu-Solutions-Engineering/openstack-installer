@@ -150,7 +150,10 @@ def poll_state():
 
 
 def parse_state(juju, maas=None):
-    """ Parses the current state of juju containers and maas nodes
+    """Parses the current state of juju containers and maas nodes.
+
+    Returns a list of machines excluding the bootstrap node, juju
+    machine ID "0".
 
     :param juju: juju polled state
     :type juju: JujuState()
@@ -158,12 +161,13 @@ def parse_state(juju, maas=None):
     :type mass: MaasState()
     :return: nodes/containers
     :rtype: list
+
     """
     results = []
 
     for machine in juju.machines():
 
-        if machine.is_machine_0:
+        if machine.machine_id == "0":
             continue
 
         if SINGLE_SYSTEM:
