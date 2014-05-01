@@ -450,14 +450,15 @@ class NodeViewMode(Frame):
         if pegasus.SINGLE_SYSTEM:
             header.insert(3, AttrWrap(Text('(F6) Add compute node'), "border"))
         header = Columns(header)
-        self.timer = Text("", align="right")
+        self.timer = Text("", align="left")
         self.status_info = Text("", align="left")
-        self.horizon_url = Text("", align="center")
-        self.jujugui_url = Text("", align="center")
-        footer = Columns([self.status_info,
-                          self.horizon_url,
-                          self.jujugui_url,
-                          self.timer])
+        self.horizon_url = Text("", align="right")
+        self.jujugui_url = Text("", align="right")
+        footer = Columns([('weight', 0.2, self.status_info),
+                          ('weight', 0.1, self.timer),
+                          ('weight', 0.2, self.horizon_url),
+                          ('weight', 0.2, self.jujugui_url),
+                      ])
         footer = AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
@@ -547,17 +548,19 @@ class NodeViewMode(Frame):
                                    "http://{name}/horizon".format(name=i.public_address)
                             self.horizon_url.set_text(_url)
                             if "0.0.0.0" in i.public_address:
-                                self.status_info.set_text("[INFO] Nodes are still deploying")
+                                self.status_info.set_text("[INFO] Nodes "
+                                                          "are still deploying")
                             else:
-                                self.status_info.set_text("[INFO] Yay! nodes are ready")
+                                self.status_info.set_text("[INFO] Nodes "
+                                                          "are accessible")
                         if i.is_jujugui:
                             _url = "Juju-GUI: " \
                                    "http://{name}/".format(name=i.public_address)
                             self.jujugui_url.set_text(_url)
                 self.loop.draw_screen()
             self.loop.run_async(self.refresh_states, update_and_redraw)
-        self.timer.set_text("Refresh in "
-                            "{secs} (s)".format(secs=self.ticks_left))
+        self.timer.set_text("(Re-poll in "
+                            "{secs} (s))".format(secs=self.ticks_left))
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
