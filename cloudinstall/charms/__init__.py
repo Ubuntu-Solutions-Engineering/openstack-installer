@@ -80,7 +80,6 @@ class CharmBase:
             return class_.charm_name
         return class_.__name__.lower()
 
-    @utils.async
     def setup(self, _id=None):
         """ Deploy charm and configuration options
 
