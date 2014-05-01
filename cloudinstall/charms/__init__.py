@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from cloudinstall import utils
 from cloudinstall.juju.client import JujuClient
 
 log = logging.getLogger('cloudinstall.charms')
@@ -68,6 +69,7 @@ class CharmBase:
             return class_.charm_name
         return class_.__name__.lower()
 
+    @utils.async
     def setup(self, _id=None):
         """ Deploy charm and configuration options
 
@@ -96,7 +98,7 @@ class CharmBase:
                        and len(list(services.relations)) != 0:
                         self.client.add_relation(self.charm_name,
                                                  charm)
-                except AttributeError:
+                except:
                     log.debug("No relations "
                               "found for {c}".format(c=self.charm_name))
 
