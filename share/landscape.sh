@@ -16,16 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-getLandscapeCert() {
-	begin="-----BEGIN CERTIFICATE-----"
-	end="-----END CERTIFICATE-----"
-	cert=$(echo | openssl s_client -connect "$1":443 < /dev/null 2>/dev/null)
-	echo "$begin"
-	echo "$cert" | sed '1,/^-----BEGIN CERTIFICATE-----$/d' \
-	    | sed '/^-----END CERTIFICATE-----$/,$d'
-	echo "$end"
-}
-
 getDomain() {
 	echo "$1" | grep -E "^[^@]+@[^@]+\.[^@]+$" | sed -E -e 's/[^@]+@([^@]+\.[^@]+)/\1/'
 }
@@ -62,10 +52,6 @@ configureLandscape() {
 		pushState "$state"
 		state=$next_state
 	done
-}
-
-getDictField() {
-  python3 -c "d = $1; print(d['$2'])"
 }
 
 deployLandscape()
@@ -111,40 +97,13 @@ landscapeInstall()
 
 		deployLandscape 95
 
-		# Landscape isn't actually up when juju-deployer exits; the relations take a
-		# while to set up and deployer doesn't wait until they're finished (it has
-		# no way to, viz. LP #1254766), so we wait until everything is ok.
-		dialogGaugePrompt 96 "Waiting for Landscape"
-		landscape_ip=$($wait_for_landscape)
+		dialogGaugePrompt 96 "Configuring Landscape"
+		landscape_ip=$($configure_landscape \
+		    --admin-email="$admin_email" \
+		    --admin-name="$admin_name" \
+		    --system-email="$system_email" \
+		    --maas-host="$(ipAddress br0)")
 
-		certfile=~/.cloud-install/landscape-ca.pem
-		getLandscapeCert "$landscape_ip" > "$certfile"
-
-		dialogGaugePrompt 98 "Creating Landscape user"
-		# landscape-api just prints a __repr__ of the response we get, which contains
-		# both LANDSCAPE_API_KEY and LANDSCAPE_API_SECRET for the user.
-		resp=$(landscape-api \
-		    --key anonymous --secret anonymous --uri "https://$landscape_ip/api/" \
-		    --ssl-ca-file "$certfile" \
-		    call BootstrapLDS \
-		    admin_email="$admin_email" \
-		    admin_password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd") \
-		    admin_name="$admin_name"
-		    root_url="https://$landscape_ip/" \
-		    system_email="$system_email")
-		landscape_api_key=$(getDictField "$resp" LANDSCAPE_API_KEY)
-		landscape_api_secret=$(getDictField "$resp" LANDSCAPE_API_SECRET)
-
-		dialogGaugePrompt 99 "Registering MAAS in Landscape"
-		landscape-api \
-		    --key "$landscape_api_key" \
-		    --secret "$landscape_api_secret" \
-		    --uri "https://$landscape_ip/api/" \
-		    --ssl-ca-file "$certfile" \
-		    register-maas-region-controller \
-		    endpoint="http://$(ipAddress br0)/MAAS" \
-		    credentials="$(cat /home/$INSTALL_USER/.cloud-install/maas-creds)" \
-		    > /dev/null
 	} > "$TMP/gauge"
 	dialogGaugeStop
 
