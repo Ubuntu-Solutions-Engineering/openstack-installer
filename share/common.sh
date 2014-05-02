@@ -83,6 +83,7 @@ error()
 exitInstall()
 {
 	ret=$?
+	set +x
 	stopLog
 	wait
 	if [ $ret -gt 0 ]; then
