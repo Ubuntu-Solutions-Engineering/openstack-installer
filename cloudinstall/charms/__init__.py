@@ -23,6 +23,7 @@ from cloudinstall.juju.client import JujuClient
 
 log = logging.getLogger('cloudinstall.charms')
 
+
 class CharmBase:
     """ Base charm class """
 
@@ -102,10 +103,14 @@ class CharmBase:
         if len(self.related) > 0:
             services = self.state.service(self.charm_name)
             for charm in self.related:
-                if not self.is_related(charm, services.relations) \
-                   and len(list(services.relations)) != 0:
-                    self.client.add_relation(self.charm_name,
-                                             charm)
+                try:
+                    if not self.is_related(charm, services.relations) \
+                       and len(list(services.relations)) != 0:
+                        self.client.add_relation(self.charm_name,
+                                                 charm)
+                except:
+                    log.debug("No relations "
+                              "found for {c}".format(c=self.charm_name))
 
     def post_proc(self):
         """ Perform any post processing
