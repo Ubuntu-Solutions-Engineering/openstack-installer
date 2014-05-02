@@ -80,6 +80,10 @@ class ControllerOverlay(Overlay):
         self.underlying = underlying
         self.command_runner = command_runner
         self.done = False
+        self.machine = None
+        self.deployed_charms = []
+        self.finalized_charms = []
+        self.single_net_configured = False
         self.info_text = Text(self.NODE_WAIT
                               if pegasus.SINGLE_SYSTEM
                               else self.PXE_BOOT)
@@ -110,9 +114,79 @@ class ControllerOverlay(Overlay):
         helper = utils.ImporterHelper(cloudinstall.charms)
         charms = helper.get_modules()
 
+        if self.machine is None:
+            self.machine = self.get_controller_machine(data)
+
+            if self.machine is None:
+                return True     # keep polling
+
+            if pegasus.SINGLE_SYSTEM and not self.single_net_configured:
+                self.configure_lxc_network()
+
+            log.debug("starting install on machine {mid}".format(mid=self.machine.machine_id))
+
+
+        undeployed_charms = [c for c in charms if c not in self.deployed_charms]
+
+        if len(undeployed_charms) > 0:
+            self.info_text.set_text("Deploying charms")
+            log.debug("Deploying charms")
+            for charm in undeployed_charms:
+                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
+                charm_ = charm_(state=data)
+                log.debug("checking if {c} is already deployed:".format(c=charm))
+                # charm is loaded, decide whether to run it
+                if charm_.name() in [s.service_name for s in data.services]:
+                    log.debug("{c} is already deployed, skipping".format(c=charm))
+                    self.deployed_charms.append(charm)
+                    continue
+
+                log.debug("{c} is NOT already deployed - deploying".format(c=charm))
+
+                # Hardcode lxc on same machine as they are
+                # created on-demand.
+                charm_.setup(_id='lxc:{mid}'.format(mid=self.machine.machine_id))
+                self.deployed_charms.append(charm)
+
+        unfinalized_charms = [c for c in self.deployed_charms if c not in self.finalized_charms]
+
+        if len(unfinalized_charms) > 0:
+            self.info_text.set_text("Setting charm relations")
+            log.debug("Setting charm relations")
+            for charm in [c for c in self.deployed_charms if c not in self.finalized_charms]:
+
+                charm_ = utils.import_module('cloudinstall.charms.'
+                                             '{charm}'.format(charm=charm))[0]
+                charm_ = charm_(state=data)
+
+                if data.service(charm_.charm_name) is None:
+                    # Juju doesn't see the service related to this
+                    # charm yet, so defer setting its relations.
+                    log.debug("service not up yet for charm {c}".format(c=charm_.charm_name))
+                    continue
+
+                log.debug("calling set_relations() for charm {c}".format(c=charm_.charm_name))
+                charm_.set_relations()
+                charm_.post_proc()
+                self.finalized_charms.append(charm)
+
+        log.debug("at end of process(), deployed_charms={d}"
+                  "finalized_charms={f}".format(d=self.deployed_charms,
+                                                f=self.finalized_charms))
+
+        if len(self.finalized_charms) == len(charms):
+            log.debug("Charm setup done.")
+            return False
+        else:
+            log.debug("Polling will continue until all charms are finalized.")
+            return True
+
+
+    def get_controller_machine(self, data):
         allocated = list(data.machines_allocated())
         log.debug("Allocated machines: "
                   "{machines}".format(machines=allocated))
+
 
         if pegasus.MULTI_SYSTEM:
             if len(allocated) == 0:
@@ -120,86 +194,39 @@ class ControllerOverlay(Overlay):
                           "Please pxe boot a machine."
                 log.debug(err_msg)
                 self.info_text.set_text(err_msg)
-                return True
-            elif len(allocated) > 0:
-                machine = allocated[0]
-                for charm in charms:
-                    charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                    charm_ = charm_(state=data)
-
-                    # charm is loaded, decide whether to run it
-                    if charm_.name() in [s.service_name
-                                         for s in data.services]:
-                        continue
-
-                    log.debug("Calling charm.setup(_id='lxc:{mid}') for charm "
-                              "{charm}".format(charm=charm_.name(),
-                                               mid=machine.machine_id))
-
-                    charm_.setup(_id='lxc:{mid}'.format(mid=machine.machine_id))
-                for charm in charms:
-                    charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                    charm_ = charm_(state=data)
-                    charm_.set_relations()
-                    charm_.post_proc()
-                return False
+                return None
             else:
-                log.debug("No machines, waiting.")
-                return True
+                return allocated[0]
+
         elif pegasus.SINGLE_SYSTEM:
-            # wait for an allocated machine that is also started
-            started_machines = [m for m in allocated
-                                if m.agent_state == 'started']
-            if len(started_machines) == 0:
-                self.info_text.set_text("Waiting for a machine "
-                                        "to become ready.")
-                return True
+            if self.machine is None:
+                # wait for an allocated machine that is also started
+                started_machines = [m for m in allocated
+                                    if m.agent_state == 'started']
+                if len(started_machines) == 0:
+                    self.info_text.set_text("Waiting for a machine "
+                                            "to become ready.")
+                    return None
 
-            machine = started_machines[0]
-            self.info_text.set_text("Deploying charms")
-            log.debug("starting install "
-                      "on machine {mid}".format(mid=machine.machine_id))
+                return started_machines[0]
 
-            # Ok we're up lets upload our lxc-host-only template
-            # and reboot so any containers will be deployed with
-            # the proper subnet
-            utils._run("scp -oStrictHostKeyChecking=no "
-                       "/usr/share/cloud-installer/templates/lxc-host-only "
-                       "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
-            cmds = []
-            cmds.append("sudo mv /tmp/lxc-host-only "
-                        "/etc/network/interfaces.d/lxcbr0.cfg")
-            cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
-            cmds.append("sudo reboot")
-            utils._run("ssh -oStrictHostKeyChecking=no "
-                       "ubuntu@{host} {cmds}".format(host=machine.dns_name,
-                                                     cmds=" && ".join(cmds)))
-
-            for charm in charms:
-                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                charm_ = charm_(state=data)
-
-                # charm is loaded, decide whether to run it
-                if charm_.name() in [s.service_name for s in data.services]:
-                    continue
-
-                # Hardcode lxc on machine 1 as they are
-                # created on-demand.
-                charm_.setup(_id='lxc:1')
-
-            self.info_text.set_text("Setting charm relations ...")
-            for charm in charms:
-                charm_ = utils.import_module('cloudinstall.charms.'
-                                             '{charm}'.format(charm=charm))[0]
-                charm_ = charm_(state=data)
-                charm_.set_relations()
-                charm_.post_proc()
-
-        else:
-            log.warning("neither of pegasus.SINGLE_SYSTEM "
-                        "or pegasus.MULTI_SYSTEM are true.")
-            return True
-
+    def configure_lxc_network(self):
+        # upload our lxc-host-only template
+        # and reboot so any containers will be deployed with
+        # the proper subnet
+        host = self.machine.dns_name
+        utils._run("scp -oStrictHostKeyChecking=no "
+                   "/usr/share/cloud-installer/templates/lxc-host-only "
+                   "ubuntu@{host}:/tmp/lxc-host-only".format(host=host))
+        cmds = []
+        cmds.append("sudo mv /tmp/lxc-host-only "
+                    "/etc/network/interfaces.d/lxcbr0.cfg")
+        cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
+        cmds.append("sudo reboot")
+        utils._run("ssh -oStrictHostKeyChecking=no "
+                   "ubuntu@{host} {cmds}".format(host=host,
+                                                 cmds=" && ".join(cmds)))
+        self.single_net_configured = True
 
 def _wrap_focus(widgets, unfocused=None):
     try:
