@@ -109,6 +109,8 @@ class CharmBase:
                         self.client.add_relation(self.charm_name,
                                                  charm)
                 except:
+                    import traceback
+                    log.debug("Exception being ignored:{}".format(traceback.format_exc()))
                     log.debug("No relations "
                               "found for {c}".format(c=self.charm_name))
 
