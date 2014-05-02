@@ -38,7 +38,7 @@ log = logging.getLogger('cloudinstall.gui')
 
 TITLE_TEXT = "Ubuntu Cloud Installer"
 
-# - Properties -----------------------------------------------------------------
+# - Properties ----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 
 # Time to lock in seconds
@@ -128,11 +128,14 @@ class ControllerOverlay(Overlay):
                     charm_ = charm_(state=data)
 
                     # charm is loaded, decide whether to run it
-                    if charm_.name() in [s.service_name for s in data.services]:
+                    if charm_.name() in [s.service_name
+                                         for s in data.services]:
                         continue
 
-                    log.debug("Calling charm.setup(_id='lxc:{mid}') for charm {charm}".format(charm=charm_.name(),
-                                                                                              mid=machine.machine_id))
+                    log.debug("Calling charm.setup(_id='lxc:{mid}') for charm "
+                              "{charm}".format(charm=charm_.name(),
+                                               mid=machine.machine_id))
+
                     charm_.setup(_id='lxc:{mid}'.format(mid=machine.machine_id))
                 for charm in charms:
                     charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
@@ -164,7 +167,8 @@ class ControllerOverlay(Overlay):
                        "/usr/share/cloud-installer/templates/lxc-host-only "
                        "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
             cmds = []
-            cmds.append("sudo mv /tmp/lxc-host-only /etc/network/interfaces.d/lxcbr0.cfg")
+            cmds.append("sudo mv /tmp/lxc-host-only "
+                        "/etc/network/interfaces.d/lxcbr0.cfg")
             cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
             cmds.append("sudo reboot")
             utils._run("ssh -oStrictHostKeyChecking=no "
@@ -300,11 +304,13 @@ class Node(WidgetWrap):
                    "({status})".format(unit_name=u.unit_name,
                                        status=u.agent_state)
 
-            info = "{info}\n  address: {address}".format(info=info,
-                                                         address=u.public_address)
+            info = "{info}\n  " \
+                   "address: {address}".format(info=info,
+                                               address=u.public_address)
             if 'error' in u.agent_state:
-                info = "{info}\n  info: {state_info}".format(info=info,
-                                                             state_info=u.agent_state_info.lstrip())
+                info = "{info}\n  " \
+                       "info: {state_info}".format(info=info,
+                                                   state_info=u.agent_state_info.lstrip())
             info = "{info}\n\n".format(info=info)
             unit_info.append(('weight', 2, Text(info)))
 
@@ -383,16 +389,16 @@ class CommandRunner(ListBox):
         :param list new_states: machine states
         :param machine: Machine()
         """
-        log.debug("CommandRunner.change_allocation: " \
+        log.debug("CommandRunner.change_allocation: "
                   "new_states: {states}".format(states=new_states))
 
         if pegasus.MULTI_SYSTEM:
             try:
-                log.debug("Validating charm in state: " \
+                log.debug("Validating charm in state: "
                           "{charms}".format(charms=machine))
                 for charm, unit in zip(machine.charms, machine.units):
                     if charm not in new_states:
-                        self._run("juju remove-unit " \
+                        self._run("juju remove-unit "
                                   "{unit}".format(unit=unit.unit_name))
             except KeyError:
                 pass
@@ -415,7 +421,7 @@ class CommandRunner(ListBox):
                                   "{charm} " \
                                   "tags={{tag}}".format(charm=charm,
                                                         tag=machine.tag)
-                    log.debug("Setting constraints: " \
+                    log.debug("Setting constraints: "
                               "{constraints}".format(constraints=constraints))
                     self._run(constraints.format(tag=machine.tag))
                     cmd = "juju add-unit {charm}".format(charm=charm)
@@ -453,8 +459,7 @@ class NodeViewMode(Frame):
         footer = Columns([('weight', 0.2, self.status_info),
                           ('weight', 0.1, self.timer),
                           ('weight', 0.2, self.horizon_url),
-                          ('weight', 0.2, self.jujugui_url),
-                      ])
+                          ('weight', 0.2, self.jujugui_url)])
         footer = AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
@@ -464,7 +469,7 @@ class NodeViewMode(Frame):
 
         self.cr = CommandRunner()
         Frame.__init__(self, header=header, body=self.nodes,
-                             footer=footer)
+                       footer=footer)
         self.controller_overlay = ControllerOverlay(self, self.cr)
         self._target = self.controller_overlay
 
@@ -577,8 +582,8 @@ class LockScreen(Overlay):
 
     INVALID = ("error", "Invalid password.")
 
-    IOERROR = ("error", "Problem accessing {pwd}. Please make sure " \
-               "it contains exactly one line that is the lock " \
+    IOERROR = ("error", "Problem accessing {pwd}. Please make sure "
+               "it contains exactly one line that is the lock "
                "password.".format(pwd=pegasus.PASSWORD_FILE))
 
     def __init__(self, underlying, unlock):
@@ -586,7 +591,7 @@ class LockScreen(Overlay):
         self.password = Edit("Password: ", mask='*')
         self.invalid = Text("")
         w = ListBox([Text(self.LOCKED), self.invalid,
-                           self.password])
+                     self.password])
         w = LineBox(w)
         w = AttrWrap(w, "dialog")
         Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 8)
@@ -667,7 +672,8 @@ class PegasusGUI(MainLoop):
                     # If the controller overlay finished its work while we were
                     # locked, bypass it.
                     # nonlocal old
-                    if isinstance(old['res'], ControllerOverlay) and old['res'].done:
+                    if isinstance(old['res'], ControllerOverlay) and \
+                       old['res'].done:
                         old['res'] = self.node_view
                     self.widget = old['res']
                     self.lock_ticks = LOCK_TIME
@@ -694,7 +700,7 @@ class PegasusGUI(MainLoop):
         FIXME: Once https://github.com/wardi/urwid/pull/57 is implemented.
         """
 
-        result = {'res' : None}
+        result = {'res': None}
 
         # Here again things are a little weird: we own write_fd, but the urwid
         # API makes things a bit awkward since we end up needing mutually
