@@ -16,54 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-getDomain() {
-	echo "$1" | grep -E "^[^@]+@[^@]+\.[^@]+$" | sed -E -e 's/[^@]+@([^@]+\.[^@]+)/\1/'
-}
-
-configureLandscape() {
-	state=1
-	states=""
-	email_domain=example.com
-	while [ -n "$state" ] && [ "$state" != 4 ]; do
-		next_state=$((state + 1))
-		case $state in
-		1)
-			dialogInput "Landscape login" \
-			    "Please enter the login email you would like to use for Landscape." \
-			    10 60
-			admin_email=$input
-			if [ $ret -ne 0 ]; then
-				popState; continue
-			fi
-			result=$(getDomain "$admin_email")
-			email_domain="$result"
-			;;
-		2)
-			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
-			dialogInput "Landscape user's full name" \
-			    "Please enter the full name of the admin user for Landscape." \
-			    10 60 "$suggested_name"
-			admin_name=$input
-			if [ $ret -ne 0 ]; then
-				popState; continue
-			fi
-			;;
-		3)
-			dialogInput "Landscape system email" \
-			    "Please enter the email that landscape should use as the system email." \
-			    10 60 "landscape@$email_domain"
-			system_email=$input
-			if [ $ret -ne 0 ]; then
-				popState; continue
-			fi
-			result=$(getDomain "$system_email")
-			;;
-		esac
-		pushState "$state"
-		state=$next_state
-	done
-}
-
 deployLandscape()
 {
 	end_percent=${1:-100}
@@ -94,8 +46,6 @@ deployLandscape()
 
 landscapeInstall()
 {
-	configureLandscape
-
 	# The landscape install needs a fully working juju bootstrap environment,
 	# just like the multi install with no status screen does.
 	multiInstall cloud-install-landscape
