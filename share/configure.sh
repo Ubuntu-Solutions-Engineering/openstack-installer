@@ -90,7 +90,7 @@ configureInstall()
 			interfaces=$(getInterfaces)
 			interfaces_count=$(echo "$interfaces" | wc -w)
 			if [ $interfaces_count -ge 2 ]; then
-				interface=$(dialogMenu "Select the network MaaS will manage. MaaS will be the DHCP server on this network and respond to PXE requests." "" 15 60 8 $interfaces)
+				interface=$(dialogMenu "Select the network" "Select the network MaaS will manage. MaaS will be the DHCP server on this network and respond to PXE requests." 15 60 8 $interfaces)
 				if [ -z "$interface" ]; then
 					popState; continue
 				fi
