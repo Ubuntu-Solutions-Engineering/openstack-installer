@@ -22,6 +22,7 @@ getDomain() {
 
 configureLandscape() {
 	state=1
+	states=""
 	email_domain=example.com
 	while [ -n "$state" ] && [ "$state" != 4 ]; do
 		next_state=$((state + 1))
