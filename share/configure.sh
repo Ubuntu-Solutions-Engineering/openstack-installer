@@ -56,6 +56,10 @@ checkSingleInstall()
 	checkDiskSpace $SINGLE_DISK_MIN
 }
 
+getDomain() {
+	echo "$1" | grep -E "^[^@]+@[^@]+\.[^@]+$" | sed -E -e 's/[^@]+@([^@]+\.[^@]+)/\1/'
+}
+
 configureInstall()
 {
 	state=1
@@ -77,6 +81,7 @@ configureInstall()
 				next_state=20
 				;;
 			"Landscape managed")
+				landscape=true
 				next_state=10
 				;;
 			esac
@@ -132,6 +137,36 @@ configureInstall()
 			    10 60 "$dhcp_range"
 			dhcp_range=$input
 			if [ $ret -ne 0 ]; then
+				popState; continue
+			fi
+			if [ -z "$landscape" ]; then
+				next_state=30
+			else
+				next_state=15
+			fi
+			;;
+		15)
+			dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60
+			admin_email=$input
+			result=$(getDomain "$admin_email")
+			if [ -z "$result" ]; then
+				popState; continue
+			fi
+			email_domain="$result"
+			;;
+		16)
+			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
+			dialogInput "Landscape user's full name" "Please enter the full name of the admin user for Landscape." 10 60 "$suggested_name"
+			admin_name=$input
+			if [ -z "$admin_name" ]; then
+				popState; continue
+			fi
+			;;
+		17)
+			dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain"
+			system_email=$input
+			result=$(getDomain "$system_email")
+			if [ -z "$result" ]; then
 				popState; continue
 			fi
 			next_state=30
