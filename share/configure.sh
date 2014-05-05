@@ -94,7 +94,7 @@ configureInstall()
 			if [ $interfaces_count -ge 2 ]; then
 				dialogMenu "Select the network" \
 				    "Select the network MaaS will manage. MaaS will be the DHCP server on this network and respond to PXE requests." \
-				    15 60 8 $interfaces
+				    15 60 6 $interfaces
 				interface=$input
 				if [ $ret -ne 0 ]; then
 					popState; continue
