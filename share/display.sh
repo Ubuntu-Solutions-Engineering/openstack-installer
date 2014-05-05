@@ -100,8 +100,8 @@ dialogGaugeStop()
 #
 dialogInput()
 {
-	whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox "$2" $3 $4 \
-	    "$5" 3>&1 1>/dev/tty 2>&3 || true
+	{ input=$(whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox \
+	    "$2" $3 $4 "$5" 3>&1 1>/dev/tty 2>&3); ret=$?; } || true
 }
 
 # Display a menu
@@ -118,11 +118,13 @@ dialogMenu()
 	width=$4
 	menu_height=$5
 	shift 5
-	for item; do
-		echo "\"$item\""
-		echo '""'
-	done | xargs whiptail --title "$title" --backtitle "$BACKTITLE" --menu \
-	    "$text" $height $width $menu_height 3>&1 1>/dev/tty 2>&3 || true
+	{
+		input=$(for item; do echo "\"$item\""; echo '""'; done \
+		    | xargs whiptail --title "$title" --backtitle "$BACKTITLE" \
+		    --menu "$text" $height $width $menu_height 3>&1 1>/dev/tty \
+		    2>&3)
+		ret=$?
+	} || true
 }
 
 # Display a message
@@ -143,8 +145,8 @@ dialogMsgBox()
 #
 dialogPassword()
 {
-	whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox "$2" $3 \
-	    $4 3>&1 1>/dev/tty 2>&3 || true
+	{ input=$(whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox \
+	    "$2" $3 $4 3>&1 1>/dev/tty 2>&3); ret=$?; } || true
 }
 
 # Display a yes/no choice

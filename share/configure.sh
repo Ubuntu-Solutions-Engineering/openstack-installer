@@ -63,7 +63,12 @@ configureInstall()
 		next_state=$((state + 1))
 		case $state in
 		1)
-			install_type=$(dialogMenu "Select install type" "" 10 60 3 Multi-system "Single system" "Landscape managed")
+			dialogMenu "Select install type" "" 10 60 3 \
+			    Multi-system "Single system" "Landscape managed"
+			install_type=$input
+			if [ $ret -ne 0 ]; then
+				popState; continue
+			fi
 			case $install_type in
 			Multi-system)
 				next_state=10
@@ -73,9 +78,6 @@ configureInstall()
 				;;
 			"Landscape managed")
 				next_state=10
-				;;
-			*)
-				popState; continue
 				;;
 			esac
 			;;
@@ -90,8 +92,10 @@ configureInstall()
 			interfaces=$(getInterfaces)
 			interfaces_count=$(echo "$interfaces" | wc -w)
 			if [ $interfaces_count -ge 2 ]; then
-				interface=$(dialogMenu "Select the network MaaS will manage. MaaS will be the DHCP server on this network and respond to PXE requests." "" 15 60 8 $interfaces)
-				if [ -z "$interface" ]; then
+				dialogMenu "Select the network MaaS will manage. MaaS will be the DHCP server on this network and respond to PXE requests." \
+				    "" 15 60 8 $interfaces
+				interface=$input
+				if [ $ret -ne 0 ]; then
 					popState; continue
 				fi
 			else
@@ -102,7 +106,9 @@ configureInstall()
 		12)
 			bridge_interface=""
 			if [ $interfaces_count -ge 2 ]; then
-				if dialogYesNo "Bridge interface?" Yes No "Sometimes it is useful to run MaaS on its own network. If you are running MaaS on its own network and would like to bridge this network to the outside world, please indicate so." 10 60; then
+				if dialogYesNo "Bridge interface?" Yes No \
+				    "Sometimes it is useful to run MaaS on its own network. If you are running MaaS on its own network and would like to bridge this network to the outside world, please indicate so." \
+				    10 60; then
 					bridge_interface=true
 				fi
 			fi
@@ -120,8 +126,11 @@ configureInstall()
 			state=$next_state; continue
 			;;
 		14)
-			dhcp_range=$(dialogInput "IP address range (<ip addr low>-<ip addr high>):" "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." 10 60 "$dhcp_range")
-			if [ -z "$dhcp_range" ]; then
+			dialogInput "IP address range (<ip addr low>-<ip addr high>):" \
+			    "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." \
+			    10 60 "$dhcp_range"
+			dhcp_range=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			next_state=30
@@ -134,18 +143,26 @@ configureInstall()
 			state=30; continue
 			;;
 		30)
-			openstack_password=$(dialogPassword "OpenStack admin user password:" "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." 10 60)
-			if [ -z "$openstack_password" ]; then
+			dialogPassword "OpenStack admin user password:" \
+			    "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
+			    10 60
+			openstack_password=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			;;
 		31)
-			openstack_password2=$(dialogPassword "OpenStack admin user password to verify:" "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." 10 60)
-			if [ -z "$openstack_password2" ]; then
+			dialogPassword "OpenStack admin user password to verify:" \
+			    "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." \
+			    10 60
+			openstack_password2=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			if [ "$openstack_password" != "$openstack_password2" ]; then
-				dialogMsgBox "[!] Password mismatch" Continue "The two passwords you entered were not the same, please try again." 10 60
+				dialogMsgBox "[!] Password mismatch" Continue \
+				    "The two passwords you entered were not the same, please try again." \
+				    10 60
 				popState; continue
 			fi
 			;;
