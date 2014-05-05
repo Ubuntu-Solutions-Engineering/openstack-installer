@@ -58,16 +58,19 @@ landscapeInstall()
 		deployLandscape 95
 
 		dialogGaugePrompt 96 "Configuring Landscape"
+		maas_ip=$(ipAddress br0)
 		landscape_ip=$($configure_landscape \
 		    --admin-email="$admin_email" \
 		    --admin-name="$admin_name" \
 		    --system-email="$system_email" \
-		    --maas-host="$(ipAddress br0)")
+		    --maas-host="$maas_ip")
 
 	} > "$TMP/gauge"
 	dialogGaugeStop
 
-	echo "Your Landscape installation is complete!"
+	echo "You can now accept enlisted nodes in MaaS by visiting"
+	echo "http://$maas_ip/MAAS/. The username is root' and the password is the"
+	echo "one you provided during the install process."
 	echo "Please go to http://$landscape_ip/account/standalone/openstack to"
 	echo "continue with the installation of your OpenStack cloud."
 }

@@ -189,6 +189,7 @@ def main():
 
     register_maas(host, auth['LANDSCAPE_API_KEY'],
                   auth['LANDSCAPE_API_SECRET'], args.maas_host)
+    print(host)
 
 if __name__ == '__main__':
     main()
