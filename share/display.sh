@@ -96,7 +96,8 @@ dialogGaugeStop()
 #
 # dialogInput title text height width input-text
 #
-# writes text entry to stdout, empty string if user cancels
+# 'input' contains text entry
+# 'ret' contains exit code (0 on success, >0 if user cancels)
 #
 dialogInput()
 {
@@ -108,7 +109,8 @@ dialogInput()
 #
 # dialogMenu title text height width menu-height menu-item...
 #
-# writes menu selection to stdout, empty string if user cancels
+# 'input' contains menu selection
+# 'ret' contains exit code (0 on success, >0 if user cancels)
 #
 dialogMenu()
 {
@@ -141,7 +143,8 @@ dialogMsgBox()
 #
 # dialogPassword title text height width
 #
-# writes text entry to stdout, empty string if user cancels
+# 'input' contains text entry
+# 'ret' contains exit code (0 on success, >0 if user cancels)
 #
 dialogPassword()
 {
