@@ -28,26 +28,35 @@ configureLandscape() {
 		next_state=$((state + 1))
 		case $state in
 		1)
-			admin_email=$(dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60)
-			result=$(getDomain "$admin_email")
-			if [ -z "$result" ]; then
+			dialogInput "Landscape login" \
+			    "Please enter the login email you would like to use for Landscape." \
+			    10 60
+			admin_email=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
+			result=$(getDomain "$admin_email")
 			email_domain="$result"
 			;;
 		2)
 			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
-			admin_name=$(dialogInput "Landscape user's full name" "Please enter the full name of the admin user for Landscape." 10 60 "$suggested_name")
-			if [ -z "$admin_name" ]; then
+			dialogInput "Landscape user's full name" \
+			    "Please enter the full name of the admin user for Landscape." \
+			    10 60 "$suggested_name"
+			admin_name=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			;;
 		3)
-			system_email=$(dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain")
-			result=$(getDomain "$system_email")
-			if [ -z "$result" ]; then
+			dialogInput "Landscape system email" \
+			    "Please enter the email that landscape should use as the system email." \
+			    10 60 "landscape@$email_domain"
+			system_email=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
+			result=$(getDomain "$system_email")
 			;;
 		esac
 		pushState "$state"
