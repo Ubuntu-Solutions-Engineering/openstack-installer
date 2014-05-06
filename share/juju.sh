@@ -45,6 +45,17 @@ configLocalEnvironment()
 		EOF
 }
 
+configCharmOptions()
+{
+	cat <<-EOF
+                keystone:
+                  admin-password: $1
+                  admin-user: $1
+                juju-gui:
+                  password: $1
+		EOF
+}
+
 configureJuju()
 {
 	env_type=$1
