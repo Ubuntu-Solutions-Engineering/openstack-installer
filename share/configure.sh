@@ -81,7 +81,6 @@ configureInstall()
 				next_state=20
 				;;
 			"Landscape managed")
-				landscape=true
 				next_state=10
 				;;
 			esac
@@ -139,7 +138,7 @@ configureInstall()
 			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
-			if [ -z "$landscape" ]; then
+			if [ "$install_type" = "Landscape managed" ]; then
 				next_state=30
 			else
 				next_state=15

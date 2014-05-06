@@ -18,11 +18,14 @@
 
 """ Pegasus - gui interface to Ubuntu Cloud Installer """
 
+from operator import attrgetter
 from os import write, close, path
 from traceback import format_exc
 import re
 import threading
 import logging
+import importlib
+import pkgutil
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
@@ -81,8 +84,8 @@ class ControllerOverlay(Overlay):
         self.command_runner = command_runner
         self.done = False
         self.machine = None
-        self.deployed_charms = []
-        self.finalized_charms = []
+        self.deployed_charm_classes = []
+        self.finalized_charm_classes = []
         self.single_net_configured = False
         self.info_text = Text(self.NODE_WAIT
                               if pegasus.SINGLE_SYSTEM
@@ -111,8 +114,12 @@ class ControllerOverlay(Overlay):
 
     def _process(self, data):
         import cloudinstall.charms
-        helper = utils.ImporterHelper(cloudinstall.charms)
-        charms = helper.get_modules()
+
+        charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
+                         for (_, mname, _) in 
+                         pkgutil.iter_modules(cloudinstall.charms.__path__)]
+        charm_classes = sorted([m.__charm_class__ for m in charm_modules], 
+                               key=attrgetter('deploy_priority'))
 
         if self.machine is None:
             self.machine = self.get_controller_machine(data)
@@ -126,58 +133,54 @@ class ControllerOverlay(Overlay):
             log.debug("starting install on machine {mid}".format(mid=self.machine.machine_id))
 
 
-        undeployed_charms = [c for c in charms if c not in self.deployed_charms]
+        undeployed_charm_classes = [c for c in charm_classes 
+                                    if c not in self.deployed_charm_classes]
 
-        if len(undeployed_charms) > 0:
+        if len(undeployed_charm_classes) > 0:
             self.info_text.set_text("Deploying charms")
             log.debug("Deploying charms")
-            for charm in undeployed_charms:
-                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                charm_ = charm_(state=data)
+            for charm_class in undeployed_charm_classes:
+                charm = charm_class(state=data)
                 log.debug("checking if {c} is already deployed:".format(c=charm))
                 # charm is loaded, decide whether to run it
-                if charm_.name() in [s.service_name for s in data.services]:
+                if charm.name() in [s.service_name for s in data.services]:
                     log.debug("{c} is already deployed, skipping".format(c=charm))
-                    self.deployed_charms.append(charm)
+                    self.deployed_charm_classes.append(charm_class)
                     continue
 
                 log.debug("{c} is NOT already deployed - deploying".format(c=charm))
 
                 # Hardcode lxc on same machine as they are
                 # created on-demand.
-                charm_.setup(_id='lxc:{mid}'.format(mid=self.machine.machine_id))
-                self.deployed_charms.append(charm)
+                charm.setup(_id='lxc:{mid}'.format(mid=self.machine.machine_id))
+                self.deployed_charm_classes.append(charm_class)
 
-        unfinalized_charms = [c for c in self.deployed_charms
-                              if c not in self.finalized_charms]
+        unfinalized_charm_classes = [c for c in self.deployed_charm_classes
+                                     if c not in self.finalized_charm_classes]
 
-        if len(unfinalized_charms) > 0:
+        if len(unfinalized_charm_classes) > 0:
             self.info_text.set_text("Setting charm relations")
             log.debug("Setting charm relations")
-            for charm in [c for c in self.deployed_charms
-                          if c not in self.finalized_charms]:
+            for charm_class in unfinalized_charm_classes:
 
-                charm_ = utils.import_module('cloudinstall.charms.'
-                                             '{charm}'.format(charm=charm))[0]
-                charm_ = charm_(state=data)
+                charm = charm_class(state=data)
 
-                if data.service(charm_.charm_name) is None:
+                if data.service(charm.charm_name) is None:
                     # Juju doesn't see the service related to this
                     # charm yet, so defer setting its relations.
-                    log.debug("service not up yet "
-                              "for charm {c}".format(c=charm_.charm_name))
+                    log.debug("service not up yet for charm {c}".format(c=charm.charm_name))
                     continue
 
-                log.debug("calling set_relations() "
-                          "for charm {c}".format(c=charm_.charm_name))
-                charm_.set_relations()
-                self.finalized_charms.append(charm)
+                log.debug("calling set_relations() for charm {c}".format(c=charm.charm_name))
+                charm.set_relations()
+                charm.post_proc()
+                self.finalized_charm_classes.append(charm_class)
 
-        log.debug("at end of process(), deployed_charms={d}"
-                  "finalized_charms={f}".format(d=self.deployed_charms,
-                                                f=self.finalized_charms))
+        log.debug("at end of process(), deployed_charm_classes={d}"
+                  "finalized_charm_classes={f}".format(d=self.deployed_charm_classes,
+                                                f=self.finalized_charm_classes))
 
-        if len(self.finalized_charms) == len(charms):
+        if len(self.finalized_charm_classes) == len(charm_classes):
             log.debug("Charm setup done.")
             return False
         else:

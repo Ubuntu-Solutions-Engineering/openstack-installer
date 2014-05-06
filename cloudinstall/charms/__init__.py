@@ -19,6 +19,7 @@
 import logging
 import yaml
 from os.path import expanduser
+import sys
 
 from cloudinstall.juju.client import JujuClient
 
@@ -34,6 +35,7 @@ class CharmBase:
     isolate = False
     constraints = None
     configfile = expanduser("~/.cloud-install/charmconf.yaml")
+    deploy_priority = sys.maxsize
 
     def __init__(self, state=None, machine=None):
         """ initialize
