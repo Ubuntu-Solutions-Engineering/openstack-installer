@@ -50,7 +50,7 @@ configCharmOptions()
 	cat <<-EOF
                 keystone:
                   admin-password: $1
-                  admin-user: $1
+                  admin-user: 'admin'
                 juju-gui:
                   password: $1
 		EOF
