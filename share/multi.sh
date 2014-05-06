@@ -77,7 +77,7 @@ multiInstall()
 		dialogGaugePrompt 75 "Bootstrapping Juju"
 		jujuBootstrap $uuid
 		maas maas tags new name=use-fastpath-installer definition="true()"
-		maasLogout
+		chown $INSTALL_USER:$INSTALL_USER /home/$INSTALL_USER/.maascli.db
 
 		dialogGaugePrompt 100 "Installation complete"
 	} > "$TMP/gauge"
