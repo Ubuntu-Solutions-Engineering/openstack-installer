@@ -175,17 +175,15 @@ def parse_state(juju, maas=None):
                 c.mem = utils.get_host_mem()
                 c.cpu_cores = utils.get_host_cpu_cores()
                 c.storage = utils.get_host_storage()
-
-        if maas:
-            maas_machine = maas.machine(machine.instance_id)
-            if maas_machine is None:
-                log.debug("machine id='{iid}' not found in MaasState.".format(iid=machine.instance_id))
-            else:
-                machine.mem = maas_machine.mem
-                machine.cpu_cores = maas_machine.cpu_cores
-                machine.storage = maas_machine.storage
-                machine.tag = maas_machine.tag
         results.append(machine)
+
+    if maas:
+        log.debug("adding available maas machines")
+        for machine in maas.machines():
+            if machine.status == 4:
+                machine.agent_state = "started"
+            log.debug("querying {maas}".format(maas=machine))
+            results.append(machine)
     return results
 
 

@@ -148,12 +148,14 @@ class ControllerOverlay(Overlay):
                 charm_.setup(_id='lxc:{mid}'.format(mid=self.machine.machine_id))
                 self.deployed_charms.append(charm)
 
-        unfinalized_charms = [c for c in self.deployed_charms if c not in self.finalized_charms]
+        unfinalized_charms = [c for c in self.deployed_charms
+                              if c not in self.finalized_charms]
 
         if len(unfinalized_charms) > 0:
             self.info_text.set_text("Setting charm relations")
             log.debug("Setting charm relations")
-            for charm in [c for c in self.deployed_charms if c not in self.finalized_charms]:
+            for charm in [c for c in self.deployed_charms
+                          if c not in self.finalized_charms]:
 
                 charm_ = utils.import_module('cloudinstall.charms.'
                                              '{charm}'.format(charm=charm))[0]
@@ -162,12 +164,13 @@ class ControllerOverlay(Overlay):
                 if data.service(charm_.charm_name) is None:
                     # Juju doesn't see the service related to this
                     # charm yet, so defer setting its relations.
-                    log.debug("service not up yet for charm {c}".format(c=charm_.charm_name))
+                    log.debug("service not up yet "
+                              "for charm {c}".format(c=charm_.charm_name))
                     continue
 
-                log.debug("calling set_relations() for charm {c}".format(c=charm_.charm_name))
+                log.debug("calling set_relations() "
+                          "for charm {c}".format(c=charm_.charm_name))
                 charm_.set_relations()
-                charm_.post_proc()
                 self.finalized_charms.append(charm)
 
         log.debug("at end of process(), deployed_charms={d}"

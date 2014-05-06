@@ -218,7 +218,7 @@ class MaasState:
         for machine in self.maas:
             if 'juju-bootstrap.maas' in machine['hostname']:
                 continue
-            yield MaasMachine(-1, machine)
+            yield MaasMachine(4, machine)
 
     def num_in_state(self, state):
         """ Number of machines in a particular state
