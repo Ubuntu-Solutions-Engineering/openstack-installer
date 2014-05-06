@@ -30,3 +30,5 @@ class CharmKeystone(CharmBase):
         self.client.set_config(self.charm_name,
                                {'admin-password': self.openstack_password(),
                                 'admin-user': 'admin'})
+
+__charm_class__ = CharmKeystone

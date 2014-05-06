@@ -29,3 +29,5 @@ class CharmJujuGui(CharmBase):
     def post_proc(self):
         self.client.set_config(self.charm_name,
                                {'password': self.openstack_password()})
+
+__charm_class__ = CharmJujuGui
