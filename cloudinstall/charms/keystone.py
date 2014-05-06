@@ -25,3 +25,5 @@ class CharmKeystone(CharmBase):
     charm_name = 'keystone'
     display_name = 'Keystone'
     related = ['mysql']
+
+__charm_class__ = CharmKeystone

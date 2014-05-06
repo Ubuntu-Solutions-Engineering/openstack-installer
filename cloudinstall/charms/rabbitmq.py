@@ -23,3 +23,5 @@ class CharmRabbitMQ(CharmBase):
 
     charm_name = 'rabbitmq-server'
     display_name = 'RabbitMQ Server'
+
+__charm_class__ = CharmRabbitMQ
