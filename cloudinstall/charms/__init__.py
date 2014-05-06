@@ -33,7 +33,7 @@ class CharmBase:
     related = []
     isolate = False
     constraints = None
-    deploy_priority = sys.maxint
+    deploy_priority = sys.maxsize
 
     def __init__(self, state=None, machine=None):
         """ initialize
