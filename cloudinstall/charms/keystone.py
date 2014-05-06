@@ -25,8 +25,3 @@ class CharmKeystone(CharmBase):
     charm_name = 'keystone'
     display_name = 'Keystone'
     related = ['mysql']
-
-    def post_proc(self):
-        self.client.set_config(self.charm_name,
-                               {'admin-password': self.openstack_password(),
-                                'admin-user': 'admin'})
