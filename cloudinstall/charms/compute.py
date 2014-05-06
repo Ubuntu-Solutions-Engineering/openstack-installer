@@ -37,3 +37,5 @@ class CharmNovaCompute(CharmBase):
                and 'rabbitmq-server' in charm:
                 self.client.add_relation("{c}:amqp".format(c=self.charm_name),
                                          "rabbitmq-server:amqp")
+
+__charm_class__ = CharmNovaCompute
