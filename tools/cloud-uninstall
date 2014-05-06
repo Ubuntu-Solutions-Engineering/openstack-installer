@@ -43,7 +43,11 @@ case $WHAT in
     rm /etc/network/interfaces.d/cloud-install.cfg
     ifconfig br0 down
     brctl delbr br0
-    service networking restart
+    interface=$(cat /etc/network/cloud-interfaces)
+    rm /etc/network/cloud-interface
+    if [ -n "$interface" ]; then
+        ifdown $interface && ifup $interface
+    fi
 
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo you might need to fix your /etc/resolv.conf
