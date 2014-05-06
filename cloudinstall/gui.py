@@ -18,6 +18,7 @@
 
 """ Pegasus - gui interface to Ubuntu Cloud Installer """
 
+from operator import attrgetter
 from os import write, close, path
 from traceback import format_exc
 import re
@@ -113,6 +114,8 @@ class ControllerOverlay(Overlay):
         import cloudinstall.charms
         helper = utils.ImporterHelper(cloudinstall.charms)
         charms = helper.get_modules()
+
+        charms = sorted(charms, key=attrgetter('deploy_priority'))
 
         if self.machine is None:
             self.machine = self.get_controller_machine(data)

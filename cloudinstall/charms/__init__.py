@@ -18,6 +18,7 @@
 
 import logging
 from os.path import expanduser
+import sys
 
 from cloudinstall.juju.client import JujuClient
 
@@ -32,6 +33,7 @@ class CharmBase:
     related = []
     isolate = False
     constraints = None
+    deploy_priority = sys.maxint
 
     def __init__(self, state=None, machine=None):
         """ initialize

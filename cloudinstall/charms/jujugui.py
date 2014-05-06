@@ -24,6 +24,7 @@ class CharmJujuGui(CharmBase):
 
     charm_name = 'juju-gui'
     display_name = 'Juju GUI'
+    deploy_priority = 0         # deploy before all other charms
 
     def post_proc(self):
         self.client.set_config(self.charm_name,
