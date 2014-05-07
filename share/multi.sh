@@ -101,4 +101,6 @@ setupMultiInstall()
 	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" \
 	    "/home/$INSTALL_USER/.cloud-install"
+	configCharmOptions $openstack_password > \
+          "/home/$INSTALL_USER/.cloud-install/charmconf.yaml"
 }
