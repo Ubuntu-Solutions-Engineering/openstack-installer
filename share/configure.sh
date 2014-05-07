@@ -110,6 +110,37 @@ configureInstall()
 			fi
 			;;
 		12)
+			dialogGaugeStart "DHCP server detection" \
+			    "Detecting existing dhcp servers...\n\nPress [enter] to skip" \
+			    8 70 0
+			detectDhcpServer $interface &
+			skip=""
+			i=0
+			while [ $i -ne 10 ]; do
+				if dd bs=1 count=100 iflag=nonblock \
+				    2> /dev/null | tr "\r" "\n" \
+				    | read -r input; then
+					skip=true
+					{ kill $!; wait $!; } || true
+					break
+				fi
+				if ! ps -p $! > /dev/null; then
+					break
+				fi
+				echo $(((i * 100) / 10))
+				sleep 1
+				i=$((i + 1))
+			done > "$TMP/gauge"
+			dialogGaugeStop
+			if [ -z "$skip" ] && wait $! && ! dialogYesNo "[!] Existing DHCP server detected" \
+			    Continue Cancel \
+			    "An existing DHCP server has been detected on the interface ${interface}.\n\nThis installation will install and manage its own DHCP server. A collision between servers may prevent you from adding subsequent nodes.\n\nSelect Continue to proceed regardless" \
+			    15 60; then
+				popState; continue
+			fi
+			state=13; continue
+			;;
+		13)
 			bridge_interface=""
 			if [ $interfaces_count -ge 2 ]; then
 				if dialogYesNo "Bridge interface?" Yes No \
@@ -120,7 +151,7 @@ configureInstall()
 			fi
 			state=$next_state; continue
 			;;
-		13)
+		14)
 			network=$(ipNetwork $interface)
 			address=$(ipAddress $interface)
 			if [ -n "$bridge_interface" ]; then
@@ -131,7 +162,7 @@ configureInstall()
 			fi
 			state=$next_state; continue
 			;;
-		14)
+		15)
 			dialogInput "IP address range (<ip addr low>-<ip addr high>):" \
 			    "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." \
 			    10 60 "$dhcp_range"
@@ -142,10 +173,10 @@ configureInstall()
 			if [ -z "$landscape" ]; then
 				next_state=30
 			else
-				next_state=15
+				next_state=16
 			fi
 			;;
-		15)
+		16)
 			dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60
 			admin_email=$input
 			result=$(getDomain "$admin_email")
@@ -154,7 +185,7 @@ configureInstall()
 			fi
 			email_domain="$result"
 			;;
-		16)
+		17)
 			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
 			dialogInput "Landscape user's full name" "Please enter the full name of the admin user for Landscape." 10 60 "$suggested_name"
 			admin_name=$input
@@ -162,7 +193,7 @@ configureInstall()
 				popState; continue
 			fi
 			;;
-		17)
+		18)
 			dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain"
 			system_email=$input
 			result=$(getDomain "$system_email")
