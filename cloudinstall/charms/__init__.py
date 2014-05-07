@@ -17,7 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import yaml
 from os.path import expanduser
+import sys
 
 from cloudinstall.juju.client import JujuClient
 
@@ -32,6 +34,8 @@ class CharmBase:
     related = []
     isolate = False
     constraints = None
+    configfile = expanduser("~/.cloud-install/charmconf.yaml")
+    deploy_priority = sys.maxsize
 
     def __init__(self, state=None, machine=None):
         """ initialize
@@ -86,14 +90,22 @@ class CharmBase:
         The default should be sufficient but if more functionality
         is needed this should be overridden.
         """
+        kwds = {}
+        kwds['machine_id'] = _id
+
+        if self.configfile:
+            with open(self.configfile) as f:
+                _opts = yaml.load(f.read())
+                if self.charm_name in _opts:
+                    kwds['configfile'] = self.configfile
+
         if self.isolate:
-            _id = None
-            self.client.deploy(charm=self.charm_name,
-                               instances=1,
-                               constraints=self.constraints)
+            kwds['machine_id'] = None
+            kwds['instances'] = 1
+            kwds['constraints'] = self.constraints
+            self.client.deploy(self.charm_name, kwds)
         else:
-            self.client.deploy(charm=self.charm_name,
-                               machine_id=_id)
+            self.client.deploy(self.charm_name, kwds)
 
     def set_relations(self):
         """ Setup charm relations
@@ -101,7 +113,7 @@ class CharmBase:
         Override in charm specific.
         """
         if len(self.related) > 0:
-            services = self.state.service(self.charm_name)
+            services = self.state[1].service(self.charm_name)
             for charm in self.related:
                 try:
                     if not self.is_related(charm, services.relations) \
