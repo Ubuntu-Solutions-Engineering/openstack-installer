@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from os.path import expanduser
 from cloudinstall.charms import CharmBase
 
 
@@ -27,16 +26,4 @@ class CharmKeystone(CharmBase):
     display_name = 'Keystone'
     related = ['mysql']
 
-    def __openstack_password(self):
-        PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
-        try:
-            with open(PASSWORD_FILE) as f:
-                OPENSTACK_PASSWORD = f.read().strip()
-        except IOError:
-            OPENSTACK_PASSWORD = 'password'
-        return OPENSTACK_PASSWORD
-
-    def post_proc(self):
-        self.client.set_config(self.charm_name,
-                               {'admin-password': self.__openstack_password(),
-                                'admin-user': 'admin'})
+__charm_class__ = CharmKeystone

@@ -1,5 +1,5 @@
 #
-# horizin.py - Openstack Dashboard Charm instructions
+# horizon.py - Openstack Dashboard Charm instructions
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -25,3 +25,5 @@ class CharmHorizon(CharmBase):
     charm_name = 'openstack-dashboard'
     display_name = 'Openstack Dashboard (Horizon)'
     related = ['keystone']
+
+__charm_class__ = CharmHorizon

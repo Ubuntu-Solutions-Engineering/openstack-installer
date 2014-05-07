@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+# -*- mode: python; -*-
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This package is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+from subprocess import check_output
+from os.path import expanduser
+
+import argparse
+import requests
+from requests.exceptions import ConnectionError
+import time
+import yaml
+from urllib.parse import quote, urlparse, urlunparse
+import hmac
+from hashlib import sha256
+from base64 import b64encode
+
+MAGIC_OK_STRING = 'New user - Landscape'
+LATEST_VERSION = "2011-08-01"
+
+
+def parse(url):
+    """
+    Split the given URL into the host, port, and path.
+
+    @type url: C{str}
+    @param url: An URL to parse.
+    """
+    lowurl = url.lower()
+    if not lowurl.startswith(("http://", "https://")):
+        raise SyntaxError(
+            "URL must start with 'http://' or 'https://': %s" % (url,))
+    url = url.strip()
+    parsed = urlparse(url)
+    path = urlunparse(("", "") + parsed[2:])
+    host = parsed[1]
+
+    if ":" in host:
+        host, port = host.split(":")
+        try:
+            port = int(port)
+        except ValueError:
+            port = None
+    else:
+        port = None
+
+    return str(host), port, str(path)
+
+
+def run_query(access_key, secret_key, action, params, uri,
+              version=LATEST_VERSION):
+    """Make a low-level query against the Landscape API.
+
+    @param access_key: The user access key.
+    param secret_key: The user secret key.
+    @param action: The type of methods to call. For example, "GetComputers".
+    @param params: A dictionary of the parameters to pass to the action.
+    @param uri: The root URI of the API service. For example,
+        "https://landscape.canonical.com/".
+    """
+    timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    params.update({"access_key_id": access_key,
+                   "action": action,
+                   "signature_version": "2",
+                   "signature_method": "HmacSHA256",
+                   "timestamp": timestamp,
+                   "version": version})
+
+    for key, value in params.items():
+        if isinstance(key, str):
+            params.pop(key)
+            key = key.encode('utf-8')
+        if isinstance(value, str):
+            value = value.encode("utf-8")
+        params[key] = value
+
+    method = "POST"
+    host, port, path = parse(uri)
+    if port is not None:
+        signed_host = "%s:%d" % (host, port)
+    else:
+        signed_host = host
+    if not path:
+        path = "/"
+        uri = "%s/" % uri
+    signed_params = "&".join(
+        "%s=%s" % (quote(key, safe="~"), quote(value, safe="~"))
+        for key, value in sorted(params.items()))
+    to_sign = "%s\n%s\n%s\n%s" % (method, signed_host, path, signed_params)
+    to_sign = to_sign.encode('utf-8')
+    secret_key = secret_key.encode('utf-8')
+    digest = hmac.new(secret_key, to_sign, sha256).digest()
+    signature = b64encode(digest)
+    signed_params += "&signature=%s" % quote(signature)
+    params['signature'] = signature
+    r = requests.post(uri, data=params, verify=False)
+
+    # if we can't talk to landscape correctly, the install should fail.
+    assert r.status_code == 200
+
+    return r
+
+
+def get_landscape_host():
+    """ Assuming landscape has been deployed in landscape-dense-maas form,
+    find the "dns-name" of the landscape web server. """
+    juju = yaml.load(check_output(['juju', 'status']))
+
+    try:
+        return juju['services']['apache2']['units']['apache2/0']['public-address']
+    except KeyError:
+        raise Exception("Landscape not found!")
+
+
+# Landscape isn't actually up when juju-deployer exits; the relations take a
+# while to set up and deployer doesn't wait until they're finished (it has
+# no way to, viz. LP #1254766), so we wait until everything is ok.
+def wait_for_landscape(host):
+    while True:
+        try:
+            # Landscape generates a self signed cert for each install.
+            r = requests.get('http://%s/' % host, verify=False)
+            if MAGIC_OK_STRING in r.text:
+                # now do an API call to make sure the API is up (it gives 503
+                # for a while)
+                r = requests.get('http://%s/api/' % host, verify=False)
+                if r.status_code == 200:
+                    break
+        except ConnectionError:
+            pass
+        time.sleep(10)
+
+
+def register_new_user(host, **kwargs):
+    """ Register a new user. Takes kwargs admin_email admin_name, and
+    system_email. """
+    kwargs['root_url'] = 'https://%s/' % host
+    with open(expanduser('~/.cloud-install/openstack.passwd')) as f:
+        kwargs['admin_password'] = f.read().strip()
+
+    res = run_query('anonymous', 'anonymous', 'BootstrapLDS', kwargs,
+                    'https://%s/api/' % host)
+
+    return res.json()
+
+
+def register_maas(host, key, secret, maas_host):
+    with open(expanduser("~/.cloud-install/maas-creds")) as f:
+        creds = f.read().strip()
+
+    data = {
+      'endpoint': 'http://%s/MAAS' % maas_host,
+      'credentials': creds,
+    }
+
+    run_query(key, secret, 'RegisterMAASRegionController', data,
+              'https://%s/api/' % host)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--admin-email", help="the admin (login) e-mail")
+    parser.add_argument("--admin-name", help="administrator's full name")
+    parser.add_argument("--system-email", help="landscape's email address")
+    parser.add_argument("--maas-host", help="the host of the MAAS instance")
+
+    args = parser.parse_args()
+
+    host = get_landscape_host()
+    wait_for_landscape(host)
+    auth = register_new_user(host, admin_email=args.admin_email,
+                             admin_name=args.admin_name,
+                             system_email=args.system_email)
+
+    register_maas(host, auth['LANDSCAPE_API_KEY'],
+                  auth['LANDSCAPE_API_SECRET'], args.maas_host)
+    print(host)
+
+if __name__ == '__main__':
+    main()

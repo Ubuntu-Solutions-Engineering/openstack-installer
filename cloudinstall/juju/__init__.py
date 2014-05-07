@@ -67,31 +67,22 @@ class JujuState:
     def machines(self):
         """ Machines property
 
-        :returns: machines known to juju
+        :returns: machines known to juju (except bootstrap)
         :rtype: generator
         """
         for machine_id, machine in self._yaml['machines'].items():
-            if '0' in machine_id:
+            if '0' == machine_id:
                 continue
             yield Machine(machine_id, machine)
 
     def machines_allocated(self):
         """ Machines allocated property
 
-        :returns: Machines in an allocated state
+        :returns: all machines in an allocated state (see self.valid_states)
         :rtype: iter
         """
-        return filter(self.__validate_allocation,
-                      self.machines())
-
-    def machines_unallocated(self):
-        """ Machines unallocated property
-
-        :returns: Machines in an unallocated state
-        :rtype: iter
-        """
-        return filter(self.__validate_unallocation,
-                      self.machines())
+        return [m for m in self.machines()
+                if m.agent_state in self.valid_states]
 
     def service(self, name):
         """ Return a single service entry

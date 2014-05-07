@@ -196,12 +196,6 @@ maasLogin()
 	maas login maas http://localhost/MAAS/api/1.0 $1
 }
 
-maasLogout()
-{
-	maas logout maas
-	rm -rf /home/$INSTALL_USER/.maascli.db
-}
-
 nodeStatus()
 {
 	maas maas nodes list id=$1 \
