@@ -468,9 +468,8 @@ class NodeViewMode(Frame):
         header = [AttrWrap(Text(TITLE_TEXT), "border"),
                   AttrWrap(Text('(Q) Quit'), "border"),
                   AttrWrap(Text('(F5) Refresh'), "border"),
+                  AttrWrap(Text('(F6) Add units'), "border"),
                   AttrWrap(Text('(F8) Console'), "border")]
-        if pegasus.SINGLE_SYSTEM:
-            header.insert(3, AttrWrap(Text('(F6) Add compute node'), "border"))
         header = Columns(header)
         self.timer = Text("", align="left")
         self.status_info = Text("", align="left")
