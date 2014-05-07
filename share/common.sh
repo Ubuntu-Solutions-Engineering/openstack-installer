@@ -50,6 +50,12 @@ createTempDir()
 	TMP=$(mktemp -d /tmp/cloud-install.XXX)
 }
 
+detectDhcpServer()
+{
+	nmap --script broadcast-dhcp-discover -e $1 2> /dev/null \
+	    | grep -q DHCPOFFER
+}
+
 disableBlank()
 {
 	tty=$(tty)
