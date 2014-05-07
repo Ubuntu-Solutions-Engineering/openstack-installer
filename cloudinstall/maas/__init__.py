@@ -178,6 +178,14 @@ class MaasMachine(Machine):
         """
         return self.machine.get('owner', 'root')
 
+    def __repr__(self):
+        return "<MaasMachine({dns_name},{state},{mem}," \
+            "{storage},{cpus})>".format(dns_name=self.hostname,
+                                        state=self.agent_state,
+                                        mem=self.mem,
+                                        storage=self.storage,
+                                        cpus=self.cpu_cores)
+
 
 class MaasState:
     """ Represents global MaaS state """
@@ -218,7 +226,16 @@ class MaasState:
         for machine in self.maas:
             if 'juju-bootstrap.maas' in machine['hostname']:
                 continue
-            yield MaasMachine(4, machine)
+            yield MaasMachine(-1, machine)
+
+    def machines_allocated(self):
+        """ Maas machines in an allocated(ready) state
+
+        :returns: all machines in an allocated(ready) state
+        :rtype: iter:
+        """
+        return [m for m in self.machines()
+                if m.status == self.READY]
 
     def num_in_state(self, state):
         """ Number of machines in a particular state

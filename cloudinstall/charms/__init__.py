@@ -113,7 +113,7 @@ class CharmBase:
         Override in charm specific.
         """
         if len(self.related) > 0:
-            services = self.state.service(self.charm_name)
+            services = self.state[1].service(self.charm_name)
             for charm in self.related:
                 try:
                     if not self.is_related(charm, services.relations) \

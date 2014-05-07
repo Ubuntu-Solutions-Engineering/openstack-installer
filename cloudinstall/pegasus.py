@@ -146,7 +146,7 @@ def poll_state():
         c.tag_fpi(maas)
         c.nodes_accept_all()
         c.tag_name(maas)
-    return parse_state(juju, maas), juju
+    return parse_state(juju, maas), juju, maas
 
 
 def parse_state(juju, maas=None):
@@ -178,11 +178,13 @@ def parse_state(juju, maas=None):
         results.append(machine)
 
     if maas:
-        log.debug("adding available maas machines")
         for machine in maas.machines():
             if machine.status == 4:
-                machine.agent_state = "started"
-            log.debug("querying {maas}".format(maas=machine))
+                machine.agent_state = "ready"
+            if machine.status == 6:
+                machine.agent_state = "allocated"
+            machine.dns_name = machine.hostname
+            log.debug("querying maas machine: {maas}".format(maas=machine))
             results.append(machine)
     return results
 

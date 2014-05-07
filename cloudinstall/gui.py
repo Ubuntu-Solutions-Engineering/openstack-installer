@@ -113,12 +113,13 @@ class ControllerOverlay(Overlay):
         return continue_
 
     def _process(self, data):
+        _machines, _juju_state, _maas_state = data
         import cloudinstall.charms
 
         charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
-                         for (_, mname, _) in 
+                         for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
-        charm_classes = sorted([m.__charm_class__ for m in charm_modules], 
+        charm_classes = sorted([m.__charm_class__ for m in charm_modules],
                                key=attrgetter('deploy_priority'))
 
         if self.machine is None:
@@ -130,10 +131,11 @@ class ControllerOverlay(Overlay):
             if pegasus.SINGLE_SYSTEM and not self.single_net_configured:
                 self.configure_lxc_network()
 
-            log.debug("starting install on machine {mid}".format(mid=self.machine.machine_id))
+            log.debug("starting install on "
+                      "machine {mid}".format(mid=self.machine.machine_id))
 
 
-        undeployed_charm_classes = [c for c in charm_classes 
+        undeployed_charm_classes = [c for c in charm_classes
                                     if c not in self.deployed_charm_classes]
 
         if len(undeployed_charm_classes) > 0:
@@ -143,7 +145,7 @@ class ControllerOverlay(Overlay):
                 charm = charm_class(state=data)
                 log.debug("checking if {c} is already deployed:".format(c=charm))
                 # charm is loaded, decide whether to run it
-                if charm.name() in [s.service_name for s in data.services]:
+                if charm.name() in [s.service_name for s in _juju_state.services]:
                     log.debug("{c} is already deployed, skipping".format(c=charm))
                     self.deployed_charm_classes.append(charm_class)
                     continue
@@ -165,7 +167,7 @@ class ControllerOverlay(Overlay):
 
                 charm = charm_class(state=data)
 
-                if data.service(charm.charm_name) is None:
+                if _juju_state.service(charm.charm_name) is None:
                     # Juju doesn't see the service related to this
                     # charm yet, so defer setting its relations.
                     log.debug("service not up yet for charm {c}".format(c=charm.charm_name))
@@ -189,22 +191,30 @@ class ControllerOverlay(Overlay):
 
 
     def get_controller_machine(self, data):
-        allocated = list(data.machines_allocated())
+        machines, juju_state, maas_state = data
+        allocated = list(juju_state.machines_allocated())
         log.debug("Allocated machines: "
                   "{machines}".format(machines=allocated))
 
-
         if pegasus.MULTI_SYSTEM:
-            if len(allocated) == 0:
+            maas_allocated = list(maas_state.machines_allocated())
+            if len(allocated) == 0 and len(maas_allocated) == 0:
                 err_msg = "No machines allocated to juju. " \
                           "Please pxe boot a machine."
                 log.debug(err_msg)
                 self.info_text.set_text(err_msg)
                 return None
+            elif len(allocated) == 0 and len(maas_allocated) > 0:
+                self.info_text.set_text("Adding maas machine to juju")
+                self.command_runner.add_machine()
+                return None
             else:
-                return allocated[0]
+                return self.get_started_machine(allocated)
 
         elif pegasus.SINGLE_SYSTEM:
+            return self.get_started_machine(allocated)
+
+    def get_started_machine(self, allocated):
             if self.machine is None:
                 # wait for an allocated machine that is also started
                 started_machines = [m for m in allocated
@@ -496,7 +506,7 @@ class NodeViewMode(Frame):
         footer = AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
-        self.machines, self.state = state
+        self.machines, self.state, self.maas_state = state
         self.nodes = ListWithHeader(NODE_HEADER)
         self.loop = loop
 
@@ -560,11 +570,11 @@ class NodeViewMode(Frame):
 
         :params list state: JujuState()
         """
-        _machines, _state = state
+        _machines, _state, maas_state = state
         nodes = [Node(s, _state, self.open_dialog)
                  for s in _state.services]
         if self.target == self.controller_overlay and \
-                not self.controller_overlay.process(_state):
+                not self.controller_overlay.process(state):
             self.target = self
         self.nodes.update(nodes)
 
