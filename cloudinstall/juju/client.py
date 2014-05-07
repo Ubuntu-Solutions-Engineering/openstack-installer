@@ -49,10 +49,12 @@ log  = logging.getLogger(__name__)
 
 class JujuClient:
     """ Juju client class """
-    # def __init__(self, url='wss://juju-bootstrap.maas:17070/'):
-    #     self.conn = JujuWS(url, protocols=['https-only'])
-    #     self._request_id = 1
-    #     self.is_connected = False
+
+    def __init__(self, url='wss://juju-bootstrap.maas:17070/'):
+        "Constructor. url param is a websocket url, currently unused."
+        #     self.conn = JujuWS(url, protocols=['https-only'])
+        #     self._request_id = 1
+        #     self.is_connected = False
 
     # def login(self, password):
     #     """ Login to juju
