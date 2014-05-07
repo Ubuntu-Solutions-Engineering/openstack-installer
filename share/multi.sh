@@ -25,6 +25,7 @@ multiInstall()
 	{
 		dialogGaugePrompt 2 "Setting up install"
 		setupMultiInstall
+		testAndConfigureInterface
 
 		dialogAptInstall 4 20 ${1:-cloud-install-multi}
 
@@ -105,4 +106,16 @@ setupMultiInstall()
 	    "/home/$INSTALL_USER/.cloud-install"
 	configCharmOptions $openstack_password > \
           "/home/$INSTALL_USER/.cloud-install/charmconf.yaml"
+}
+
+testAndConfigureInterface()
+{
+	if [ -z "$(ipAddress $interface)" ]; then
+		ifdown $interface && ifup $interface
+		if [ -z "$(ipAddress $interface)" ]; then
+			echo "You selected $interface which could not be configured." 1>&2
+			echo "Please ensure $interface gets an IP address and re-run the installer." 1>&2
+			false
+		fi
+	fi
 }
