@@ -29,6 +29,7 @@ Vcs-Bzr: lp:cloud-installer
 Package: cloud-installer
 Architecture: all
 Depends: gawk,
+         nmap,
          pwgen,
          python3-all,
          python3-mock,
