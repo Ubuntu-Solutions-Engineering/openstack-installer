@@ -14,30 +14,36 @@ Development and testing is done on Ubuntu and using a release of
 Building cloud installer
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Sbuild** is the preferred way for building the package set. Please
-refer to this `wiki page <https://wiki.ubuntu.com/SimpleSbuild>`_ on
-setting up sbuild.
+.. note:: 
+   Although not required, **Sbuild** is the preferred way for building the package set. Please
+   refer to this `wiki page <https://wiki.ubuntu.com/SimpleSbuild>`_ on
+   setting up sbuild.
 
-Just like the base system the sbuild chroots need to be `Trusty` or
-later.
-
-.. note::
-
-   The architecture of the chroots do not matter.
+   Just like the base system the sbuild chroots need to be `Trusty` or
+   later, but the architecture of the chroots does not matter.
 
 Once **sbuild** is configured, checkout the source code of the
-installer
+installer:
 
 .. code::
 
    $ git clone https://github.com/Ubuntu-Solutions-Engineering/cloud-installer.git ~/cloud-installer
    $ cd cloud-installer
 
+Use the target 'install-dependencies' to install a custom binary package for the build dependencies:
+
+.. code::
+
+   $ make install-dependencies
+
+
 From here you can build the entire package set by running:
 
 .. code::
 
    $ make sbuild
+   # or, if you prefer not to use sbuild:
+   $ make deb
 
 Once finished your packages will be stored in the top level directory
 where your cloud-installer project is kept.
@@ -45,6 +51,30 @@ where your cloud-installer project is kept.
 .. code::
 
    $ ls ../*.deb
+
+Running the cloud installer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Running the installer for test currently requires installing the packages.
+After building the packages using either 'make deb' or 'make sbuild', you can install and run with the 'run' target:
+
+.. code::
+   
+   $ sudo make run type=single
+   # or 
+   $ sudo make run type=multi
+
+You can also set the MAAS_HTTP_PROXY env var for the cloud-install command like this:
+
+.. code::
+
+   $ sudo make run type=single proxy=http://myproxy/
+
+If you are running the landscape installer, you will want to use the 'landscape' target:
+
+.. code::
+
+   $ sudo make landscape proxy=http://myproxy/
 
 Building documentation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -67,3 +97,12 @@ used.
 .. code::
 
    $ JUJU_LIVE=1 nosetests3 test
+
+For the python code, using pep8 and pyflakes is encouraged:
+
+.. code::
+
+   $ make pyflakes
+   $ make pep8
+
+
