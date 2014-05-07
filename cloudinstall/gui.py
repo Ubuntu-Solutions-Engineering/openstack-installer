@@ -29,7 +29,7 @@ import pkgutil
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
-                   SimpleListWalker, Edit, CheckBox,
+                   SimpleListWalker, Edit, CheckBox, RadioButton,
 
                    MainLoop, ExitMainLoop)
 
@@ -251,27 +251,52 @@ def _wrap_focus(widgets, unfocused=None):
         return AttrMap(widgets, unfocused, "focus")
 
 
-class AddComputeDialog(Overlay):
-    """ Dialog for adding new compute nodes """
+class AddCharmDialog(Overlay):
+    """ Adding charm dialog """
 
     def __init__(self, underlying, state, destroy, command_runner=None):
+        import cloudinstall.charms
+        charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
+                         for (_, mname, _) in
+                         pkgutil.iter_modules(cloudinstall.charms.__path__)]
+        charm_classes = sorted([m.__charm_class__ for m in charm_modules],
+                               key=attrgetter('deploy_priority'))
+
+        self.state = state
         self.cr = command_runner
         self.underlying = underlying
         self.destroy = destroy
-        self._buttons = [Button("Yes", self.yes),
-                         Button("No", self.no)]
-        self.wrapped_buttons = _wrap_focus(self._buttons)
-        self.buttons = Columns(self.wrapped_buttons)
-        self.root = Text("Would you like to add a compute node?")
-        self.w = ListBox([self.root, self.buttons])
-        self.w = LineBox(self.w)
-        self.w = AttrWrap(self.w, "dialog")
+
+        self.boxes = []
+        self.bgroup = []
+        first_index = 0
+        for i, charm_class in enumerate(charm_classes):
+            charm = charm_class(state=self.state)
+            if charm.name() and not first_index:
+                first_index = i
+            r = RadioButton(self.bgroup, charm.name())
+            r.text_label = charm.name()
+            self.boxes.append(r)
+        wrapped_boxes = _wrap_focus(self.boxes)
+
+
+        bs = [Button("Ok", self.yes), Button("Cancel", self.no)]
+        wrapped_buttons = _wrap_focus(bs)
+        self.buttons = Columns(wrapped_buttons)
+        self.items = ListBox(wrapped_boxes)
+        self.items.set_focus(first_index)
+        ba = BoxAdapter(self.items, height=len(wrapped_boxes))
+        self.lb = ListBox([ba, Text(""), self.buttons])
+        self.w = LineBox(self.lb, title="Select new charm")
+        self.w = AttrMap(self.w, "dialog")
         Overlay.__init__(self, self.w, self.underlying,
-                         'center', 45, 'middle', 4)
+                         'center', 45, 'middle', len(wrapped_boxes) + 4)
 
     def yes(self, button):
-        log.info("Deploying a new nova compute machine")
-        self.cr.add_unit('nova-compute')
+        selected = list(filter(lambda r: r.get_state(), self.boxes))[0]
+        _charm_to_deploy = selected.label
+        log.info("Deploying a new {charm}".format(charm=_charm_to_deploy))
+        self.cr.add_unit(_charm_to_deploy)
         self.destroy()
 
     def no(self, button):
@@ -280,20 +305,22 @@ class AddComputeDialog(Overlay):
 
 class ChangeStateDialog(Overlay):
     def __init__(self, underlying, state, on_success, on_cancel):
+        import cloudinstall.charms
+        charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
+                         for (_, mname, _) in
+                         pkgutil.iter_modules(cloudinstall.charms.__path__)]
+        charm_classes = sorted([m.__charm_class__ for m in charm_modules],
+                               key=attrgetter('deploy_priority'))
 
         self.state = state
         self.boxes = []
-        start_states = []
-        log.debug("ChangeStateDialog {state}".format(state=list(self.state.services)))
-        start_states = _allocation_for_charms(list(self.state.services))
-
-        self.boxes = []
         first_index = 0
-        for i, txt in enumerate(RADIO_STATES):
-            if txt in start_states and not first_index:
+        for i, charm_class in enumerate(charm_classes):
+            charm = charm_class(state=self.state)
+            if charm.name() and not first_index:
                 first_index = i
-            r = CheckBox(txt, state=txt in start_states)
-            r.text_label = txt
+            r = CheckBox(charm.name())
+            r.text_label = charm.name()
             self.boxes.append(r)
         wrapped_boxes = _wrap_focus(self.boxes)
 
@@ -422,56 +449,6 @@ class CommandRunner(ListBox):
         out = self.client.add_unit(service_name, machine_id)
         return out
 
-    def change_allocation(self, new_states, machine):
-        """ Changes state allocation of machine
-
-        .. note::
-
-            This only applies to multi-system installs.
-
-        :param list new_states: machine states
-        :param machine: Machine()
-        """
-        log.debug("CommandRunner.change_allocation: "
-                  "new_states: {states}".format(states=new_states))
-
-        if pegasus.MULTI_SYSTEM:
-            try:
-                log.debug("Validating charm in state: "
-                          "{charms}".format(charms=machine))
-                for charm, unit in zip(machine.charms, machine.units):
-                    if charm not in new_states:
-                        self._run("juju remove-unit "
-                                  "{unit}".format(unit=unit.unit_name))
-            except KeyError:
-                pass
-
-            if len(new_states) == 0:
-                cmd = "juju terminate-machine " \
-                      "{id}".format(id=machine.machine_id)
-                log.debug("Terminating machine: {cmd}".format(cmd=cmd))
-                self._run(cmd)
-
-            state_to_charm = {v: k for k, v in pegasus.ALLOCATION.items()}
-            for state in set(new_states) - set(machine.charms):
-                charm = state_to_charm[state]
-                new_service = charm not in self.services
-                if new_service:
-                    self.client.deploy(charm,
-                                       constraints=dict(tags=machine.tag))
-                else:
-                    constraints = "juju set-constraints --service " \
-                                  "{charm} " \
-                                  "tags={{tag}}".format(charm=charm,
-                                                        tag=machine.tag)
-                    log.debug("Setting constraints: "
-                              "{constraints}".format(constraints=constraints))
-                    self._run(constraints.format(tag=machine.tag))
-                    cmd = "juju add-unit {charm}".format(charm=charm)
-                    log.debug("Adding unit: {cmd}".format(cmd=cmd))
-                    self._run(cmd)
-                    self._run(constraints.format(tag=''))
-
 
 # TODO: This and CommandRunner should really be merged
 class ConsoleMode(Frame):
@@ -540,20 +517,11 @@ class NodeViewMode(Frame):
         """ Hides Overlaying dialogs """
         self.loop.widget = self
 
-    def open_dialog(self, machine=None):
-        def ok(new_states):
-            self.cr.change_allocation(new_states, machine)
-            self.destroy()
-        if pegasus.MULTI_SYSTEM:
-            self.loop.widget = ChangeStateDialog(self,
-                                                 self.state,
-                                                 ok,
-                                                 self.destroy)
-        else:
-            self.loop.widget = AddComputeDialog(self,
-                                                self.state,
-                                                self.destroy,
-                                                self.cr)
+    def open_dialog(self):
+            self.loop.widget = AddCharmDialog(self,
+                                              self.state,
+                                              self.destroy,
+                                              self.cr)
 
     def refresh_states(self):
         """ Refresh states
