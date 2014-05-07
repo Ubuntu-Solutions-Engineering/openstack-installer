@@ -169,9 +169,9 @@ configureInstall()
 				popState; continue
 			fi
 			if [ "$install_type" = "Landscape managed" ]; then
-				next_state=30
-			else
 				next_state=16
+			else
+				next_state=30
 			fi
 			;;
 		16)
