@@ -39,15 +39,21 @@ case $WHAT in
     service lxc-net start
 
     # clean up the networking
-    cp /etc/network/interfaces.cloud.bak /etc/network/interfaces
-    rm /etc/network/interfaces.d/cloud-install.cfg
+    interface=$(cat /etc/network/cloud-interface)
     ifconfig br0 down
     brctl delbr br0
-    interface=$(cat /etc/network/cloud-interfaces)
-    rm /etc/network/cloud-interface
     if [ -n "$interface" ]; then
-        ifdown $interface && ifup $interface
+        ifdown $interface
     fi
+
+    cp /etc/network/interfaces.cloud.bak /etc/network/interfaces
+    rm /etc/network/interfaces.d/cloud-install.cfg
+    rm /etc/network/cloud-interface
+
+    if [ -n "$interface" ]; then
+        ifup $interface
+    fi
+    ifdown lo && ifup lo
 
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo you might need to fix your /etc/resolv.conf
