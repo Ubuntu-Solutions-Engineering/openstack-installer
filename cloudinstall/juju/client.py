@@ -178,7 +178,7 @@ class JujuClient:
     #                                       Config=config,
     #                                       Constraints=constraints,
     #                                       ToMachineSpec=machine_spec)))
-    def deploy(self, charm, machine_id=None, instances=None, constraints=None):
+    def deploy(self, charm, settings):
         """ Deploy a charm to an instance
 
         :param str charm: charm to deploy
@@ -187,16 +187,20 @@ class JujuClient:
         :param dict constraints: (optional) machine constraints
         """
         cmd = "juju deploy"
-        if machine_id:
+        if 'machine_id' in settings and settings['machine_id']:
             cmd = "{cmd} --to {machine_id}".format(cmd=cmd,
-                                                   machine_id=str(machine_id))
-        if instances:
+                                                   machine_id=str(settings['machine_id']))
+        if 'instances' in settings:
             cmd = "{cmd} -n {instances}".format(cmd=cmd,
-                                                instances=instances)
+                                                instances=settings['instances'])
 
-        if constraints:
+        if 'configfile' in settings:
+            cmd = "{cmd} --config {configfile}".format(cmd=cmd,
+                                                       configfile=settings['configfile'])
+
+        if 'constraints' in settings:
             opts = []
-            for k,v in constraints.items():
+            for k,v in settings['constraints'].items():
                 opts.append("{k}={v}".format(k=k, v=v))
             if opts:
                 cmd = "{cmd} --constraints \"{opts}\"".format(cmd=cmd,

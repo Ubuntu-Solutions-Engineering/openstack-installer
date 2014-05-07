@@ -50,6 +50,12 @@ createTempDir()
 	TMP=$(mktemp -d /tmp/cloud-install.XXX)
 }
 
+detectDhcpServer()
+{
+	nmap --script broadcast-dhcp-discover -e $1 2> /dev/null \
+	    | grep -q DHCPOFFER
+}
+
 disableBlank()
 {
 	tty=$(tty)
@@ -83,6 +89,7 @@ error()
 exitInstall()
 {
 	ret=$?
+	set +x
 	stopLog
 	wait
 	if [ $ret -gt 0 ]; then
@@ -170,6 +177,6 @@ ts()
 INSTALL_USER=$(getent passwd 1000 | cut -d : -f 1)
 
 # HELPER TOOLS
-wait_for_landscape=/usr/share/cloud-installer/bin/wait-for-landscape
+configure_landscape=/usr/share/cloud-installer/bin/configure-landscape
 ip_range=/usr/share/cloud-installer/bin/ip_range.py
 maas_report_boot_images=/usr/share/cloud-installer/bin/maas-report-boot-images

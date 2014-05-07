@@ -146,11 +146,14 @@ def poll_state():
         c.tag_fpi(maas)
         c.nodes_accept_all()
         c.tag_name(maas)
-    return parse_state(juju, maas), juju
+    return parse_state(juju, maas), juju, maas
 
 
 def parse_state(juju, maas=None):
-    """ Parses the current state of juju containers and maas nodes
+    """Parses the current state of juju containers and maas nodes.
+
+    Returns a list of machines excluding the bootstrap node, juju
+    machine ID "0".
 
     :param juju: juju polled state
     :type juju: JujuState()
@@ -158,12 +161,13 @@ def parse_state(juju, maas=None):
     :type mass: MaasState()
     :return: nodes/containers
     :rtype: list
+
     """
     results = []
 
     for machine in juju.machines():
 
-        if machine.is_machine_0:
+        if machine.machine_id == "0":
             continue
 
         if SINGLE_SYSTEM:
@@ -171,17 +175,17 @@ def parse_state(juju, maas=None):
                 c.mem = utils.get_host_mem()
                 c.cpu_cores = utils.get_host_cpu_cores()
                 c.storage = utils.get_host_storage()
-
-        if maas:
-            maas_machine = maas.machine(machine.instance_id)
-            if maas_machine is None:
-                log.debug("machine id='{iid}' not found in MaasState.".format(iid=machine.instance_id))
-            else:
-                machine.mem = maas_machine.mem
-                machine.cpu_cores = maas_machine.cpu_cores
-                machine.storage = maas_machine.storage
-                machine.tag = maas_machine.tag
         results.append(machine)
+
+    if maas:
+        for machine in maas.machines():
+            if machine.status == 4:
+                machine.agent_state = "ready"
+            if machine.status == 6:
+                machine.agent_state = "allocated"
+            machine.dns_name = machine.hostname
+            log.debug("querying maas machine: {maas}".format(maas=machine))
+            results.append(machine)
     return results
 
 

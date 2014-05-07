@@ -18,11 +18,14 @@
 
 """ Pegasus - gui interface to Ubuntu Cloud Installer """
 
+from operator import attrgetter
 from os import write, close, path
 from traceback import format_exc
 import re
 import threading
 import logging
+import importlib
+import pkgutil
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
@@ -38,7 +41,7 @@ log = logging.getLogger('cloudinstall.gui')
 
 TITLE_TEXT = "Ubuntu Cloud Installer"
 
-# - Properties -----------------------------------------------------------------
+# - Properties ----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 
 # Time to lock in seconds
@@ -78,9 +81,12 @@ class ControllerOverlay(Overlay):
 
     def __init__(self, underlying, command_runner):
         self.underlying = underlying
-        self.allocated = None
         self.command_runner = command_runner
         self.done = False
+        self.machine = None
+        self.deployed_charm_classes = []
+        self.finalized_charm_classes = []
+        self.single_net_configured = False
         self.info_text = Text(self.NODE_WAIT
                               if pegasus.SINGLE_SYSTEM
                               else self.PXE_BOOT)
@@ -107,103 +113,136 @@ class ControllerOverlay(Overlay):
         return continue_
 
     def _process(self, data):
+        _machines, _juju_state, _maas_state = data
         import cloudinstall.charms
-        helper = utils.ImporterHelper(cloudinstall.charms)
-        charms = helper.get_modules()
 
-        allocated = list(data.machines_allocated())
+        charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
+                         for (_, mname, _) in
+                         pkgutil.iter_modules(cloudinstall.charms.__path__)]
+        charm_classes = sorted([m.__charm_class__ for m in charm_modules],
+                               key=attrgetter('deploy_priority'))
+
+        if self.machine is None:
+            self.machine = self.get_controller_machine(data)
+
+            if self.machine is None:
+                return True     # keep polling
+
+            if pegasus.SINGLE_SYSTEM and not self.single_net_configured:
+                self.configure_lxc_network()
+
+            log.debug("starting install on "
+                      "machine {mid}".format(mid=self.machine.machine_id))
+
+
+        undeployed_charm_classes = [c for c in charm_classes
+                                    if c not in self.deployed_charm_classes]
+
+        if len(undeployed_charm_classes) > 0:
+            self.info_text.set_text("Deploying charms")
+            log.debug("Deploying charms")
+            for charm_class in undeployed_charm_classes:
+                charm = charm_class(state=data)
+                log.debug("checking if {c} is already deployed:".format(c=charm))
+                # charm is loaded, decide whether to run it
+                if charm.name() in [s.service_name for s in _juju_state.services]:
+                    log.debug("{c} is already deployed, skipping".format(c=charm))
+                    self.deployed_charm_classes.append(charm_class)
+                    continue
+
+                log.debug("{c} is NOT already deployed - deploying".format(c=charm))
+
+                # Hardcode lxc on same machine as they are
+                # created on-demand.
+                charm.setup(_id='lxc:{mid}'.format(mid=self.machine.machine_id))
+                self.deployed_charm_classes.append(charm_class)
+
+        unfinalized_charm_classes = [c for c in self.deployed_charm_classes
+                                     if c not in self.finalized_charm_classes]
+
+        if len(unfinalized_charm_classes) > 0:
+            self.info_text.set_text("Setting charm relations")
+            log.debug("Setting charm relations")
+            for charm_class in unfinalized_charm_classes:
+
+                charm = charm_class(state=data)
+
+                if _juju_state.service(charm.charm_name) is None:
+                    # Juju doesn't see the service related to this
+                    # charm yet, so defer setting its relations.
+                    log.debug("service not up yet for charm {c}".format(c=charm.charm_name))
+                    continue
+
+                log.debug("calling set_relations() for charm {c}".format(c=charm.charm_name))
+                charm.set_relations()
+                charm.post_proc()
+                self.finalized_charm_classes.append(charm_class)
+
+        log.debug("at end of process(), deployed_charm_classes={d}"
+                  "finalized_charm_classes={f}".format(d=self.deployed_charm_classes,
+                                                f=self.finalized_charm_classes))
+
+        if len(self.finalized_charm_classes) == len(charm_classes):
+            log.debug("Charm setup done.")
+            return False
+        else:
+            log.debug("Polling will continue until all charms are finalized.")
+            return True
+
+
+    def get_controller_machine(self, data):
+        machines, juju_state, maas_state = data
+        allocated = list(juju_state.machines_allocated())
         log.debug("Allocated machines: "
                   "{machines}".format(machines=allocated))
 
         if pegasus.MULTI_SYSTEM:
-            unallocated = list(data.machines_unallocated())
-            log.debug("Unallocated machines: "
-                      "{machines}".format(machines=unallocated))
-
-            if len(allocated) == 0:
+            maas_allocated = list(maas_state.machines_allocated())
+            if len(allocated) == 0 and len(maas_allocated) == 0:
                 err_msg = "No machines allocated to juju. " \
                           "Please pxe boot a machine."
                 log.debug(err_msg)
                 self.info_text.set_text(err_msg)
-                return True
-            elif len(allocated) > 0:
-                machine = allocated[0]
-                for charm in charms:
-                    charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                    charm_ = charm_(state=data)
-
-                    # charm is loaded, decide whether to run it
-                    if charm_.name() in [s.service_name for s in data.services]:
-                        continue
-
-                    log.debug("Calling charm.setup(_id='lxc:{mid}') for charm {charm}".format(charm=charm_.name(),
-                                                                                              mid=machine.machine_id))
-                    charm_.setup(_id='lxc:{mid}'.format(mid=machine.machine_id))
-                for charm in charms:
-                    charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                    charm_ = charm_(state=data)
-                    charm_.set_relations()
-                    charm_.post_proc()
-                return False
+                return None
+            elif len(allocated) == 0 and len(maas_allocated) > 0:
+                self.info_text.set_text("Adding maas machine to juju")
+                self.command_runner.add_machine()
+                return None
             else:
-                log.debug("No machines, waiting.")
-                return True
+                return self.get_started_machine(allocated)
+
         elif pegasus.SINGLE_SYSTEM:
-            if len(allocated) == 0:
-                self.info_text.set_text("Waiting for a machine to become ready ..")
-                return True
-            else:
-                machine = allocated[0]
-                if machine.is_machine_1 \
-                   and 'started' in machine.agent_state:
-                    # Ok we're up lets upload our lxc-host-only template
-                    # and reboot so any containers will be deployed with
-                    # the proper subnet
-                    utils._run("scp -oStrictHostKeyChecking=no "
-                               "/usr/share/cloud-installer/templates/lxc-host-only "
-                               "ubuntu@{host}:/tmp/lxc-host-only".format(host=machine.dns_name))
-                    cmds = []
-                    cmds.append("sudo mv /tmp/lxc-host-only /etc/network/interfaces.d/lxcbr0.cfg")
-                    cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
-                    cmds.append("sudo reboot")
-                    utils._run("ssh -oStrictHostKeyChecking=no "
-                               "ubuntu@{host} {cmds}".format(host=machine.dns_name,
-                                                             cmds=" && ".join(cmds)))
-                else:
-                    # machine still hasn't started wait for the loop
-                    # to come back around.
-                    self.info_text.set_text("A machine is allocated, "
-                                            "waiting for it to start ...",
-                                            align="center")
-                    return True
-            for charm in charms:
-                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                charm_ = charm_(state=data)
+            return self.get_started_machine(allocated)
 
-                # charm is loaded, decide whether to run it
-                if charm_.name() in [s.service_name for s in data.services]:
-                    continue
+    def get_started_machine(self, allocated):
+            if self.machine is None:
+                # wait for an allocated machine that is also started
+                started_machines = [m for m in allocated
+                                    if m.agent_state == 'started']
+                if len(started_machines) == 0:
+                    self.info_text.set_text("Waiting for a machine "
+                                            "to become ready.")
+                    return None
 
-                # Hardcode lxc on machine 1 as they are
-                # created on-demand.
-                charm_.setup(_id='lxc:1')
-                self.info_text.set_text("Deploying charms ...",
-                                        align='center')
-            for charm in charms:
-                charm_ = utils.import_module('cloudinstall.charms.{charm}'.format(charm=charm))[0]
-                charm_ = charm_(state=data)
-                self.info_text.set_text("Setting charm relations ...",
-                                        align='center')
-                charm_.set_relations()
-                self.info_text.set_text("Setting charm options ...",
-                                        align='center')
-                charm_.post_proc()
+                return started_machines[0]
 
-        else:
-            log.warning("neither of pegasus.SINGLE_SYSTEM "
-                        "or pegasus.MULTI_SYSTEM are true.")
-            return True
-
+    def configure_lxc_network(self):
+        # upload our lxc-host-only template
+        # and reboot so any containers will be deployed with
+        # the proper subnet
+        host = self.machine.dns_name
+        utils._run("scp -oStrictHostKeyChecking=no "
+                   "/usr/share/cloud-installer/templates/lxc-host-only "
+                   "ubuntu@{host}:/tmp/lxc-host-only".format(host=host))
+        cmds = []
+        cmds.append("sudo mv /tmp/lxc-host-only "
+                    "/etc/network/interfaces.d/lxcbr0.cfg")
+        cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
+        cmds.append("sudo reboot")
+        utils._run("ssh -oStrictHostKeyChecking=no "
+                   "ubuntu@{host} {cmds}".format(host=host,
+                                                 cmds=" && ".join(cmds)))
+        self.single_net_configured = True
 
 def _wrap_focus(widgets, unfocused=None):
     try:
@@ -308,11 +347,13 @@ class Node(WidgetWrap):
                    "({status})".format(unit_name=u.unit_name,
                                        status=u.agent_state)
 
-            info = "{info}\n  address: {address}".format(info=info,
-                                                         address=u.public_address)
+            info = "{info}\n  " \
+                   "address: {address}".format(info=info,
+                                               address=u.public_address)
             if 'error' in u.agent_state:
-                info = "{info}\n  info: {state_info}".format(info=info,
-                                                             state_info=u.agent_state_info.lstrip())
+                info = "{info}\n  " \
+                       "info: {state_info}".format(info=info,
+                                                   state_info=u.agent_state_info.lstrip())
             info = "{info}\n\n".format(info=info)
             unit_info.append(('weight', 2, Text(info)))
 
@@ -391,16 +432,16 @@ class CommandRunner(ListBox):
         :param list new_states: machine states
         :param machine: Machine()
         """
-        log.debug("CommandRunner.change_allocation: " \
+        log.debug("CommandRunner.change_allocation: "
                   "new_states: {states}".format(states=new_states))
 
         if pegasus.MULTI_SYSTEM:
             try:
-                log.debug("Validating charm in state: " \
+                log.debug("Validating charm in state: "
                           "{charms}".format(charms=machine))
                 for charm, unit in zip(machine.charms, machine.units):
                     if charm not in new_states:
-                        self._run("juju remove-unit " \
+                        self._run("juju remove-unit "
                                   "{unit}".format(unit=unit.unit_name))
             except KeyError:
                 pass
@@ -423,7 +464,7 @@ class CommandRunner(ListBox):
                                   "{charm} " \
                                   "tags={{tag}}".format(charm=charm,
                                                         tag=machine.tag)
-                    log.debug("Setting constraints: " \
+                    log.debug("Setting constraints: "
                               "{constraints}".format(constraints=constraints))
                     self._run(constraints.format(tag=machine.tag))
                     cmd = "juju add-unit {charm}".format(charm=charm)
@@ -454,22 +495,24 @@ class NodeViewMode(Frame):
         if pegasus.SINGLE_SYSTEM:
             header.insert(3, AttrWrap(Text('(F6) Add compute node'), "border"))
         header = Columns(header)
-        self.timer = Text("", align="right")
-        self.horizon_url = Text("")
-        self.jujugui_url = Text("")
-        footer = Columns([self.horizon_url,
-                                self.jujugui_url,
-                                self.timer])
+        self.timer = Text("", align="left")
+        self.status_info = Text("", align="left")
+        self.horizon_url = Text("", align="right")
+        self.jujugui_url = Text("", align="right")
+        footer = Columns([('weight', 0.2, self.status_info),
+                          ('weight', 0.1, self.timer),
+                          ('weight', 0.2, self.horizon_url),
+                          ('weight', 0.2, self.jujugui_url)])
         footer = AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
-        self.machines, self.state = state
+        self.machines, self.state, self.maas_state = state
         self.nodes = ListWithHeader(NODE_HEADER)
         self.loop = loop
 
         self.cr = CommandRunner()
         Frame.__init__(self, header=header, body=self.nodes,
-                             footer=footer)
+                       footer=footer)
         self.controller_overlay = ControllerOverlay(self, self.cr)
         self._target = self.controller_overlay
 
@@ -527,25 +570,12 @@ class NodeViewMode(Frame):
 
         :params list state: JujuState()
         """
-        _machines, _state = state
-        nodes = [Node(s, _state, self.open_dialog) \
+        _machines, _state, maas_state = state
+        nodes = [Node(s, _state, self.open_dialog)
                  for s in _state.services]
         if self.target == self.controller_overlay and \
-                not self.controller_overlay.process(_state):
+                not self.controller_overlay.process(state):
             self.target = self
-            for n in _state.services:
-                for i in n.units:
-                    if i.is_horizon:
-                        _url = "Horizon: " \
-                               "http://{name}/horizon".format(name=i.public_address)
-                        self.horizon_url.set_text(_url)
-                        self.loop.draw_screen()
-                    if i.is_jujugui:
-                        _url = "Juju-GUI: " \
-                               "http://{name}/".format(name=i.public_address)
-                        self.jujugui_url.set_text(_url)
-                        self.loop.draw_screen()
-
         self.nodes.update(nodes)
 
     def tick(self):
@@ -553,10 +583,28 @@ class NodeViewMode(Frame):
             self.ticks_left = self.poll_interval
 
             def update_and_redraw(state):
+                self.status_info.set_text("[INFO] Polling node availability")
                 self.do_update(state)
+                for n in state[1].services:
+                    for i in n.units:
+                        if i.is_horizon:
+                            _url = "Horizon: " \
+                                   "http://{name}/horizon".format(name=i.public_address)
+                            self.horizon_url.set_text(_url)
+                            if "0.0.0.0" in i.public_address:
+                                self.status_info.set_text("[INFO] Nodes "
+                                                          "are still deploying")
+                            else:
+                                self.status_info.set_text("[INFO] Nodes "
+                                                          "are accessible")
+                        if i.is_jujugui:
+                            _url = "Juju-GUI: " \
+                                   "http://{name}/".format(name=i.public_address)
+                            self.jujugui_url.set_text(_url)
                 self.loop.draw_screen()
             self.loop.run_async(self.refresh_states, update_and_redraw)
-        self.timer.set_text("Refresh in {secs} (s)".format(secs=self.ticks_left))
+        self.timer.set_text("(Re-poll in "
+                            "{secs} (s))".format(secs=self.ticks_left))
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
@@ -577,8 +625,8 @@ class LockScreen(Overlay):
 
     INVALID = ("error", "Invalid password.")
 
-    IOERROR = ("error", "Problem accessing {pwd}. Please make sure " \
-               "it contains exactly one line that is the lock " \
+    IOERROR = ("error", "Problem accessing {pwd}. Please make sure "
+               "it contains exactly one line that is the lock "
                "password.".format(pwd=pegasus.PASSWORD_FILE))
 
     def __init__(self, underlying, unlock):
@@ -586,7 +634,7 @@ class LockScreen(Overlay):
         self.password = Edit("Password: ", mask='*')
         self.invalid = Text("")
         w = ListBox([Text(self.LOCKED), self.invalid,
-                           self.password])
+                     self.password])
         w = LineBox(w)
         w = AttrWrap(w, "dialog")
         Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 8)
@@ -667,7 +715,8 @@ class PegasusGUI(MainLoop):
                     # If the controller overlay finished its work while we were
                     # locked, bypass it.
                     # nonlocal old
-                    if isinstance(old['res'], ControllerOverlay) and old['res'].done:
+                    if isinstance(old['res'], ControllerOverlay) and \
+                       old['res'].done:
                         old['res'] = self.node_view
                     self.widget = old['res']
                     self.lock_ticks = LOCK_TIME
@@ -694,7 +743,7 @@ class PegasusGUI(MainLoop):
         FIXME: Once https://github.com/wardi/urwid/pull/57 is implemented.
         """
 
-        result = {'res' : None}
+        result = {'res': None}
 
         # Here again things are a little weird: we own write_fd, but the urwid
         # API makes things a bit awkward since we end up needing mutually

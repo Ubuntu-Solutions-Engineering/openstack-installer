@@ -17,10 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from cloudinstall import utils
+import yaml
+from os.path import expanduser
+import sys
+
 from cloudinstall.juju.client import JujuClient
 
 log = logging.getLogger('cloudinstall.charms')
+
 
 class CharmBase:
     """ Base charm class """
@@ -30,6 +34,8 @@ class CharmBase:
     related = []
     isolate = False
     constraints = None
+    configfile = expanduser("~/.cloud-install/charmconf.yaml")
+    deploy_priority = sys.maxsize
 
     def __init__(self, state=None, machine=None):
         """ initialize
@@ -42,6 +48,15 @@ class CharmBase:
         self.state = state
         self.machine = machine
         self.client = JujuClient()
+
+    def openstack_password(self):
+        PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
+        try:
+            with open(PASSWORD_FILE) as f:
+                OPENSTACK_PASSWORD = f.read().strip()
+        except IOError:
+            OPENSTACK_PASSWORD = 'password'
+        return OPENSTACK_PASSWORD
 
     def is_related(self, charm, relations):
         """ test for existence of charm relation
@@ -69,21 +84,28 @@ class CharmBase:
             return class_.charm_name
         return class_.__name__.lower()
 
-    @utils.async
     def setup(self, _id=None):
         """ Deploy charm and configuration options
 
         The default should be sufficient but if more functionality
         is needed this should be overridden.
         """
+        kwds = {}
+        kwds['machine_id'] = _id
+
+        if self.configfile:
+            with open(self.configfile) as f:
+                _opts = yaml.load(f.read())
+                if self.charm_name in _opts:
+                    kwds['configfile'] = self.configfile
+
         if self.isolate:
-            _id = None
-            self.client.deploy(charm=self.charm_name,
-                               instances=1,
-                               constraints=self.constraints)
+            kwds['machine_id'] = None
+            kwds['instances'] = 1
+            kwds['constraints'] = self.constraints
+            self.client.deploy(self.charm_name, kwds)
         else:
-            self.client.deploy(charm=self.charm_name,
-                               machine_id=_id)
+            self.client.deploy(self.charm_name, kwds)
 
     def set_relations(self):
         """ Setup charm relations
@@ -91,7 +113,7 @@ class CharmBase:
         Override in charm specific.
         """
         if len(self.related) > 0:
-            services = self.state.service(self.charm_name)
+            services = self.state[1].service(self.charm_name)
             for charm in self.related:
                 try:
                     if not self.is_related(charm, services.relations) \
@@ -99,6 +121,8 @@ class CharmBase:
                         self.client.add_relation(self.charm_name,
                                                  charm)
                 except:
+                    import traceback
+                    log.debug("Exception being ignored:{}".format(traceback.format_exc()))
                     log.debug("No relations "
                               "found for {c}".format(c=self.charm_name))
 

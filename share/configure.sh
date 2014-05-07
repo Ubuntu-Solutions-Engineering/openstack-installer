@@ -56,6 +56,10 @@ checkSingleInstall()
 	checkDiskSpace $SINGLE_DISK_MIN
 }
 
+getDomain() {
+	echo "$1" | grep -E "^[^@]+@[^@]+\.[^@]+$" | sed -E -e 's/[^@]+@([^@]+\.[^@]+)/\1/'
+}
+
 configureInstall()
 {
 	state=1
@@ -63,7 +67,12 @@ configureInstall()
 		next_state=$((state + 1))
 		case $state in
 		1)
-			install_type=$(dialogMenu "Select install type" "" 10 60 3 Multi-system "Single system" "Landscape managed")
+			dialogMenu "Select install type" "" 10 60 3 \
+			    Multi-system "Single system" "Landscape managed"
+			install_type=$input
+			if [ $ret -ne 0 ]; then
+				popState; continue
+			fi
 			case $install_type in
 			Multi-system)
 				next_state=10
@@ -73,9 +82,6 @@ configureInstall()
 				;;
 			"Landscape managed")
 				next_state=10
-				;;
-			*)
-				popState; continue
 				;;
 			esac
 			;;
@@ -90,8 +96,11 @@ configureInstall()
 			interfaces=$(getInterfaces)
 			interfaces_count=$(echo "$interfaces" | wc -w)
 			if [ $interfaces_count -ge 2 ]; then
-				interface=$(dialogMenu "Select network interface" "" 15 60 8 $interfaces)
-				if [ -z "$interface" ]; then
+				dialogMenu "Select the network" \
+				    "Select the network MaaS will manage. MaaS will be the DHCP server on this network and respond to PXE requests." \
+				    15 60 6 $interfaces
+				interface=$input
+				if [ $ret -ne 0 ]; then
 					popState; continue
 				fi
 			else
@@ -100,15 +109,48 @@ configureInstall()
 			fi
 			;;
 		12)
+			dialogGaugeStart "DHCP server detection" \
+			    "Detecting existing dhcp servers...\n\nPress [enter] to skip" \
+			    8 70 0
+			detectDhcpServer $interface &
+			skip=""
+			i=0
+			while [ $i -ne 10 ]; do
+				if dd bs=1 count=100 iflag=nonblock \
+				    2> /dev/null | tr "\r" "\n" \
+				    | read -r input; then
+					skip=true
+					{ kill $!; wait $!; } || true
+					break
+				fi
+				if ! ps -p $! > /dev/null; then
+					break
+				fi
+				echo $(((i * 100) / 10))
+				sleep 1
+				i=$((i + 1))
+			done > "$TMP/gauge"
+			dialogGaugeStop
+			if [ -z "$skip" ] && wait $! && ! dialogYesNo "[!] Existing DHCP server detected" \
+			    Continue Cancel \
+			    "An existing DHCP server has been detected on the interface ${interface}.\n\nThis installation will install and manage its own DHCP server. A collision between servers may prevent you from adding subsequent nodes.\n\nSelect Continue to proceed regardless" \
+			    15 60; then
+				popState; continue
+			fi
+			state=13; continue
+			;;
+		13)
 			bridge_interface=""
 			if [ $interfaces_count -ge 2 ]; then
-				if dialogYesNo "Bridge interface?" Yes No "Sometimes it is useful to run MaaS on its own network. If you are running MaaS on its own network and would like to bridge this network to the outside world, please indicate so." 10 60; then
+				if dialogYesNo "Bridge interface?" Yes No \
+				    "Sometimes it is useful to run MaaS on its own network. If you are running MaaS on its own network and would like to bridge this network to the outside world, please indicate so." \
+				    10 60; then
 					bridge_interface=true
 				fi
 			fi
 			state=$next_state; continue
 			;;
-		13)
+		14)
 			network=$(ipNetwork $interface)
 			address=$(ipAddress $interface)
 			if [ -n "$bridge_interface" ]; then
@@ -119,9 +161,42 @@ configureInstall()
 			fi
 			state=$next_state; continue
 			;;
-		14)
-			dhcp_range=$(dialogInput "IP address range (<ip addr low>-<ip addr high>):" "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." 10 60 "$dhcp_range")
-			if [ -z "$dhcp_range" ]; then
+		15)
+			dialogInput "IP address range (<ip addr low>-<ip addr high>):" \
+			    "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." \
+			    10 60 "$dhcp_range"
+			dhcp_range=$input
+			if [ $ret -ne 0 ]; then
+				popState; continue
+			fi
+			if [ "$install_type" = "Landscape managed" ]; then
+				next_state=30
+			else
+				next_state=16
+			fi
+			;;
+		16)
+			dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60
+			admin_email=$input
+			result=$(getDomain "$admin_email")
+			if [ -z "$result" ]; then
+				popState; continue
+			fi
+			email_domain="$result"
+			;;
+		17)
+			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
+			dialogInput "Landscape user's full name" "Please enter the full name of the admin user for Landscape." 10 60 "$suggested_name"
+			admin_name=$input
+			if [ -z "$admin_name" ]; then
+				popState; continue
+			fi
+			;;
+		18)
+			dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain"
+			system_email=$input
+			result=$(getDomain "$system_email")
+			if [ -z "$result" ]; then
 				popState; continue
 			fi
 			next_state=30
@@ -134,18 +209,26 @@ configureInstall()
 			state=30; continue
 			;;
 		30)
-			openstack_password=$(dialogPassword "OpenStack admin user password:" "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." 10 60)
-			if [ -z "$openstack_password" ]; then
+			dialogPassword "OpenStack admin user password:" \
+			    "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
+			    10 60
+			openstack_password=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			;;
 		31)
-			openstack_password2=$(dialogPassword "OpenStack admin user password to verify:" "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." 10 60)
-			if [ -z "$openstack_password2" ]; then
+			dialogPassword "OpenStack admin user password to verify:" \
+			    "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." \
+			    10 60
+			openstack_password2=$input
+			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			if [ "$openstack_password" != "$openstack_password2" ]; then
-				dialogMsgBox "[!] Password mismatch" Continue "The two passwords you entered were not the same, please try again." 10 60
+				dialogMsgBox "[!] Password mismatch" Continue \
+				    "The two passwords you entered were not the same, please try again." \
+				    10 60
 				popState; continue
 			fi
 			;;

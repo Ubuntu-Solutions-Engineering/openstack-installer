@@ -26,6 +26,10 @@ case $WHAT in
     apt_purge '.*maas.*' 'bind9'
     sudo -u postgres psql -c 'drop database maasdb;'
 
+    # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
+    # so we kill it explicitly.
+    sudo killall -u maas twistd
+
     lxc-stop -n juju-bootstrap
     lxc-destroy -n juju-bootstrap
 

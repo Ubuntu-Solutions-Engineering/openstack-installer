@@ -96,19 +96,21 @@ dialogGaugeStop()
 #
 # dialogInput title text height width input-text
 #
-# writes text entry to stdout, empty string if user cancels
+# 'input' contains text entry
+# 'ret' contains exit code (0 on success, >0 if user cancels)
 #
 dialogInput()
 {
-	whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox "$2" $3 $4 \
-	    "$5" 3>&1 1>/dev/tty 2>&3 || true
+	{ input=$(whiptail --title "$1" --backtitle "$BACKTITLE" --inputbox \
+	    "$2" $3 $4 "$5" 3>&1 1>/dev/tty 2>&3); ret=$?; } || true
 }
 
 # Display a menu
 #
 # dialogMenu title text height width menu-height menu-item...
 #
-# writes menu selection to stdout, empty string if user cancels
+# 'input' contains menu selection
+# 'ret' contains exit code (0 on success, >0 if user cancels)
 #
 dialogMenu()
 {
@@ -118,11 +120,13 @@ dialogMenu()
 	width=$4
 	menu_height=$5
 	shift 5
-	for item; do
-		echo "\"$item\""
-		echo '""'
-	done | xargs whiptail --title "$title" --backtitle "$BACKTITLE" --menu \
-	    "$text" $height $width $menu_height 3>&1 1>/dev/tty 2>&3 || true
+	{
+		input=$(for item; do echo "\"$item\""; echo '""'; done \
+		    | xargs whiptail --title "$title" --backtitle "$BACKTITLE" \
+		    --menu "$text" $height $width $menu_height 3>&1 1>/dev/tty \
+		    2>&3)
+		ret=$?
+	} || true
 }
 
 # Display a message
@@ -139,12 +143,13 @@ dialogMsgBox()
 #
 # dialogPassword title text height width
 #
-# writes text entry to stdout, empty string if user cancels
+# 'input' contains text entry
+# 'ret' contains exit code (0 on success, >0 if user cancels)
 #
 dialogPassword()
 {
-	whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox "$2" $3 \
-	    $4 3>&1 1>/dev/tty 2>&3 || true
+	{ input=$(whiptail --title "$1" --backtitle "$BACKTITLE" --passwordbox \
+	    "$2" $3 $4 3>&1 1>/dev/tty 2>&3); ret=$?; } || true
 }
 
 # Display a yes/no choice

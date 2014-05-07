@@ -25,26 +25,8 @@ class Machine:
         self._cpu_cores = self.hardware('cpu-cores')
         self._storage = self.hardware('root-disk')
         self._mem = self.hardware('memory')
-
-    @property
-    def is_machine_0(self):
-        """ Checks if machine is bootstrapped node
-
-        :rtype: bool
-        """
-        return "0" in self.machine_id
-
-    @property
-    def is_machine_1(self):
-        """ Checks if machine is first machine
-
-        This holds the openstack services needed
-        to manage your cloud. Everything except
-        nova-compute should be deployed here.
-
-        :rtype: bool
-        """
-        return "1" in self.machine_id
+        self.agent_state = self.machine.get('agent-state', '')
+        self.dns_name = self.machine.get('dns-name', '')
 
     @property
     def cpu_cores(self):
@@ -123,22 +105,6 @@ class Machine:
         :rtype: str
         """
         return self.machine.get('instance-id', '')
-
-    @property
-    def dns_name(self):
-        """ Returns dns-name
-
-        :rtype: str
-        """
-        return self.machine.get('dns-name', '')
-
-    @property
-    def agent_state(self):
-        """ Returns agent-state
-
-        :rtype: str
-        """
-        return self.machine.get('agent-state', '')
 
     @property
     def containers(self):
