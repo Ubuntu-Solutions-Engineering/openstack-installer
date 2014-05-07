@@ -76,6 +76,24 @@ If you are running the landscape installer, you will want to use the 'landscape'
 
    $ sudo make landscape proxy=http://myproxy/
 
+Running the Pegasus status screen
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have run the installer and are working on changes to the status screen (in cloudinstall/), you can re-run the status screen with the correct python path using this target:
+
+.. code::
+
+   $ make status
+
+If you are testing the status screen's code for deploying charms, you may need to first start your juju environment over from scratch:
+
+.. code::
+
+   $ juju destroy-environment local
+   $ juju bootstrap
+   $ make status
+
+
 Building documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
