@@ -31,7 +31,7 @@ class CharmNovaCompute(CharmBase):
 
     def set_relations(self):
         super(CharmNovaCompute, self).set_relations()
-        services = self.state.service(self.charm_name)
+        services = self.state[1].service(self.charm_name)
         for charm in self.related:
             if not self.is_related(charm, services.relations) \
                and 'rabbitmq-server' in charm:

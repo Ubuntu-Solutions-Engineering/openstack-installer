@@ -25,6 +25,8 @@ class Machine:
         self._cpu_cores = self.hardware('cpu-cores')
         self._storage = self.hardware('root-disk')
         self._mem = self.hardware('memory')
+        self.agent_state = self.machine.get('agent-state', '')
+        self.dns_name = self.machine.get('dns-name', '')
 
     @property
     def cpu_cores(self):
@@ -103,22 +105,6 @@ class Machine:
         :rtype: str
         """
         return self.machine.get('instance-id', '')
-
-    @property
-    def dns_name(self):
-        """ Returns dns-name
-
-        :rtype: str
-        """
-        return self.machine.get('dns-name', '')
-
-    @property
-    def agent_state(self):
-        """ Returns agent-state
-
-        :rtype: str
-        """
-        return self.machine.get('agent-state', '')
 
     @property
     def containers(self):
