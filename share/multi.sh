@@ -47,11 +47,12 @@ multiInstall()
 		createMaasBridge $interface
 		dialogGaugePrompt 34 "Configuring MAAS networking"
 
+		configureMaasServices $(ipAddress br0)
+
 		if [ -n "$bridge_interface" ]; then
 			gateway=$(ipAddress br0)
 			configureNat $(ipNetwork br0)
 			enableIpForwarding
-			configureMaasServices $gateway
 		fi
 
 		# Retrieve dhcp-range
