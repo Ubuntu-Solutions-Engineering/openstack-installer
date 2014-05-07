@@ -116,9 +116,8 @@ configureInstall()
 			skip=""
 			i=0
 			while [ $i -ne 10 ]; do
-				if dd bs=1 count=100 iflag=nonblock \
-				    2> /dev/null | tr "\r" "\n" \
-				    | read -r input; then
+				if dd bs=1 iflag=nonblock 2> /dev/null \
+				    | tr "\r" "\n" | read -r input; then
 					skip=true
 					{ kill $!; wait $!; } || true
 					break
