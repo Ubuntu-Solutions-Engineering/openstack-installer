@@ -23,7 +23,7 @@ case $WHAT in
     juju destroy-environment --yes --force maas
     rm -r ~/.maascli.db
 
-    apt_purge '.*maas.*' 'bind9'
+    apt_purge '.*maas.*'
     sudo -u postgres psql -c 'drop database maasdb;'
 
     # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
@@ -39,16 +39,15 @@ case $WHAT in
     service lxc-net start
 
     # clean up the networking
-    interface=$(cat /etc/network/cloud-interface)
+    interface=$(cat /etc/cloud-installer/interface)
     ifconfig br0 down
     brctl delbr br0
     if [ -n "$interface" ]; then
         ifdown $interface
     fi
 
-    cp /etc/network/interfaces.cloud.bak /etc/network/interfaces
+    cp /etc/cloud-installer/interfaces.cloud.bak /etc/network/interfaces
     rm /etc/network/interfaces.d/cloud-install.cfg
-    rm /etc/network/cloud-interface
 
     if [ -n "$interface" ]; then
         ifup $interface
@@ -95,4 +94,4 @@ if [ ${RET} -eq 0 ]; then
 fi
 
 rm -rf ~/.juju ~/.cloud-install || true
-rm /etc/.cloud-installed || true
+rm /etc/cloud-installer || true

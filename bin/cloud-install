@@ -82,7 +82,9 @@ set -x
 
 disableBlank
 
-if [ ! -e /etc/.cloud-installed ]; then
+mkdir -p /etc/cloud-installer
+
+if [ ! -e /etc/cloud-installer/installed ]; then
 	configureInstall
 
 	case $install_type in
@@ -101,7 +103,7 @@ if [ ! -e /etc/.cloud-installed ]; then
 		exit 0
 		;;
 	esac
-	touch /etc/.cloud-installed
+	touch /etc/cloud-installer/installed
 else
 	echo "Cloud already installed."
 fi
