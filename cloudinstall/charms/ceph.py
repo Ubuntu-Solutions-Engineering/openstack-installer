@@ -25,6 +25,7 @@ class CharmCeph(CharmBase):
     charm_name = 'ceph'
     display_name = 'Ceph'
     related = ['glance', 'mysq', 'rabbitmq-server']
+    deploy_priority = 5
 
     def has_quorum(self):
         return len(list(self.state[2].machines_allocated())) >= 3
