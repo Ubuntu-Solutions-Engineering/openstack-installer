@@ -557,8 +557,8 @@ class NodeViewMode(Frame):
     def update_and_redraw(self, state):
         self.status_info.set_text("[INFO] Polling node availability")
         self.juju_state, self.maas_state = state
-        self.do_update(juju_state, maas_state)
-        for n in juju_state.services:
+        self.do_update(self.juju_state, self.maas_state)
+        for n in self.juju_state.services:
             for i in n.units:
                 if i.is_horizon:
                     ip = i.public_address
