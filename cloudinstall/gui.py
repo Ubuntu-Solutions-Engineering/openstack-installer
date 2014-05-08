@@ -24,7 +24,7 @@ from traceback import format_exc
 import re
 import threading
 import logging
-import importlib
+from importlib import import_module
 import pkgutil
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
@@ -100,30 +100,30 @@ class ControllerOverlay(Overlay):
                          'middle',
                          5)
 
-    def process(self, data):
+    def process(self, juju_state, maas_state):
         """ Process a node list. Returns True if the overlay still needs to be
         shown, false otherwise. """
         if self.done:
             return False
 
-        continue_ = self._process(data)
+        continue_ = self._process(juju_state, maas_state)
         if not continue_:
             self.done = True
             log.debug("ControllerOverlay process() is done")
         return continue_
 
-    def _process(self, data):
-        _machines, _juju_state, _maas_state = data
+    def _process(self, juju_state, maas_state):
         import cloudinstall.charms
 
-        charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
+        charm_modules = [import_module('cloudinstall.charms.' + mname)
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
+
         charm_classes = sorted([m.__charm_class__ for m in charm_modules],
                                key=attrgetter('deploy_priority'))
 
         if self.machine is None:
-            self.machine = self.get_controller_machine(data)
+            self.machine = self.get_controller_machine(juju_state, maas_state)
 
             if self.machine is None:
                 return True     # keep polling
@@ -134,7 +134,6 @@ class ControllerOverlay(Overlay):
             log.debug("starting install on "
                       "machine {mid}".format(mid=self.machine.machine_id))
 
-
         undeployed_charm_classes = [c for c in charm_classes
                                     if c not in self.deployed_charm_classes]
 
@@ -142,19 +141,22 @@ class ControllerOverlay(Overlay):
             self.info_text.set_text("Deploying charms")
             log.debug("Deploying charms")
             for charm_class in undeployed_charm_classes:
-                charm = charm_class(state=data)
-                log.debug("checking if {c} is already deployed:".format(c=charm))
-                # charm is loaded, decide whether to run it
-                if charm.name() in [s.service_name for s in _juju_state.services]:
-                    log.debug("{c} is already deployed, skipping".format(c=charm))
+                charm = charm_class(juju_state=juju_state)
+                log.debug("checking if {c} is deployed:".format(c=charm))
+
+                service_names = [s.service_name for s in juju_state.services]
+                if charm.name() in service_names:
+                    log.debug("{c} is already deployed, skipping"
+                              "".format(c=charm))
                     self.deployed_charm_classes.append(charm_class)
                     continue
 
-                log.debug("{c} is NOT already deployed - deploying".format(c=charm))
+                log.debug("Deploying {c}".format(c=charm))
 
                 # Hardcode lxc on same machine as they are
                 # created on-demand.
-                charm.setup(_id='lxc:{mid}'.format(mid=self.machine.machine_id))
+                charm.setup(_id='lxc:{mid}'
+                            .format(mid=self.machine.machine_id))
                 self.deployed_charm_classes.append(charm_class)
 
         unfinalized_charm_classes = [c for c in self.deployed_charm_classes
@@ -165,22 +167,25 @@ class ControllerOverlay(Overlay):
             log.debug("Setting charm relations")
             for charm_class in unfinalized_charm_classes:
 
-                charm = charm_class(state=data)
+                charm = charm_class(juju_state=juju_state)
 
-                if _juju_state.service(charm.charm_name) is None:
+                if juju_state.service(charm.charm_name) is None:
                     # Juju doesn't see the service related to this
                     # charm yet, so defer setting its relations.
-                    log.debug("service not up yet for charm {c}".format(c=charm.charm_name))
+                    log.debug("service not up yet for charm {c}"
+                              .format(c=charm.charm_name))
                     continue
 
-                log.debug("calling set_relations() for charm {c}".format(c=charm.charm_name))
+                log.debug("calling set_relations() for charm {c}"
+                          .format(c=charm.charm_name))
                 charm.set_relations()
                 charm.post_proc()
                 self.finalized_charm_classes.append(charm_class)
 
         log.debug("at end of process(), deployed_charm_classes={d}"
-                  "finalized_charm_classes={f}".format(d=self.deployed_charm_classes,
-                                                f=self.finalized_charm_classes))
+                  "finalized_charm_classes={f}"
+                  .format(d=self.deployed_charm_classes,
+                          f=self.finalized_charm_classes))
 
         if len(self.finalized_charm_classes) == len(charm_classes):
             log.debug("Charm setup done.")
@@ -189,9 +194,8 @@ class ControllerOverlay(Overlay):
             log.debug("Polling will continue until all charms are finalized.")
             return True
 
+    def get_controller_machine(self, juju_state, maas_state):
 
-    def get_controller_machine(self, data):
-        machines, juju_state, maas_state = data
         allocated = list(juju_state.machines_allocated())
         log.debug("Allocated machines: "
                   "{machines}".format(machines=allocated))
@@ -214,17 +218,17 @@ class ControllerOverlay(Overlay):
         elif pegasus.SINGLE_SYSTEM:
             return self.get_started_machine(allocated)
 
-    def get_started_machine(self, allocated):
-            if self.machine is None:
-                # wait for an allocated machine that is also started
-                started_machines = [m for m in allocated
-                                    if m.agent_state == 'started']
-                if len(started_machines) == 0:
-                    self.info_text.set_text("Waiting for a machine "
-                                            "to become ready.")
-                    return None
+        return None
 
-                return started_machines[0]
+    def get_started_machine(self, allocated):
+        started_machines = [m for m in allocated
+                            if m.agent_state == 'started']
+        if len(started_machines) == 0:
+            self.info_text.set_text("Waiting for a machine "
+                                    "to become ready.")
+            return None
+
+        return started_machines[0]
 
     def configure_lxc_network(self):
         # upload our lxc-host-only template
@@ -244,6 +248,7 @@ class ControllerOverlay(Overlay):
                                                  cmds=" && ".join(cmds)))
         self.single_net_configured = True
 
+
 def _wrap_focus(widgets, unfocused=None):
     try:
         return [AttrMap(w, unfocused, "focus") for w in widgets]
@@ -256,7 +261,7 @@ class AddCharmDialog(Overlay):
 
     def __init__(self, underlying, state, destroy, command_runner=None):
         import cloudinstall.charms
-        charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
+        charm_modules = [import_module('cloudinstall.charms.' + mname)
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
         charm_classes = sorted([m.__charm_class__ for m in charm_modules],
@@ -528,48 +533,55 @@ class NodeViewMode(Frame):
         Make a call to refresh both juju and maas machine states
 
         :returns: data from the polling of services and the juju state
-        :rtype: tuple (parse_state(), Machine())
+        :rtype: tuple (JujuState(), MaasState())
         """
         return pegasus.poll_state()
 
-    def do_update(self, state):
+    def do_update(self, juju_state, maas_state):
         """ Updating node states
 
-        :params list state: JujuState()
+        :param juju_state: juju polled state
+        :type juju_state JujuState()
+        :param maas_state: maas polled state
+        :type maas_state MaasState()
         """
-        _machines, _state, maas_state = state
-        nodes = [Node(s, _state, self.open_dialog)
-                 for s in _state.services]
-        if self.target == self.controller_overlay and \
-                not self.controller_overlay.process(state):
-            self.target = self
+        nodes = [Node(s, juju_state, self.open_dialog)
+                 for s in juju_state.services]
+
+        if self.target == self.controller_overlay:
+            continue_polling = self.controller_overlay.process(juju_state,
+                                                               maas_state)
+            if continue_polling is False:
+                self.target = self
         self.nodes.update(nodes)
+
+    def update_and_redraw(self, state):
+        self.status_info.set_text("[INFO] Polling node availability")
+        juju_state, maas_state = state
+        self.do_update(juju_state, maas_state)
+        for n in juju_state.services:
+            for i in n.units:
+                if i.is_horizon:
+                    ip = i.public_address
+                    _url = "Horizon: " \
+                           "http://{ip}/horizon".format(ip=ip)
+                    self.horizon_url.set_text(_url)
+                    if "0.0.0.0" in i.public_address:
+                        self.status_info.set_text("[INFO] Nodes "
+                                                  "are still deploying")
+                    else:
+                        self.status_info.set_text("[INFO] Nodes "
+                                                  "are accessible")
+                if i.is_jujugui:
+                    _url = "Juju-GUI: " \
+                           "http://{name}/".format(name=i.public_address)
+                    self.jujugui_url.set_text(_url)
+        self.loop.draw_screen()
 
     def tick(self):
         if self.ticks_left == 0:
             self.ticks_left = self.poll_interval
-
-            def update_and_redraw(state):
-                self.status_info.set_text("[INFO] Polling node availability")
-                self.do_update(state)
-                for n in state[1].services:
-                    for i in n.units:
-                        if i.is_horizon:
-                            _url = "Horizon: " \
-                                   "http://{name}/horizon".format(name=i.public_address)
-                            self.horizon_url.set_text(_url)
-                            if "0.0.0.0" in i.public_address:
-                                self.status_info.set_text("[INFO] Nodes "
-                                                          "are still deploying")
-                            else:
-                                self.status_info.set_text("[INFO] Nodes "
-                                                          "are accessible")
-                        if i.is_jujugui:
-                            _url = "Juju-GUI: " \
-                                   "http://{name}/".format(name=i.public_address)
-                            self.jujugui_url.set_text(_url)
-                self.loop.draw_screen()
-            self.loop.run_async(self.refresh_states, update_and_redraw)
+            self.loop.run_async(self.refresh_states, self.update_and_redraw)
         self.timer.set_text("(Re-poll in "
                             "{secs} (s))".format(secs=self.ticks_left))
         self.ticks_left = self.ticks_left - 1
