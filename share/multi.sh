@@ -18,8 +18,8 @@
 
 multiInstall()
 {
-	cp /etc/network/interfaces /etc/network/interfaces.cloud.bak
-	echo $interface > /etc/network/cloud-interface
+	cp /etc/network/interfaces /etc/cloud-installer/interfaces.cloud.bak
+	echo $interface > /etc/cloud-installer/interface
 
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
