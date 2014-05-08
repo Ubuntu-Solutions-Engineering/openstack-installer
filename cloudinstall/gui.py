@@ -259,7 +259,7 @@ def _wrap_focus(widgets, unfocused=None):
 class AddCharmDialog(Overlay):
     """ Adding charm dialog """
 
-    def __init__(self, underlying, state, destroy, command_runner=None):
+    def __init__(self, underlying, juju_state, destroy, command_runner=None):
         import cloudinstall.charms
         charm_modules = [import_module('cloudinstall.charms.' + mname)
                          for (_, mname, _) in
@@ -267,7 +267,6 @@ class AddCharmDialog(Overlay):
         charm_classes = sorted([m.__charm_class__ for m in charm_modules],
                                key=attrgetter('deploy_priority'))
 
-        self.state = state
         self.cr = command_runner
         self.underlying = underlying
         self.destroy = destroy
@@ -276,7 +275,7 @@ class AddCharmDialog(Overlay):
         self.bgroup = []
         first_index = 0
         for i, charm_class in enumerate(charm_classes):
-            charm = charm_class(state=self.state)
+            charm = charm_class(state=juju_state)
             if charm.name() and not first_index:
                 first_index = i
             r = RadioButton(self.bgroup, charm.name())
@@ -309,7 +308,7 @@ class AddCharmDialog(Overlay):
 
 
 class ChangeStateDialog(Overlay):
-    def __init__(self, underlying, state, on_success, on_cancel):
+    def __init__(self, underlying, juju_state, on_success, on_cancel):
         import cloudinstall.charms
         charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
                          for (_, mname, _) in
@@ -317,11 +316,10 @@ class ChangeStateDialog(Overlay):
         charm_classes = sorted([m.__charm_class__ for m in charm_modules],
                                key=attrgetter('deploy_priority'))
 
-        self.state = state
         self.boxes = []
         first_index = 0
         for i, charm_class in enumerate(charm_classes):
-            charm = charm_class(state=self.state)
+            charm = charm_class(state=juju_state)
             if charm.name() and not first_index:
                 first_index = i
             r = CheckBox(charm.name())
@@ -361,7 +359,7 @@ class ChangeStateDialog(Overlay):
 class Node(WidgetWrap):
     """ A single ui node representation
     """
-    def __init__(self, service=None, state=None, open_dialog=None):
+    def __init__(self, service=None, open_dialog=None):
         """
         Initialize Node
 
@@ -369,7 +367,6 @@ class Node(WidgetWrap):
         :param type: Service()
         """
         self.service = service
-        self.state = state
         self.units = (self.service.units)
         self.open_dialog = open_dialog
 
@@ -469,7 +466,7 @@ class ConsoleMode(Frame):
 
 
 class NodeViewMode(Frame):
-    def __init__(self, loop, state):
+    def __init__(self, loop):
         header = [AttrWrap(Text(TITLE_TEXT), "border"),
                   AttrWrap(Text('(Q) Quit'), "border"),
                   AttrWrap(Text('(F5) Refresh'), "border"),
@@ -487,7 +484,8 @@ class NodeViewMode(Frame):
         footer = AttrWrap(footer, "border")
         self.poll_interval = 10
         self.ticks_left = 0
-        self.machines, self.state, self.maas_state = state
+        self.juju_state = None
+        self.maas_state = None
         self.nodes = ListWithHeader(NODE_HEADER)
         self.loop = loop
 
@@ -523,7 +521,7 @@ class NodeViewMode(Frame):
 
     def open_dialog(self):
             self.loop.widget = AddCharmDialog(self,
-                                              self.state,
+                                              self.juju_state,
                                               self.destroy,
                                               self.cr)
 
@@ -535,6 +533,7 @@ class NodeViewMode(Frame):
         :returns: data from the polling of services and the juju state
         :rtype: tuple (JujuState(), MaasState())
         """
+        log.debug("refresh_states() about to poll_state()")
         return pegasus.poll_state()
 
     def do_update(self, juju_state, maas_state):
@@ -545,7 +544,7 @@ class NodeViewMode(Frame):
         :param maas_state: maas polled state
         :type maas_state MaasState()
         """
-        nodes = [Node(s, juju_state, self.open_dialog)
+        nodes = [Node(s, self.open_dialog)
                  for s in juju_state.services]
 
         if self.target == self.controller_overlay:
@@ -557,7 +556,7 @@ class NodeViewMode(Frame):
 
     def update_and_redraw(self, state):
         self.status_info.set_text("[INFO] Polling node availability")
-        juju_state, maas_state = state
+        self.juju_state, self.maas_state = state
         self.do_update(juju_state, maas_state)
         for n in juju_state.services:
             for i in n.units:
@@ -581,6 +580,7 @@ class NodeViewMode(Frame):
     def tick(self):
         if self.ticks_left == 0:
             self.ticks_left = self.poll_interval
+            log.debug("NodeViewMode tick() calling refresh_states()")
             self.loop.run_async(self.refresh_states, self.update_and_redraw)
         self.timer.set_text("(Re-poll in "
                             "{secs} (s))".format(secs=self.ticks_left))
@@ -634,11 +634,10 @@ class LockScreen(Overlay):
 class PegasusGUI(MainLoop):
     """ Pegasus Entry class """
 
-    def __init__(self, state=None):
-        self.state = state
+    def __init__(self):
         self.cr = CommandRunner()
         self.console = ConsoleMode()
-        self.node_view = NodeViewMode(self, self.state)
+        self.node_view = NodeViewMode(self)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
         self.init_machine()
@@ -651,7 +650,7 @@ class PegasusGUI(MainLoop):
         if pegasus.MULTI_SYSTEM:
             return
         else:
-            allocated = list(self.state[1].machines_allocated())
+            allocated = list(self.juju_state.machines_allocated())
             if len(allocated) == 0:
                 self.cr.add_machine(constraints={'mem': '3G',
                                                  'root-disk': '20G'})
