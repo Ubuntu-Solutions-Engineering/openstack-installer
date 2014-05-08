@@ -77,7 +77,7 @@ def poll_state():
     """ Polls current state of Juju and MAAS
 
     :returns: list of Machine() and the Juju state
-    :rtype: list, JujuState()
+    :rtype: tuple (JujuState(), MaasState())
     """
     # Capture Juju state
     ret, juju, _ = utils.get_command_output('juju status')
@@ -104,24 +104,22 @@ def poll_state():
         c.tag_fpi(maas)
         c.nodes_accept_all()
         c.tag_name(maas)
-    return parse_state(juju, maas), juju, maas
+
+    update_machine_info(juju, maas)
+    return (juju, maas)
 
 
-def parse_state(juju, maas=None):
+def update_machine_info(juju, maas=None):
     """Parses the current state of juju containers and maas nodes.
 
-    Returns a list of machines excluding the bootstrap node, juju
-    machine ID "0".
+    Updates machine info in-place.
 
     :param juju: juju polled state
     :type juju: JujuState()
     :param maas: maas polled state
     :type mass: MaasState()
-    :return: nodes/containers
-    :rtype: list
 
     """
-    results = []
 
     for machine in juju.machines():
 
@@ -133,7 +131,6 @@ def parse_state(juju, maas=None):
                 c.mem = utils.get_host_mem()
                 c.cpu_cores = utils.get_host_cpu_cores()
                 c.storage = utils.get_host_storage()
-        results.append(machine)
 
     if maas:
         for machine in maas.machines():
@@ -143,8 +140,6 @@ def parse_state(juju, maas=None):
                 machine.agent_state = "allocated"
             machine.dns_name = machine.hostname
             log.debug("querying maas machine: {maas}".format(maas=machine))
-            results.append(machine)
-    return results
 
 
 def wait_for_services():
