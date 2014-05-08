@@ -174,7 +174,7 @@ ts()
 	awk '{ print strftime("%F %T"), $0; fflush() }' "$1"
 }
 
-INSTALL_USER=$(getent passwd 1000 | cut -d : -f 1)
+INSTALL_USER=$(logname)
 
 # HELPER TOOLS
 configure_landscape=/usr/share/cloud-installer/bin/configure-landscape

@@ -60,28 +60,6 @@ CONTROLLER_CHARMS = [
     OPENSTACK_DASHBOARD,
 ]
 
-RELATIONS = {
-    KEYSTONE: [MYSQL],
-    NOVA_CLOUD_CONTROLLER: [MYSQL, RABBITMQ_SERVER, GLANCE, KEYSTONE],
-    NOVA_COMPUTE: [MYSQL, RABBITMQ_SERVER, GLANCE, NOVA_CLOUD_CONTROLLER],
-    GLANCE: [MYSQL, KEYSTONE],
-    OPENSTACK_DASHBOARD: [KEYSTONE],
-}
-
-###############################################################################
-# TODO: Remove since charm relations are handled per charm class
-# Handle charm relations
-# def get_charm_relations(charm):
-#     """ Return a list of (relation, command) of relations to add. """
-#     for rel in RELATIONS.get(charm, []):
-#         if charm == NOVA_COMPUTE and rel == RABBITMQ_SERVER:
-#             c, r = (NOVA_COMPUTE + ":amqp", RABBITMQ_SERVER + ":amqp")
-#         else:
-#             c, r = (charm, rel)
-#         cmd = "juju add-relation {charm} {relation}"
-#         yield (r, cmd.format(charm=c, relation=r))
-###############################################################################
-
 PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
 try:
     with open(PASSWORD_FILE) as f:
@@ -94,26 +72,6 @@ except IOError:
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
 MULTI_SYSTEM = exists(expanduser('~/.cloud-install/multi'))
 
-###############################################################################
-# FIXME: With addition of Openstack charms to Trusty
-# we shouldn't need to use a configuration file for specifying
-# the openstack-origin as it will default to 'distro' which
-# in this case is Trusty's openstack charms.
-#
-# def juju_config_arg(charm):
-#     """ Query configuration parameters for openstack charms
-#
-#     :param charm: name of charm
-#     :type charm: str
-#     :return: path of openstack configuration
-#     :rtype: str
-#     """
-#     path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
-#     with open(path, 'wb') as f:
-#         f.write(bytes(CONFIG_TEMPLATE, 'utf-8'))
-#     config = "" if charm in _OMIT_CONFIG else "--config {path}"
-#     return config.format(path=path)
-###############################################################################
 
 def poll_state():
     """ Polls current state of Juju and MAAS
