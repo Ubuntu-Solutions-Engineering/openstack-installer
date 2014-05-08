@@ -23,6 +23,7 @@ import sys
 
 from cloudinstall import pegasus
 from cloudinstall.juju.client import JujuClient
+from cloudinstall.juju import JujuState
 
 log = logging.getLogger('cloudinstall.charms')
 
@@ -38,7 +39,7 @@ class CharmBase:
     configfile = expanduser("~/.cloud-install/charmconf.yaml")
     deploy_priority = sys.maxsize
 
-    def __init__(self, state=None, machine=None):
+    def __init__(self, juju_state=None, machine=None):
         """ initialize
 
         :param state: :class:JujuState
@@ -46,7 +47,8 @@ class CharmBase:
         """
         self.charm_path = None
         self.exposed = False
-        self.state = state
+        self.juju_state = juju_state
+        assert isinstance(self.juju_state, JujuState)
         self.machine = machine
         self.client = JujuClient()
 
@@ -122,7 +124,7 @@ class CharmBase:
         Override in charm specific.
         """
         if len(self.related) > 0:
-            services = self.state[1].service(self.charm_name)
+            services = self.juju_state.service(self.charm_name)
             for charm in self.related:
                 try:
                     if not self.is_related(charm, services.relations) \
