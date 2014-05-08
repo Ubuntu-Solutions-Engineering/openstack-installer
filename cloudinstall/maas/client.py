@@ -352,3 +352,12 @@ class MaasClient:
         if res.ok:
             return True
         return False
+
+    def zone_delete(self, name):
+        """ Delete a zone.
+
+        :param name: Name of the zone to be deleted
+        :returns True on success & False on failure.
+        """
+        res = self.delete('/zones/{}/'.format(name))
+        return res.ok
