@@ -22,6 +22,7 @@ from os.path import expanduser
 import sys
 
 from cloudinstall.juju.client import JujuClient
+from cloudinstall.juju import JujuState
 
 log = logging.getLogger('cloudinstall.charms')
 
@@ -46,6 +47,7 @@ class CharmBase:
         self.charm_path = None
         self.exposed = False
         self.juju_state = juju_state
+        assert isinstance(self.juju_state, JujuState)
         self.machine = machine
         self.client = JujuClient()
 

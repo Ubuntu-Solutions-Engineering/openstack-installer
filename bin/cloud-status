@@ -23,7 +23,6 @@ import sys
 import os
 
 from cloudinstall import gui
-from cloudinstall import pegasus
 from cloudinstall import utils
 from cloudinstall import log
 
@@ -35,6 +34,6 @@ for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
     signal.signal(sig, sig_handler)
 
 if __name__ == '__main__':
-    gui = gui.PegasusGUI(pegasus.poll_state())
+    gui = gui.PegasusGUI()
     sys.exit(gui.run())
 
