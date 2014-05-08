@@ -23,7 +23,7 @@ case $WHAT in
     juju destroy-environment --yes --force maas
     rm -r ~/.maascli.db
 
-    apt_purge '.*maas.*' 'bind9'
+    apt_purge '.*maas.*'
     sudo -u postgres psql -c 'drop database maasdb;'
 
     # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
