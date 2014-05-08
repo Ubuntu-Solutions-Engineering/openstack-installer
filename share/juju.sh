@@ -53,6 +53,8 @@ configCharmOptions()
                   admin-user: 'admin'
                 juju-gui:
                   password: $1
+                mysql:
+                  dataset-size: 512M
 		EOF
 }
 
