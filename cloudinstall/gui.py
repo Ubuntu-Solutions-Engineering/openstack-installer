@@ -640,6 +640,7 @@ class PegasusGUI(MainLoop):
         self.node_view = NodeViewMode(self)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
+        self.juju_state, _ = pegasus.poll_state()
         self.init_machine()
         MainLoop.__init__(self, self.node_view.target, STYLES,
                           unhandled_input=self._header_hotkeys)
