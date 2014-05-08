@@ -21,6 +21,7 @@ import yaml
 from os.path import expanduser
 import sys
 
+from cloudinstall import pegasus
 from cloudinstall.juju.client import JujuClient
 from cloudinstall.juju import JujuState
 
@@ -50,6 +51,14 @@ class CharmBase:
         assert isinstance(self.juju_state, JujuState)
         self.machine = machine
         self.client = JujuClient()
+
+    @property
+    def is_single(self):
+        return pegasus.SINGLE_SYSTEM
+
+    @property
+    def is_multi(self):
+        return pegasus.MULTI_SYSTEM
 
     def openstack_password(self):
         PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')

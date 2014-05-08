@@ -1,5 +1,5 @@
 #
-# mysql.py - Mysql Charm instructions
+# swift.py - Swift instructions
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -19,10 +19,20 @@
 from cloudinstall.charms import CharmBase
 
 
-class CharmMysql(CharmBase):
-    """ MYSQL directives """
+class CharmSwift(CharmBase):
+    """ swift directives """
 
-    charm_name = 'mysql'
-    display_name = 'MySQL'
+    charm_name = 'swift-storage'
+    display_name = 'Swift'
+    related = ['glance', 'mysql', 'rabbitmq-server']
+    deploy_priority = 5
 
-__charm_class__ = CharmMysql
+    def has_quorum(self):
+        return len(list(self.state[2].machines_allocated())) >= 3
+
+    def setup(self):
+        """ Custom setup for ceph """
+        if self.is_multi and self.has_quorum():
+            self.client.deploy(self.charm_name, dict(instances=3))
+
+__charm_class__ = CharmSwift
