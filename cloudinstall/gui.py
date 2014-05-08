@@ -275,7 +275,7 @@ class AddCharmDialog(Overlay):
         self.bgroup = []
         first_index = 0
         for i, charm_class in enumerate(charm_classes):
-            charm = charm_class(state=juju_state)
+            charm = charm_class(juju_state=juju_state)
             if charm.name() and not first_index:
                 first_index = i
             r = RadioButton(self.bgroup, charm.name())
@@ -319,7 +319,7 @@ class ChangeStateDialog(Overlay):
         self.boxes = []
         first_index = 0
         for i, charm_class in enumerate(charm_classes):
-            charm = charm_class(state=juju_state)
+            charm = charm_class(juju_state=juju_state)
             if charm.name() and not first_index:
                 first_index = i
             r = CheckBox(charm.name())
