@@ -24,6 +24,7 @@ class CharmSwift(CharmBase):
 
     charm_name = 'swift-storage'
     display_name = 'Swift'
+    related = ['glance', 'mysql', 'rabbitmq-server']
 
     def has_quorum(self):
         return len(list(self.state[2].machines_allocated())) >= 3
