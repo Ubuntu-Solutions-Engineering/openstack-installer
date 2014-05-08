@@ -19,11 +19,13 @@
 multiInstall()
 {
 	cp /etc/network/interfaces /etc/network/interfaces.cloud.bak
+	echo $interface > /etc/network/cloud-interface
 
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
 		dialogGaugePrompt 2 "Setting up install"
 		setupMultiInstall
+		testAndConfigureInterface
 
 		dialogAptInstall 4 20 ${1:-cloud-install-multi}
 
@@ -46,11 +48,12 @@ multiInstall()
 		createMaasBridge $interface
 		dialogGaugePrompt 34 "Configuring MAAS networking"
 
+		configureMaasServices $(ipAddress br0)
+
 		if [ -n "$bridge_interface" ]; then
 			gateway=$(ipAddress br0)
 			configureNat $(ipNetwork br0)
 			enableIpForwarding
-			configureMaasServices $gateway
 		fi
 
 		# Retrieve dhcp-range
@@ -103,4 +106,16 @@ setupMultiInstall()
 	    "/home/$INSTALL_USER/.cloud-install"
 	configCharmOptions $openstack_password > \
           "/home/$INSTALL_USER/.cloud-install/charmconf.yaml"
+}
+
+testAndConfigureInterface()
+{
+	if [ -z "$(ipAddress $interface)" ]; then
+		ifdown $interface && ifup $interface
+		if [ -z "$(ipAddress $interface)" ]; then
+			echo "You selected $interface which could not be configured." 1>&2
+			echo "Please ensure $interface gets an IP address and re-run the installer." 1>&2
+			false
+		fi
+	fi
 }

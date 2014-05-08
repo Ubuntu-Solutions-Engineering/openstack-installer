@@ -152,7 +152,10 @@ configureInstall()
 		14)
 			network=$(ipNetwork $interface)
 			address=$(ipAddress $interface)
-			if [ -n "$bridge_interface" ]; then
+			if [ -z "$address" ]; then
+				# The interface isn't configured, so don't suggest a DHCP range.
+				dhcp_range=""
+			elif [ -n "$bridge_interface" ]; then
 				dhcp_range=$($ip_range $network $address)
 			else
 				gateway=$(gateway)
@@ -169,9 +172,9 @@ configureInstall()
 				popState; continue
 			fi
 			if [ "$install_type" = "Landscape managed" ]; then
-				next_state=30
-			else
 				next_state=16
+			else
+				next_state=30
 			fi
 			;;
 		16)
