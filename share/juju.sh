@@ -30,6 +30,7 @@ configMaasEnvironment()
 		    default-series: trusty
 		    authorized-keys-path: ~/.ssh/id_rsa.pub
 		    apt-http-proxy: 'http://$1:8000/'
+		    lxc-use-clone: true
 		EOF
 }
 
@@ -42,6 +43,7 @@ configLocalEnvironment()
 		  local:
 		    type: local
 		    container: kvm
+		    lxc-use-clone: true
 		EOF
 }
 

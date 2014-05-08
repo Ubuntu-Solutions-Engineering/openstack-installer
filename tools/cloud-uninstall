@@ -94,4 +94,4 @@ if [ ${RET} -eq 0 ]; then
 fi
 
 rm -rf ~/.juju ~/.cloud-install || true
-rm /etc/cloud-installer || true
+rm -rf /etc/cloud-installer || true
