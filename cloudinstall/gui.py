@@ -310,7 +310,7 @@ class AddCharmDialog(Overlay):
 class ChangeStateDialog(Overlay):
     def __init__(self, underlying, juju_state, on_success, on_cancel):
         import cloudinstall.charms
-        charm_modules = [importlib.import_module('cloudinstall.charms.' + mname)
+        charm_modules = [import_module('cloudinstall.charms.' + mname)
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
         charm_classes = sorted([m.__charm_class__ for m in charm_modules],
