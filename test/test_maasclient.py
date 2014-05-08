@@ -42,31 +42,33 @@ class MaasClientTest(unittest.TestCase):
     def setUp(self):
         self.c = MaasClient(AUTH)
         self.tag = 'a-test-tag-' + randomString()
-
-    def test_get_tags(self):
-        res = self.c.tags
-        self.assertGreater(len(res), 0)
-
-    def test_tag_new(self):
         res = self.c.tag_new(self.tag)
         self.assertTrue(res)
 
-    def test_tag_delete(self):
+    def tearDown(self):
         res = self.c.tag_delete(self.tag)
         self.assertTrue(res)
+
+    def test_get_tags(self):
+        self.assertTrue(self.tag in [t['name'] for t in self.c.tags])
+
 
 @unittest.skipIf(not MAAS_INSTALLED, "Maas is not installed")
 class MaasClientZoneTest(unittest.TestCase):
     def setUp(self):
         self.c = MaasClient(AUTH)
-
-    def test_new_zone(self):
-        res = self.c.zone_new('testzone-' + randomString(), 
+        self.zone_name = 'testzone-' + randomString()
+        res = self.c.zone_new(self.zone_name,
                               'zone created in unittest')
+        self.assertTrue(res)
+
+    def tearDown(self):
+        res = self.c.zone_delete(self.zone_name)
+        self.assertTrue(res)
 
     def test_get_zones(self):
-        res = self.c.zones
-        self.assertEquals(len(res), 0)
+        self.assertTrue(self.zone_name in [z['name'] for z in self.c.zones])
+
 
 if __name__ == '__main__':
     unittest.main()
