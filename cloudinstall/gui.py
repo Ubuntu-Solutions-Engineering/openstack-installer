@@ -292,7 +292,7 @@ class AddCharmDialog(Overlay):
         self.items.set_focus(first_index)
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
         self.lb = ListBox([ba, Text(""), self.buttons])
-        self.w = LineBox(self.lb, title="Select new charm")
+        self.w = LineBox(self.lb, title="Add unit")
         self.w = AttrMap(self.w, "dialog")
         Overlay.__init__(self, self.w, self.underlying,
                          'center', 45, 'middle', len(wrapped_boxes) + 4)
