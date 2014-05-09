@@ -325,16 +325,20 @@ class JujuClient:
     #     return self.call(dict(Type="Client",
     #                           Request="AddServiceUnits",
     #                           Params=dict(MachineSpec=machine_spec)))
-    def add_unit(self, service_name, machine_id=None):
+    def add_unit(self, service_name, machine_id=None, count=1):
         """ Add unit to machine
 
         :param str service_name: service/charm name
         :param str machine_id: machine id
+        :param int count: number of units to add
         """
         cmd = "juju add-unit {name}".format(name=service_name)
         if machine_id:
             cmd = "{cmd} --to {_id}".format(cmd=cmd, _id=machine_id)
-        log.debug("Adding additional {name}".format(name=service_name))
+        if count > 1:
+            cmd += " -n {count}".format(count=count)
+        log.debug("Adding additional {name}, cmd='{cmd}'"
+                  .format(name=service_name, cmd=cmd))
         ret, out, _ = get_command_output(cmd)
         if ret:
             log.warning("Problem adding {name} " \

@@ -29,8 +29,7 @@ import pkgutil
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
-                   SimpleListWalker, Edit, CheckBox, RadioButton,
-
+                   SimpleListWalker, Edit, CheckBox, RadioButton, IntEdit,
                    MainLoop, ExitMainLoop)
 
 from cloudinstall.juju.client import JujuClient
@@ -282,6 +281,9 @@ class AddCharmDialog(Overlay):
             r = RadioButton(self.bgroup, charm.name())
             r.text_label = charm.name()
             self.boxes.append(r)
+
+        self.count_editor = IntEdit("Number of units to add: ", 1)
+        self.boxes.append(self.count_editor)
         wrapped_boxes = _wrap_focus(self.boxes)
 
 
@@ -291,17 +293,26 @@ class AddCharmDialog(Overlay):
         self.items = ListBox(wrapped_boxes)
         self.items.set_focus(first_index)
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
-        self.lb = ListBox([ba, Text(""), self.buttons])
+
+        self.validation_text = Text("")
+        self.lb = ListBox([ba, self.validation_text, self.buttons])
         self.w = LineBox(self.lb, title="Add unit")
         self.w = AttrMap(self.w, "dialog")
         Overlay.__init__(self, self.w, self.underlying,
                          'center', 45, 'middle', len(wrapped_boxes) + 4)
 
     def yes(self, button):
-        selected = list(filter(lambda r: r.get_state(), self.boxes))[0]
+        selected = [r for r in self.boxes if
+                    r is not self.count_editor
+                    and r.get_state()][0]
+        #selected = list(filter(lambda r: r.get_state(), self.boxes))[0]
         _charm_to_deploy = selected.label
-        log.info("Deploying a new {charm}".format(charm=_charm_to_deploy))
-        self.cr.add_unit(_charm_to_deploy)
+        n = self.count_editor.value()
+        if n == 0:
+            self.validation_text = Text("Please enter a number >= 1.")
+
+        log.info("Adding {n} units of {charm}".format(n=n, charm=_charm_to_deploy))
+        self.cr.add_unit(_charm_to_deploy, count=int(n))
         self.destroy()
 
     def no(self, button):
@@ -341,7 +352,7 @@ class ChangeStateDialog(Overlay):
         self.items = ListBox(wrapped_boxes)
         self.items.set_focus(first_index)
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
-        self.lb = ListBox([ba, Text(""), self.buttons])
+        self.lb = ListBox([ba, self.count_editor, self.buttons])
         root = LineBox(self.lb, title="Select new charm")
         root = AttrMap(root, "dialog")
 
@@ -443,13 +454,14 @@ class CommandRunner(ListBox):
         out = self.client.add_machine(constraints)
         return out
 
-    def add_unit(self, service_name, machine_id=None):
+    def add_unit(self, service_name, machine_id=None, count=1):
         """ Add a unit with optional machine id
 
         :param str service_name: name of charm
         :param int machine_id: (optional) id of machine to deploy to
+        :param int count: (optional) number of units to add
         """
-        out = self.client.add_unit(service_name, machine_id)
+        out = self.client.add_unit(service_name, machine_id, count)
         return out
 
 
