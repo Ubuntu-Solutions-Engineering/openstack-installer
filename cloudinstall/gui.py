@@ -303,7 +303,6 @@ class AddCharmDialog(Overlay):
         selected = [r for r in self.boxes if
                     r is not self.count_editor
                     and r.get_state()][0]
-        #selected = list(filter(lambda r: r.get_state(), self.boxes))[0]
         _charm_to_deploy = selected.label
         n = self.count_editor.value()
         log.info("Adding {n} units of {charm}".format(n=n, charm=_charm_to_deploy))
