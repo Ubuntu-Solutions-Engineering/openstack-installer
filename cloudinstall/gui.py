@@ -293,7 +293,6 @@ class AddCharmDialog(Overlay):
         self.items = ListBox(wrapped_boxes)
         self.items.set_focus(first_index)
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
-
         self.lb = ListBox([ba, Text(""), self.buttons])
         self.w = LineBox(self.lb, title="Add unit")
         self.w = AttrMap(self.w, "dialog")
