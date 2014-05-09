@@ -264,8 +264,9 @@ class AddCharmDialog(Overlay):
         charm_modules = [import_module('cloudinstall.charms.' + mname)
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
-        charm_classes = sorted([m.__charm_class__ for m in charm_modules],
-                               key=attrgetter('deploy_priority'))
+        charm_classes = [m.__charm_class__ for m in charm_modules
+                         if m.__charm_class__.allow_multi_units]
+
 
         self.cr = command_runner
         self.underlying = underlying
@@ -291,7 +292,7 @@ class AddCharmDialog(Overlay):
         self.items.set_focus(first_index)
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
         self.lb = ListBox([ba, Text(""), self.buttons])
-        self.w = LineBox(self.lb, title="Select new charm")
+        self.w = LineBox(self.lb, title="Add unit")
         self.w = AttrMap(self.w, "dialog")
         Overlay.__init__(self, self.w, self.underlying,
                          'center', 45, 'middle', len(wrapped_boxes) + 4)

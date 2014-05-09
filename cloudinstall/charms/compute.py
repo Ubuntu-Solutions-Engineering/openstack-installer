@@ -28,6 +28,7 @@ class CharmNovaCompute(CharmBase):
     isolate = True
     constraints = {'mem': '4G',
                    'root-disk': '10G'}
+    allow_multi_units = True
 
     def set_relations(self):
         super(CharmNovaCompute, self).set_relations()
