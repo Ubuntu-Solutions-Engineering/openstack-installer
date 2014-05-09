@@ -265,7 +265,7 @@ class AddCharmDialog(Overlay):
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
         charm_classes = [m.__charm_class__ for m in charm_modules
-                         if m.allow_multi_units]
+                         if m.__charm_class__.allow_multi_units]
 
 
         self.cr = command_runner
