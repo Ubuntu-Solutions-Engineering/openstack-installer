@@ -294,8 +294,7 @@ class AddCharmDialog(Overlay):
         self.items.set_focus(first_index)
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
 
-        self.validation_text = Text("")
-        self.lb = ListBox([ba, self.validation_text, self.buttons])
+        self.lb = ListBox([ba, Text(""), self.buttons])
         self.w = LineBox(self.lb, title="Add unit")
         self.w = AttrMap(self.w, "dialog")
         Overlay.__init__(self, self.w, self.underlying,
@@ -308,9 +307,6 @@ class AddCharmDialog(Overlay):
         #selected = list(filter(lambda r: r.get_state(), self.boxes))[0]
         _charm_to_deploy = selected.label
         n = self.count_editor.value()
-        if n == 0:
-            self.validation_text = Text("Please enter a number >= 1.")
-
         log.info("Adding {n} units of {charm}".format(n=n, charm=_charm_to_deploy))
         self.cr.add_unit(_charm_to_deploy, count=int(n))
         self.destroy()
