@@ -74,7 +74,7 @@ fi
 createTempDir
 startLog
 
-trap exitInstall EXIT
+trap exitInstall EXIT HUP INT QUIT TERM
 trap "" PIPE
 
 # TODO add better logging
