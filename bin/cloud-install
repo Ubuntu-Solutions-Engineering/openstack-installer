@@ -32,7 +32,7 @@ OPT_CONFIGFILE=c
 OPT_EXAMPLE=e
 OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_CONFIGFILE}:${OPT_EXAMPLE}
 USAGE="\
-cloud-install [-${OPT_TYPE}${OPT_READPASS}${OPT_CONFIGFILE}]
+cloud-install [-${OPT_TYPE}${OPT_CONFIGFILE}${OPT_EXAMPLE}]
 
 Create an Ubuntu Cloud! (requires root privileges)
 
