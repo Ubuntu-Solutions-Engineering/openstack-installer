@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from io import StringIO
 from os.path import expanduser, exists
 from subprocess import check_call
 
@@ -80,14 +79,21 @@ def poll_state():
     :rtype: tuple (JujuState(), MaasState())
     """
     # Capture Juju state
-    ret, juju, _ = utils.get_command_output('juju status')
+    ret, juju_stdout, juju_stderr, _ = utils.get_command_output('juju status',
+                                                                combine_output=False)
     if ret:
         log.debug("Juju state unknown, will re-poll in " \
                   "case bootstrap is taking a little longer to come up.")
+        log.debug("Juju status output: {o} \n stderr: {e}"
+                  .format(o=juju_stdout, e=juju_stderr))
         # Stub out a juju status for now
         juju = JujuState('environment: local\nmachines:')
     else:
-        juju = JujuState(StringIO(juju))
+        try:
+            juju = JujuState(juju_stdout)
+        except:
+            log.exception("Ignoring exception in parsing juju state.")
+            juju = JujuState('environment: local\nmachines:')
 
     maas = None
     if MULTI_SYSTEM:
