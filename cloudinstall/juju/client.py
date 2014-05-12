@@ -138,7 +138,7 @@ class JujuClient:
             if opts:
                 cmd = "{cmd} --constraints \"{opts}\"".format(cmd=cmd,
                                                           opts=" ".join(opts))
-        ret, out, rtime = get_command_output(cmd)
+        ret, out, _, _ = get_command_output(cmd)
         log.debug("Machine added: {cmd} ({out})".format(cmd=cmd, out=out))
         return out
 
@@ -159,7 +159,7 @@ class JujuClient:
                                                  b=endpoint_b)
         log.debug("Adding relation {a} <-> {b}".format(a=endpoint_a,
                                                        b=endpoint_b))
-        ret, out, _ = get_command_output(cmd)
+        ret, out, _, _ = get_command_output(cmd)
         return out
 
     # def remove_relation(self, endpoint_a, endpoint_b):
@@ -209,7 +209,7 @@ class JujuClient:
                                                           opts=" ".join(opts))
         cmd = "{cmd} {charm}".format(cmd=cmd, charm=charm)
         log.debug("Deploying {charm} -> {cmd}".format(charm=charm, cmd=cmd))
-        ret, out, _ = get_command_output(cmd)
+        ret, out, _, _ = get_command_output(cmd)
         log.debug("Deploy result: {out}".format(out=out))
         if ret:
             log.warning("Deploy error ({cmd}): {out}".format(cmd=cmd,
@@ -233,7 +233,7 @@ class JujuClient:
         for k,v in config_keys.items():
             cmd = "juju set {service} {k}={v}".format(service=service_name,
                                                       k=k, v=v)
-            ret, out, _ = get_command_output(cmd)
+            ret, out, _, _ = get_command_output(cmd)
             if ret:
                 log.warning("Problem setting config: " \
                             "{out}".format(out=out))
@@ -325,17 +325,21 @@ class JujuClient:
     #     return self.call(dict(Type="Client",
     #                           Request="AddServiceUnits",
     #                           Params=dict(MachineSpec=machine_spec)))
-    def add_unit(self, service_name, machine_id=None):
+    def add_unit(self, service_name, machine_id=None, count=1):
         """ Add unit to machine
 
         :param str service_name: service/charm name
         :param str machine_id: machine id
+        :param int count: number of units to add
         """
         cmd = "juju add-unit {name}".format(name=service_name)
         if machine_id:
             cmd = "{cmd} --to {_id}".format(cmd=cmd, _id=machine_id)
-        log.debug("Adding additional {name}".format(name=service_name))
-        ret, out, _ = get_command_output(cmd)
+        if count > 1:
+            cmd += " -n {count}".format(count=count)
+        log.debug("Adding additional {name}, cmd='{cmd}'"
+                  .format(name=service_name, cmd=cmd))
+        ret, out, _, _ = get_command_output(cmd)
         if ret:
             log.warning("Problem adding {name} " \
                         "{out}".format(name=service_name,
