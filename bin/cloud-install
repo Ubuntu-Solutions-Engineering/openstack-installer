@@ -37,7 +37,7 @@ Create an Ubuntu Cloud! (requires root privileges)
 
 Options:
   -$OPT_CONFIGFILE <file> - POSIX shell script to be sourced by installer
-                    automating install by pre-setting menu responses.
+      automating install by pre-setting menu responses.
   -$OPT_INSTALL  install only (don't invoke cloud-status)
   -$OPT_HELP  print this message"
 
