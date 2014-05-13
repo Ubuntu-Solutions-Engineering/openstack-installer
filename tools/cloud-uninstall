@@ -47,6 +47,7 @@ case $WHAT in
     fi
 
     cp /etc/cloud-installer/interfaces.cloud.bak /etc/network/interfaces
+    cp -r /etc/cloud-installer/interfaces.cloud.d.bak /etc/network/interfaces.d
     rm /etc/network/interfaces.d/cloud-install.cfg
 
     if [ -n "$interface" ]; then
