@@ -60,6 +60,13 @@ getDomain() {
 	echo "$1" | grep -E "^[^@]+@[^@]+\.[^@]+$" | sed -E -e 's/[^@]+@([^@]+\.[^@]+)/\1/'
 }
 
+validateDHCPRange() 
+{
+    { python3 -c \
+	"from ipaddress import ip_address; import sys; addrs = list(map(ip_address, '$1'.split('-'))); addrs[1]"\
+	> /dev/null ; ret=$?; } || true
+
+}
 configureInstall()
 {
 	state=1
@@ -189,6 +196,12 @@ configureInstall()
 				popState; continue
 			    fi
 			fi
+			validateDHCPRange $dhcp_range
+			if [ -z "$dhcp_range" ] || [ $ret -eq 1 ]; then
+				dialogMsgBox "[!] Invalid Range" Continue "Please enter a valid IP address range" 10 60
+				continue
+			fi
+
 			if [ "$install_type" = "Landscape managed" ]; then
 				next_state=16
 			else
@@ -197,13 +210,20 @@ configureInstall()
 			;;
 		16)
 			if [ -z "$admin_email" ]; then
-
 			    dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60
+			    if [ $ret -ne 0 ]; then
+				popState; continue
+			    fi
 			    admin_email=$input
+			    if [ -z "$admin_email" ]; then
+				dialogMsgBox "[!] Missing Input" Continue "Please enter a login email." 10 60
+				continue
 			fi
 			result=$(getDomain "$admin_email")
 			if [ -z "$result" ]; then
-				popState; continue
+				dialogMsgBox "[!] Missing Email Domain" Continue \
+					"Sorry, I couldn't extract the domain from '$admin_email'. Please try again." 10 60
+				continue
 			fi
 			email_domain="$result"
 			;;
@@ -214,20 +234,35 @@ configureInstall()
 
 			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
 			dialogInput "Landscape user's full name" "Please enter the full name of the admin user for Landscape." 10 60 "$suggested_name"
+			if [ $ret -ne 0 ]; then
+				popState; continue
+			fi
 			admin_name=$input
 
 			if [ -z "$admin_name" ]; then
-				popState; continue
+				dialogMsgBox "[!] Missing Input" Continue "Please enter a name." 10 60
+				continue
 			fi
 			;;
 		18)
 			if [ -z "$system_email" ]; then
 			    dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain"
-			    system_email=$input
-			    result=$(getDomain "$system_email")
-			    if [ -z "$result" ]; then
+			    if [ $ret -ne 0 ]; then
 				popState; continue
 			    fi
+			    system_email=$input
+                            
+			    if [ -z "$system_email" ]; then
+				dialogMsgBox "[!] Missing Input" Continue "Please enter a system email." 10 60
+				continue
+			    fi
+
+			    result=$(getDomain "$system_email")
+			    if [ -z "$result" ]; then
+				dialogMsgBox "[!] Missing Email Domain" Continue \
+				    "Sorry, I could not extract the domain from '$system_email'. Please try again."\
+					10 60
+				continue
 			fi
 			next_state=30
 			;;
@@ -244,25 +279,29 @@ configureInstall()
 			    state=32; continue
 			fi
 			dialogPassword "OpenStack admin user password:" \
-			    "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
-			    10 60
+				"A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
+				10 60
 			openstack_password=$input
 			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
+			if [ -z "$openstack_password" ]; then
+				dialogMsgBox "[!] Missing Password" Continue "Please enter a password." 10 60
+				continue
+			fi
 			;;
 		31)
 			dialogPassword "OpenStack admin user password to verify:" \
-			    "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." \
-			    10 60
+				"Please enter the same OpenStack admin user password again to verify that you have typed it correctly." \
+				10 60
 			openstack_password2=$input
 			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			if [ "$openstack_password" != "$openstack_password2" ]; then
 				dialogMsgBox "[!] Password mismatch" Continue \
-				    "The two passwords you entered were not the same, please try again." \
-				    10 60
+					"The two passwords you entered were not the same, please try again." \
+					10 60
 				popState; continue
 			fi
 			;;
