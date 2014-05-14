@@ -43,6 +43,8 @@ COMPUTE = "Compute"
 OBJECT_STORAGE = "Object Storage"
 BLOCK_STORAGE = "Block Storage"
 
+# NOTE: this appears to be out of date
+# see LP bug 1319222
 ALLOCATION = {
     NOVA_CLOUD_CONTROLLER: CONTROLLER,
     NOVA_COMPUTE: COMPUTE,
