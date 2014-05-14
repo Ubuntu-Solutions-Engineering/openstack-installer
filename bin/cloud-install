@@ -29,8 +29,7 @@
 OPT_HELP=h
 OPT_INSTALL=i
 OPT_CONFIGFILE=c
-OPT_EXAMPLE=e
-OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_CONFIGFILE}:${OPT_EXAMPLE}
+OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_CONFIGFILE}:
 USAGE="\
 cloud-install [-${OPT_TYPE}${OPT_READPASS}${OPT_CONFIGFILE}]
 
@@ -40,35 +39,12 @@ Options:
   -$OPT_CONFIGFILE <file> - POSIX shell script to be sourced by installer
       automating install by pre-setting menu responses.
   -$OPT_INSTALL  install only (don't invoke cloud-status)
-  -$OPT_HELP  print this message
-  -$OPT_EXAMPLE  print example config file."
+  -$OPT_HELP  print this message"
 
 usage()
 {
 	echo "$USAGE"
 }
-
-CONFIG_EXAMPLE="
-install_type=\"Single system\" # or \"Multi-system\" or \"Landscape managed\"
-openstack_password=\"password\"
-
-# Multi-system only:
-interface=\"eth0\"
-bridge_interface=\"\"
-
-# set to nonempty string to avoid automated check for existing DHCP
-# server on the network:
-skip_dhcp_detection=true
-
-# range of IP addresses for MAAS to lease
-dhcp_range=\"192.168.100.2-192.168.100.244\"
-
-# Landscape-managed installs only:
-# Full name of admin user for Landscape
-admin_name=\"A. D. Ministrator\"
-admin_email=\"A.D.Ministrator@example.com\"
-system_email=\"landscape@example.com\"
-"
 
 usageError()
 {
@@ -83,10 +59,6 @@ while getopts $OPTS opt; do
 		;;
 	$OPT_HELP)
 		usage
-		exit 0
-		;;
-	$OPT_EXAMPLE)
-		echo "$CONFIG_EXAMPLE"
 		exit 0
 		;;
 	$OPT_CONFIGFILE)
