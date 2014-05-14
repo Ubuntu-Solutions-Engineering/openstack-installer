@@ -33,6 +33,7 @@ if exists(CHARM_CONFIG_FILENAME):
     with open(CHARM_CONFIG_FILENAME) as f:
         CHARM_CONFIG = yaml.load(f.read())
 
+
 class CharmBase:
     """ Base charm class """
 

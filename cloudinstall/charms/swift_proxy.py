@@ -26,9 +26,8 @@ class CharmSwiftProxy(CharmBase):
     display_name = 'Swift Proxy'
     related = []
     deploy_priority = 5
-
-    def setup(self):
-        """ Custom setup for swift-proxy to avoid --to"""
-        self.client.deploy(self.charm_name, dict(instances=3))
+    constraints = {'mem': '1G',
+                   'root-disk': '8G'}
+    isolate = True
 
 __charm_class__ = CharmSwiftProxy

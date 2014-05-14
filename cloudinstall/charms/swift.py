@@ -27,11 +27,12 @@ class CharmSwift(CharmBase):
     related = ['swift-proxy']
     deploy_priority = 5
     default_replicas = 3
+    isolate = True
 
     def setup(self):
         """Custom setup for swift-storage to get replicas from config"""
         if 'swift-proxy' in CHARM_CONFIG:
-            num_replicas = CHARM_CONFIG.get('replicas', 
+            num_replicas = CHARM_CONFIG.get('replicas',
                                             self.default_replicas)
         else:
             num_replicas = self.default_replicas

@@ -19,7 +19,7 @@
 """ Pegasus - gui interface to Ubuntu Cloud Installer """
 
 from operator import attrgetter
-from os import write, close, path
+from os import write, close, path, getenv
 from traceback import format_exc
 import re
 import threading
@@ -86,6 +86,7 @@ class ControllerOverlay(Overlay):
         self.deployed_charm_classes = []
         self.finalized_charm_classes = []
         self.single_net_configured = False
+        self.lxc_root_tarball_configured = False
         self.info_text = Text(self.NODE_WAIT
                               if pegasus.SINGLE_SYSTEM
                               else self.PXE_BOOT)
@@ -130,6 +131,15 @@ class ControllerOverlay(Overlay):
             if pegasus.SINGLE_SYSTEM and not self.single_net_configured:
                 self.configure_lxc_network()
 
+            # Speed up things if we go ahead and download the rootfs image
+            # from http://cloud-images.ubuntu.com/releases/trusty/release/
+            #
+            # Use: export LXC_ROOT_TARBALL=/path/to/rootfs_tarball.tar.gz
+            rootfs = getenv('LXC_ROOT_TARBALL', False)
+            if rootfs and not self.lxc_root_tarball_configured:
+                log.debug("Copying local copy of rootfs")
+                self.configure_lxc_root_tarball(rootfs)
+
             log.debug("starting install on "
                       "machine {mid}".format(mid=self.machine.machine_id))
 
@@ -152,10 +162,13 @@ class ControllerOverlay(Overlay):
 
                 log.debug("Deploying {c}".format(c=charm))
 
-                # Hardcode lxc on same machine as they are
-                # created on-demand.
-                charm.setup(_id='lxc:{mid}'
-                            .format(mid=self.machine.machine_id))
+                if charm.isolate:
+                    charm.setup()
+                else:
+                    # Hardcode lxc on same machine as they are
+                    # created on-demand.
+                    charm.setup(_id='lxc:{mid}'
+                                .format(mid=self.machine.machine_id))
                 self.deployed_charm_classes.append(charm_class)
 
         unfinalized_charm_classes = [c for c in self.deployed_charm_classes
@@ -246,6 +259,20 @@ class ControllerOverlay(Overlay):
                    "ubuntu@{host} {cmds}".format(host=host,
                                                  cmds=" && ".join(cmds)))
         self.single_net_configured = True
+
+    def configure_lxc_root_tarball(self, rootfs):
+        """ Use a local copy of the cloud rootfs tarball """
+        host = self.machine.dns_name
+        cmds = "sudo mkdir -p /var/cache/lxc/cloud-trusty"
+        utils._run("ssh -oStrictHostKeyChecking=no "
+                   "ubuntu@{host} {cmds}".format(host=host,
+                                                 cmds=cmds))
+        utils._run("scp -oStrictHostKeyChecking=no "
+                   "{rootfs} "
+                   "ubuntu@{host}:/var/cache/lxc/cloud-trusty/.".format(rootfs=rootfs,
+                                                                        host=host))
+
+        self.lxc_root_tarball_configured = True
 
 
 def _wrap_focus(widgets, unfocused=None):
