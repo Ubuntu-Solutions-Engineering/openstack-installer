@@ -18,7 +18,7 @@
 
 import logging
 import yaml
-from os.path import expanduser
+from os.path import expanduser, exists
 import sys
 
 from cloudinstall import pegasus
@@ -27,6 +27,11 @@ from cloudinstall.juju import JujuState
 
 log = logging.getLogger('cloudinstall.charms')
 
+CHARM_CONFIG_FILENAME = expanduser("~/.cloud-install/charmconf.yaml")
+CHARM_CONFIG = {}
+if exists(CHARM_CONFIG_FILENAME):
+    with open(CHARM_CONFIG_FILENAME) as f:
+        CHARM_CONFIG = yaml.load(f.read())
 
 class CharmBase:
     """ Base charm class """
@@ -36,7 +41,6 @@ class CharmBase:
     related = []
     isolate = False
     constraints = None
-    configfile = expanduser("~/.cloud-install/charmconf.yaml")
     deploy_priority = sys.maxsize
     allow_multi_units = False
 
@@ -105,11 +109,8 @@ class CharmBase:
         kwds = {}
         kwds['machine_id'] = _id
 
-        if self.configfile:
-            with open(self.configfile) as f:
-                _opts = yaml.load(f.read())
-                if self.charm_name in _opts:
-                    kwds['configfile'] = self.configfile
+        if self.charm_name in CHARM_CONFIG:
+            kwds['configfile'] = CHARM_CONFIG_FILENAME
 
         if self.isolate:
             kwds['machine_id'] = None
