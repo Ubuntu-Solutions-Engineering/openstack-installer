@@ -1,5 +1,5 @@
 #
-# __init__.py - init
+# swift-proxy.py - Swift-proxy instructions
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -16,6 +16,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Ubuntu Cloud Installer """
+from cloudinstall.charms import CharmBase
 
-__version__ = "0.15+git20140513"
+
+class CharmSwiftProxy(CharmBase):
+    """ swift directives """
+
+    charm_name = 'swift-proxy'
+    display_name = 'Swift Proxy'
+    related = []
+    deploy_priority = 5
+    constraints = {'mem': '1G',
+                   'root-disk': '8G'}
+    isolate = True
+
+__charm_class__ = CharmSwiftProxy
