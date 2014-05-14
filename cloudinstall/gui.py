@@ -688,7 +688,8 @@ class PegasusGUI(MainLoop):
             allocated = list(self.juju_state.machines_allocated())
             if len(allocated) == 0:
                 self.cr.add_machine(constraints={'mem': '3G',
-                                                 'root-disk': '20G'})
+                                                 'root-disk': '20G',
+                                                 'cpu-cores': '3'})
 
     def _key_pressed(self, keys, raw):
         # We use this as an 'input filter' just to hook when keys are pressed;
