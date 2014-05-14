@@ -57,6 +57,12 @@ configCharmOptions()
                   password: $1
                 mysql:
                   dataset-size: 512M
+                swift-proxy:
+                  zone-assignment: auto
+                  replicas: 3
+                swift-storage:
+                  zone: 1
+                  block-device: /etc/swift/storage.img|2G
 		EOF
 }
 
