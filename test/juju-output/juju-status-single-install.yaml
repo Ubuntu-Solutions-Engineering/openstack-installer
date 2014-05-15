@@ -2,139 +2,203 @@ environment: local
 machines:
   "0":
     agent-state: started
-    agent-version: 1.18.0.1
+    agent-version: 1.18.1.1
     dns-name: localhost
     instance-id: localhost
     series: trusty
+  "1":
+    agent-state: started
+    agent-version: 1.18.1.1
+    dns-name: 10.0.3.200
+    instance-id: ubuntu-local-machine-1
+    series: trusty
+    containers:
+      1/lxc/0:
+        agent-state: started
+        agent-version: 1.18.1.1
+        dns-name: 10.0.3.130
+        instance-id: juju-machine-1-lxc-0
+        series: trusty
+        hardware: arch=amd64
+      1/lxc/1:
+        agent-state: started
+        agent-version: 1.18.1.1
+        dns-name: 10.0.3.120
+        instance-id: juju-machine-1-lxc-1
+        series: trusty
+        hardware: arch=amd64
+      1/lxc/2:
+        agent-state: started
+        agent-version: 1.18.1.1
+        dns-name: 10.0.3.194
+        instance-id: juju-machine-1-lxc-2
+        series: trusty
+        hardware: arch=amd64
+      1/lxc/3:
+        agent-state: started
+        agent-version: 1.18.1.1
+        dns-name: 10.0.3.34
+        instance-id: juju-machine-1-lxc-3
+        series: trusty
+        hardware: arch=amd64
+      1/lxc/4:
+        agent-state: down
+        agent-state-info: (started)
+        agent-version: 1.18.1.1
+        dns-name: 10.0.3.208
+        instance-id: juju-machine-1-lxc-4
+        series: trusty
+        hardware: arch=amd64
+      1/lxc/5:
+        agent-state: pending
+        instance-id: juju-machine-1-lxc-5
+        series: trusty
+        hardware: arch=amd64
+      1/lxc/6:
+        agent-state: pending
+        instance-id: juju-machine-1-lxc-6
+        series: trusty
+        hardware: arch=amd64
+    hardware: arch=amd64 cpu-cores=3 mem=3072M root-disk=20480M
   "2":
     agent-state: started
-    agent-version: 1.18.0.1
-    dns-name: 10.0.3.174
-    instance-id: poe-local-machine-2
-    series: precise
+    agent-version: 1.18.1.1
+    dns-name: 10.0.3.160
+    instance-id: ubuntu-local-machine-2
+    series: trusty
     hardware: arch=amd64 cpu-cores=1 mem=512M root-disk=8192M
-  "3":
-    agent-state: started
-    agent-version: 1.18.0.1
-    dns-name: 10.0.3.218
-    instance-id: poe-local-machine-3
-    series: precise
-    hardware: arch=amd64 cpu-cores=1 mem=1024M root-disk=8192M
 services:
-  ceph:
-    charm: cs:precise/ceph-22
-    exposed: false
-    relations:
-      mon:
-      - ceph
-    units:
-      ceph/0:
-        agent-state: error
-        agent-state-info: 'hook failed: "config-changed"'
-        agent-version: 1.18.0.1
-        machine: "3"
-        public-address: 10.0.3.218
   glance:
-    charm: cs:precise/glance-30
+    charm: cs:trusty/glance-2
     exposed: false
     relations:
+      amqp:
+      - rabbitmq-server
       cluster:
       - glance
+      identity-service:
+      - keystone
+      image-service:
+      - nova-cloud-controller
+      - nova-compute
+      shared-db:
+      - mysql
     units:
       glance/0:
-        agent-state: started
-        agent-version: 1.18.0.1
-        machine: "3"
-        open-ports:
-        - 9292/tcp
-        public-address: 10.0.3.218
+        agent-state: pending
+        agent-version: 1.18.1.1
+        machine: 1/lxc/2
+        public-address: 10.0.3.194
+  juju-gui:
+    charm: cs:trusty/juju-gui-2
+    exposed: false
+    units:
+      juju-gui/0:
+        agent-state: pending
+        agent-version: 1.18.1.1
+        machine: 1/lxc/0
+        public-address: 10.0.3.130
   keystone:
-    charm: cs:precise/keystone-31
+    charm: cs:trusty/keystone-3
     exposed: false
     relations:
       cluster:
       - keystone
+      identity-service:
+      - glance
+      - nova-cloud-controller
+      - openstack-dashboard
       shared-db:
       - mysql
     units:
       keystone/0:
-        agent-state: error
-        agent-state-info: 'hook failed: "shared-db-relation-changed"'
-        agent-version: 1.18.0.1
-        machine: "3"
-        public-address: 10.0.3.218
+        agent-state: pending
+        agent-version: 1.18.1.1
+        machine: 1/lxc/4
+        public-address: 10.0.3.208
   mysql:
-    charm: cs:precise/mysql-38
+    charm: cs:trusty/mysql-0
     exposed: false
     relations:
       cluster:
       - mysql
       shared-db:
+      - glance
       - keystone
       - nova-cloud-controller
+      - nova-compute
     units:
       mysql/0:
-        agent-state: started
-        agent-version: 1.18.0.1
-        machine: "3"
-        public-address: 10.0.3.218
+        agent-state: pending
+        machine: 1/lxc/5
   nova-cloud-controller:
-    charm: cs:precise/nova-cloud-controller-32
+    charm: cs:trusty/nova-cloud-controller-39
     exposed: false
     relations:
+      amqp:
+      - rabbitmq-server
+      cloud-compute:
+      - nova-compute
       cluster:
       - nova-cloud-controller
+      identity-service:
+      - keystone
+      image-service:
+      - glance
       shared-db:
       - mysql
     units:
       nova-cloud-controller/0:
-        agent-state: error
-        agent-state-info: 'hook failed: "shared-db-relation-changed"'
-        agent-version: 1.18.0.1
-        machine: "3"
-        open-ports:
-        - 3333/tcp
-        - 8773/tcp
-        - 8774/tcp
-        public-address: 10.0.3.218
+        agent-state: pending
+        agent-version: 1.18.1.1
+        machine: 1/lxc/1
+        public-address: 10.0.3.120
   nova-compute:
-    charm: cs:precise/nova-compute-25
+    charm: cs:trusty/nova-compute-1
     exposed: false
     relations:
+      amqp:
+      - rabbitmq-server
+      cloud-compute:
+      - nova-cloud-controller
       compute-peer:
       - nova-compute
+      image-service:
+      - glance
+      shared-db:
+      - mysql
     units:
       nova-compute/0:
         agent-state: started
-        agent-version: 1.18.0.1
+        agent-version: 1.18.1.1
         machine: "2"
-        public-address: 10.0.3.174
+        public-address: 10.0.3.160
   openstack-dashboard:
-    charm: cs:precise/openstack-dashboard-15
+    charm: cs:trusty/openstack-dashboard-1
     exposed: false
     relations:
       cluster:
       - openstack-dashboard
+      identity-service:
+      - keystone
     units:
       openstack-dashboard/0:
-        agent-state: started
-        agent-version: 1.18.0.1
-        machine: "3"
-        open-ports:
-        - 80/tcp
-        - 443/tcp
-        public-address: 10.0.3.218
+        agent-state: pending
+        agent-version: 1.18.1.1
+        machine: 1/lxc/3
+        public-address: 10.0.3.34
   rabbitmq-server:
-    charm: cs:precise/rabbitmq-server-21
+    charm: cs:trusty/rabbitmq-server-1
     exposed: false
     relations:
+      amqp:
+      - glance
+      - nova-cloud-controller
+      - nova-compute
       cluster:
       - rabbitmq-server
     units:
       rabbitmq-server/0:
-        agent-state: started
-        agent-version: 1.18.0.1
-        machine: "3"
-        open-ports:
-        - 5672/tcp
-        public-address: 10.0.3.218
+        agent-state: pending
+        machine: 1/lxc/6
+ 
