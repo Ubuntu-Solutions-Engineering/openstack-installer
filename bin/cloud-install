@@ -28,13 +28,16 @@
 
 OPT_HELP=h
 OPT_INSTALL=i
-OPTS=:${OPT_INSTALL}${OPT_HELP}
+OPT_CONFIGFILE=c
+OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_CONFIGFILE}:
 USAGE="\
-cloud-install [-${OPT_INSTALL}${OPT_HELP}]
+cloud-install [-${OPT_TYPE}${OPT_CONFIGFILE}${OPT_HELP}]
 
 Create an Ubuntu Cloud! (requires root privileges)
 
 Options:
+  -$OPT_CONFIGFILE <file> - POSIX shell script to be sourced by installer
+      automating install by pre-setting menu responses.
   -$OPT_INSTALL  install only (don't invoke cloud-status)
   -$OPT_HELP  print this message"
 
@@ -58,6 +61,9 @@ while getopts $OPTS opt; do
 		usage
 		exit 0
 		;;
+	$OPT_CONFIGFILE)
+		configfile=$OPTARG
+		;;
 	\?)
 		usageError "Unknown argument: $OPTARG"
 		exit 1
@@ -69,6 +75,11 @@ shift $((OPTIND - 1))
 if [ $(id -u) -ne 0 ]; then
 	usageError "Installing a cloud requires root privileges. Rerun with sudo."
 	exit 1
+fi
+
+
+if [ ! -z "$configfile" ]; then
+    . $configfile
 fi
 
 createTempDir
