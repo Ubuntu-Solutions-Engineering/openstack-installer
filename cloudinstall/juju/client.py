@@ -19,8 +19,8 @@
 # TODO: Make use of python3-websocket once
 # https://github.com/liris/websocket-client/pull/76 is merged.
 # from ws4py.client.threadedclient import WebSocketClient
-#import json
-#import time
+# import json
+# import time
 import logging
 
 from cloudinstall.utils import get_command_output
