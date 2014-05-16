@@ -60,7 +60,7 @@ pyflakes:
 	python3 `which pyflakes` cloudinstall
 
 pep8:
-	-pep8 cloudinstall
+	pep8 cloudinstall
 
 test:
 	mkdir -p $(HOME)/.cloud-install
