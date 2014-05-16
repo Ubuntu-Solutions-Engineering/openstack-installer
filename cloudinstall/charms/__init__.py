@@ -44,6 +44,7 @@ class CharmBase:
     constraints = None
     deploy_priority = sys.maxsize
     allow_multi_units = False
+    optional = False
 
     def __init__(self, juju_state=None, machine=None):
         """ initialize
