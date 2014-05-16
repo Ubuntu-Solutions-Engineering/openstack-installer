@@ -25,7 +25,7 @@ import logging
 
 from cloudinstall.utils import get_command_output
 
-log  = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # class JujuWS(WebSocketClient):
 #     def opened(self):
@@ -46,6 +46,7 @@ log  = logging.getLogger(__name__)
 #     @juju_pass.setter
 #     def juju_pass(self, password):
 #         self._juju_pass = password
+
 
 class JujuClient:
     """ Juju client class """
@@ -131,13 +132,13 @@ class JujuClient:
         cmd = "juju add-machine"
         opts = []
         if constraints:
-            log.debug("Setting machine constraints: " \
+            log.debug("Setting machine constraints: "
                       "({constraints}), ".format(constraints=constraints))
-            for k,v in constraints.items():
+            for k, v in constraints.items():
                 opts.append("{k}={v}".format(k=k, v=v))
             if opts:
-                cmd = "{cmd} --constraints \"{opts}\"".format(cmd=cmd,
-                                                          opts=" ".join(opts))
+                cmd = ("{cmd} --constraints \"{opts}\"".format(
+                    cmd=cmd, opts=" ".join(opts)))
         ret, out, _, _ = get_command_output(cmd)
         log.debug("Machine added: {cmd} ({out})".format(cmd=cmd, out=out))
         return out
@@ -152,7 +153,8 @@ class JujuClient:
     #     """ Adds relation between units """
     #     return self.call(dict(Type="Client",
     #                           Request="AddRelation",
-    #                           Params=dict(Endpoints=[endpoint_a, endpoint_b])))
+    #                           Params=dict(Endpoints=[endpoint_a,
+    #                                                  endpoint_b])))
     def add_relation(self, endpoint_a, endpoint_b):
         """ Add relation between services """
         cmd = "juju add-relation {a} {b}".format(a=endpoint_a,
@@ -166,8 +168,8 @@ class JujuClient:
     #     """ Removes relation """
     #     return self.call(dict(Type="Client",
     #                           Request="DestroyRelaiton",
-    #                           Params=dict(Endpoints=[endpoint_a, endpoint_b])))
-
+    #                           Params=dict(Endpoints=[endpoint_a,
+    #                                                  endpoint_b])))
 
     # def deploy(self, service_name, charm_url,
     #            num_units=1, config=None,
@@ -190,25 +192,24 @@ class JujuClient:
         """
         cmd = "juju deploy"
         if 'machine_id' in settings and settings['machine_id']:
-            cmd = "{cmd} --to {machine_id}".format(cmd=cmd,
-                                                   machine_id=str(settings['machine_id']))
+            cmd += " --to {mid}".format(mid=settings['machine_id'])
+
         if 'instances' in settings:
-            cmd = "{cmd} -n {instances}".format(cmd=cmd,
-                                                instances=settings['instances'])
+            cmd += " -n {instances}".format(instances=settings['instances'])
 
         if 'configfile' in settings:
-            cmd = "{cmd} --config {configfile}".format(cmd=cmd,
-                                                       configfile=settings['configfile'])
+            cmd += " --config {file}".format(file=settings['configfile'])
 
         if 'constraints' in settings:
             opts = []
-            for k,v in settings['constraints'].items():
+            for k, v in settings['constraints'].items():
                 opts.append("{k}={v}".format(k=k, v=v))
             if opts:
-                cmd = "{cmd} --constraints \"{opts}\"".format(cmd=cmd,
-                                                          opts=" ".join(opts))
-        cmd = "{cmd} {charm}".format(cmd=cmd, charm=charm)
+                cmd += " --constraints \"{opts}\"".format(opts=" ".join(opts))
+
+        cmd += " {charm}".format(charm=charm)
         log.debug("Deploying {charm} -> {cmd}".format(charm=charm, cmd=cmd))
+
         ret, out, _, _ = get_command_output(cmd)
         log.debug("Deploy result: {out}".format(out=out))
         if ret:
@@ -228,14 +229,14 @@ class JujuClient:
         :param dict config_keys: config parameters in the
                                  form of { 'key' : 'value' }
         """
-        log.debug("Setting config variables for " \
+        log.debug("Setting config variables for "
                   "{name}".format(name=service_name))
-        for k,v in config_keys.items():
+        for k, v in config_keys.items():
             cmd = "juju set {service} {k}={v}".format(service=service_name,
                                                       k=k, v=v)
             ret, out, _, _ = get_command_output(cmd)
             if ret:
-                log.warning("Problem setting config: " \
+                log.warning("Problem setting config: "
                             "{out}".format(out=out))
 
     # def unset_config(self, service_name, config_keys):
@@ -252,13 +253,11 @@ class JujuClient:
     #                                       CharmUrl=charm_url,
     #                                       Force=force)))
 
-
     # def get_service(self, service_name):
     #     """ Get charm, config, constraits for srevice"""
     #     return self.call(dict(Type="Client",
     #                           Request="ServiceGet",
     #                           Params=dict(ServiceName=service_name)))
-
 
     # def get_config(self, service_name):
     #     """ Get service configuration """
@@ -337,11 +336,11 @@ class JujuClient:
             cmd = "{cmd} --to {_id}".format(cmd=cmd, _id=machine_id)
         if count > 1:
             cmd += " -n {count}".format(count=count)
-        log.debug("Adding additional {name}, cmd='{cmd}'"
-                  .format(name=service_name, cmd=cmd))
+        log.debug("Adding additional {name}, cmd='{cmd}'".format(
+            name=service_name, cmd=cmd))
         ret, out, _, _ = get_command_output(cmd)
         if ret:
-            log.warning("Problem adding {name} " \
+            log.warning("Problem adding {name} "
                         "{out}".format(name=service_name,
                                        out=out))
 
@@ -375,4 +374,5 @@ class JujuClient:
     #     """ Gets annotation """
     #     return self.call(dict(Type="Client",
     #                           Request="GetAnnotation",
-    #                           Params=dict(Tag="%-s%" % (entity_type, entity))))
+    #                           Params=dict(Tag="%-s%" % (entity_type,
+    #                                                     entity))))

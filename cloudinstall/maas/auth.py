@@ -80,11 +80,9 @@ class MaasAuth:
                 self.api_key = f.read().rstrip('\n')
         else:
             log.debug("Could not find credentials, attempting to login.")
-            self.api_key = check_output(['sudo',
-                                         'maas-region-admin',
-                                         'apikey',
-                                         '--username',
-                                         username]).decode('ascii').rstrip('\n')
+            out = check_output(['sudo', 'maas-region-admin', 'apikey',
+                                '--username', username])
+            self.api_key = out.decode('ascii').rstrip('\n')
 
     def read_config(self, url, creds):
         """Read cloud-init config from given `url` into `creds` dict.
