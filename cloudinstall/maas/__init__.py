@@ -18,6 +18,7 @@
 
 from cloudinstall.machine import Machine
 
+
 class MaasMachine(Machine):
     """ Single maas machine """
 

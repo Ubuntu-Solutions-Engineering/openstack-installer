@@ -168,8 +168,8 @@ class ControllerOverlay(Overlay):
                 else:
                     # Hardcode lxc on same machine as they are
                     # created on-demand.
-                    charm.setup(_id='lxc:{mid}'
-                                .format(mid=self.machine.machine_id))
+                    charm.setup(_id='lxc:{mid}'.format(
+                        mid=self.machine.machine_id))
                 self.deployed_charm_classes.append(charm_class)
 
         unfinalized_charm_classes = [c for c in self.deployed_charm_classes
@@ -185,20 +185,20 @@ class ControllerOverlay(Overlay):
                 if juju_state.service(charm.charm_name) is None:
                     # Juju doesn't see the service related to this
                     # charm yet, so defer setting its relations.
-                    log.debug("service not up yet for charm {c}"
-                              .format(c=charm.charm_name))
+                    log.debug("service not up yet for charm {c}".format(
+                        c=charm.charm_name))
                     continue
 
-                log.debug("calling set_relations() for charm {c}"
-                          .format(c=charm.charm_name))
+                log.debug("calling set_relations() for charm {c}".format(
+                    c=charm.charm_name))
                 charm.set_relations()
                 charm.post_proc()
                 self.finalized_charm_classes.append(charm_class)
 
         log.debug("at end of process(), deployed_charm_classes={d}"
-                  "finalized_charm_classes={f}"
-                  .format(d=self.deployed_charm_classes,
-                          f=self.finalized_charm_classes))
+                  "finalized_charm_classes={f}".format(
+                      d=self.deployed_charm_classes,
+                      f=self.finalized_charm_classes))
 
         if len(self.finalized_charm_classes) == len(charm_classes):
             log.debug("Charm setup done.")
@@ -270,8 +270,8 @@ class ControllerOverlay(Overlay):
                                                  cmds=cmds))
         utils._run("scp -oStrictHostKeyChecking=no "
                    "{rootfs} "
-                   "ubuntu@{host}:/var/cache/lxc/cloud-trusty/.".format(rootfs=rootfs,
-                                                                        host=host))
+                   "ubuntu@{host}:/var/cache/lxc/cloud-trusty/.".format(
+                       rootfs=rootfs, host=host))
 
         self.lxc_root_tarball_configured = True
 
@@ -294,7 +294,6 @@ class AddCharmDialog(Overlay):
         charm_classes = [m.__charm_class__ for m in charm_modules
                          if m.__charm_class__.allow_multi_units]
 
-
         self.cr = command_runner
         self.underlying = underlying
         self.destroy = destroy
@@ -314,7 +313,6 @@ class AddCharmDialog(Overlay):
         self.boxes.append(self.count_editor)
         wrapped_boxes = _wrap_focus(self.boxes)
 
-
         bs = [Button("Ok", self.yes), Button("Cancel", self.no)]
         wrapped_buttons = _wrap_focus(bs)
         self.buttons = Columns(wrapped_buttons)
@@ -333,7 +331,8 @@ class AddCharmDialog(Overlay):
                     and r.get_state()][0]
         _charm_to_deploy = selected.label
         n = self.count_editor.value()
-        log.info("Adding {n} units of {charm}".format(n=n, charm=_charm_to_deploy))
+        log.info("Adding {n} units of {charm}".format(
+            n=n, charm=_charm_to_deploy))
         self.cr.add_unit(_charm_to_deploy, count=int(n))
         self.destroy()
 
@@ -414,9 +413,10 @@ class Node(WidgetWrap):
                    "address: {address}".format(info=info,
                                                address=u.public_address)
             if 'error' in u.agent_state:
+                state_info = u.agent_state_info.lstrip()
                 info = "{info}\n  " \
                        "info: {state_info}".format(info=info,
-                                                   state_info=u.agent_state_info.lstrip())
+                                                   state_info=state_info)
             info = "{info}\n\n".format(info=info)
             unit_info.append(('weight', 2, Text(info)))
 

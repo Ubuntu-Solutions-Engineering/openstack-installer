@@ -68,9 +68,9 @@ def get_command_output(command, timeout=300, combine_output=True):
         command = "timeout %ds %s" % (timeout, command)
 
     if combine_output:
-        stderr_dest=STDOUT
+        stderr_dest = STDOUT
     else:
-        stderr_dest=PIPE
+        stderr_dest = PIPE
 
     p = Popen(command, shell=True,
               stdout=PIPE, stderr=stderr_dest,
@@ -96,7 +96,9 @@ def get_network_interface(iface):
     """
     status, output, _, _ = get_command_output('ifconfig %s' % (iface,))
     line = output.split('\n')[1:2][0].lstrip()
-    regex = re.compile('^inet addr:([0-9]+(?:\.[0-9]+){3})\s+Bcast:([0-9]+(?:\.[0-9]+){3})\s+Mask:([0-9]+(?:\.[0-9]+){3})')
+    regex = re.compile('^inet addr:([0-9]+(?:\.[0-9]+){3})\s+'
+                       'Bcast:([0-9]+(?:\.[0-9]+){3})\s+'
+                       'Mask:([0-9]+(?:\.[0-9]+){3})')
     match = re.match(regex, line)
     if match:
         return {'address': match.group(1),
@@ -136,16 +138,20 @@ def get_host_mem():
     else:
         return 0
 
+
 def get_host_storage():
     """ Get host storage
 
     LXC doesn't report storage so we pull from host
     """
-    ret, out, _, _ = get_command_output('df -B G --total -l --output=avail -x devtmpfs -x tmpfs | tail -n 1 | tr -d "G"')
+    ret, out, _, _ = get_command_output('df -B G --total -l --output=avail'
+                                        ' -x devtmpfs -x tmpfs | tail -n 1'
+                                        ' | tr -d "G"')
     if not ret:
         return out.lstrip()
     else:
         return 0
+
 
 def get_host_cpu_cores():
     """ Get host cpu-cores
@@ -158,6 +164,7 @@ def get_host_cpu_cores():
         return out.strip()
     else:
         return 'N/A'
+
 
 def partition(pred, iterable):
     """ Returns tuple of allocated and unallocated systems
@@ -174,7 +181,8 @@ def partition(pred, iterable):
         def is_allocated(d):
             allocated_states = ['started', 'pending', 'down']
             return 'charms' in d or d['agent_state'] in allocated_states
-        allocated, unallocated = utils.partition(is_allocated, [{state: 'pending'}])
+        allocated, unallocated = utils.partition(is_allocated,
+                                                 [{state: 'pending'}])
     """
     yes, no = [], []
     for i in iterable:
@@ -257,4 +265,3 @@ def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
 
         for name in fnmatch.filter(filelist, file_pattern):
             yield os.path.join(path, name)
-
