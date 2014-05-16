@@ -81,10 +81,11 @@ def poll_state():
     :rtype: tuple (JujuState(), MaasState())
     """
     # Capture Juju state
-    ret, juju_stdout, juju_stderr, _ = utils.get_command_output('juju status',
-                                                                combine_output=False)
+    (ret, juju_stdout,
+     juju_stderr, _) = utils.get_command_output('juju status',
+                                                combine_output=False)
     if ret:
-        log.debug("Juju state unknown, will re-poll in " \
+        log.debug("Juju state unknown, will re-poll in "
                   "case bootstrap is taking a little longer to come up.")
         log.debug("Juju status output: {o} \n stderr: {e}"
                   .format(o=juju_stdout, e=juju_stderr))

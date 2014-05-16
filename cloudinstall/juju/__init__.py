@@ -26,6 +26,7 @@ from cloudinstall.service import Service
 
 log = logging.getLogger(__name__)
 
+
 class JujuState:
     """ Represents a global Juju state """
 
@@ -37,19 +38,6 @@ class JujuState:
         """
         self._yaml = yaml.load(raw_yaml)
         self.valid_states = ['pending', 'started', 'down']
-
-    def __validate_allocation(self, machine):
-        """ Private function to test if machine is in an allocated
-        state.
-        """
-        return machine.is_machine_1 and \
-             machine.agent_state in self.valid_states
-
-    def __validate_unallocation(self, machine):
-        """ Private function to test if machine is in an unallocated
-        state.
-        """
-        return not machine.is_machine_1
 
     def machine(self, machine_id):
         """ Return single machine state
