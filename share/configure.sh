@@ -67,11 +67,13 @@ configureInstall()
 		next_state=$((state + 1))
 		case $state in
 		1)
-			dialogMenu "Select install type" "" 10 60 3 \
-			    Multi-system "Single system" "Landscape managed"
-			install_type=$input
-			if [ $ret -ne 0 ]; then
+			if [ -z "$install_type" ]; then
+			    dialogMenu "Select install type" "" 10 60 3 \
+				Multi-system "Single system" "Landscape managed"
+			    install_type=$input
+			    if [ $ret -ne 0 ]; then
 				popState; continue
+			    fi
 			fi
 			case $install_type in
 			Multi-system)
@@ -93,6 +95,10 @@ configureInstall()
 			state=11; continue
 			;;
 		11)
+			if [ ! -z "$interface" ]; then
+			    state=$next_state;
+			    continue
+			fi
 			interfaces=$(getInterfaces)
 			interfaces_count=$(echo "$interfaces" | wc -w)
 			if [ $interfaces_count -ge 2 ]; then
@@ -109,6 +115,9 @@ configureInstall()
 			fi
 			;;
 		12)
+			if [ ! -z "$skip_dhcp_detection" ]; then
+			    state=$next_state; continue
+			fi
 			dialogGaugeStart "DHCP server detection" \
 			    "Detecting existing dhcp servers...\n\nPress [enter] to skip" \
 			    8 70 0
@@ -139,7 +148,9 @@ configureInstall()
 			state=13; continue
 			;;
 		13)
-			bridge_interface=""
+			if [ ! -z "$bridge_interface" ]; then
+			    state=$next_state; continue
+			fi
 			if [ $interfaces_count -ge 2 ]; then
 				if dialogYesNo "Bridge interface?" Yes No \
 				    "Sometimes it is useful to run MaaS on its own network. If you are running MaaS on its own network and would like to bridge this network to the outside world, please indicate so." \
@@ -150,6 +161,10 @@ configureInstall()
 			state=$next_state; continue
 			;;
 		14)
+			if [ ! -z "$dhcp_range" ]; then
+			    dhcp_range_was_preset=true
+			    state=$next_state; continue
+			fi
 			network=$(ipNetwork $interface)
 			address=$(ipAddress $interface)
 			if [ -z "$address" ]; then
@@ -164,12 +179,15 @@ configureInstall()
 			state=$next_state; continue
 			;;
 		15)
-			dialogInput "IP address range (<ip addr low>-<ip addr high>):" \
-			    "IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." \
-			    10 60 "$dhcp_range"
-			dhcp_range=$input
-			if [ $ret -ne 0 ]; then
+			if [ -z "$dhcp_range_was_preset" ]; then
+
+			    dialogInput "IP address range (<ip addr low>-<ip addr high>):" \
+				"IP address range for DHCP leases.\nNew nodes will be assigned addresses from this pool." \
+				10 60 "$dhcp_range"
+			    dhcp_range=$input
+			    if [ $ret -ne 0 ]; then
 				popState; continue
+			    fi
 			fi
 			if [ "$install_type" = "Landscape managed" ]; then
 				next_state=16
@@ -178,8 +196,11 @@ configureInstall()
 			fi
 			;;
 		16)
-			dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60
-			admin_email=$input
+			if [ -z "$admin_email" ]; then
+
+			    dialogInput "Landscape login" "Please enter the login email you would like to use for Landscape." 10 60
+			    admin_email=$input
+			fi
 			result=$(getDomain "$admin_email")
 			if [ -z "$result" ]; then
 				popState; continue
@@ -187,19 +208,26 @@ configureInstall()
 			email_domain="$result"
 			;;
 		17)
+			if [ ! -z "$admin_name" ]; then
+			    continue
+			fi
+
 			suggested_name="$(getent passwd $INSTALL_USER | cut -d ':' -f 5 | cut -d ',' -f 1)"
 			dialogInput "Landscape user's full name" "Please enter the full name of the admin user for Landscape." 10 60 "$suggested_name"
 			admin_name=$input
+
 			if [ -z "$admin_name" ]; then
 				popState; continue
 			fi
 			;;
 		18)
-			dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain"
-			system_email=$input
-			result=$(getDomain "$system_email")
-			if [ -z "$result" ]; then
+			if [ -z "$system_email" ]; then
+			    dialogInput "Landscape system email" "Please enter the email that landscape should use as the system email." 10 60 "landscape@$email_domain"
+			    system_email=$input
+			    result=$(getDomain "$system_email")
+			    if [ -z "$result" ]; then
 				popState; continue
+			    fi
 			fi
 			next_state=30
 			;;
@@ -211,6 +239,10 @@ configureInstall()
 			state=30; continue
 			;;
 		30)
+			if [ ! -z "$openstack_password" ]; then
+			    # skip to end
+			    state=32; continue
+			fi
 			dialogPassword "OpenStack admin user password:" \
 			    "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
 			    10 60

@@ -6,6 +6,7 @@ bin/maas-report-boot-images            usr/share/cloud-installer/bin
 share/common.sh                        usr/share/cloud-installer/common
 share/configure.sh                     usr/share/cloud-installer/common
 share/display.sh                       usr/share/cloud-installer/common
+share/examples/config.example          usr/share/cloud-installer
 share/juju.sh                          usr/share/cloud-installer/common
 share/landscape.sh                     usr/share/cloud-installer/common
 share/maas.sh                          usr/share/cloud-installer/common
