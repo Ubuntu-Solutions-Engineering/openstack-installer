@@ -170,7 +170,7 @@ class Service:
     def units(self):
         """ Service units
 
-        :returns: list associated units for service
+        :returns: iterator of associated units for service
         :rtype: Unit()
         """
         for unit_name, units in self.service.get('units', {}).items():
@@ -192,7 +192,7 @@ class Service:
     def relations(self):
         """ Service relations
 
-        :returns: list of relations for service
+        :returns: iterator of relations for service
         :rtype: Relation()
         """
         relations = self.service.get('relations', {})
