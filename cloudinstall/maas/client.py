@@ -76,7 +76,6 @@ class MaasClient:
         return requests.delete(url=self.auth.api_url + url,
                                auth=self._oauth())
 
-
     ###########################################################################
     # Boot Images API
     ###########################################################################
@@ -117,7 +116,6 @@ class MaasClient:
         if res.ok:
             return json.loads(res.text)
         return {}
-
 
     ###########################################################################
     # Node API
@@ -240,7 +238,7 @@ class MaasClient:
         """
         tags = {tagmd['name'] for tagmd in self.tags}
         if tag not in tags:
-            res = self.post('/tags/', dict(op='new',name=tag))
+            res = self.post('/tags/', dict(op='new', name=tag))
             return res.ok
         return False
 
@@ -290,7 +288,8 @@ class MaasClient:
         """
         for machine in maas.machines():
             tag = machine.system_id
-            if 'tag_names' not in machine.tag_names or tag not in machine.tag_names:
+            if 'tag_names' not in machine.tag_names or \
+               tag not in machine.tag_names:
                 self.tag_new(tag)
                 self.tag_machine(tag, tag)
 

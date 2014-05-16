@@ -28,6 +28,7 @@ class CharmSwift(CharmBase):
     deploy_priority = 5
     default_replicas = 3
     isolate = True
+    allow_multi_units = True
 
     def setup(self):
         """Custom setup for swift-storage to get replicas from config"""
