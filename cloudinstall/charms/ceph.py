@@ -32,6 +32,7 @@ class CharmCeph(CharmBase):
     deploy_priority = 5
     default_instances = 3
     optional = True
+    allow_multi_units = True
 
     def has_quorum(self):
         return len(list(self.state[2].machines_allocated())) >= 3
