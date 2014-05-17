@@ -119,7 +119,8 @@ class ControllerOverlay(Overlay):
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
 
-        charm_classes = sorted([m.__charm_class__ for m in charm_modules],
+        charm_classes = sorted([m.__charm_class__ for m in charm_modules
+                                if not m.__charm_class__.optional],
                                key=attrgetter('deploy_priority'))
 
         if self.machine is None:
