@@ -57,7 +57,7 @@ Description: Ubuntu Cloud installer
 
 Package: cloud-install-multi
 Section: admin
-Architecture: any
+Architecture: all
 Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, ${misc:Depends}
 Description: Ubuntu Cloud installer (multi-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
@@ -70,7 +70,7 @@ Description: Ubuntu Cloud installer (multi-system) - dependency package
 
 Package: cloud-install-single
 Section: admin
-Architecture: any
+Architecture: all
 Depends: juju-local, uvtool, uvtool-libvirt, ${misc:Depends}
 Description: Ubuntu Cloud installer (single-system) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
@@ -83,7 +83,7 @@ Description: Ubuntu Cloud installer (single-system) - dependency package
 
 Package: cloud-install-landscape
 Section: admin
-Architecture: any
+Architecture: all
 Depends: cloud-install-multi, juju-deployer, ${misc:Depends}
 Description: Ubuntu Cloud installer (landscape) - dependency package
  Ubuntu Cloud installer is a metal to cloud image that provides an extremely
