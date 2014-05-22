@@ -508,12 +508,10 @@ class NodeViewMode(Frame):
                   AttrWrap(Text('(F6) Add units'), "border"),
                   AttrWrap(Text('(F8) Console'), "border")]
         header = Columns(header)
-        self.timer = Text("", align="left")
         self.status_info = Text("", align="left")
         self.horizon_url = Text("", align="right")
         self.jujugui_url = Text("", align="right")
         footer = Columns([('weight', 0.2, self.status_info),
-                          ('weight', 0.1, self.timer),
                           ('weight', 0.2, self.horizon_url),
                           ('weight', 0.2, self.jujugui_url)])
         footer = AttrWrap(footer, "border")
@@ -617,8 +615,6 @@ class NodeViewMode(Frame):
             self.ticks_left = self.poll_interval
             log.debug("NodeViewMode tick() calling refresh_states()")
             self.loop.run_async(self.refresh_states, self.update_and_redraw)
-        self.timer.set_text("(Re-poll in "
-                            "{secs} (s))".format(secs=self.ticks_left))
         self.ticks_left = self.ticks_left - 1
 
     def keypress(self, size, key):
