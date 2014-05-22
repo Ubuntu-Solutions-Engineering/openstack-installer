@@ -30,6 +30,7 @@ configMaasEnvironment()
 		    default-series: trusty
 		    authorized-keys-path: ~/.ssh/id_rsa.pub
 		    apt-http-proxy: 'http://$1:8000/'
+		    lxc-use-clone: true
 		EOF
 }
 
@@ -42,6 +43,7 @@ configLocalEnvironment()
 		  local:
 		    type: local
 		    container: kvm
+		    lxc-use-clone: true
 		EOF
 }
 
@@ -53,6 +55,14 @@ configCharmOptions()
                   admin-user: 'admin'
                 juju-gui:
                   password: $1
+                mysql:
+                  dataset-size: 512M
+                swift-proxy:
+                  zone-assignment: auto
+                  replicas: 3
+                swift-storage:
+                  zone: 1
+                  block-device: /etc/swift/storage.img|2G
 		EOF
 }
 

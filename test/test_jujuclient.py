@@ -34,7 +34,8 @@ JUJU_URL = os.environ.get('JUJU_URL', 'wss://juju-bootstrap.master:17070/')
 JUJU_INSTALLED = os.path.exists(os.path.join(os.path.expanduser('~'),
                                              '.juju/environments.yaml'))
 
-@unittest.skipIf(not JUJU_INSTALLED, "Juju is not installed")
+#@unittest.skipIf(not JUJU_INSTALLED, "Juju is not installed")
+@unittest.skip("Juju websocket client is temporarily disabled.")
 class JujuClientTest(unittest.TestCase):
     def setUp(self):
         self.c = JujuClient(url=JUJU_URL)
@@ -46,7 +47,8 @@ class JujuClientTest(unittest.TestCase):
         self.c.login(JUJU_PASS)
         self.assertTrue(self.c.is_connected)
 
-@unittest.skipIf(not JUJU_INSTALLED, "Juju is not installed")
+#@unittest.skipIf(not JUJU_INSTALLED, "Juju is not installed")
+@unittest.skip("Juju websocket client is temporarily disabled.")
 class JujuApiTest(unittest.TestCase):
     def setUp(self):
         self.c = JujuClient(url=JUJU_URL)

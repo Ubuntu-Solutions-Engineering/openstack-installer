@@ -22,10 +22,12 @@
 import logging
 import os
 
-def setup_logger(name=__name__):
-    """ setup logging
 
-    Overridding the default log level(**debug**) can be done via an environment variable `UCI_LOGLEVEL`
+def setup_logger(name=__name__):
+    """setup logging
+
+    Overridding the default log level(**debug**) can be done via an
+    environment variable `UCI_LOGLEVEL`
 
     Available levels:
 
@@ -42,6 +44,7 @@ def setup_logger(name=__name__):
 
     :params str name: logger name
     :returns: a log object
+
     """
     HOME = os.getenv('HOME')
     CONFIG_DIR = '.cloud-install'
@@ -49,7 +52,7 @@ def setup_logger(name=__name__):
     LOGFILE = os.path.join(CONFIG_PATH, 'commands.log')
     commandslog = logging.FileHandler(LOGFILE, 'w')
     commandslog.setFormatter(logging.Formatter(
-        '%(levelname)-9s * %(asctime)s [PID:%(process)d] * %(name)s * ' \
+        '%(levelname)-9s * %(asctime)s [PID:%(process)d] * %(name)s * '
         '%(message)s',
         datefmt='%m-%d %H:%M:%S'))
 

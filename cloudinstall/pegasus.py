@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from io import StringIO
 from os.path import expanduser, exists
 from subprocess import check_call
 
@@ -44,6 +43,8 @@ COMPUTE = "Compute"
 OBJECT_STORAGE = "Object Storage"
 BLOCK_STORAGE = "Block Storage"
 
+# NOTE: this appears to be out of date
+# see LP bug 1319222
 ALLOCATION = {
     NOVA_CLOUD_CONTROLLER: CONTROLLER,
     NOVA_COMPUTE: COMPUTE,
@@ -60,28 +61,6 @@ CONTROLLER_CHARMS = [
     OPENSTACK_DASHBOARD,
 ]
 
-RELATIONS = {
-    KEYSTONE: [MYSQL],
-    NOVA_CLOUD_CONTROLLER: [MYSQL, RABBITMQ_SERVER, GLANCE, KEYSTONE],
-    NOVA_COMPUTE: [MYSQL, RABBITMQ_SERVER, GLANCE, NOVA_CLOUD_CONTROLLER],
-    GLANCE: [MYSQL, KEYSTONE],
-    OPENSTACK_DASHBOARD: [KEYSTONE],
-}
-
-###############################################################################
-# TODO: Remove since charm relations are handled per charm class
-# Handle charm relations
-# def get_charm_relations(charm):
-#     """ Return a list of (relation, command) of relations to add. """
-#     for rel in RELATIONS.get(charm, []):
-#         if charm == NOVA_COMPUTE and rel == RABBITMQ_SERVER:
-#             c, r = (NOVA_COMPUTE + ":amqp", RABBITMQ_SERVER + ":amqp")
-#         else:
-#             c, r = (charm, rel)
-#         cmd = "juju add-relation {charm} {relation}"
-#         yield (r, cmd.format(charm=c, relation=r))
-###############################################################################
-
 PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
 try:
     with open(PASSWORD_FILE) as f:
@@ -94,42 +73,30 @@ except IOError:
 SINGLE_SYSTEM = exists(expanduser('~/.cloud-install/single'))
 MULTI_SYSTEM = exists(expanduser('~/.cloud-install/multi'))
 
-###############################################################################
-# FIXME: With addition of Openstack charms to Trusty
-# we shouldn't need to use a configuration file for specifying
-# the openstack-origin as it will default to 'distro' which
-# in this case is Trusty's openstack charms.
-#
-# def juju_config_arg(charm):
-#     """ Query configuration parameters for openstack charms
-#
-#     :param charm: name of charm
-#     :type charm: str
-#     :return: path of openstack configuration
-#     :rtype: str
-#     """
-#     path = os.path.join(tempfile.gettempdir(), "openstack.yaml")
-#     with open(path, 'wb') as f:
-#         f.write(bytes(CONFIG_TEMPLATE, 'utf-8'))
-#     config = "" if charm in _OMIT_CONFIG else "--config {path}"
-#     return config.format(path=path)
-###############################################################################
 
 def poll_state():
     """ Polls current state of Juju and MAAS
 
     :returns: list of Machine() and the Juju state
-    :rtype: list, JujuState()
+    :rtype: tuple (JujuState(), MaasState())
     """
     # Capture Juju state
-    ret, juju, _ = utils.get_command_output('juju status')
+    (ret, juju_stdout,
+     juju_stderr, _) = utils.get_command_output('juju status',
+                                                combine_output=False)
     if ret:
-        log.debug("Juju state unknown, will re-poll in " \
+        log.debug("Juju state unknown, will re-poll in "
                   "case bootstrap is taking a little longer to come up.")
+        log.debug("Juju status output: {o} \n stderr: {e}".format(
+            o=juju_stdout, e=juju_stderr))
         # Stub out a juju status for now
         juju = JujuState('environment: local\nmachines:')
     else:
-        juju = JujuState(StringIO(juju))
+        try:
+            juju = JujuState(juju_stdout)
+        except:
+            log.exception("Ignoring exception in parsing juju state.")
+            juju = JujuState('environment: local\nmachines:')
 
     maas = None
     if MULTI_SYSTEM:
@@ -146,24 +113,22 @@ def poll_state():
         c.tag_fpi(maas)
         c.nodes_accept_all()
         c.tag_name(maas)
-    return parse_state(juju, maas), juju, maas
+
+    update_machine_info(juju, maas)
+    return (juju, maas)
 
 
-def parse_state(juju, maas=None):
+def update_machine_info(juju, maas=None):
     """Parses the current state of juju containers and maas nodes.
 
-    Returns a list of machines excluding the bootstrap node, juju
-    machine ID "0".
+    Updates machine info in-place.
 
     :param juju: juju polled state
     :type juju: JujuState()
     :param maas: maas polled state
     :type mass: MaasState()
-    :return: nodes/containers
-    :rtype: list
 
     """
-    results = []
 
     for machine in juju.machines():
 
@@ -175,7 +140,6 @@ def parse_state(juju, maas=None):
                 c.mem = utils.get_host_mem()
                 c.cpu_cores = utils.get_host_cpu_cores()
                 c.storage = utils.get_host_storage()
-        results.append(machine)
 
     if maas:
         for machine in maas.machines():
@@ -185,8 +149,6 @@ def parse_state(juju, maas=None):
                 machine.agent_state = "allocated"
             machine.dns_name = machine.hostname
             log.debug("querying maas machine: {maas}".format(maas=machine))
-            results.append(machine)
-    return results
 
 
 def wait_for_services():

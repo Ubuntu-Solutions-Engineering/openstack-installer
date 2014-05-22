@@ -60,7 +60,7 @@ pyflakes:
 	python3 `which pyflakes` cloudinstall
 
 pep8:
-	-pep8 cloudinstall
+	pep8 cloudinstall
 
 test:
 	mkdir -p $(HOME)/.cloud-install
@@ -69,9 +69,14 @@ test:
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
 
+# Indirection to allow 'make run' to build deb automatically, but
+# 'make sbuild; make run' will not invoke 'deb'.
+../cloud-installer*.deb: deb
+	echo "rule to make .deb automatically"
+
 # sudo make run type=multi proxy=http://localhost:3128/
 .PHONY: run
-run: deb
+run: ../cloud-installer*.deb
 	-dpkg -i ../cloud-installer*deb
 	-dpkg -i ../cloud-install-${type}*deb
 	apt-get -yy install -f
@@ -79,7 +84,7 @@ run: deb
 
 # sudo make landscape proxy=http://localhost:3128/
 .PHONY: landscape
-landscape: deb
+landscape: ../cloud-installer*.deb
 	-dpkg -i ../cloud-installer*deb
 	-dpkg -i ../cloud-install-multi*deb
 	-dpkg -i ../cloud-install-landscape*deb
