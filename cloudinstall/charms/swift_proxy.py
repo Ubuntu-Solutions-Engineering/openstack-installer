@@ -1,5 +1,5 @@
 #
-# controller.py - Nova Cloud Controller Charm instructions
+# swift-proxy.py - Swift-proxy instructions
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -19,12 +19,16 @@
 from cloudinstall.charms import CharmBase
 
 
-class CharmNovaCloudController(CharmBase):
-    """ Openstack Nova Cloud Controller directives """
+class CharmSwiftProxy(CharmBase):
+    """ swift directives """
 
-    charm_name = 'nova-cloud-controller'
-    display_name = 'Nova Cloud Controller'
-    related = ['mysql', 'rabbitmq-server', 'glance', 'keystone']
+    charm_name = 'swift-proxy'
+    display_name = 'Swift Proxy'
+    related = []
+    deploy_priority = 5
+    constraints = {'mem': '1G',
+                   'root-disk': '8G'}
+    isolate = True
     allow_multi_units = True
 
-__charm_class__ = CharmNovaCloudController
+__charm_class__ = CharmSwiftProxy

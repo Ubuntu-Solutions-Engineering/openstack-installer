@@ -17,25 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# import helpers
-
-# load_status = lambda f: helpers.load_status(f, JujuState)
-
-# @load_status('juju-output/no-services.out')
-# def test_noservices(s):
-#     assert len(s.assignments) == 0
-#     assert len(s.services) == 0
-
-# @load_status('juju-output/one-pending.out')
-# def test_onepending(s):
-#     assert len(s.assignments) == 0
-#     assert len(s.services) == 0
-
-# @load_status('juju-output/service-pending.out')
-# def test_servicepending(s):
-#     assert len(s.assignments) == 1
-#     assert len(s.services) == 1
-
 import unittest
 import sys
 import os
@@ -46,6 +27,7 @@ from cloudinstall.juju import JujuState
 
 JUJU_USELIVE = os.environ.get('JUJU_USELIVE', 0)
 JUJU_INSTALLED = os.path.exists("/usr/bin/juju")
+
 
 class JujuStateMultiTest(unittest.TestCase):
     def setUp(self):
@@ -88,8 +70,73 @@ class JujuStateMultiTest(unittest.TestCase):
             for c in m.containers:
                 self.assertTrue('lxc' in c.instance_id)
 
+
 class JujuStateSingleTest(unittest.TestCase):
+    "Read the 'juju status' yaml for single post-install"
+
     def setUp(self):
-        with open('juju-output/juju-status-single-install.yaml') as f:
-            self.status_yaml = f.read().decode('ascii')
-        self.juju = JujuState(self.status_yaml)
+        with open('test/juju-output/juju-status-single-install.yaml') as f:
+            self.juju = JujuState(f.read())
+
+        self.m_one = self.juju.machine("1")
+        self.c_one = self.m_one.container("1/lxc/0")
+
+    def test_ignore_bootstrap_node(self):
+        "jujustate.machines() should not include #0"
+        self.assertEqual(len(list(self.juju.machines())), 2)
+
+    def test_services(self):
+        "All services parsed correctly"
+        expected = ['glance', 'juju-gui', 'keystone', 'mysql',
+                    'nova-cloud-controller', 'nova-compute',
+                    'openstack-dashboard', 'rabbitmq-server']
+        actual = list(self.juju.services)
+        actual_names = [s.service_name for s in actual]
+        self.assertEqual(set(actual_names), set(expected))
+
+    def test_find_service(self):
+        "Find a service based on charm name"
+        cn = "juju-gui"
+        s = self.juju.service(cn)
+        self.assertEqual(cn, s.service_name)
+
+    def test_bogus_service_returns_none(self):
+        "return None for nonexistent services"
+        cn = "fake-bogus-charm"
+        s = self.juju.service(cn)
+        self.assertEqual(None, s)
+
+    def test_two_machines_allocated(self):
+        ml = self.juju.machines_allocated()
+        self.assertEqual(2, len(ml))
+
+    def test_m_one_containers(self):
+        cl = list(self.m_one.containers)
+        self.assertEqual(7, len(cl))
+        self.assertEqual(self.c_one.agent_state, "started")
+
+    def test_get_hardware(self):
+        cpu_cores = self.m_one.hardware("cpu-cores")
+        self.assertEqual(cpu_cores, '3')
+        self.assertEqual(self.c_one.hardware("arch"), "amd64")
+
+
+class JujuStateSinglePredeployTest(unittest.TestCase):
+    "Read the 'juju status' yaml for single pre-deploy"
+
+    def setUp(self):
+        with open('test/juju-output/juju-status-single-pre-deploy.yaml') as f:
+            self.juju = JujuState(f.read())
+
+    def test_one_machine_allocated(self):
+        ml = self.juju.machines_allocated()
+        self.assertEqual(1, len(ml))
+
+    def test_no_services(self):
+        sl = list(self.juju.services)
+        self.assertEqual(0, len(sl))
+
+    def test_no_containers(self):
+        m_one = self.juju.machines_allocated()[0]
+        cl = list(m_one.containers)
+        self.assertEqual(0, len(cl))

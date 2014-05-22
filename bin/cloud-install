@@ -28,13 +28,16 @@
 
 OPT_HELP=h
 OPT_INSTALL=i
-OPTS=:${OPT_INSTALL}${OPT_HELP}
+OPT_CONFIGFILE=c
+OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_CONFIGFILE}:
 USAGE="\
-cloud-install [-${OPT_INSTALL}${OPT_HELP}]
+cloud-install [-${OPT_TYPE}${OPT_CONFIGFILE}${OPT_HELP}]
 
 Create an Ubuntu Cloud! (requires root privileges)
 
 Options:
+  -$OPT_CONFIGFILE <file> - POSIX shell script to be sourced by installer
+      automating install by pre-setting menu responses.
   -$OPT_INSTALL  install only (don't invoke cloud-status)
   -$OPT_HELP  print this message"
 
@@ -58,6 +61,9 @@ while getopts $OPTS opt; do
 		usage
 		exit 0
 		;;
+	$OPT_CONFIGFILE)
+		configfile=$OPTARG
+		;;
 	\?)
 		usageError "Unknown argument: $OPTARG"
 		exit 1
@@ -71,10 +77,15 @@ if [ $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
+
+if [ ! -z "$configfile" ]; then
+    . $configfile
+fi
+
 createTempDir
 startLog
 
-trap exitInstall EXIT
+trap exitInstall EXIT HUP INT QUIT TERM
 trap "" PIPE
 
 # TODO add better logging
@@ -82,7 +93,9 @@ set -x
 
 disableBlank
 
-if [ ! -e /etc/.cloud-installed ]; then
+mkdir -p /etc/cloud-installer
+
+if [ ! -e /etc/cloud-installer/installed ]; then
 	configureInstall
 
 	case $install_type in
@@ -101,7 +114,7 @@ if [ ! -e /etc/.cloud-installed ]; then
 		exit 0
 		;;
 	esac
-	touch /etc/.cloud-installed
+	touch /etc/cloud-installer/installed
 else
 	echo "Cloud already installed."
 fi

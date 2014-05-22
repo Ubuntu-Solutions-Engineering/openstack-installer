@@ -28,10 +28,11 @@ class CharmNovaCompute(CharmBase):
     isolate = True
     constraints = {'mem': '4G',
                    'root-disk': '10G'}
+    allow_multi_units = True
 
     def set_relations(self):
         super(CharmNovaCompute, self).set_relations()
-        services = self.state[1].service(self.charm_name)
+        services = self.juju_state.service(self.charm_name)
         for charm in self.related:
             if not self.is_related(charm, services.relations) \
                and 'rabbitmq-server' in charm:

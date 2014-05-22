@@ -18,6 +18,7 @@
 
 from cloudinstall.charms import CharmBase
 
+
 class CharmRabbitMQ(CharmBase):
     """ RabbitMQ directives """
 
