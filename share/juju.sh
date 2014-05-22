@@ -85,6 +85,12 @@ jujuBootstrap()
 {
 	cluster_uuid=$1
 
+	# Juju >= 1.19 supports vlans. Since we're bootstrapping into a container,
+	# when they try to modprobe the vlan module it won't work (viz. LP #1316762)
+	# inside the container, so our solution is to add it outside the container so
+	# that containers can use vlans.
+	modprobe 8021q
+
 	lxc-create -n juju-bootstrap -t ubuntu-cloud -- -r trusty
 	sed -e "s/^lxc.network.link.*$/lxc.network.link = br0/" -i \
 	    /var/lib/lxc/juju-bootstrap/config
