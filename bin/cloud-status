@@ -20,7 +20,6 @@
 
 import signal
 import sys
-import os
 
 from cloudinstall import gui
 from cloudinstall import utils
@@ -36,4 +35,3 @@ for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
 if __name__ == '__main__':
     gui = gui.PegasusGUI()
     sys.exit(gui.run())
-
