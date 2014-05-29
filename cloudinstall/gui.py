@@ -26,7 +26,7 @@ import threading
 import logging
 from importlib import import_module
 import pkgutil
-from multiprocessing import
+from multiprocessing import cpu_count
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
