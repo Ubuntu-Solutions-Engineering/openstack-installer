@@ -682,7 +682,7 @@ class PegasusGUI(MainLoop):
         """ Handles intial deployment of a machine """
         max_cpus = cpu_count()
         if max_cpus >= 2:
-          max_cpus = max_cpus / 2
+            max_cpus = max_cpus / 2
         if pegasus.MULTI_SYSTEM:
             return
         else:
