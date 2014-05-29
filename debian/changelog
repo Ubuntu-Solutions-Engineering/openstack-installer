@@ -1,14 +1,10 @@
-cloud-installer (0.17+git20140516-0ubuntu1) trusty; urgency=medium
+cloud-installer (0.17+git20140529-0ubuntu1) utopic; urgency=medium
 
-  * Start 0.17 development
+  * Make all packages architecture-independent
+  * Added swift and swift-proxy to installer
+  * Add ability to do unattended installs
 
- -- Adam Stokes <adam.stokes@ubuntu.com>  Fri, 16 May 2014 10:40:20 -0400
-
-cloud-installer (0.15+git20140513-0ubuntu1) trusty; urgency=low
-
-  * Start 0.15 development
-
- -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 13 May 2014 22:40:27 -0400
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 29 May 2014 09:15:28 -0400
 
 cloud-installer (0.14+bzr301-0ubuntu1) trusty; urgency=low
 

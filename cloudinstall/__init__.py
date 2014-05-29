@@ -18,4 +18,4 @@
 
 """ Ubuntu Cloud Installer """
 
-__version__ = "0.17+git20140516"
+__version__ = "0.17+git20140529"
