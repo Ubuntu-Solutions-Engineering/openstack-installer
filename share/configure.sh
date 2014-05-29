@@ -69,7 +69,7 @@ configureInstall()
 		1)
 			if [ -z "$install_type" ]; then
 			    dialogMenu "Select install type" "" 10 60 3 \
-				Multi-system "Single system" "Landscape managed"
+				Multi-system "Single system"
 			    install_type=$input
 			    if [ $ret -ne 0 ]; then
 				popState; continue
