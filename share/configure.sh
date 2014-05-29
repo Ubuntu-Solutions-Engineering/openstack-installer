@@ -218,12 +218,17 @@ configureInstall()
 			    if [ -z "$admin_email" ]; then
 				dialogMsgBox "[!] Missing Input" Continue "Please enter a login email." 10 60
 				continue
-			fi
-			result=$(getDomain "$admin_email")
-			if [ -z "$result" ]; then
+                            fi
+			    result=$(getDomain "$admin_email")
+			    if [ -z "$result" ]; then
 				dialogMsgBox "[!] Missing Email Domain" Continue \
 				    "Sorry, I couldn't extract the domain from '$admin_email'. Please try again." 10 60
 				continue
+                            fi
+                        else
+                            # set result to domain of pre-seeded admin email,
+                            # in case system_email is not also pre-seeded.
+                            result=$(getDomain "$admin_email")
 			fi
 			email_domain="$result"
 			;;
@@ -263,6 +268,7 @@ configureInstall()
 				    "Sorry, I could not extract the domain from '$system_email'. Please try again." \
 				    10 60
 				continue
+                            fi
 			fi
 			next_state=30
 			;;
