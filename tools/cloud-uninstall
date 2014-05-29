@@ -20,6 +20,17 @@ case $WHAT in
     echo Multi install cleansing.
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+    # Here we shut down all the maas machines before doing a juju-destroy. We
+    # do this because there might be more than one juju environment in the
+    # maas (in fact, in the case of landscape it creates another for its
+    # openstack environment), and we want to make sure to power off all the
+    # machines.
+    allocated=$(maas maas nodes list-allocated | \
+      python3 -c 'import json; import sys; print(" ".join(map(lambda x: x["system_id"], json.load(sys.stdin))))')
+    for system_id in $allocated; do
+      maas maas node stop $system_id
+    done
+
     juju destroy-environment --yes --force maas
     rm -r ~/.maascli.db
 
