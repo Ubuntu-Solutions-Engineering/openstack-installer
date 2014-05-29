@@ -54,10 +54,6 @@ case $WHAT in
         ifup $interface
     fi
     ifdown lo && ifup lo
-
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    echo you might need to fix your /etc/resolv.conf
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     ;;
   single-system)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
