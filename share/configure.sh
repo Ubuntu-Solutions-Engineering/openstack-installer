@@ -308,7 +308,7 @@ configureInstall()
 				dialogMsgBox "[!] Password mismatch" Continue \
 				    "The two passwords you entered were not the same, please try again." \
 				    10 60
-				popState; continue
+				continue
 			fi
 			;;
 		esac
