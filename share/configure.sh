@@ -222,7 +222,7 @@ configureInstall()
 			result=$(getDomain "$admin_email")
 			if [ -z "$result" ]; then
 				dialogMsgBox "[!] Missing Email Domain" Continue \
-					"Sorry, I couldn't extract the domain from '$admin_email'. Please try again." 10 60
+				    "Sorry, I couldn't extract the domain from '$admin_email'. Please try again." 10 60
 				continue
 			fi
 			email_domain="$result"
@@ -260,8 +260,8 @@ configureInstall()
 			    result=$(getDomain "$system_email")
 			    if [ -z "$result" ]; then
 				dialogMsgBox "[!] Missing Email Domain" Continue \
-				    "Sorry, I could not extract the domain from '$system_email'. Please try again."\
-					10 60
+				    "Sorry, I could not extract the domain from '$system_email'. Please try again." \
+				    10 60
 				continue
 			fi
 			next_state=30
@@ -279,8 +279,8 @@ configureInstall()
 			    state=32; continue
 			fi
 			dialogPassword "OpenStack admin user password:" \
-				"A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
-				10 60
+			    "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
+			    10 60
 			openstack_password=$input
 			if [ $ret -ne 0 ]; then
 				popState; continue
@@ -292,16 +292,16 @@ configureInstall()
 			;;
 		31)
 			dialogPassword "OpenStack admin user password to verify:" \
-				"Please enter the same OpenStack admin user password again to verify that you have typed it correctly." \
-				10 60
+			    "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." \
+			    10 60
 			openstack_password2=$input
 			if [ $ret -ne 0 ]; then
 				popState; continue
 			fi
 			if [ "$openstack_password" != "$openstack_password2" ]; then
 				dialogMsgBox "[!] Password mismatch" Continue \
-					"The two passwords you entered were not the same, please try again." \
-					10 60
+				    "The two passwords you entered were not the same, please try again." \
+				    10 60
 				popState; continue
 			fi
 			;;
