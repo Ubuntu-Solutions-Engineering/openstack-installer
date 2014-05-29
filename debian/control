@@ -45,8 +45,8 @@ Depends: gawk,
          ${misc:Depends},
          ${python3:Depends},
          ${python:Depends}
-Description: Ubuntu Cloud installer
- Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+Description: Ubuntu Openstack installer
+ Ubuntu Openstack installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
  physical system deployments as well as multiple physical system
@@ -59,8 +59,8 @@ Package: cloud-install-multi
 Section: admin
 Architecture: all
 Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, vlan, ${misc:Depends}
-Description: Ubuntu Cloud installer (multi-system) - dependency package
- Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+Description: Ubuntu Openstack installer (multi-system) - dependency package
+ Ubuntu Openstack installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
  physical system deployments as well as multiple physical system
@@ -72,8 +72,8 @@ Package: cloud-install-single
 Section: admin
 Architecture: all
 Depends: juju-local, uvtool, uvtool-libvirt, ${misc:Depends}
-Description: Ubuntu Cloud installer (single-system) - dependency package
- Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+Description: Ubuntu Openstack installer (single-system) - dependency package
+ Ubuntu Openstack installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
  physical system deployments as well as multiple physical system
@@ -85,8 +85,8 @@ Package: cloud-install-landscape
 Section: admin
 Architecture: all
 Depends: cloud-install-multi, juju-deployer, ${misc:Depends}
-Description: Ubuntu Cloud installer (landscape) - dependency package
- Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+Description: Ubuntu Openstack installer (landscape) - dependency package
+ Ubuntu Openstack installer is a metal to cloud image that provides an extremely
  simple way to install, deploy and scale an openstack cloud on top of
  Ubuntu server. Initial configurations are available for single
  physical system deployments as well as multiple physical system

@@ -22,7 +22,7 @@
 cloud-installer
 ===============
 
-Ubuntu Cloud installer is a metal to cloud image that provides an extremely
+Ubuntu Openstack installer is a metal to cloud image that provides an extremely
 simple way to install, deploy and scale an openstack cloud on top of
 Ubuntu server. Initial configurations are available for single
 physical system deployments as well as multiple physical system
@@ -58,7 +58,7 @@ if sys.argv[-1] == 'clean':
 
 setup(name='cloud-installer',
       version=cloudinstall.__version__,
-      description="Openstack private cloud with Ubuntu Cloud installer",
+      description="Openstack private cloud with Ubuntu Openstack installer",
       long_description=__doc__,
       author='Canonical Solutions Engineering',
       author_email='ubuntu-dev@lists.ubuntu.com',

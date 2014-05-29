@@ -33,7 +33,7 @@ OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_CONFIGFILE}:
 USAGE="\
 cloud-install [-${OPT_TYPE}${OPT_CONFIGFILE}${OPT_HELP}]
 
-Create an Ubuntu Cloud! (requires root privileges)
+Create an Ubuntu Openstack Cloud! (requires root privileges)
 
 Options:
   -$OPT_CONFIGFILE <file> - POSIX shell script to be sourced by installer
