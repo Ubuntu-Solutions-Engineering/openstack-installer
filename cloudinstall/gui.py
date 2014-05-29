@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Pegasus - gui interface to Ubuntu Cloud Installer """
+""" Pegasus - gui interface to  Installer """
 
 from operator import attrgetter
 from os import write, close, path, getenv
@@ -26,6 +26,7 @@ import threading
 import logging
 from importlib import import_module
 import pkgutil
+from multiprocessing import
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
@@ -38,7 +39,7 @@ from cloudinstall import utils
 
 log = logging.getLogger('cloudinstall.gui')
 
-TITLE_TEXT = "Ubuntu Cloud Installer"
+TITLE_TEXT = "Ubuntu Openstack Installer"
 
 # - Properties ----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
@@ -686,7 +687,7 @@ class PegasusGUI(MainLoop):
             if len(allocated) == 0:
                 self.cr.add_machine(constraints={'mem': '3G',
                                                  'root-disk': '20G',
-                                                 'cpu-cores': '3'})
+                                                 'cpu-cores': cpu_count() / 2})
 
     def _key_pressed(self, keys, raw):
         # We use this as an 'input filter' just to hook when keys are pressed;

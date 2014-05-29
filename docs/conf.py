@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Ubuntu Cloud Installer documentation build configuration file, created by
+# Ubuntu Openstack Installer documentation build configuration file, created by
 # sphinx-quickstart on Mon Apr  7 14:07:45 2014.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -69,7 +69,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Ubuntu Cloud Installer'
+project = u'Ubuntu Openstack Installer'
 copyright = u'2014, Canonical Ltd'
 
 version = release = cloudinstall.__version__
@@ -128,7 +128,7 @@ html_theme = 'default'
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = "Ubuntu Cloud Installer"
+html_short_title = "Ubuntu Openstack Installer"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -205,7 +205,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'UbuntuCloudInstaller.tex', u'Ubuntu Cloud Installer Documentation',
+  ('index', 'UbuntuCloudInstaller.tex', u'Ubuntu Openstack Installer Documentation',
    u'Solutions Engineering', 'manual'),
 ]
 
@@ -235,9 +235,9 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('cloud-install', 'cloud-install', u'Ubuntu Cloud Installer Documentation',
+    ('cloud-install', 'cloud-install', u'Ubuntu Openstack Installer Documentation',
      [u'Canonical Solutions Engineering'], 1),
-    ('cloud-status', 'cloud-status', u'Ubuntu Cloud Status Documentation',
+    ('cloud-status', 'cloud-status', u'Ubuntu Openstack Status Documentation',
      [u'Canonical Solutions Engineering'], 1)
 ]
 
@@ -251,7 +251,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'UbuntuCloudInstaller', u'Ubuntu Cloud Installer Documentation',
+  ('index', 'UbuntuCloudInstaller', u'Ubuntu Openstack Installer Documentation',
    u'Solutions Engineering', 'UbuntuCloudInstaller', 'One line description of project.',
    'Miscellaneous'),
 ]

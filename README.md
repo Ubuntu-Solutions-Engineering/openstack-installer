@@ -1,4 +1,4 @@
-# Ubuntu Cloud Installer
+# Ubuntu Openstack Installer
 
 [![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer)
 

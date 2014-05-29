@@ -1,4 +1,4 @@
-Ubuntu Cloud Installer
+Ubuntu Openstack Installer
 ==================================================
 
 `Github project page <https://github.com/ubuntu-solutions-engineering/cloud-installer>`_
