@@ -36,6 +36,13 @@ To start the installation run the following command
 An initial dialog box will appear asking you to select which type of
 install, choose **Single system**.
 
+Setting a password
+^^^^^^^^^^^^^^^^^^
+
+When asked to set the openstack password it should be noted that this password is
+used throughout all openstack related services (ie Horizon login password). The only
+service that does not use this password is **juju-gui**.
+
 Next Steps
 ^^^^^^^^^^
 
