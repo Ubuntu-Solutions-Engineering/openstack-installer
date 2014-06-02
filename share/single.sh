@@ -16,6 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Setup single install
+#
+# setupSingleInstall
+#
+# See singleInstall
+#
 setupSingleInstall()
 {
 	mkdir -m 0700 -p "/home/$INSTALL_USER/.cloud-install"
@@ -29,6 +35,10 @@ setupSingleInstall()
           "/home/$INSTALL_USER/.cloud-install/charmconf.yaml"
 }
 
+# Single system install
+#
+# singleInstall
+#
 singleInstall()
 {
 	dialogGaugeStart Installing "Please wait" 8 70 0
