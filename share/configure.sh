@@ -21,6 +21,15 @@ MULTI_RAM_MIN=2
 SINGLE_DISK_MIN=20
 SINGLE_RAM_MIN=8
 
+# Check free disk space
+#
+# checkDiskSpace minimum
+#
+# 'fail' contains current failure count
+# 'text' contains error message
+#
+# See requirementsError
+#
 checkDiskSpace()
 {
 	avail=$(df -B G --total -l --output=avail -x devtmpfs -x tmpfs \
@@ -31,6 +40,15 @@ checkDiskSpace()
 	fi
 }
 
+# Check total memory
+#
+# checkMemory minimum
+#
+# 'fail' contains current failure count
+# 'text' contains error message
+#
+# See requirementsError
+#
 checkMemory()
 {
 	free=$(free -gt | awk 'END { print $2 }')
@@ -40,6 +58,15 @@ checkMemory()
 	fi
 }
 
+# Check multi install requirements
+#
+# checkMultiInstall
+#
+# 'fail' contains current failure count
+# 'text' contains error message
+#
+# See requirementsError
+#
 checkMultiInstall()
 {
 	fail=0
@@ -48,6 +75,15 @@ checkMultiInstall()
 	checkDiskSpace $MULTI_DISK_MIN
 }
 
+# Check single install requirements
+#
+# checkSingleInstall
+#
+# 'fail' contains current failure count
+# 'text' contains error message
+#
+# See requirementsError
+#
 checkSingleInstall()
 {
 	fail=0
@@ -56,10 +92,21 @@ checkSingleInstall()
 	checkDiskSpace $SINGLE_DISK_MIN
 }
 
-getDomain() {
+# Get email domain
+#
+# getDomain email
+#
+getDomain()
+{
 	echo "$1" | grep -E "^[^@]+@[^@]+\.[^@]+$" | sed -E -e 's/[^@]+@([^@]+\.[^@]+)/\1/'
 }
 
+# Validate DHCP range
+#
+# validateDHCPRange range
+#
+# 'ret' contains exit code (0 on success, >0 otherwise)
+#
 validateDHCPRange() 
 {
     { python3 -c \
@@ -67,6 +114,14 @@ validateDHCPRange()
 	> /dev/null ; ret=$?; } || true
 
 }
+
+# Configure install
+#
+# configureInstall
+#
+# 'install_type' and other variables will contain user specified configuration
+# 'install_type' will be empty if user cancels
+#
 configureInstall()
 {
 	state=1
@@ -317,6 +372,14 @@ configureInstall()
 	done
 }
 
+# Pop menu state
+#
+# popState
+#
+# 'state' contains popped state
+#
+# See pushState
+#
 popState()
 {
 	if [ -n "$states" ]; then
@@ -327,11 +390,25 @@ popState()
 	fi
 }
 
+# Push menu state
+#
+# pushState state
+#
+# See popState
+#
 pushState()
 {
 	states="$states $1"
 }
 
+# Display requirements errors
+#
+# requirementsError
+#
+# exit 0 on continue, 1 on cancel
+#
+# See checkMultiInstall, checkSingleInstall
+#
 requirementsError()
 {
 	dialogYesNo "[!] System requirements not met" Continue Cancel \
