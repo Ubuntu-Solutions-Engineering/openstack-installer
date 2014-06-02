@@ -506,8 +506,7 @@ class NodeViewMode(Frame):
         header = [AttrWrap(Text(TITLE_TEXT), "border"),
                   AttrWrap(Text('(Q) Quit'), "border"),
                   AttrWrap(Text('(F5) Refresh'), "border"),
-                  AttrWrap(Text('(F6) Add units'), "border"),
-                  AttrWrap(Text('(F8) Console'), "border")]
+                  AttrWrap(Text('(F6) Add units'), "border")]
         header = Columns(header)
         self.status_info = Text("", align="left")
         self.horizon_url = Text("", align="right")
@@ -703,6 +702,7 @@ class PegasusGUI(MainLoop):
         if isinstance(self.widget, LockScreen):
             return None
         if key == 'f8':
+            pass
             if self.widget == self.console:
                 self.widget = self.node_view.target
             else:
