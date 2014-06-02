@@ -22,6 +22,12 @@ LOG=/var/log/cloud-install.log
 export PYTHONPATH=/usr/share/cloud-installer:$PYTHONPATH
 export PYTHONDONTWRITEBYTECODE=true
 
+# iptables config
+#
+# configIptablesNat source destination
+#
+# See configureNat
+#
 configIptablesNat()
 {
 	cat <<-EOF
@@ -35,6 +41,10 @@ configIptablesNat()
 		EOF
 }
 
+# Configure NAT
+#
+# configureNat source destination
+#
 configureNat()
 {
 	iptables -t nat -A POSTROUTING -s $1 ! -d $1 -j MASQUERADE
@@ -45,17 +55,37 @@ configureNat()
 	    /etc/network/interfaces
 }
 
+# Create temporary installer directory
+#
+# createTempDir
+#
+# 'TMP' contains created directory
+#
+# See removeTempDir
+#
 createTempDir()
 {
 	TMP=$(mktemp -d /tmp/cloud-install.XXX)
 }
 
+# Detect dhcp server on network
+#
+# detectDhcpServer interface
+#
+# exit 0 if detected, >0 otherwise
+#
 detectDhcpServer()
 {
 	nmap --script broadcast-dhcp-discover -e $1 2> /dev/null \
 	    | grep -q DHCPOFFER
 }
 
+# Disable blanking if on console
+#
+# disableBlank
+#
+# See enableBlank
+#
 disableBlank()
 {
 	tty=$(tty)
@@ -65,6 +95,12 @@ disableBlank()
 	fi
 }
 
+# Re-enable blanking if on console
+#
+# enableBlank
+#
+# See disableBlank
+#
 enableBlank()
 {
 	if [ -n "$CONSOLE_BLANK" ]; then
@@ -72,6 +108,10 @@ enableBlank()
 	fi
 }
 
+# Enable IP forwarding
+#
+# enableIpForwarding
+#
 enableIpForwarding()
 {
 	sed -e 's/^#net.ipv4.ip_forward=1$/net.ipv4.ip_forward=1/' -i \
@@ -79,6 +119,10 @@ enableIpForwarding()
 	sysctl -p
 }
 
+# Display error
+#
+# error
+#
 error()
 {
 	dialogMsgBox "[!] An error has occurred" Continue \
@@ -86,6 +130,10 @@ error()
 	    10 60
 }
 
+# Cleanup installer before exit
+#
+# exitInstall
+#
 exitInstall()
 {
 	ret=$?
@@ -99,6 +147,10 @@ exitInstall()
 	removeTempDir
 }
 
+# Generate SSH keys for install user
+#
+# generateSshKeys
+#
 generateSshKeys()
 {
 	if [ ! -e "/home/$INSTALL_USER/.ssh/id_rsa" ]; then
@@ -112,36 +164,68 @@ generateSshKeys()
 	fi
 }
 
+# Get interfaces
+#
+# getInterfaces
+#
+# writes space delimited list to stdout
+#
 getInterfaces()
 {
 	ifconfig -s | egrep -v 'Iface|lo' | egrep -o '^[a-zA-Z0-9]+' | paste -sd ' '
 }
 
+# Get gateway
+#
+# gateway
+#
 gateway()
 {
 	route -n | awk 'index($4, "G") { print $2 }'
 }
 
+# Get IP address
+#
+# ipAddress interface
+#
 ipAddress()
 {
 	ifconfig $1 | egrep -o "inet addr:[0-9.]+" | sed -e "s/^inet addr://"
 }
 
+# Get IP broadcast address
+#
+# ipBroadcast interface
+#
 ipBroadcast()
 {
 	ifconfig $1 | egrep -o "Bcast:[0-9.]+" | sed -e "s/^Bcast://"
 }
 
+# Get IP netmask
+#
+# ipNetmask interface
+#
 ipNetmask()
 {
 	ifconfig $1 | egrep -o "Mask:[0-9.]+" | sed -e "s/^Mask://"
 }
 
+# Get IP network
+#
+# ipNetwork interface
+#
 ipNetwork()
 {
 	ip addr show $1 | awk '/^    inet / { print $2 }'
 }
 
+# Remove temporary installer directory
+#
+# removeTempDir
+#
+# See createTempDir
+#
 removeTempDir()
 {
 	if [ -n "$TMP" ]; then
@@ -149,6 +233,12 @@ removeTempDir()
 	fi
 }
 
+# Start external log
+#
+# startLog
+#
+# See stopLog
+#
 startLog()
 {
 	(umask 0077; touch "$LOG")
@@ -159,6 +249,12 @@ startLog()
 	exec 2> "$TMP/log"
 }
 
+# Stop external log
+#
+# stopLog
+#
+# See startLog
+#
 stopLog()
 {
 	if [ -n "$log_pid" ]; then
@@ -169,6 +265,14 @@ stopLog()
 	fi
 }
 
+# Timestamp input
+#
+# ts file
+#
+# writes timestamped lines from file to stdout
+#
+# See startLog
+#
 ts()
 {
 	awk '{ print strftime("%F %T"), $0; fflush() }' "$1"
