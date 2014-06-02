@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.charms import CharmBase, CHARM_CONFIG
+from cloudinstall.charms import CharmBase, CHARM_CONFIG, CHARM_CONFIG_FILENAME
 
 
 class CharmSwift(CharmBase):
@@ -38,6 +38,11 @@ class CharmSwift(CharmBase):
         else:
             num_replicas = self.default_replicas
 
-        self.client.deploy(self.charm_name, dict(instances=num_replicas))
+        kwds = dict(instances=num_replicas)
+
+        if self.charm_name in CHARM_CONFIG:
+            kwds['configfile'] = CHARM_CONFIG_FILENAME
+
+        self.client.deploy(self.charm_name, kwds)
 
 __charm_class__ = CharmSwift
