@@ -702,7 +702,7 @@ class PegasusGUI(MainLoop):
         if isinstance(self.widget, LockScreen):
             return None
         if key == 'f8':
-            pass
+            return
             if self.widget == self.console:
                 self.widget = self.node_view.target
             else:
