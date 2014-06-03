@@ -16,6 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Juju MAAS config
+#
+# configMaasEnvironment address credentials secret proxy
+#
+# See configureJuju
+#
 configMaasEnvironment()
 {
 	cat <<-EOF
@@ -34,6 +40,12 @@ configMaasEnvironment()
 		EOF
 }
 
+# Juju local config
+#
+# configLocalEnvironment
+#
+# See configureJuju
+#
 configLocalEnvironment()
 {
 	cat <<-EOF
@@ -47,6 +59,10 @@ configLocalEnvironment()
 		EOF
 }
 
+# Charm config
+#
+# configCharmOptions password
+#
 configCharmOptions()
 {
 	cat <<-EOF
@@ -66,6 +82,10 @@ configCharmOptions()
 		EOF
 }
 
+# Configure Juju
+#
+# configureJuju type type-arguments
+#
 configureJuju()
 {
 	env_type=$1
@@ -80,6 +100,13 @@ configureJuju()
 	    "/home/$INSTALL_USER/.juju/environments.yaml"
 }
 
+# Bootstrap Juju inside container
+#
+# Creates an LXC container, registers it in MAAS (as a fake machine), then
+# bootstraps Juju using normal MAAS provider process.
+#
+# jujuBootstrap uuid
+#
 # TODO break this function into smaller ones
 jujuBootstrap()
 {
