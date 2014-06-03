@@ -24,7 +24,7 @@ class CharmSwiftProxy(CharmBase):
 
     charm_name = 'swift-proxy'
     display_name = 'Swift Proxy'
-    related = []
+    related = ['keystone']
     deploy_priority = 5
     constraints = {'mem': '1G',
                    'root-disk': '8G'}
