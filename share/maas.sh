@@ -16,6 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# bind config
+#
+# configBindOptions forwarder...
+#
+# See configureDns
+#
 configBindOptions()
 {
 	cat <<"EOF"
@@ -36,6 +42,12 @@ EOF
 EOF
 }
 
+# interfaces config
+#
+# configMaasBridge interface config
+#
+# See createMaasBridge
+#
 configMaasBridge()
 {
 	cat <<-EOF
@@ -48,6 +60,10 @@ configMaasBridge()
 	printf "\t%s\n" "bridge_ports $1"
 }
 
+# Configure DNS
+#
+# configureDns
+#
 configureDns()
 {
 	configBindOptions $(awk '/^nameserver / { print $2 }' /etc/resolv.conf) \
@@ -59,11 +75,19 @@ configureDns()
 	ifdown lo; ifup lo
 }
 
+# Configure MAAS images
+#
+# configureMaasImages
+#
 configureMaasImages()
 {
 	cp /usr/share/cloud-installer/templates/bootresources.yaml /etc/maas/bootresources.yaml
 }
 
+# Configure MAAS services
+#
+# configureMaasServices address
+#
 configureMaasServices()
 {
 	# When maas starts, it picks an interface at random and stuffs it in these
@@ -86,6 +110,16 @@ configureMaasServices()
 	fi
 }
 
+# Configure MAAS interfaces
+#
+# Comments out any interfaces configuration matching the specified interface
+# or br0. Additionally, configuration matching the specified interface is
+# extracted to an external file where it becomes new config for br0.
+#
+# configureMaasInterfaces interface bridge-config interfaces
+#
+# See createMaasBridge
+#
 configureMaasInterfaces()
 {
 	awk -v interface=$1 -v "bridge_cfg=$2" -f - "$3" <<-"EOF"
@@ -124,6 +158,10 @@ configureMaasInterfaces()
 		EOF
 }
 
+# Configure MAAS networking
+#
+# configureMaasNetworking uuid interface gateway dhcp-low dhcp-high
+#
 configureMaasNetworking()
 {
 	address=$(ipAddress $2)
@@ -142,6 +180,15 @@ configureMaasNetworking()
 	fi
 }
 
+# Create MAAS bridge
+#
+# Creates br0 bridge using existing configuration for specified interface.
+# Bridge is defined in /etc/network/interfaces.d/cloud-install.cfg.
+# Existing config for either an existing br0 bridge or the specified interface
+# will be commented out.
+#
+# createMaasBridge interface
+#
 createMaasBridge()
 {
 	ifdown $1 br0 1>&2 || true
@@ -162,6 +209,10 @@ createMaasBridge()
 	ifup $1 br0 1>&2
 }
 
+# Create MAAS superuser
+#
+# createMaasSuperUser
+#
 createMaasSuperUser()
 {
 	password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd")
@@ -169,17 +220,31 @@ createMaasSuperUser()
 	    | setsid sh -c "maas-region-admin createsuperuser --username root --email root@example.com 1>&2"
 }
 
+# MAAS address
+#
+# maasAddress address
+#
 maasAddress()
 {
 	echo $1 | tr . -
 }
 
+# MAAS file path
+#
+# maasFilePath prefix
+#
 maasFilePath()
 {
 	maas maas files list "prefix=$1" \
 	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["anon_resource_uri"])'
 }
 
+# Check MAAS interface exists
+#
+# maasInterfaceExists uuid interface
+#
+# exit 0 if exists, 1 otherwise
+#
 maasInterfaceExists()
 {
 	exists=$(maas maas node-group-interfaces list $1 \
@@ -191,23 +256,43 @@ maasInterfaceExists()
 	fi
 }
 
+# MAAS login
+#
+# maasLogin credentials
+#
 maasLogin()
 {
 	maas login maas http://localhost/MAAS/api/1.0 $1
 }
 
+# Node status
+#
+# nodeStatus id
+#
 nodeStatus()
 {
 	maas maas nodes list id=$1 \
 	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["status"])'
 }
 
+# Node system id
+#
+# nodeSystemId mac
+#
 nodeSystemId()
 {
 	maas maas nodes list mac_address=$1 \
 	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["system_id"])'
 }
 
+# Wait for MAAS cluster registration
+#
+# When MAAS first runs, the cluster controller must register with the region
+# controller. This can take a few seconds at which point you get a real uuid
+# instead of 'master'.
+#
+# waitForClusterRegistration
+#
 waitForClusterRegistration()
 {
 	while true; do
@@ -220,6 +305,10 @@ waitForClusterRegistration()
 	done
 }
 
+# Wait for specified node status
+#
+# waitForNodeStatus id status
+#
 waitForNodeStatus()
 {
 	while [ $(nodeStatus $1) -ne $2 ]; do
