@@ -16,6 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Deploy Landscape
+#
+# deployLandscape percent
+#
 deployLandscape()
 {
 	end_percent=${1:-100}
@@ -44,6 +48,10 @@ deployLandscape()
 	rm -f "$TMP/deployer-out"
 }
 
+# Landscape install
+#
+# landscapeInstall
+#
 landscapeInstall()
 {
 	# The landscape install needs a fully working juju bootstrap environment,
