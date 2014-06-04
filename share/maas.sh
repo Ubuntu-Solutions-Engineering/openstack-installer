@@ -84,32 +84,6 @@ configureMaasImages()
 	cp /usr/share/cloud-installer/templates/bootresources.yaml /etc/maas/bootresources.yaml
 }
 
-# Configure MAAS services
-#
-# configureMaasServices address
-#
-configureMaasServices()
-{
-	# When maas starts, it picks an interface at random and stuffs it in these
-	# config files. If that happens to be an extrnal interface that is, say,
-	# getting an IP via DHCP, then when it gets a new IP our MaaS is totally
-	# broken. So here we switch any external IPs in the configuration files with
-	# the internal MaaS IP, which should effectively be the same here but also
-	# won't change.
-	#
-	# Even though we are changing config files for the services, we don't need to
-	# restart them, since they'll work fine now (and until the server would get a
-	# new IP if this config setting hadn't been changed).
-	current=$(gawk 'match($0, /http:\/\/([0-9.]*)\/MAAS/, m) { print m[1]; }' \
-	    /etc/maas/maas_cluster.conf)
-	if [ "$1" != "$current" ]; then
-		sed -i "s/$current/$1/g" \
-		    /etc/maas/maas_cluster.conf \
-		    /etc/maas/maas_local_celeryconfig.py \
-		    /etc/maas/maas_local_settings.py
-	fi
-}
-
 # Configure MAAS interfaces
 #
 # Comments out any interfaces configuration matching the specified interface
