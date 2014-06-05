@@ -1,13 +1,16 @@
 install_type="Single system" # or "Multi-system" or "Landscape managed"
 openstack_password="password"
 
+# set to 'true' to skip system requirement checks
+skip_requirement_checks="true"
+
 # Multi-system only:
 interface="eth0"
-bridge_interface=""
+bridge_interface="false"
 
-# set to nonempty string to avoid automated check for existing DHCP
+# set to 'true' to avoid automated check for existing DHCP
 # server on the network:
-skip_dhcp_detection=true
+skip_dhcp_detection="true"
 
 # range of IP addresses for MAAS to lease
 dhcp_range="192.168.100.2-192.168.100.244"
