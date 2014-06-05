@@ -76,6 +76,7 @@ configCharmOptions()
                 swift-proxy:
                   zone-assignment: auto
                   replicas: 3
+                  use-https: 'no'
                 swift-storage:
                   zone: 1
                   block-device: /etc/swift/storage.img|2G
