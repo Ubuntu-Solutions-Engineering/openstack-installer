@@ -53,7 +53,7 @@ multiInstall()
 		createMaasBridge $interface
 		dialogGaugePrompt 34 "Configuring MAAS networking"
 
-		if [ -n "$bridge_interface" ]; then
+		if [ "$bridge_interface" = true ]; then
 			gateway=$(ipAddress br0)
 			configureNat $(ipNetwork br0)
 			enableIpForwarding
