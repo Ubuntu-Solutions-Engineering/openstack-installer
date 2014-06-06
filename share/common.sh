@@ -22,6 +22,21 @@ LOG=/var/log/cloud-install.log
 export PYTHONPATH=/usr/share/cloud-installer:$PYTHONPATH
 export PYTHONDONTWRITEBYTECODE=true
 
+# Absolute path
+#
+# absolutePath path
+#
+# writes absolute path to stdout
+#
+absolutePath()
+{
+	if [ "${1#/}" = "$1" ]; then
+		echo "$(pwd)/$1"
+	else
+		echo "$1"
+	fi
+}
+
 # iptables config
 #
 # configIptablesNat source destination
