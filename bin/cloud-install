@@ -29,9 +29,9 @@
 OPT_HELP=h
 OPT_INSTALL=i
 OPT_CONFIGFILE=c
-OPTS=:${OPT_INSTALL}${OPT_HELP}${OPT_CONFIGFILE}:
+OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_HELP}
 USAGE="\
-cloud-install [-${OPT_TYPE}${OPT_CONFIGFILE}${OPT_HELP}]
+cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_HELP}]
 
 Create an Ubuntu Openstack Cloud! (requires root privileges)
 
@@ -68,6 +68,10 @@ while getopts $OPTS opt; do
 		usageError "Unknown argument: $OPTARG"
 		exit 1
 		;;
+	:)
+		usageError "Option $OPTARG requires an argument"
+		exit 1
+		;;
 	esac
 done
 shift $((OPTIND - 1))
@@ -77,9 +81,8 @@ if [ $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
-
-if [ ! -z "$configfile" ]; then
-    . $configfile
+if [ -n "$configfile" ]; then
+	. "$(absolutePath "$configfile")"
 fi
 
 createTempDir
