@@ -121,7 +121,8 @@ class ControllerOverlay(Overlay):
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
 
         charm_classes = sorted([m.__charm_class__ for m in charm_modules
-                                if not m.__charm_class__.optional],
+                                if not m.__charm_class__.optional and \
+                                  not m.__charm_class__.disabled],
                                key=attrgetter('deploy_priority'))
 
         if self.machine is None:
@@ -293,7 +294,8 @@ class AddCharmDialog(Overlay):
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
         charm_classes = [m.__charm_class__ for m in charm_modules
-                         if m.__charm_class__.allow_multi_units]
+                         if m.__charm_class__.allow_multi_units and \
+                           not m.__charm_class__.disabled]
 
         self.cr = command_runner
         self.underlying = underlying
