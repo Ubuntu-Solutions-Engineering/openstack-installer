@@ -46,11 +46,9 @@ class JujuState:
         :returns: machine
         :rtype: cloudinstall.machine.Machine()
         """
-        try:
-            return next(filter(lambda x: x.machine_id == machine_id,
-                               self.machines()))
-        except StopIteration:
-            return Machine(-1, {})
+        r = next(filter(lambda x: x.machine_id == machine_id,
+                 self.machines()), Machine(-1, {}))
+        return r
 
     def machines(self):
         """ Machines property
@@ -79,11 +77,9 @@ class JujuState:
         :returns: a service entry or None
         :rtype: Service()
         """
-        try:
-            return next(filter(lambda s: s.service_name == name,
-                               self.services))
-        except StopIteration:
-            return None
+        r = next(filter(lambda s: s.service_name == name,
+                        self.services), Service(name, {}))
+        return r
 
     @property
     def services(self):

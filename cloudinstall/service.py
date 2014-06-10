@@ -161,10 +161,7 @@ class Service:
                 return True
             return False
 
-        try:
-            return next(filter(_match, self.units))
-        except StopIteration:
-            return Unit('unknown', [])
+        return next(filter(_match, self.units), Unit('unknown', []))
 
     @property
     def units(self):
