@@ -183,8 +183,8 @@ class ControllerOverlay(Overlay):
             for charm_class in unfinalized_charm_classes:
 
                 charm = charm_class(juju_state=juju_state)
-
-                if juju_state.service(charm.charm_name) is None:
+                svc = juju_state.service(charm.charm_name)
+                if not svc.service:
                     # Juju doesn't see the service related to this
                     # charm yet, so defer setting its relations.
                     log.debug("service not up yet for charm {c}".format(
