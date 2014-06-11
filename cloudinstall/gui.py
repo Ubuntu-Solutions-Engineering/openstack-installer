@@ -317,7 +317,8 @@ class AddCharmDialog(Overlay):
                     and r.get_state()][0]
         _charm_to_deploy = selected.label
         n = self.count_editor.value()
-        if _charm_to_deploy in self.juju_state.services:
+        svc = self.juju_state.service(_charm_to_deploy)
+        if svc.service:
             log.info("Adding {n} units of {charm}".format(
                      n=n, charm=_charm_to_deploy))
             self.cr.add_unit(_charm_to_deploy, count=int(n))
