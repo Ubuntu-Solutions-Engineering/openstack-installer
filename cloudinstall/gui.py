@@ -18,6 +18,7 @@
 
 """ Pegasus - gui interface to  Installer """
 
+from operator import attrgetter
 from os import write, close, path, getenv
 from traceback import format_exc
 import re
@@ -111,7 +112,11 @@ class ControllerOverlay(Overlay):
         return continue_
 
     def _process(self, juju_state, maas_state):
-        charm_classes = utils.load_charms()
+        charm_modules = utils.load_charms()
+        charm_classes = sorted([m.__charm_class__ for m in charm_modules
+                                if not m.__charm_class__.optional and
+                                not m.__charm_class__.disabled],
+                               key=attrgetter('deploy_priority'))
 
         if self.machine is None:
             self.machine = self.get_controller_machine(juju_state, maas_state)
@@ -277,7 +282,10 @@ class AddCharmDialog(Overlay):
     """ Adding charm dialog """
 
     def __init__(self, underlying, juju_state, destroy, command_runner=None):
-        self.charm_classes = utils.load_charms()
+        charm_modules = utils.load_charms()
+        self.charm_classes = [m.__charm_class__ for m in charm_modules
+                              if m.__charm_class__.allow_multi_units and
+                              not m.__charm_class__.disabled]
 
         self.juju_state = juju_state
         self.cr = command_runner
