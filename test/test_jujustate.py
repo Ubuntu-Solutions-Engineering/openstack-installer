@@ -101,10 +101,10 @@ class JujuStateSingleTest(unittest.TestCase):
         self.assertEqual(cn, s.service_name)
 
     def test_bogus_service_returns_none(self):
-        "return None for nonexistent services"
+        "return empty dictionary for nonexistent services"
         cn = "fake-bogus-charm"
         s = self.juju.service(cn)
-        self.assertEqual(None, s)
+        self.assertEqual({}, s.service)
 
     def test_two_machines_allocated(self):
         ml = self.juju.machines_allocated()
