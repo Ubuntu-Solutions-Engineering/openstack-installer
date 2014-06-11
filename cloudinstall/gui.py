@@ -293,10 +293,11 @@ class AddCharmDialog(Overlay):
         charm_modules = [import_module('cloudinstall.charms.' + mname)
                          for (_, mname, _) in
                          pkgutil.iter_modules(cloudinstall.charms.__path__)]
-        charm_classes = [m.__charm_class__ for m in charm_modules
-                         if m.__charm_class__.allow_multi_units and
-                         not m.__charm_class__.disabled]
+        self.charm_classes = [m.__charm_class__ for m in charm_modules
+                              if m.__charm_class__.allow_multi_units and
+                              not m.__charm_class__.disabled]
 
+        self.juju_state = juju_state
         self.cr = command_runner
         self.underlying = underlying
         self.destroy = destroy
@@ -304,7 +305,7 @@ class AddCharmDialog(Overlay):
         self.boxes = []
         self.bgroup = []
         first_index = 0
-        for i, charm_class in enumerate(charm_classes):
+        for i, charm_class in enumerate(self.charm_classes):
             charm = charm_class(juju_state=juju_state)
             if charm.name() and not first_index:
                 first_index = i
@@ -334,9 +335,21 @@ class AddCharmDialog(Overlay):
                     and r.get_state()][0]
         _charm_to_deploy = selected.label
         n = self.count_editor.value()
-        log.info("Adding {n} units of {charm}".format(
-            n=n, charm=_charm_to_deploy))
-        self.cr.add_unit(_charm_to_deploy, count=int(n))
+        if _charm_to_deploy in self.juju_state.services:
+            log.info("Adding {n} units of {charm}".format(
+                     n=n, charm=_charm_to_deploy))
+            self.cr.add_unit(_charm_to_deploy, count=int(n))
+        else:
+            # FIXME: redundant.
+            for charm_class in self.charm_classes:
+                charm = charm_class(juju_state=self.juju_state)
+                if charm.name() == _charm_to_deploy:
+                    if charm.isolate:
+                        charm.setup()
+                    else:
+                        charm.setup(_id='lxc:{mid}'.format(mid="1"))
+                    charm.set_relations()
+                    charm.post_proc()
         self.destroy()
 
     def no(self, button):
