@@ -18,14 +18,11 @@
 
 """ Pegasus - gui interface to  Installer """
 
-from operator import attrgetter
 from os import write, close, path, getenv
 from traceback import format_exc
 import re
 import threading
 import logging
-from importlib import import_module
-import pkgutil
 from multiprocessing import cpu_count
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
@@ -114,16 +111,7 @@ class ControllerOverlay(Overlay):
         return continue_
 
     def _process(self, juju_state, maas_state):
-        import cloudinstall.charms
-
-        charm_modules = [import_module('cloudinstall.charms.' + mname)
-                         for (_, mname, _) in
-                         pkgutil.iter_modules(cloudinstall.charms.__path__)]
-
-        charm_classes = sorted([m.__charm_class__ for m in charm_modules
-                                if not m.__charm_class__.optional and
-                                not m.__charm_class__.disabled],
-                               key=attrgetter('deploy_priority'))
+        charm_classes = utils.load_charms()
 
         if self.machine is None:
             self.machine = self.get_controller_machine(juju_state, maas_state)
@@ -289,13 +277,7 @@ class AddCharmDialog(Overlay):
     """ Adding charm dialog """
 
     def __init__(self, underlying, juju_state, destroy, command_runner=None):
-        import cloudinstall.charms
-        charm_modules = [import_module('cloudinstall.charms.' + mname)
-                         for (_, mname, _) in
-                         pkgutil.iter_modules(cloudinstall.charms.__path__)]
-        self.charm_classes = [m.__charm_class__ for m in charm_modules
-                              if m.__charm_class__.allow_multi_units and
-                              not m.__charm_class__.disabled]
+        self.charm_classes = utils.load_charms()
 
         self.juju_state = juju_state
         self.cr = command_runner
@@ -358,12 +340,7 @@ class AddCharmDialog(Overlay):
 
 class ChangeStateDialog(Overlay):
     def __init__(self, underlying, juju_state, on_success, on_cancel):
-        import cloudinstall.charms
-        charm_modules = [import_module('cloudinstall.charms.' + mname)
-                         for (_, mname, _) in
-                         pkgutil.iter_modules(cloudinstall.charms.__path__)]
-        charm_classes = sorted([m.__charm_class__ for m in charm_modules],
-                               key=attrgetter('deploy_priority'))
+        charm_classes = utils.load_charms()
 
         self.boxes = []
         first_index = 0
