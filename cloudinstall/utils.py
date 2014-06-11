@@ -27,11 +27,30 @@ import logging
 from threading import Thread
 from functools import wraps
 from time import strftime
+from importlib import import_module
+import pkgutil
+from operator import attrgetter
 
 log = logging.getLogger('cloudinstall.utils')
 
 # String with number of minutes, or None.
 blank_len = None
+
+
+def load_charms():
+    """ Load known charm classes
+    """
+    import cloudinstall.charms
+
+    charm_modules = [import_module('cloudinstall.charms.' + mname)
+                     for (_, mname, _) in
+                     pkgutil.iter_modules(cloudinstall.charms.__path__)]
+
+    charm_classes = sorted([m.__charm_class__ for m in charm_modules
+                            if not m.__charm_class__.optional and
+                            not m.__charm_class__.disabled],
+                           key=attrgetter('deploy_priority'))
+    return charm_classes
 
 
 def async(func):
