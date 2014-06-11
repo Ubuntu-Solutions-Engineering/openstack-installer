@@ -24,6 +24,6 @@ class CharmGlance(CharmBase):
 
     charm_name = 'glance'
     display_name = 'Glance'
-    related = ['mysql', 'keystone', 'rabbitmq-server', 'swift-proxy']
+    related = ['mysql', 'keystone', 'rabbitmq-server']
 
 __charm_class__ = CharmGlance
