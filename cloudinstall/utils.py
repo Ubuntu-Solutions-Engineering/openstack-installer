@@ -29,7 +29,6 @@ from functools import wraps
 from time import strftime
 from importlib import import_module
 import pkgutil
-from operator import attrgetter
 
 log = logging.getLogger('cloudinstall.utils')
 
