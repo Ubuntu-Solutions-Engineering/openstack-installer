@@ -80,6 +80,8 @@ configCharmOptions()
                 swift-storage:
                   zone: 1
                   block-device: /etc/swift/storage.img|2G
+                quantum-gateway:
+                  ext-port: 'eth0:1'
 		EOF
 }
 
