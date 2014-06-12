@@ -25,6 +25,6 @@ class CharmQuantum(CharmBase):
     isolate = True
     optional = False
     constraints = {'mem': '1G',
-                   'root-disk': '8G'}
+                   'root-disk': '2G'}
 
 __charm_class__ = CharmQuantum
