@@ -27,7 +27,7 @@ class CharmNovaCompute(CharmBase):
     related = ['mysql', 'rabbitmq-server', 'glance', 'nova-cloud-controller']
     isolate = True
     constraints = {'mem': '4G',
-                   'root-disk': '10G'}
+                   'root-disk': '40G'}
     allow_multi_units = True
 
     def set_relations(self):
