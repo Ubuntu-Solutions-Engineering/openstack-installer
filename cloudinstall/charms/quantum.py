@@ -1,6 +1,3 @@
-#
-# swift.py - Swift instructions
-#
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
