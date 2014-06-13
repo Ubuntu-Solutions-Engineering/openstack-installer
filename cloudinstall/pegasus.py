@@ -81,19 +81,18 @@ def poll_state():
     :rtype: tuple (JujuState(), MaasState())
     """
     # Capture Juju state
-    (ret, juju_stdout,
-     juju_stderr, _) = utils.get_command_output('juju status',
-                                                combine_output=False)
-    if ret:
+    cmd = utils.get_command_output('juju status',
+                                   combine_output=False)
+    if cmd['ret']:
         log.debug("Juju state unknown, will re-poll in "
                   "case bootstrap is taking a little longer to come up.")
         log.debug("Juju status output: {o} \n stderr: {e}".format(
-            o=juju_stdout, e=juju_stderr))
+            o=cmd['stdout'], e=cmd['stderr']))
         # Stub out a juju status for now
         juju = JujuState('environment: local\nmachines:')
     else:
         try:
-            juju = JujuState(juju_stdout)
+            juju = JujuState(cmd['stdout'])
         except:
             log.exception("Ignoring exception in parsing juju state.")
             juju = JujuState('environment: local\nmachines:')
