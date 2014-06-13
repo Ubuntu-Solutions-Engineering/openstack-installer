@@ -20,8 +20,9 @@ import logging
 import yaml
 from os.path import expanduser, exists
 import sys
+from queue import Queue
 
-from cloudinstall import pegasus
+from cloudinstall import pegasus, utils
 from cloudinstall.juju.client import JujuClient
 from cloudinstall.juju import JujuState
 
@@ -132,14 +133,15 @@ class CharmBase:
             services = self.juju_state.service(self.charm_name)
             for charm in self.related:
                 try:
-                    if not self.is_related(charm, services.relations) \
-                       and len(list(services.relations)) != 0:
+                    if not self.is_related(charm, services.relations):
+                        log.info("Adding relation: {c}".format(
+                                 c=self.charm_name))
                         self.client.add_relation(self.charm_name,
                                                  charm)
                 except:
                     log.exception("Ignoring exception in set_relations.")
-                    log.debug("No relations "
-                              "found for {c}".format(c=self.charm_name))
+        log.debug("No new relations "
+                  "found for {c}".format(c=self.charm_name))
 
     def post_proc(self):
         """ Perform any post processing
@@ -152,3 +154,30 @@ class CharmBase:
 
     def __repr__(self):
         return self.name()
+
+
+class CharmQueue:
+    """ charm queue for handling relations in the background
+    """
+    def __init__(self):
+        self.charm_q = Queue()
+        self.juju_state, _ = pegasus.poll_state()
+        self.is_running = False
+
+    def add(self, charm):
+        self.charm_q.put(charm)
+
+    @utils.async
+    def watch_relations(self):
+        log.debug("Starting relations watcher.")
+        while True:
+            self.juju_state, _ = pegasus.poll_state()
+            charm = self.charm_q.get()
+            try:
+                charm.set_relations()
+                charm.post_proc()
+                self.charm_q.task_done()
+            except:
+                log.error("Problem relating {c},"
+                          " requeueing.".format(c=charm.charm_name))
+                self.add(charm)
