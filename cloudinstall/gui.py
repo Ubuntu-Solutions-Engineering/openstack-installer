@@ -41,7 +41,7 @@ log = logging.getLogger('cloudinstall.gui')
 TITLE_TEXT = "Ubuntu Openstack Installer"
 
 # - Properties ----------------------------------------------------------------
-IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
+IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['stdout'])
 
 # Time to lock in seconds
 LOCK_TIME = 120
