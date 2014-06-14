@@ -77,7 +77,8 @@ class ControllerOverlay(Overlay):
     NODE_SETUP = "Your node has been correctly detected. " \
                  "Please wait until setup is complete "
 
-    def __init__(self, underlying, command_runner):
+    def __init__(self, underlying, command_runner, opts):
+        self.opts = opts
         self.underlying = underlying
         self.command_runner = command_runner
         self.done = False
@@ -117,6 +118,12 @@ class ControllerOverlay(Overlay):
                                 if not m.__charm_class__.optional and
                                 not m.__charm_class__.disabled],
                                key=attrgetter('deploy_priority'))
+        # Add any additional charms enabled from command line
+        if self.opts.enable_swift:
+            for m in charm_modules:
+                if m.__charm_class__.name() == "swift-storage" or \
+                        m.__charm_class__.name() == "swift-proxy":
+                    charm_classes.append(m.__charm_class__)
 
         if self.machine is None:
             self.machine = self.get_controller_machine(juju_state, maas_state)
@@ -503,7 +510,7 @@ class ConsoleMode(Frame):
 
 
 class NodeViewMode(Frame):
-    def __init__(self, loop):
+    def __init__(self, loop, opts):
         header = [AttrWrap(Text(TITLE_TEXT), "border"),
                   AttrWrap(Text('(F6) Add units'), "border"),
                   AttrWrap(Text('(F5) Refresh'), "border"),
@@ -522,11 +529,12 @@ class NodeViewMode(Frame):
         self.maas_state = None
         self.nodes = ListWithHeader(NODE_HEADER)
         self.loop = loop
+        self.opts = opts
 
         self.cr = CommandRunner()
         Frame.__init__(self, header=header, body=self.nodes,
                        footer=footer)
-        self.controller_overlay = ControllerOverlay(self, self.cr)
+        self.controller_overlay = ControllerOverlay(self, self.cr, self.opts)
         self._target = self.controller_overlay
 
     # TODO: get rid of this shim.
@@ -666,10 +674,11 @@ class LockScreen(Overlay):
 class PegasusGUI(MainLoop):
     """ Pegasus Entry class """
 
-    def __init__(self):
+    def __init__(self, opts):
+        self.opts = opts
         self.cr = CommandRunner()
         self.console = ConsoleMode()
-        self.node_view = NodeViewMode(self)
+        self.node_view = NodeViewMode(self, self.opts)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
         self.juju_state, _ = pegasus.poll_state()
