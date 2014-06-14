@@ -22,6 +22,7 @@ from cloudinstall.pegasus import poll_state
 
 log = logging.getLogger('cloudinstall.charms.compute')
 
+
 class CharmNovaCompute(CharmBase):
     """ Openstack Nova Compute directives """
 
