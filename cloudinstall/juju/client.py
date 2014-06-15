@@ -160,10 +160,13 @@ class JujuClient:
         """ Add relation between services """
         cmd = "juju add-relation {a} {b}".format(a=endpoint_a,
                                                  b=endpoint_b)
-        log.debug("Adding relation {a} <-> {b}".format(a=endpoint_a,
-                                                       b=endpoint_b))
-        cmd_ = get_command_output(cmd)
-        return cmd_['stdout']
+        cmd_ = get_command_output(cmd, combine_output=True)
+        log.debug("Adding relation ({a},{b}) ".format(a=endpoint_a,
+                                                      b=endpoint_b))
+        if cmd_['ret']:
+            log.error("Result: {r}".format(r=cmd_['stdout']))
+            return True
+        return False
 
     # def remove_relation(self, endpoint_a, endpoint_b):
     #     """ Removes relation """
