@@ -37,9 +37,9 @@ class CharmNovaCompute(CharmBase):
     def set_relations(self):
         super(CharmNovaCompute, self).set_relations()
         juju, _ = poll_state()
-        services = juju.service(self.charm_name)
+        service = juju.service(self.charm_name)
         has_amqp = list(filter(lambda r: 'amqp' in r.relation_name,
-                        services.relations))
+                        service.relations))
         if len(has_amqp) == 0:
             log.debug("Setting amqp relation for compute.")
             ret = self.client.add_relation("{c}:amqp".format(
