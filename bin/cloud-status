@@ -20,6 +20,7 @@
 
 import signal
 import sys
+import argparse
 
 from cloudinstall import gui
 from cloudinstall import utils
@@ -32,6 +33,15 @@ def sig_handler(signum, frame):
 for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
     signal.signal(sig, sig_handler)
 
+def parse_options(*args, **kwds):
+    parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
+                                     prog='cloud-status')
+    parser.add_argument('--enable-swift', action='store_true',
+                        dest='enable_swift', default=False,
+                        help='Enable swift storage')
+    return parser.parse_args()
+
 if __name__ == '__main__':
-    gui = gui.PegasusGUI()
+    opts = parse_options(sys.argv)
+    gui = gui.PegasusGUI(opts)
     sys.exit(gui.run())
