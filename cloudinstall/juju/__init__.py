@@ -37,6 +37,7 @@ class JujuState:
         :param raw_yaml: YAML object
         """
         self._yaml = yaml.load(raw_yaml)
+        assert isinstance(self._yaml, dict)
         self.valid_states = ['pending', 'started', 'down']
 
     def machine(self, machine_id):
