@@ -134,9 +134,9 @@ class CharmBase:
             services = self.juju_state.service(self.charm_name)
             for charm in self.related:
                 if not self.is_related(charm, services.relations):
-                    ret = self.client.add_relation(self.charm_name,
+                    err = self.client.add_relation(self.charm_name,
                                                    charm)
-                    if ret:
+                    if err:
                         log.error("Relation not ready for "
                                   "{c}, requeueing.".format(c=self.charm_name))
                         return True
@@ -170,8 +170,8 @@ class CharmQueue:
         log.debug("Starting relations watcher.")
         while True:
             charm = self.charm_q.get()
-            ret = charm.set_relations()
-            if ret:
+            err = charm.set_relations()
+            if err:
                 self.charm_q.put(charm)
             else:
                 charm.post_proc()
