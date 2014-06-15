@@ -84,18 +84,9 @@ def poll_state():
     cmd = utils.get_command_output('juju status',
                                    combine_output=False)
     if cmd['ret']:
-        log.debug("Juju state unknown, will re-poll in "
-                  "case bootstrap is taking a little longer to come up.")
-        log.debug("Juju status output: {o} \n stderr: {e}".format(
-            o=cmd['stdout'], e=cmd['stderr']))
-        # Stub out a juju status for now
-        juju = JujuState('environment: local\nmachines:')
-    else:
-        try:
-            juju = JujuState(cmd['stdout'])
-        except:
-            log.exception("Ignoring exception in parsing juju state.")
-            juju = JujuState('environment: local\nmachines:')
+        raise SystemExit("Error connecting to juju: stderr: {e}".format(
+            e=cmd['stderr']))
+    juju = JujuState(cmd['stdout'])
 
     maas = None
     if MULTI_SYSTEM:
