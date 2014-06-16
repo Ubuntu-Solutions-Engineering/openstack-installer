@@ -96,6 +96,37 @@ def get_command_output(command, timeout=300, combine_output=True):
                 stderr=stderr)
 
 
+def remote_cp(host, src, dst):
+    log.debug("Remote copying {src} to {dst} on {host}".format(src=src,
+                                                               dst=dst,
+                                                               host=host))
+    ret = get_command_output(
+        "scp -oStrictHostKeyChecking=no "
+        "{src} ubuntu@{host}:{dst}".format(src=src, dst=dst, host=host))
+    log.debug("Remote copy result: {r}".format(r=ret))
+
+
+def remote_run(host, cmds):
+    if type(cmds) is list:
+        cmds = " && ".join(cmds)
+    log.debug("Remote running ({cmds}) on {host}".format(
+        host=host, cmds=cmds))
+    ret = get_command_output(
+        "ssh -oStrictHostKeyChecking=no "
+        "ubuntu@{host} {cmds}".format(host=host,
+                                      cmds=cmds))
+    log.debug("Remote run result: {r}".format(r=ret))
+
+
+def wait_for_ping(host):
+    log.debug("Pinging {host}".format(host=host))
+    ret = get_command_output(
+        "ping -c1 {host}".format(host=host))
+    if ret['ret'] > 0:
+        return True
+    return False
+
+
 def get_network_interface(iface):
     """ Get network interface properties
 
