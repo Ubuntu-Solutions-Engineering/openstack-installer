@@ -24,6 +24,7 @@ from traceback import format_exc
 import re
 import threading
 import logging
+import time
 from multiprocessing import cpu_count
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
@@ -242,31 +243,24 @@ class ControllerOverlay(Overlay):
         # and reboot so any containers will be deployed with
         # the proper subnet
         host = self.machine.dns_name
-        utils._run("scp -oStrictHostKeyChecking=no "
-                   "/usr/share/cloud-installer/templates/lxc-host-only "
-                   "ubuntu@{host}:/tmp/lxc-host-only".format(host=host))
-        cmds = []
-        cmds.append("sudo mv /tmp/lxc-host-only "
-                    "/etc/network/interfaces.d/lxcbr0.cfg")
-        cmds.append("sudo rm /etc/network/interfaces.d/eth0.cfg")
-        cmds.append("sudo reboot")
-        utils._run("ssh -oStrictHostKeyChecking=no "
-                   "ubuntu@{host} {cmds}".format(host=host,
-                                                 cmds=" && ".join(cmds)))
+        utils.remote_cp(
+            host,
+            src="/usr/share/cloud-installer/templates/lxc-host-only",
+            dst="/tmp/lxc-host-only")
+        cmd = "sudo /bin/sh /tmp/lxc-host-only"
+        utils.remote_run(host, cmds=cmd)
+        while self.machine.agent_state == "down":
+            juju, _ = pegasus.poll_state()
+            self.machine = juju.machine(self.machine.machine_id)
+            time.sleep(1)
         self.single_net_configured = True
 
     def configure_lxc_root_tarball(self, rootfs):
         """ Use a local copy of the cloud rootfs tarball """
         host = self.machine.dns_name
         cmds = "sudo mkdir -p /var/cache/lxc/cloud-trusty"
-        utils._run("ssh -oStrictHostKeyChecking=no "
-                   "ubuntu@{host} {cmds}".format(host=host,
-                                                 cmds=cmds))
-        utils._run("scp -oStrictHostKeyChecking=no "
-                   "{rootfs} "
-                   "ubuntu@{host}:/var/cache/lxc/cloud-trusty/.".format(
-                       rootfs=rootfs, host=host))
-
+        utils.remote_ssh(host, cmds=cmds)
+        utils.remote_cp(host, src=rootfs, dst="/var/cache/lxc/cloud-trusty")
         self.lxc_root_tarball_configured = True
 
 
