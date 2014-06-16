@@ -24,7 +24,6 @@ from traceback import format_exc
 import re
 import threading
 import logging
-import time
 from multiprocessing import cpu_count
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
@@ -239,27 +238,22 @@ class ControllerOverlay(Overlay):
         return started_machines[0]
 
     def configure_lxc_network(self):
-        # upload our lxc-host-only template
-        # and reboot so any containers will be deployed with
-        # the proper subnet
-        host = self.machine.dns_name
+        # upload our lxc-host-only template and setup bridge
         utils.remote_cp(
-            host,
+            self.machine.machine_id,
             src="/usr/share/cloud-installer/templates/lxc-host-only",
             dst="/tmp/lxc-host-only")
-        cmd = "sudo /bin/sh /tmp/lxc-host-only"
-        utils.remote_run(host, cmds=cmd)
-        while self.machine.agent_state == "down":
-            juju, _ = pegasus.poll_state()
-            self.machine = juju.machine(self.machine.machine_id)
-            time.sleep(1)
+        utils.remote_run(self.machine.machine_id,
+                         cmds="sudo chmod +x /tmp/lxc-host-only")
+        utils.remote_run(self.machine.machine_id,
+                         cmds="sudo /tmp/lxc-host-only")
         self.single_net_configured = True
 
     def configure_lxc_root_tarball(self, rootfs):
         """ Use a local copy of the cloud rootfs tarball """
         host = self.machine.dns_name
         cmds = "sudo mkdir -p /var/cache/lxc/cloud-trusty"
-        utils.remote_ssh(host, cmds=cmds)
+        utils.remote_run(self.machine.machine_id, cmds=cmds)
         utils.remote_cp(host, src=rootfs, dst="/var/cache/lxc/cloud-trusty")
         self.lxc_root_tarball_configured = True
 
