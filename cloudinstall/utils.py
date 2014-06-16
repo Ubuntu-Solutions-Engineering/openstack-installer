@@ -119,9 +119,9 @@ def remote_run(host, cmds):
 
 
 def wait_for_ping(host):
-    log.debug("Pinging {host}".format(host=host))
     ret = get_command_output(
         "ping -c1 {host}".format(host=host))
+    log.debug("Pinging {host}: {r}".format(host=host, r=ret))
     if ret['ret'] > 0:
         return True
     return False

@@ -1,6 +1,17 @@
-auto eth0
-iface eth0 inet manual
+#!/bin/sh
 
-auto lxcbr0
-iface lxcbr0 inet dhcp
-    bridge_ports eth0
+configLxcHostOnly ()
+{
+	cat <<-EOF
+		auto eth0
+		iface eth0 inet manual
+
+		auto lxcbr0
+		iface lxcbr0 inet dhcp
+			bridge_ports eth0
+		EOF
+}
+
+configLxcHostOnly > /etc/network/interfaces.d/lxcbr0.cfg
+sudo rm /etc/network/interfaces.d/eth0.cfg
+sudo reboot
