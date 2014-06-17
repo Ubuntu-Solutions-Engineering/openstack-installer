@@ -15,6 +15,15 @@ Add the `cloud-installer` ppa to your system.
    Adding the ppa is only necessary until an official release to the
    archives has been announced.
 
+Recommended Hardware
+^^^^^^^^^^^^^^^^^^^^
+
+The installer would work best with at least:
+
+- 12G RAM
+- 100G HDD (SSD for optimal performance)
+- 8 CPUS
+
 Installation
 ^^^^^^^^^^^^
 
@@ -33,15 +42,32 @@ To start the installation run the following command
 
    $ sudo cloud-install
 
+Optional Flags
+
+.. code::
+
+    Options:
+      -c <file>   POSIX shell script to be sourced by installer
+                  automating install by pre-setting menu responses.
+      -s          enable swift-storage
+      -i          install only (don't invoke cloud-status)
+      -h          print this message
+
+
+.. note::
+
+    Enabling swift storage requires at least 3 instances and another additional
+    instance for swift-proxy.
+
 An initial dialog box will appear asking you to select which type of
 install, choose **Single system**.
 
 Setting a password
 ^^^^^^^^^^^^^^^^^^
 
-When asked to set the openstack password it should be noted that this password is
-used throughout all openstack related services (ie Horizon login password). The only
-service that does not use this password is **juju-gui**.
+When asked to set the openstack password it should be noted that this password
+is used throughout all openstack related services (ie Horizon login password).
+The only service that does not use this password is **juju-gui**.
 
 Next Steps
 ^^^^^^^^^^
@@ -61,3 +87,8 @@ the dialog box.
 Finally, once those nodes are displayed and the charms deployed the
 horizon dashboard will be available to you for managing your openstack
 cloud.
+
+Troubleshooting
+^^^^^^^^^^^^^^^
+
+The installer keeps its own logs in **$HOME/.cloud-install/commands.log**.
