@@ -387,7 +387,7 @@ configureMenu()
 				state=$((next_state + 1)); continue
 			fi
 			dialogPassword "OpenStack admin user password:" \
-			    "A good password will contain a mixture of letters, numbers and punctuation and should be changed at regular intervals." \
+			    "A good password will contain a mixture of letters, numbers and punctuation." \
 			    10 60
 			openstack_password=$input
 			if [ $ret -ne 0 ]; then
@@ -403,7 +403,7 @@ configureMenu()
 		## openstack password confirmation ##
 		31)
 			dialogPassword "OpenStack admin user password to verify:" \
-			    "Please enter the same OpenStack admin user password again to verify that you have typed it correctly." \
+			    "Please enter the same OpenStack admin user password again to verify." \
 			    10 60
 			openstack_password2=$input
 			if [ $ret -ne 0 ]; then
