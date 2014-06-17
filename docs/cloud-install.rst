@@ -1,13 +1,17 @@
 
 .. code::
 
-   cloud-install [-ih]
+    cloud-install [-cish]
 
-   Create an Ubuntu Cloud! (requires root privileges)
+    Create an Ubuntu Openstack Cloud! (requires root privileges)
 
-   Options:
-     -i    install only (don't invoke cloud-status)
-     -h    print this message
+    Options:
+      -c <file>   POSIX shell script to be sourced by installer
+                  automating install by pre-setting menu responses.
+      -s          enable swift-storage
+      -i          install only (don't invoke cloud-status)
+      -h          print this message
+
 
 
 DESCRIPTION
