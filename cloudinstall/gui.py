@@ -55,7 +55,7 @@ STYLES = [
     ('body',         'white',      'black',),
     ('border',       'brown',      'dark magenta'),
     ('focus',        'black',      'dark green'),
-    ('dialog',       'black',      'dark cyan'),
+    ('dialog',       'black',      'light gray'),
     ('list_title',   'black',      'light gray',),
     ('error',        'white',      'dark red'),
 ]
