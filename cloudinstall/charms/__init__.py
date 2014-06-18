@@ -36,6 +36,22 @@ if exists(CHARM_CONFIG_FILENAME):
         CHARM_CONFIG = yaml.load(f.read())
 
 
+def get_charm(charm_name, charms, juju_state):
+    """ returns single charm class
+
+    :param str charm_name: name of charm to query
+    :param charms: list of charm classes
+    :param juju_state: status of juju
+    :rtype: Charm
+    :returns: charm class
+    """
+    for charm in charms:
+        c = charm(juju_state=juju_state)
+        log.debug(c)
+        if charm_name == c.name():
+            return c
+
+
 class CharmBase:
     """ Base charm class """
 
@@ -48,6 +64,7 @@ class CharmBase:
     allow_multi_units = False
     optional = False
     disabled = False
+    machine_id = False
 
     def __init__(self, juju_state=None, machine=None):
         """ initialize
@@ -105,14 +122,14 @@ class CharmBase:
             return class_.charm_name
         return class_.__name__.lower()
 
-    def setup(self, _id=None):
+    def setup(self):
         """ Deploy charm and configuration options
 
         The default should be sufficient but if more functionality
         is needed this should be overridden.
         """
         kwds = {}
-        kwds['machine_id'] = _id
+        kwds['machine_id'] = self.machine_id
 
         if self.charm_name in CHARM_CONFIG:
             kwds['configfile'] = CHARM_CONFIG_FILENAME
@@ -159,21 +176,36 @@ class CharmQueue:
     """ charm queue for handling relations in the background
     """
     def __init__(self):
-        self.charm_q = Queue()
+        self.charm_relations_q = Queue()
+        self.charm_setup_q = Queue()
         self.is_running = False
 
-    def add(self, charm):
-        self.charm_q.put(charm)
+    def add_relation(self, charm):
+        self.charm_relations_q.put(charm)
+
+    def add_setup(self, charm):
+        self.charm_setup_q.put(charm)
+
+    @utils.async
+    def watch_setup(self):
+        log.debug("Starting charm setup watcher.")
+        while True:
+            charm = self.charm_setup_q.get()
+            err = charm.setup()
+            if err:
+                self.charm_setup_q.put(charm)
+            self.charm_setup_q.task_done()
+            time.sleep(1)
 
     @utils.async
     def watch_relations(self):
-        log.debug("Starting relations watcher.")
+        log.debug("Starting charm relations watcher.")
         while True:
-            charm = self.charm_q.get()
+            charm = self.charm_relations_q.get()
             err = charm.set_relations()
             if err:
-                self.charm_q.put(charm)
+                self.charm_relations_q.put(charm)
             else:
                 charm.post_proc()
-            self.charm_q.task_done()
+            self.charm_relations_q.task_done()
             time.sleep(1)
