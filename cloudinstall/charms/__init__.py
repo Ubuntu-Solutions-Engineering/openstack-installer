@@ -36,18 +36,16 @@ if exists(CHARM_CONFIG_FILENAME):
         CHARM_CONFIG = yaml.load(f.read())
 
 
-def get_charm(charm_name, charms, juju_state):
+def get_charm(charm_name, juju_state):
     """ returns single charm class
 
     :param str charm_name: name of charm to query
-    :param charms: list of charm classes
     :param juju_state: status of juju
     :rtype: Charm
     :returns: charm class
     """
-    for charm in charms:
-        c = charm(juju_state=juju_state)
-        log.debug(c)
+    for charm in utils.load_charms():
+        c = charm.__charm_class__(juju_state)
         if charm_name == c.name():
             return c
 
