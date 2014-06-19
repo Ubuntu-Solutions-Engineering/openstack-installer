@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.charms import (CharmBase, CHARM_CONFIG, CHARM_CONFIG_FILENAME,
+from cloudinstall.charms import (CharmBase, CHARM_CONFIG,
+                                 CHARM_CONFIG_FILENAME,
                                  DisplayPriorities)
 
 

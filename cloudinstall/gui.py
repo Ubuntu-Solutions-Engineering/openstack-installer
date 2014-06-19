@@ -592,7 +592,8 @@ class NodeViewMode(Frame):
                                 deployed_service_names],
                                key=attrgetter('charm_name'))
 
-        a = sorted([(c.display_priority, c.charm_name, Node(s, self.open_dialog))
+        a = sorted([(c.display_priority, c.charm_name,
+                     Node(s, self.open_dialog))
                     for (c, s) in zip(charm_classes, deployed_services)])
         nodes = [node for (_, _, node) in a]
 
