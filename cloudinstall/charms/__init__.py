@@ -36,6 +36,14 @@ if exists(CHARM_CONFIG_FILENAME):
         CHARM_CONFIG = yaml.load(f.read())
 
 
+class DisplayPriorities:
+    """A fake enum"""
+    Core = 0
+    Compute = 10
+    Storage = 20
+    Other = 30
+
+
 def get_charm(charm_name, juju_state):
     """ returns single charm class
 
@@ -59,6 +67,7 @@ class CharmBase:
     isolate = False
     constraints = None
     deploy_priority = sys.maxsize
+    display_priority = DisplayPriorities.Core
     allow_multi_units = False
     optional = False
     disabled = False
