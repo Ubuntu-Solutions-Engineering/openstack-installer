@@ -321,10 +321,12 @@ class AddCharmDialog(Overlay):
         else:
             charm_q = CharmQueue()
             charm = get_charm(_charm_to_deploy,
-                              self.charm_classes,
                               self.juju_state)
             if not charm.isolate:
                 charm.machine_id = 'lxc:{mid}'.format(mid="1")
+
+            charm_q.add_setup(charm)
+            charm_q.add_relation(charm)
 
             # Add charm dependencies
             if len(charm.related) > 0:
@@ -333,13 +335,12 @@ class AddCharmDialog(Overlay):
                     if not svc.service:
                         log.info("Adding dependent charm {c}".format(c=c))
                         charm_dep = get_charm(c,
-                                              self.charm_classes,
                                               self.juju_state)
                         if not charm_dep.isolate:
                             charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
                         charm_q.add_setup(charm_dep)
-            charm_q.add_relation(charm)
-            charm_q.add_setup(charm)
+                        charm_q.add_relation(charm_dep)
+
             if not charm_q.is_running:
                 charm_q.watch_setup()
                 charm_q.watch_relations()
