@@ -107,7 +107,7 @@ dialogInput()
 
 # Display a menu
 #
-# dialogMenu title text height width menu-height menu-item...
+# dialogMenu title default-item text height width menu-height menu-item...
 #
 # 'input' contains menu selection
 # 'ret' contains exit code (0 on success, >0 if user cancels)
@@ -115,16 +115,17 @@ dialogInput()
 dialogMenu()
 {
 	title=$1
-	text=$2
-	height=$3
-	width=$4
-	menu_height=$5
-	shift 5
+	default_item=$2
+	text=$3
+	height=$4
+	width=$5
+	menu_height=$6
+	shift 6
 	{
 		input=$(for item; do echo "\"$item\""; echo '""'; done \
 		    | xargs whiptail --title "$title" --backtitle "$BACKTITLE" \
-		    --menu "$text" $height $width $menu_height 3>&1 1>/dev/tty \
-		    2>&3)
+		    --default-item "$default_item" --menu "$text" $height \
+		    $width $menu_height 3>&1 1>/dev/tty 2>&3)
 		ret=$?
 	} || true
 }
