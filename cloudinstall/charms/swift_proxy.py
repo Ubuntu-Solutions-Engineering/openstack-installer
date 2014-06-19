@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.charms import CharmBase
+from cloudinstall.charms import CharmBase, DisplayPriorities
 
 
 class CharmSwiftProxy(CharmBase):
@@ -24,6 +24,7 @@ class CharmSwiftProxy(CharmBase):
 
     charm_name = 'swift-proxy'
     display_name = 'Swift Proxy'
+    display_priority = DisplayPriorities.Storage
     related = ['keystone', 'glance']
     deploy_priority = 5
     constraints = {'mem': '1G',

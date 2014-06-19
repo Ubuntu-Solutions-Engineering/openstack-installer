@@ -583,8 +583,18 @@ class NodeViewMode(Frame):
         :param maas_state: maas polled state
         :type maas_state MaasState()
         """
-        nodes = [Node(s, self.open_dialog)
-                 for s in juju_state.services]
+        deployed_services = sorted(juju_state.services,
+                                   key=attrgetter('service_name'))
+        deployed_service_names = [s.service_name for s in deployed_services]
+
+        charm_classes = sorted([m.__charm_class__ for m in utils.load_charms()
+                                if m.__charm_class__.charm_name in
+                                deployed_service_names],
+                               key=attrgetter('charm_name'))
+
+        a = sorted([(c.display_priority, c.charm_name, Node(s, self.open_dialog))
+                    for (c, s) in zip(charm_classes, deployed_services)])
+        nodes = [node for (_, _, node) in a]
 
         if self.target == self.controller_overlay:
             continue_polling = self.controller_overlay.process(juju_state,

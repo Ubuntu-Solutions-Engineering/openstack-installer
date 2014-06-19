@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from cloudinstall.charms import CharmBase
+from cloudinstall.charms import CharmBase, DisplayPriorities
 from cloudinstall.pegasus import poll_state
 
 log = logging.getLogger('cloudinstall.charms.compute')
@@ -28,6 +28,7 @@ class CharmNovaCompute(CharmBase):
 
     charm_name = 'nova-compute'
     display_name = 'Nova Compute Node'
+    display_priority = DisplayPriorities.Compute
     related = ['mysql', 'glance', 'nova-cloud-controller']
     isolate = True
     constraints = {'mem': '4G',
