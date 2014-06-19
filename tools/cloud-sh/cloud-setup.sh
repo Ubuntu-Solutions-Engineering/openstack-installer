@@ -19,7 +19,7 @@ keystone user-create --name ubuntu --tenant ubuntu --pass password --email juju@
 
 # create vm network
 neutron net-create ubuntu-net
-neutron subnet-create --name ubuntu-subnet --gateway 10.0.4.1 ubuntu-net 10.0.4.0/24
+neutron subnet-create --name ubuntu-subnet --gateway 10.0.4.1 --dns-nameserver 10.0.3.1 ubuntu-net 10.0.4.0/24
 neutron router-create ubuntu-router
 neutron router-interface-add ubuntu-router ubuntu-subnet
 neutron router-gateway-set ubuntu-router ext-net
