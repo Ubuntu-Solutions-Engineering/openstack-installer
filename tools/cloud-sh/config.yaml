@@ -1,0 +1,11 @@
+keystone:
+  admin-password: password
+
+mysql:
+  dataset-size: 15%
+
+nova-cloud-controller:
+  network-manager: Neutron
+
+quantum-gateway:
+  instance-mtu: 1400
