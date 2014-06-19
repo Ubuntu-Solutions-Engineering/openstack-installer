@@ -149,8 +149,9 @@ configureMenu()
 			if [ -n "$seed_install_type" ]; then
 				state=$next_state; continue
 			fi
-			dialogMenu "Select install type" "" 10 60 3 \
-			    Multi-system "Single system"
+			dialogMenu "Select install type" "$install_type" "" 10 \
+			    60 3 Multi-system "Single system" \
+			    "Landscape managed (coming soon)"
 			install_type=$input
 			if [ $ret -ne 0 ]; then
 				popState; continue
@@ -158,11 +159,14 @@ configureMenu()
 			;;
 		2)
 			case $install_type in
-			Multi-system|"Landscape managed")
+			Multi-system)
 				state=10
 				;;
 			"Single system")
 				state=20
+				;;
+			"Landscape managed (coming soon)")
+				popState; continue
 				;;
 			esac
 			continue
@@ -187,7 +191,7 @@ configureMenu()
 			interfaces=$(getInterfaces)
 			interfaces_count=$(echo "$interfaces" | wc -w)
 			if [ $interfaces_count -ge 2 ]; then
-				dialogMenu "Select the network" \
+				dialogMenu "Select the network" "" \
 				    "Select the network MaaS will manage. MaaS will be the DHCP server on this network and respond to PXE requests." \
 				    15 60 6 $interfaces
 				interface=$input
