@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.charms import CharmBase
+from cloudinstall.charms import CharmBase, DisplayPriorities
 
 
 class CharmJujuGui(CharmBase):
@@ -24,6 +24,7 @@ class CharmJujuGui(CharmBase):
 
     charm_name = 'juju-gui'
     display_name = 'Juju GUI'
+    display_priority = DisplayPriorities.Other
     deploy_priority = 0         # deploy before all other charms
 
 __charm_class__ = CharmJujuGui
