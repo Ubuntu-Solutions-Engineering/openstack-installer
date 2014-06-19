@@ -34,7 +34,7 @@ from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
 from cloudinstall.juju.client import JujuClient
 from cloudinstall import pegasus
 from cloudinstall import utils
-from cloudinstall.charms import CharmQueue
+from cloudinstall.charms import CharmQueue, get_charm
 
 log = logging.getLogger('cloudinstall.gui')
 
@@ -171,8 +171,9 @@ class ControllerOverlay(Overlay):
                 else:
                     # Hardcode lxc on same machine as they are
                     # created on-demand.
-                    charm.setup(_id='lxc:{mid}'.format(
-                        mid=self.machine.machine_id))
+                    charm.machine_id = 'lxc:{mid}'.format(
+                        mid=self.machine.machine_id)
+                    charm.setup()
                 self.deployed_charm_classes.append(charm_class)
 
         unfinalized_charm_classes = [c for c in self.deployed_charm_classes
@@ -183,7 +184,7 @@ class ControllerOverlay(Overlay):
             self.info_text.set_text("Setting charm relations")
             for charm_class in unfinalized_charm_classes:
                 charm = charm_class(juju_state=juju_state)
-                charm_q.add(charm)
+                charm_q.add_relation(charm)
                 self.finalized_charm_classes.append(charm_class)
             if not charm_q.is_running:
                 charm_q.watch_relations()
@@ -318,19 +319,32 @@ class AddCharmDialog(Overlay):
                      n=n, charm=_charm_to_deploy))
             self.cr.add_unit(_charm_to_deploy, count=int(n))
         else:
-            # FIXME: redundant.
             charm_q = CharmQueue()
-            for charm_class in self.charm_classes:
-                charm = charm_class(juju_state=self.juju_state)
-                if charm.name() == _charm_to_deploy:
-                    charm_q.add(charm)
-                    if charm.isolate:
-                        charm.setup()
-                    else:
-                        charm.setup(_id='lxc:{mid}'.format(mid="1"))
-                    if not charm_q.is_running:
-                        charm_q.watch_relations()
-                        charm_q.is_running = True
+            charm = get_charm(_charm_to_deploy,
+                              self.juju_state)
+            if not charm.isolate:
+                charm.machine_id = 'lxc:{mid}'.format(mid="1")
+
+            charm_q.add_setup(charm)
+            charm_q.add_relation(charm)
+
+            # Add charm dependencies
+            if len(charm.related) > 0:
+                for c in charm.related:
+                    svc = self.juju_state.service(_charm_to_deploy)
+                    if not svc.service:
+                        log.info("Adding dependent charm {c}".format(c=c))
+                        charm_dep = get_charm(c,
+                                              self.juju_state)
+                        if not charm_dep.isolate:
+                            charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
+                        charm_q.add_setup(charm_dep)
+                        charm_q.add_relation(charm_dep)
+
+            if not charm_q.is_running:
+                charm_q.watch_setup()
+                charm_q.watch_relations()
+                charm_q.is_running = True
         self.destroy()
 
     def no(self, button):
