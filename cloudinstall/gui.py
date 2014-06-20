@@ -181,13 +181,16 @@ class ControllerOverlay(Overlay):
 
         charm_q = CharmQueue()
         if len(unfinalized_charm_classes) > 0:
-            self.info_text.set_text("Setting charm relations")
+            self.info_text.set_text("Setting charm relations "
+                                    "and post processing")
             for charm_class in unfinalized_charm_classes:
                 charm = charm_class(juju_state=juju_state)
                 charm_q.add_relation(charm)
+                charm_q.add_post_proc(charm)
                 self.finalized_charm_classes.append(charm_class)
             if not charm_q.is_running:
                 charm_q.watch_relations()
+                charm_q.watch_post_proc()
                 charm_q.is_running = True
 
         log.debug("at end of process(), deployed_charm_classes={d}"
@@ -327,6 +330,7 @@ class AddCharmDialog(Overlay):
 
             charm_q.add_setup(charm)
             charm_q.add_relation(charm)
+            charm_q.add_post_proc(charm)
 
             # Add charm dependencies
             if len(charm.related) > 0:
@@ -340,10 +344,12 @@ class AddCharmDialog(Overlay):
                             charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
                         charm_q.add_setup(charm_dep)
                         charm_q.add_relation(charm_dep)
+                        charm_q.add_post_proc(charm_dep)
 
             if not charm_q.is_running:
                 charm_q.watch_setup()
                 charm_q.watch_relations()
+                charm_q.watch_post_proc()
                 charm_q.is_running = True
         self.destroy()
 
