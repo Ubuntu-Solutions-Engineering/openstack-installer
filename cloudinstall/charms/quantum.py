@@ -13,7 +13,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import logging
+from cloudinstall import utils
 from cloudinstall.charms import CharmBase
+
+log = logging.getLogger('cloudinstall.charms.quantum')
 
 
 class CharmQuantum(CharmBase):
@@ -26,5 +31,21 @@ class CharmQuantum(CharmBase):
     optional = False
     constraints = {'mem': '1G',
                    'root-disk': '2G'}
+
+    def post_proc(self):
+        """ performs additional network configuration for charm """
+        unit = self.wait_for_agent()
+        if unit:
+            utils.remote_cp(
+                unit.machine_id,
+                src=os.path.join(self.tmpl_path, "quantum-network.sh"),
+                dst="/tmp/quantum-network.sh")
+            utils.remote_run(unit.machine_id,
+                             cmds="sudo chmod +x /tmp/quantum-network.sh")
+            utils.remote_run(unit.machine_id,
+                             cmds="sudo /tmp/quantum-network.sh")
+            return False
+        return True
+
 
 __charm_class__ = CharmQuantum

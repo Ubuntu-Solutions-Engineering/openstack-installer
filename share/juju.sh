@@ -81,7 +81,9 @@ configCharmOptions()
                   zone: 1
                   block-device: /etc/swift/storage.img|2G
                 quantum-gateway:
-                  ext-port: 'eth0:1'
+                  instance-mtu: 1400
+                nova-cloud-controller:
+                  network-manager: Neutron
 		EOF
 }
 
