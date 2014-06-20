@@ -84,6 +84,8 @@ configCharmOptions()
                   instance-mtu: 1400
                 nova-cloud-controller:
                   network-manager: Neutron
+                glance-simplestreams-sync:
+                  use_swift: False
 		EOF
 }
 
