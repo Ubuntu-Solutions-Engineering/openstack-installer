@@ -19,7 +19,7 @@
 """ Pegasus - gui interface to  Installer """
 
 from operator import attrgetter
-from os import write, close, getenv
+from os import write, close, getenv, path
 from traceback import format_exc
 import re
 import threading
@@ -104,7 +104,7 @@ class ControllerOverlay(Overlay):
     def process(self, juju_state, maas_state):
         """ Process a node list. Returns True if the overlay still needs to be
         shown, false otherwise. """
-        if self.done:
+        if self.done or path.isfile('/etc/cloud-installer/installed'):
             return False
 
         continue_ = self._process(juju_state, maas_state)
