@@ -174,8 +174,6 @@ class ControllerOverlay(Overlay):
                     charm.machine_id = 'lxc:{mid}'.format(
                         mid=self.machine.machine_id)
                     charm.setup()
-                # Do post processing
-                charm.post_proc()
                 self.deployed_charm_classes.append(charm_class)
 
         unfinalized_charm_classes = [c for c in self.deployed_charm_classes
