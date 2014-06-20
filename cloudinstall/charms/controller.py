@@ -55,8 +55,11 @@ class CharmNovaCloudController(CharmBase):
                 unit.machine_id,
                 src=self._pubkey(),
                 dst="/tmp/id_rsa.pub")
-            utils.remote_run(unit.machine_id,
-                             cmds="sudo /tmp/nova-controller-setup.sh")
+            err = utils.remote_run(unit.machine_id,
+                                   cmds="sudo /tmp/nova-controller-setup.sh")
+            if err['ret'] == 1:
+                # something happened during nova setup, re-run
+                return True
             return False
         return True
 
