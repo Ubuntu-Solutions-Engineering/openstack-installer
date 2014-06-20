@@ -455,19 +455,6 @@ class CommandRunner(ListBox):
         return out
 
 
-# TODO: This and CommandRunner should really be merged
-class ConsoleMode(Frame):
-    def __init__(self):
-        header = [AttrWrap(Text(TITLE_TEXT), "border"),
-                  AttrWrap(Text('(Q) Quit'), "border"),
-                  AttrWrap(Text('(F8) Node list'), "border")]
-        header = Columns(header)
-        with open(path.expanduser('~/.cloud-install/commands.log')) as f:
-            body = f.readlines()
-        body = ListBox([Text(x) for x in body])
-        Frame.__init__(self, header=header, body=body)
-
-
 class NodeViewMode(Frame):
     def __init__(self, loop, opts):
         header = [AttrWrap(Text(TITLE_TEXT), "border"),
@@ -504,10 +491,6 @@ class NodeViewMode(Frame):
     @target.setter
     def target(self, val):
         self._target = val
-        # Don't switch from command runner back to us "randomly" (i.e. when
-        # the setup is complete and the overlay goes away).
-        if isinstance(self.loop.widget, ConsoleMode):
-            return
         # don't accidentally unlock
         if not isinstance(self.loop.widget, LockScreen):
             self.loop.widget = val
@@ -647,7 +630,6 @@ class PegasusGUI(MainLoop):
     def __init__(self, opts):
         self.opts = opts
         self.cr = CommandRunner()
-        self.console = ConsoleMode()
         self.node_view = NodeViewMode(self, self.opts)
         self.lock_ticks = 0  # start in a locked state
         self.locked = False
@@ -681,12 +663,6 @@ class PegasusGUI(MainLoop):
         # if we are locked, don't do anything
         if isinstance(self.widget, LockScreen):
             return None
-        if key == 'f8':
-            return
-            if self.widget == self.console:
-                self.widget = self.node_view.target
-            else:
-                self.widget = self.console
         if key in ['q', 'Q']:
             raise ExitMainLoop()
 
