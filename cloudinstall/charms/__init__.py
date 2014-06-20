@@ -18,7 +18,7 @@
 
 import logging
 import yaml
-from os.path import expanduser, exists
+from os import path
 import sys
 from queue import Queue
 import time
@@ -29,9 +29,9 @@ from cloudinstall.juju import JujuState
 
 log = logging.getLogger('cloudinstall.charms')
 
-CHARM_CONFIG_FILENAME = expanduser("~/.cloud-install/charmconf.yaml")
+CHARM_CONFIG_FILENAME = path.expanduser("~/.cloud-install/charmconf.yaml")
 CHARM_CONFIG = {}
-if exists(CHARM_CONFIG_FILENAME):
+if path.exists(CHARM_CONFIG_FILENAME):
     with open(CHARM_CONFIG_FILENAME) as f:
         CHARM_CONFIG = yaml.load(f.read())
 
@@ -87,6 +87,16 @@ class CharmBase:
         self.client = JujuClient()
 
     @property
+    def tmpl_path(self):
+        """ template path """
+        return "/usr/share/cloud-installer/templates"
+
+    @property
+    def cfg_path(self):
+        """ top level configuration path """
+        return path.expanduser('~/.cloud-install')
+
+    @property
     def is_single(self):
         return pegasus.SINGLE_SYSTEM
 
@@ -95,13 +105,37 @@ class CharmBase:
         return pegasus.MULTI_SYSTEM
 
     def openstack_password(self):
-        PASSWORD_FILE = expanduser('~/.cloud-install/openstack.passwd')
+        PASSWORD_FILE = path.join(self.cfg_path, 'openstack.passwd')
         try:
             with open(PASSWORD_FILE) as f:
                 OPENSTACK_PASSWORD = f.read().strip()
         except IOError:
             OPENSTACK_PASSWORD = 'password'
         return OPENSTACK_PASSWORD
+
+    def _openstack_env(self, user, password, tenant, auth_url):
+        """ setup openstack environment vars """
+        return """export OS_USERNAME={user}
+export OS_PASSWORD={password}
+export OS_TENANT_NAME={tenant}
+export OS_AUTH_URL=http://{auth_url}:5000/v2.0
+export OS_REGION_NAME=RegionOne""".format(
+            user=user, password=password,
+            tenant=tenant, auth_url=auth_url)
+
+    def _openstack_env_save(self, user, data):
+        """ sets up environment file user """
+        try:
+            with open(self._openstack_env_path(user), 'w') as f:
+                f.write(data)
+        except IOError as e:
+            log.error("Unable to write admin environment variables."
+                      "(Result: {e})".format(e=e))
+
+    def _openstack_env_path(self, user):
+        """ path to openstack environment file """
+        fname = "openstack-{u}-rc".format(u=user)
+        return path.join(self.cfg_path, fname)
 
     def is_related(self, charm, relations):
         """ test for existence of charm relation
@@ -175,6 +209,26 @@ class CharmBase:
         """
         pass
 
+    def wait_for_agent(self, svc_name=None):
+        """ Waits for service agent to be reachable
+
+        :rtype: Unit()
+        :returns: unit if ready
+        """
+        if not svc_name:
+            svc_name = self.charm_name
+        log.debug("Checking availability for {c}.".format(c=svc_name))
+        juju, _ = pegasus.poll_state()
+        svc = juju.service(svc_name)
+        unit = svc.unit(svc_name)
+        if unit.agent_state == "started":
+            return unit
+        return False
+
+    def _pubkey(self):
+        """ return ssh pub key """
+        return path.expanduser('~/.ssh/id_rsa.pub')
+
     def __repr__(self):
         return self.name()
 
@@ -185,6 +239,7 @@ class CharmQueue:
     def __init__(self):
         self.charm_relations_q = Queue()
         self.charm_setup_q = Queue()
+        self.charm_post_proc_q = Queue()
         self.is_running = False
 
     def add_relation(self, charm):
@@ -192,6 +247,9 @@ class CharmQueue:
 
     def add_setup(self, charm):
         self.charm_setup_q.put(charm)
+
+    def add_post_proc(self, charm):
+        self.charm_post_proc_q.put(charm)
 
     @utils.async
     def watch_setup(self):
@@ -212,7 +270,16 @@ class CharmQueue:
             err = charm.set_relations()
             if err:
                 self.charm_relations_q.put(charm)
-            else:
-                charm.post_proc()
             self.charm_relations_q.task_done()
             time.sleep(1)
+
+    @utils.async
+    def watch_post_proc(self):
+        log.debug("Starting charm post processing watcher.")
+        while True:
+            charm = self.charm_post_proc_q.get()
+            err = charm.post_proc()
+            if err:
+                self.charm_post_proc_q.put(charm)
+            self.charm_post_proc_q.task_done()
+            time.sleep(10)
