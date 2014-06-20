@@ -16,7 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import logging
+from cloudinstall import utils
 from cloudinstall.charms import CharmBase
+
+log = logging.getLogger('cloudinstall.charms.controller')
 
 
 class CharmNovaCloudController(CharmBase):
@@ -26,5 +31,42 @@ class CharmNovaCloudController(CharmBase):
     display_name = 'Nova Cloud Controller'
     related = ['mysql', 'rabbitmq-server', 'glance', 'keystone']
     allow_multi_units = True
+
+    def post_proc(self):
+        """ post processing for nova-cloud-controller """
+        unit = self.wait_for_agent()
+        if unit:
+            # We need to get keystone public_address for auth_url here
+            unit = self.wait_for_agent('keystone')
+            if not unit:
+                return True
+            for u in ['admin', 'ubuntu']:
+                env = self._openstack_env(u, self.openstack_password(),
+                                          u, unit.public_address)
+                self._openstack_env_save(u, env)
+
+            utils.remote_cp(
+                unit.machine_id,
+                src=os.path.join(self.tmpl_path,
+                                 "nova-controller-setup.sh"),
+                dst="/tmp/nova-controller-setup.sh")
+            utils.remote_cp(
+                unit.machine_id,
+                src=self._pubkey(),
+                dst="/tmp/id_rsa.pub")
+            utils.remote_cp(unit.machine_id,
+                            src=self._openstack_env_path(),
+                            dst='/tmp/openstack-admin-rc')
+            utils.remote_cp(unit.machine_id,
+                            src=self._openstack_env_path(),
+                            dst='/tmp/openstack-ubuntu-rc')
+            utils.remote_run(unit.machine_id,
+                             cmds="sudo chmod +x "
+                                  "/tmp/nova-controller-setup.sh")
+            utils.remote_run(unit.machine_id,
+                             cmds="sudo /tmp/nova-controller-setup.sh")
+            return False
+        return True
+
 
 __charm_class__ = CharmNovaCloudController

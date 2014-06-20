@@ -1,3 +1,11 @@
+cloud-installer (0.17+git20140619-0ubuntu1) utopic; urgency=medium
+
+  * Add neutron support
+  * Dependency handler for certain services
+  * Refined machine 1 network configuration to not require a reboot
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 19 Jun 2014 17:46:17 -0400
+
 cloud-installer (0.17+git20140529-0ubuntu1) utopic; urgency=medium
 
   * Make all packages architecture-independent
