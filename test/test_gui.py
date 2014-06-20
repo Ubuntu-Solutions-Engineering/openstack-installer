@@ -172,33 +172,6 @@ def test_NodeViewMode_tick():
     assert nvm.target == nvm
     assert nvm.url.get_text()[0] == 'http://line 1/horizon'
 
-@unittest.skip
-def test_ChangeStateDialog():
-    def make_state_asserter(states):
-        states = {pegasus.ALLOCATION[s] for s in states}
-        def on_ok(new_states):
-            assert set(states) == set(new_states)
-        return on_ok
-
-    def make_dialog(states, additional=None):
-        if additional is None:
-            additional = set()
-        metadata = fake_metadata()
-        metadata['charms'] = states
-        dialog = gui.ChangeStateDialog(
-            None, metadata, make_state_asserter(set(states).union(additional)), id)
-        return dialog
-
-    # no change
-    dialog = make_dialog([pegasus.NOVA_COMPUTE])
-    dialog.keypress((100,100), 'tab')
-    dialog.keypress((100,100), 'enter')
-
-    # select first
-    dialog = make_dialog([], list(pegasus.ALLOCATION.keys())[:1])
-    dialog.keypress((100,100), 'enter')
-    dialog.keypress((100,100), 'tab')
-    dialog.keypress((100,100), 'enter')
 
 @unittest.skip
 def test_allocation():
