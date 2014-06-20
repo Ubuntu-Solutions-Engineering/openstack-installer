@@ -357,50 +357,6 @@ class AddCharmDialog(Overlay):
         self.destroy()
 
 
-class ChangeStateDialog(Overlay):
-    def __init__(self, underlying, juju_state, on_success, on_cancel):
-        charm_classes = utils.load_charms()
-
-        self.boxes = []
-        first_index = 0
-        for i, charm_class in enumerate(charm_classes):
-            charm = charm_class(juju_state=juju_state)
-            if charm.name() and not first_index:
-                first_index = i
-            r = CheckBox(charm.name())
-            r.text_label = charm.name()
-            self.boxes.append(r)
-        wrapped_boxes = _wrap_focus(self.boxes)
-
-        def ok(button):
-            selected = filter(lambda r: r.get_state(), self.boxes)
-            on_success([s.text_label for s in selected])
-
-        def cancel(button):
-            on_cancel()
-
-        bs = [Button("Ok", ok), Button("Cancel", cancel)]
-        wrapped_buttons = _wrap_focus(bs)
-        self.buttons = Columns(wrapped_buttons)
-        self.items = ListBox(wrapped_boxes)
-        self.items.set_focus(first_index)
-        ba = BoxAdapter(self.items, height=len(wrapped_boxes))
-        self.lb = ListBox([ba, self.count_editor, self.buttons])
-        root = LineBox(self.lb, title="Select new charm")
-        root = AttrMap(root, "dialog")
-
-        Overlay.__init__(self, root, underlying, 'center', 30, 'middle',
-                         len(wrapped_boxes) + 4)
-
-    def keypress(self, size, key):
-        if key == 'tab':
-            if self.lb.get_focus()[0] == self.buttons:
-                self.keypress(size, 'page up')
-            else:
-                self.keypress(size, 'page down')
-        return Overlay.keypress(self, size, key)
-
-
 class Node(WidgetWrap):
     """ A single ui node representation
     """
