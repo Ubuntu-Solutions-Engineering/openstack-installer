@@ -40,13 +40,12 @@ class CharmNovaCloudController(CharmBase):
             keystone = self.wait_for_agent('keystone')
             if not keystone:
                 return True
-            for u in ['admin', 'ubuntu']:
-                env = self._openstack_env(u, self.openstack_password(),
-                                          u, keystone.public_address)
-                self._openstack_env_save(u, env)
-                utils.remote_cp(unit.machine_id,
-                                src=self._openstack_env_path(u),
-                                dst='/tmp/openstack-{u}-rc'.format(u=u))
+            env = self._openstack_env('admin', self.openstack_password(),
+                                      'admin', keystone.public_address)
+            self._openstack_env_save('admin', env)
+            utils.remote_cp(unit.machine_id,
+                            src=self._openstack_env_path('admin'),
+                            dst='/tmp/openstack-admin-rc')
             utils.remote_cp(
                 unit.machine_id,
                 src=os.path.join(self.tmpl_path,
