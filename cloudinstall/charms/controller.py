@@ -44,18 +44,14 @@ class CharmNovaCloudController(CharmBase):
                 env = self._openstack_env(u, self.openstack_password(),
                                           u, keystone.public_address)
                 self._openstack_env_save(u, env)
-
+                utils.remote_cp(unit.machine_id,
+                                src=self._openstack_env_path(u),
+                                dst='/tmp/openstack-{u}-rc'.format(u=u))
             utils.remote_cp(
                 unit.machine_id,
                 src=os.path.join(self.tmpl_path,
                                  "nova-controller-setup.sh"),
                 dst="/tmp/nova-controller-setup.sh")
-            utils.remote_cp(unit.machine_id,
-                            src=self._openstack_env_path(),
-                            dst='/tmp/openstack-admin-rc')
-            utils.remote_cp(unit.machine_id,
-                            src=self._openstack_env_path(),
-                            dst='/tmp/openstack-ubuntu-rc')
             utils.remote_cp(
                 unit.machine_id,
                 src=self._pubkey(),
