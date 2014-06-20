@@ -37,12 +37,12 @@ class CharmNovaCloudController(CharmBase):
         unit = self.wait_for_agent()
         if unit:
             # We need to get keystone public_address for auth_url here
-            unit = self.wait_for_agent('keystone')
-            if not unit:
+            keystone = self.wait_for_agent('keystone')
+            if not keystone:
                 return True
             for u in ['admin', 'ubuntu']:
                 env = self._openstack_env(u, self.openstack_password(),
-                                          u, unit.public_address)
+                                          u, keystone.public_address)
                 self._openstack_env_save(u, env)
 
             utils.remote_cp(
@@ -50,19 +50,16 @@ class CharmNovaCloudController(CharmBase):
                 src=os.path.join(self.tmpl_path,
                                  "nova-controller-setup.sh"),
                 dst="/tmp/nova-controller-setup.sh")
-            utils.remote_cp(
-                unit.machine_id,
-                src=self._pubkey(),
-                dst="/tmp/id_rsa.pub")
             utils.remote_cp(unit.machine_id,
                             src=self._openstack_env_path(),
                             dst='/tmp/openstack-admin-rc')
             utils.remote_cp(unit.machine_id,
                             src=self._openstack_env_path(),
                             dst='/tmp/openstack-ubuntu-rc')
-            utils.remote_run(unit.machine_id,
-                             cmds="sudo chmod +x "
-                                  "/tmp/nova-controller-setup.sh")
+            utils.remote_cp(
+                unit.machine_id,
+                src=self._pubkey(),
+                dst="/tmp/id_rsa.pub")
             utils.remote_run(unit.machine_id,
                              cmds="sudo /tmp/nova-controller-setup.sh")
             return False
