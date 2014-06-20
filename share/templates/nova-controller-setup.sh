@@ -6,8 +6,6 @@
 neutron net-create --router:external=True --shared ext-net
 neutron subnet-create --name ext-subnet --gateway 10.0.3.1 --allocation-pool start=10.0.3.200,end=10.0.3.254 --disable-dhcp ext-net 10.0.3.0/24
 
-. /tmp/openstack-ubuntu-rc
-
 # create vm network
 neutron net-create ubuntu-net
 neutron subnet-create --name ubuntu-subnet --gateway 10.0.4.1 --dns-nameserver 10.0.3.1 ubuntu-net 10.0.4.0/24
