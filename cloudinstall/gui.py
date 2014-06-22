@@ -104,7 +104,7 @@ class ControllerOverlay(Overlay):
     def process(self, juju_state, maas_state):
         """ Process a node list. Returns True if the overlay still needs to be
         shown, false otherwise. """
-        if self.done or path.isfile('/etc/cloud-installer/installed'):
+        if self.done or len(list(juju_state.services)) >= 9:
             return False
 
         continue_ = self._process(juju_state, maas_state)
