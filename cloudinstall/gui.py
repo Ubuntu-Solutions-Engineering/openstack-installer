@@ -370,7 +370,7 @@ class Node(WidgetWrap):
         self.open_dialog = open_dialog
 
         unit_info = []
-        for u in service.units:
+        for u in sorted(service.units, key=attrgetter('unit_name')):
             info = "{unit_name} " \
                    "({status})\n".format(unit_name=u.unit_name,
                                          status=u.agent_state)
