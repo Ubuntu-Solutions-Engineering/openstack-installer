@@ -19,7 +19,7 @@
 """ Pegasus - gui interface to  Installer """
 
 from operator import attrgetter
-from os import write, close, getenv, path
+from os import write, close, getenv
 from traceback import format_exc
 import re
 import threading
