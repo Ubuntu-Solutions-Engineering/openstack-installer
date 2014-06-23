@@ -360,37 +360,38 @@ class AddCharmDialog(Overlay):
 class Node(WidgetWrap):
     """ A single ui node representation
     """
-    def __init__(self, service=None, open_dialog=None):
+    def __init__(self, service=None, open_dialog=None, juju_state=None):
         """
         Initialize Node
 
         :param service: charm service
         :param type: Service()
         """
-        self.service = service
-        self.units = (self.service.units)
         self.open_dialog = open_dialog
 
         unit_info = []
-        for u in self.units:
+        for u in sorted(service.units, key=attrgetter('unit_name')):
             info = "{unit_name} " \
-                   "({status})".format(unit_name=u.unit_name,
-                                       status=u.agent_state)
+                   "({status})\n".format(unit_name=u.unit_name,
+                                         status=u.agent_state)
 
-            info = "{info}\n  " \
-                   "address: {address}".format(info=info,
-                                               address=u.public_address)
+            info += "address: {address}".format(address=u.public_address)
+
             if 'error' in u.agent_state:
                 state_info = u.agent_state_info.lstrip()
-                info = "{info}\n  " \
-                       "info: {state_info}".format(info=info,
-                                                   state_info=state_info)
-            info = "{info}\n\n".format(info=info)
+                info += "\ninfo: {state_info}".format(state_info=state_info)
+
+            unit_machine = juju_state.machine(u.machine_id)
+            if unit_machine.agent_state is None and \
+               unit_machine.agent_state_info is not None:
+                info += "\nmachine info: " + unit_machine.agent_state_info
+
+            info += "\n\n"
             unit_info.append(('weight', 2, Text(info)))
 
         # machines
         m = [
-            (30, Text(self.service.service_name)),
+            (30, Text(service.service_name)),
             Columns(unit_info)
         ]
 
@@ -538,7 +539,7 @@ class NodeViewMode(Frame):
                                key=attrgetter('charm_name'))
 
         a = sorted([(c.display_priority, c.charm_name,
-                     Node(s, self.open_dialog))
+                     Node(s, self.open_dialog, juju_state))
                     for (c, s) in zip(charm_classes, deployed_services)])
         nodes = [node for (_, _, node) in a]
 
