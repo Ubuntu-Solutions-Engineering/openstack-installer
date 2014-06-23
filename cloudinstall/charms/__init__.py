@@ -255,31 +255,40 @@ class CharmQueue:
     def watch_setup(self):
         log.debug("Starting charm setup watcher.")
         while True:
-            charm = self.charm_setup_q.get()
-            err = charm.setup()
-            if err:
-                self.charm_setup_q.put(charm)
-            self.charm_setup_q.task_done()
+            try:
+                charm = self.charm_setup_q.get()
+                err = charm.setup()
+                if err:
+                    self.charm_setup_q.put(charm)
+                self.charm_setup_q.task_done()
+            except:
+                log.exception("ignoring exception in setup watcher.")
             time.sleep(1)
 
     @utils.async
     def watch_relations(self):
         log.debug("Starting charm relations watcher.")
         while True:
-            charm = self.charm_relations_q.get()
-            err = charm.set_relations()
-            if err:
-                self.charm_relations_q.put(charm)
-            self.charm_relations_q.task_done()
+            try:
+                charm = self.charm_relations_q.get()
+                err = charm.set_relations()
+                if err:
+                    self.charm_relations_q.put(charm)
+                self.charm_relations_q.task_done()
+            except:
+                log.exception("ignoring exception in relations watcher.")
             time.sleep(1)
 
     @utils.async
     def watch_post_proc(self):
         log.debug("Starting charm post processing watcher.")
         while True:
-            charm = self.charm_post_proc_q.get()
-            err = charm.post_proc()
-            if err:
-                self.charm_post_proc_q.put(charm)
-            self.charm_post_proc_q.task_done()
+            try:
+                charm = self.charm_post_proc_q.get()
+                err = charm.post_proc()
+                if err:
+                    self.charm_post_proc_q.put(charm)
+                self.charm_post_proc_q.task_done()
+            except:
+                log.exception("ignoring exception in post-processing watcher.")
             time.sleep(10)
