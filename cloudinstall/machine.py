@@ -26,7 +26,8 @@ class Machine:
         self._cpu_cores = self.hardware('cpu-cores')
         self._storage = self.hardware('root-disk')
         self._mem = self.hardware('memory')
-        self.agent_state = self.machine.get('agent-state', '')
+        self.agent_state = self.machine.get('agent-state', None)
+        self.agent_state_info = self.machine.get('agent-state-info', None)
         self.dns_name = self.machine.get('dns-name', '')
 
     @property
