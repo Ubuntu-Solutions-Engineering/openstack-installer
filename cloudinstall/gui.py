@@ -372,10 +372,11 @@ class Node(WidgetWrap):
         unit_info = []
         for u in sorted(service.units, key=attrgetter('unit_name')):
             info = "{unit_name} " \
-                   "({status})\n".format(unit_name=u.unit_name,
+                   "({status})".format(unit_name=u.unit_name,
                                          status=u.agent_state)
 
-            info += "address: {address}".format(address=u.public_address)
+            if u.public_address:
+                info += "\naddress: {address}".format(address=u.public_address)
 
             if 'error' in u.agent_state:
                 state_info = u.agent_state_info.lstrip()
@@ -557,20 +558,22 @@ class NodeViewMode(Frame):
         for n in self.juju_state.services:
             for i in n.units:
                 if i.is_horizon:
-                    ip = i.public_address
-                    _url = "Horizon: " \
-                           "http://{ip}/horizon".format(ip=ip)
-                    self.horizon_url.set_text(_url)
-                    if "0.0.0.0" in i.public_address:
-                        self.status_info.set_text("[INFO] Nodes "
-                                                  "are still deploying")
-                    else:
+                    url = "Horizon: "
+                    if i.public_address:
+                        url += "http://{}/horizon".format(i.public_address)
                         self.status_info.set_text("[INFO] Nodes "
                                                   "are accessible")
+                    else:
+                        url += "Pending"
+                        self.status_info.set_text("[INFO] Nodes "
+                                                  "are still deploying")
+                    self.horizon_url.set_text(url)
                 if i.is_jujugui:
-                    _url = "Juju-GUI: " \
-                           "http://{name}/".format(name=i.public_address)
-                    self.jujugui_url.set_text(_url)
+                    if i.public_address:
+                        url = "Juju-GUI: http://{}/".format(i.public_address)
+                    else:
+                        url = "Juju-GUI: Pending"
+                    self.jujugui_url.set_text(url)
         self.loop.draw_screen()
 
     def tick(self):
