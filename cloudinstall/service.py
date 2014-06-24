@@ -55,7 +55,7 @@ class Unit:
         :returns: address of unit
         :rtype: str
         """
-        return self.unit.get('public-address', '0.0.0.0')
+        return self.unit.get('public-address', None)
 
     @property
     def agent_state_info(self):
