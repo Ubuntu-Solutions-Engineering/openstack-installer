@@ -115,6 +115,7 @@ def remote_run(machine_id, cmds):
         "juju run --machine {m} '{cmds}'".format(m=machine_id,
                                                  cmds=cmds))
     log.debug("Remote run result: {r}".format(r=ret))
+    return ret
 
 
 def get_network_interface(iface):
