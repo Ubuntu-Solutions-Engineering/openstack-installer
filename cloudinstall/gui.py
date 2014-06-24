@@ -374,7 +374,7 @@ class Node(WidgetWrap):
         for u in sorted(service.units, key=attrgetter('unit_name')):
             info = "{unit_name} " \
                    "({status})".format(unit_name=u.unit_name,
-                                         status=u.agent_state)
+                                       status=u.agent_state)
 
             if u.public_address:
                 info += "\naddress: {address}".format(address=u.public_address)
