@@ -232,8 +232,9 @@ class ControllerOverlay(Overlay):
         return None
 
     def get_started_machine(self, allocated):
-        started_machines = [m for m in allocated
-                            if m.agent_state == 'started']
+        started_machines = sorted([m for m in allocated
+                                   if m.agent_state == 'started'],
+                                  key=lambda m: int(m.machine_id))
         if len(started_machines) == 0:
             self.info_text.set_text("Waiting for a machine "
                                     "to become ready.")
