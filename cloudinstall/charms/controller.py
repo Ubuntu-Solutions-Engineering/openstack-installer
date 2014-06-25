@@ -40,12 +40,13 @@ class CharmNovaCloudController(CharmBase):
             keystone = self.wait_for_agent('keystone')
             if not keystone:
                 return True
-            env = self._openstack_env('admin', self.openstack_password(),
-                                      'admin', keystone.public_address)
-            self._openstack_env_save('admin', env)
-            utils.remote_cp(unit.machine_id,
-                            src=self._openstack_env_path('admin'),
-                            dst='/tmp/openstack-admin-rc')
+            for u in ['admin', 'ubuntu']:
+                env = self._openstack_env(u, self.openstack_password(),
+                                          u, keystone.public_address)
+                self._openstack_env_save(u, env)
+                utils.remote_cp(unit.machine_id,
+                                src=self._openstack_env_path(u),
+                                dst='/tmp/openstack-{u}-rc'.format(u=u))
             utils.remote_cp(
                 unit.machine_id,
                 src=os.path.join(self.tmpl_path,
@@ -56,7 +57,7 @@ class CharmNovaCloudController(CharmBase):
                 src=self._pubkey(),
                 dst="/tmp/id_rsa.pub")
             err = utils.remote_run(unit.machine_id,
-                                   cmds="sudo /tmp/nova-controller-setup.sh")
+                                   cmds="/tmp/nova-controller-setup.sh")
             if err['ret'] == 1:
                 # something happened during nova setup, re-run
                 return True
