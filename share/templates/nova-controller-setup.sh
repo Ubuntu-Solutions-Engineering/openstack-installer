@@ -2,9 +2,20 @@
 
 . /tmp/openstack-admin-rc
 
+# adjust tiny image
+nova flavor-delete m1.tiny
+nova flavor-create m1.tiny 1 512 8 1
+
 # configure external network
 neutron net-create --router:external=True --shared ext-net
 neutron subnet-create --name ext-subnet --gateway 10.0.3.1 --allocation-pool start=10.0.3.200,end=10.0.3.254 --disable-dhcp ext-net 10.0.3.0/24
+
+# create ubuntu user
+keystone tenant-create --name ubuntu --description "Created by Juju"
+keystone user-create --name ubuntu --tenant ubuntu --pass password --email juju@localhost
+#keystone user-role-add --user ubuntu --role _member_ --tenant ubuntu
+
+. /tmp/openstack-ubuntu-rc
 
 # create vm network
 neutron net-create ubuntu-net
