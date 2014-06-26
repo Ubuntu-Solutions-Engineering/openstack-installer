@@ -119,7 +119,8 @@ class CharmBase:
 export OS_PASSWORD={password}
 export OS_TENANT_NAME={tenant}
 export OS_AUTH_URL=http://{auth_url}:5000/v2.0
-export OS_REGION_NAME=RegionOne""".format(
+export OS_REGION_NAME=RegionOne
+""".format(
             user=user, password=password,
             tenant=tenant, auth_url=auth_url)
 
