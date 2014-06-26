@@ -12,7 +12,7 @@ neutron subnet-create --name ext-subnet --gateway 10.0.3.1 --allocation-pool sta
 
 # create ubuntu user
 keystone tenant-create --name ubuntu --description "Created by Juju"
-keystone user-create --name ubuntu --tenant ubuntu --pass $1 --email juju@localhost
+keystone user-create --name ubuntu --tenant ubuntu --pass "$1" --email juju@localhost
 
 . /tmp/openstack-ubuntu-rc
 
