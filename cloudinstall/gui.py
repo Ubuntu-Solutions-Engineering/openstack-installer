@@ -520,7 +520,7 @@ class NodeViewMode(Frame):
         :returns: data from the polling of services and the juju state
         :rtype: tuple (JujuState(), MaasState())
         """
-        log.debug("refresh_states() about to poll_state()")
+        log.debug("Syncing juju state.")
         return pegasus.poll_state()
 
     def do_update(self, juju_state, maas_state):
@@ -580,7 +580,6 @@ class NodeViewMode(Frame):
     def tick(self):
         if self.ticks_left == 0:
             self.ticks_left = self.poll_interval
-            log.debug("NodeViewMode tick() calling refresh_states()")
             self.loop.run_async(self.refresh_states, self.update_and_redraw)
         self.ticks_left = self.ticks_left - 1
 
