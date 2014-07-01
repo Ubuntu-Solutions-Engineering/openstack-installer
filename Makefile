@@ -82,13 +82,16 @@ run: ../cloud-installer*.deb
 	apt-get -yy install -f
 	MAAS_HTTP_PROXY=${proxy} cloud-install
 
-# sudo make landscape proxy=http://localhost:3128/
+# sudo make landscape
 .PHONY: landscape
 landscape: ../cloud-installer*.deb
 	-dpkg -i ../cloud-installer*deb
 	-dpkg -i ../cloud-install-multi*deb
 	-dpkg -i ../cloud-install-landscape*deb
 	apt-get -yy install -f
-	MAAS_HTTP_PROXY=${proxy} cloud-install
+	@echo please follow the instructions in
+	@echo "/usr/share/cloud-installer/templates/landscape-deployments.yaml"
+	@echo and then run `sudo cloud-install` as usual
+
 
 all: deb
