@@ -3,8 +3,8 @@
 . /tmp/openstack-admin-rc
 
 # adjust tiny image
-# nova flavor-delete m1.tiny
-# nova flavor-create m1.tiny 1 512 8 1
+nova flavor-delete m1.tiny
+nova flavor-create m1.tiny 1 512 8 1
 
 # configure external network
 neutron net-create --router:external=True --shared ext-net
