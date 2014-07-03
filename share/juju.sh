@@ -56,6 +56,7 @@ configLocalEnvironment()
 		    type: local
 		    container: kvm
 		    lxc-use-clone: true
+		    admin-secret: $1
 		EOF
 }
 
