@@ -52,7 +52,7 @@ singleInstall()
 		generateSshKeys
 
 		dialogGaugePrompt 80 "Bootstrapping Juju"
-		configureJuju configLocalEnvironment
+		configureJuju configLocalEnvironment $openstack_password
                 (
                   cd "/home/$INSTALL_USER"
                   sudo -H -u "$INSTALL_USER" juju bootstrap
