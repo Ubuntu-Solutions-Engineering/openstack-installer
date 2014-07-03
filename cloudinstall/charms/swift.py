@@ -49,4 +49,8 @@ class CharmSwift(CharmBase):
 
         self.client.deploy(self.charm_name, kwds)
 
+    def post_proc(self):
+        self.client.set_config('glance-simplestreams-sync',
+                               {'use_swift': True})
+
 __charm_class__ = CharmSwift
