@@ -40,7 +40,7 @@ landscape:
     series: precise
     services:
         landscape:
-            branch: lp:~landscape/landscape-charm/stable
+            charm: cs:precise/landscape-server
             constraints: mem=2048
             options:
                 service-count: "2"
@@ -49,8 +49,7 @@ landscape:
                 repository: include-file://repo-file
                 license-file: file:///dev/null
         landscape-msg:
-            branch: lp:~landscape/landscape-charm/stable
-            charm: landscape
+            charm: cs:precise/landscape-server
             constraints: mem=2048
             options:
                 landscape-password: "look-a-different-password"
@@ -82,4 +81,3 @@ landscape-dense-maas:
             to: lxc:0
         haproxy:
             to: lxc:0
-
