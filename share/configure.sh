@@ -151,7 +151,7 @@ configureMenu()
 			fi
 			dialogMenu "Select install type" "$install_type" "" 10 \
 			    60 3 Multi-system "Single system" \
-			    "Landscape managed (coming soon)"
+			    "Landscape managed"
 			install_type=$input
 			if [ $ret -ne 0 ]; then
 				popState; continue
@@ -159,14 +159,11 @@ configureMenu()
 			;;
 		2)
 			case $install_type in
-			Multi-system)
+			Multi-system|"Landscape managed")
 				state=10
 				;;
 			"Single system")
 				state=20
-				;;
-			"Landscape managed (coming soon)")
-				popState; continue
 				;;
 			esac
 			continue
