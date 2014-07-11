@@ -189,7 +189,7 @@ createMaasBridge()
 #
 createMaasSuperUser()
 {
-	password=$(cat "/home/$INSTALL_USER/.cloud-install/openstack.passwd")
+	password=$(cat "$INSTALL_HOME/.cloud-install/openstack.passwd")
 	printf "%s\n%s\n" "$password" "$password" \
 	    | setsid sh -c "maas-region-admin createsuperuser --username root --email root@example.com 1>&2"
 }
