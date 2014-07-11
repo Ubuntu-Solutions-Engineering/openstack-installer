@@ -83,7 +83,7 @@ multiInstall()
 		dialogGaugePrompt 75 "Bootstrapping Juju"
 		jujuBootstrap $uuid
 		maas maas tags new name=use-fastpath-installer definition="true()"
-		chown $INSTALL_USER:$INSTALL_USER /home/$INSTALL_USER/.maascli.db
+		chown $INSTALL_USER:$INSTALL_USER $INSTALL_HOME/.maascli.db
 
 		dialogGaugePrompt 100 "Installation complete"
 	} > "$TMP/gauge"
@@ -98,10 +98,10 @@ multiInstall()
 #
 saveMaasCreds()
 {
-	echo $1 > "/home/$INSTALL_USER/.cloud-install/maas-creds"
-	chmod 0600 "/home/$INSTALL_USER/.cloud-install/maas-creds"
+	echo $1 > "$INSTALL_HOME/.cloud-install/maas-creds"
+	chmod 0600 "$INSTALL_HOME/.cloud-install/maas-creds"
 	chown "$INSTALL_USER:$INSTALL_USER" \
-	    "/home/$INSTALL_USER/.cloud-install/maas-creds"
+	    "$INSTALL_HOME/.cloud-install/maas-creds"
 }
 
 # Setup multi install
@@ -112,15 +112,15 @@ saveMaasCreds()
 #
 setupMultiInstall()
 {
-	mkdir -m 0700 -p "/home/$INSTALL_USER/.cloud-install"
-	touch "/home/$INSTALL_USER/.cloud-install/multi"
+	mkdir -m 0700 -p "$INSTALL_HOME/.cloud-install"
+	touch "$INSTALL_HOME/.cloud-install/multi"
 	echo "$openstack_password" \
-	    > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
-	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	    > "$INSTALL_HOME/.cloud-install/openstack.passwd"
+	chmod 0600 "$INSTALL_HOME/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" \
-	    "/home/$INSTALL_USER/.cloud-install"
+	    "$INSTALL_HOME/.cloud-install"
 	configCharmOptions $openstack_password > \
-          "/home/$INSTALL_USER/.cloud-install/charmconf.yaml"
+          "$INSTALL_HOME/.cloud-install/charmconf.yaml"
 }
 
 # Configure interface

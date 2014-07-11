@@ -99,13 +99,13 @@ configureJuju()
 	env_type=$1
 	shift
 
-	if [ ! -e "/home/$INSTALL_USER/.juju" ]; then
-		mkdir -m 0700 "/home/$INSTALL_USER/.juju"
-		chown "$INSTALL_USER:$INSTALL_USER" "/home/$INSTALL_USER/.juju"
+	if [ ! -e "$INSTALL_HOME/.juju" ]; then
+		mkdir -m 0700 "$INSTALL_HOME/.juju"
+		chown "$INSTALL_USER:$INSTALL_USER" "$INSTALL_HOME/.juju"
 	fi
-	(umask 0077; $env_type $@ > "/home/$INSTALL_USER/.juju/environments.yaml")
+	(umask 0077; $env_type $@ > "$INSTALL_HOME/.juju/environments.yaml")
 	chown "$INSTALL_USER:$INSTALL_USER" \
-	    "/home/$INSTALL_USER/.juju/environments.yaml"
+	    "$INSTALL_HOME/.juju/environments.yaml"
 }
 
 # Bootstrap Juju inside container
@@ -155,8 +155,8 @@ jujuBootstrap()
 	python2 /etc/maas/templates/commissioning-user-data/snippets/maas_signal.py \
 	    --config $TMP/maas.creds OK || true
 
-	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju --show-log sync-tools)
-	(cd "/home/$INSTALL_USER"; sudo -H -u "$INSTALL_USER" juju bootstrap --upload-tools) &
+	(cd "$INSTALL_HOME"; sudo -H -u "$INSTALL_USER" juju --show-log sync-tools)
+	(cd "$INSTALL_HOME"; sudo -H -u "$INSTALL_USER" juju bootstrap --upload-tools) &
 	waitForNodeStatus $system_id 6
 	rm -rf /var/lib/lxc/juju-bootstrap/rootfs/var/lib/cloud/seed/*
 	cp $TMP/maas.creds \
