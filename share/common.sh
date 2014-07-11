@@ -168,9 +168,9 @@ exitInstall()
 #
 generateSshKeys()
 {
-	if [ ! -e "/home/$INSTALL_USER/.ssh/id_rsa" ]; then
+	if [ ! -e "$INSTALL_HOME/.ssh/id_rsa" ]; then
 	    sudo -u "$INSTALL_USER" ssh-keygen -N "" \
-		 -f "/home/$INSTALL_USER/.ssh/id_rsa" 1>&2
+		 -f "$INSTALL_HOME/.ssh/id_rsa" 1>&2
 	else
 	    echo "*** ssh keys exist for this user, they will be used instead."
 	    echo "*** If the current ssh keys are not passwordless you'll be"
@@ -294,6 +294,7 @@ ts()
 }
 
 INSTALL_USER=${SUDO_USER:-root}
+INSTALL_HOME=$(getent passwd $INSTALL_USER | cut -d: -f6)
 
 # HELPER TOOLS
 configure_landscape=/usr/share/cloud-installer/bin/configure-landscape

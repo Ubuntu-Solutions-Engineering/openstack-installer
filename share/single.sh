@@ -24,15 +24,15 @@
 #
 setupSingleInstall()
 {
-	mkdir -m 0700 -p "/home/$INSTALL_USER/.cloud-install"
-	touch "/home/$INSTALL_USER/.cloud-install/single"
+	mkdir -m 0700 -p "$INSTALL_HOME/.cloud-install"
+	touch "$INSTALL_HOME/.cloud-install/single"
 	echo "$openstack_password" \
-	    > "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
-	chmod 0600 "/home/$INSTALL_USER/.cloud-install/openstack.passwd"
+	    > "$INSTALL_HOME/.cloud-install/openstack.passwd"
+	chmod 0600 "$INSTALL_HOME/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" \
-	    "/home/$INSTALL_USER/.cloud-install"
+	    "$INSTALL_HOME/.cloud-install"
 	configCharmOptions $openstack_password > \
-          "/home/$INSTALL_USER/.cloud-install/charmconf.yaml"
+          "$INSTALL_HOME/.cloud-install/charmconf.yaml"
 }
 
 # Single system install
@@ -54,7 +54,7 @@ singleInstall()
 		dialogGaugePrompt 80 "Bootstrapping Juju"
 		configureJuju configLocalEnvironment $openstack_password
                 (
-                  cd "/home/$INSTALL_USER"
+                  cd "$INSTALL_HOME"
                   sudo -H -u "$INSTALL_USER" juju bootstrap
                 )
 		echo 99
