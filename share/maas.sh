@@ -81,7 +81,7 @@ configureDns()
 #
 configureMaasImages()
 {
-	cp /usr/share/cloud-installer/templates/bootresources.yaml /etc/maas/bootresources.yaml
+	cp $TEMPLATES/bootresources.yaml /etc/maas/bootresources.yaml
 }
 
 # Configure MAAS interfaces
