@@ -280,6 +280,13 @@ stopLog()
 	fi
 }
 
+# Get $1 (defaults to 32) random alphanumeric characters.
+randomAlphaNum()
+{
+  num=${1:-32}
+  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $num | head -n 1
+}
+
 # Timestamp input
 #
 # ts file
@@ -300,3 +307,5 @@ INSTALL_HOME=$(getent passwd $INSTALL_USER | cut -d: -f6)
 configure_landscape=/usr/share/cloud-installer/bin/configure-landscape
 ip_range=/usr/share/cloud-installer/bin/ip_range.py
 maas_report_boot_images=/usr/share/cloud-installer/bin/maas-report-boot-images
+
+TEMPLATES=/usr/share/cloud-installer/templates
