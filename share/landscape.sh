@@ -26,7 +26,7 @@ deployLandscape()
 	mkfifo -m 0600 "$TMP/deployer-out"
 
 	sudo -H -u "$INSTALL_USER" \
-		juju-deployer -Wdv -c /usr/share/cloud-installer/templates/landscape-deployments.yaml landscape-dense-maas \
+		juju-deployer -Wdv -c $TEMPLATES/landscape-deployments.yaml landscape-dense-maas \
 		> "$TMP/deployer-out" 2>&1 &
 
 	lines_seen=0
