@@ -25,6 +25,10 @@ deployLandscape()
 	end_percent=${1:-100}
 	mkfifo -m 0600 "$TMP/deployer-out"
 
+	# Randomize landscape's internal databse password.
+	sed -i -e "s/look-a-different-password/$(randomAlphaNum)/" \
+		$TEMPLATES/landscape-deployments.yaml
+
 	sudo -H -u "$INSTALL_USER" \
 		juju-deployer -Wdv -c $TEMPLATES/landscape-deployments.yaml landscape-dense-maas \
 		> "$TMP/deployer-out" 2>&1 &
