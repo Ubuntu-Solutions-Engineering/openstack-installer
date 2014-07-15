@@ -19,25 +19,24 @@
 """ Represents a juju status """
 
 import logging
-import yaml
 
+from cloudinstall.config import Config
 from cloudinstall.machine import Machine
 from cloudinstall.service import Service
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('cloudinstall.juju')
 
 
 class JujuState:
     """ Represents a global Juju state """
 
-    def __init__(self, raw_yaml):
-        """ Builds a JujuState from a file-like object containing the raw
-        output from __juju status__
+    def __init__(self, juju):
+        """ Builds a JujuState
 
-        :param raw_yaml: YAML object
+        :param juju: Juju API connection
         """
-        self._yaml = yaml.load(raw_yaml)
-        assert isinstance(self._yaml, dict)
+        self.config = Config()
+        self.juju = juju
         self.valid_states = ['pending', 'started', 'down']
 
     def machine(self, machine_id):
@@ -57,7 +56,7 @@ class JujuState:
         :returns: machines known to juju (except bootstrap)
         :rtype: generator
         """
-        for machine_id, machine in self._yaml['machines'].items():
+        for machine_id, machine in self.juju.status()['Machines'].items():
             if '0' == machine_id:
                 continue
             yield Machine(machine_id, machine)
@@ -69,7 +68,8 @@ class JujuState:
         :rtype: iter
         """
         return [m for m in self.machines()
-                if m.agent_state in self.valid_states]
+                if m.agent_state in self.valid_states or
+                m.agent['Status'] in self.valid_states]
 
     def service(self, name):
         """ Return a single service entry
@@ -89,5 +89,11 @@ class JujuState:
         :returns: Service() of all loaded services
         :rtype: generator
         """
-        for name, service in self._yaml.get('services', {}).items():
+        for name, service in self.juju.status()['Services'].items():
             yield Service(name, service)
+
+    @property
+    def networks(self):
+        """ Juju netwoks property
+        """
+        return self.juju.status()['Networks']

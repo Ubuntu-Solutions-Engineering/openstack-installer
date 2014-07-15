@@ -48,7 +48,7 @@ class CharmCeph(CharmBase):
             log.debug("Ceph not currently supported on single installs")
             return
 
-        self.client.deploy(self.charm_name,
-                           dict(instances=self.default_instances))
+        self.juju.deploy(self.charm_name,
+                         dict(NumUnits=self.default_instances))
 
 __charm_class__ = CharmCeph

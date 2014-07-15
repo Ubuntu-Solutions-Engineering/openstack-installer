@@ -10,6 +10,7 @@ Build-Depends: debhelper (>= 9),
                python-setuptools,
                python3-all,
                python3-coverage,
+               python3-macumba,
                python3-mock,
                python3-nose,
                python3-passlib,
@@ -23,8 +24,8 @@ Standards-Version: 3.9.5
 Homepage: https://launchpad.net/cloud-installer
 X-Python-Version: >= 2.7
 X-Python3-Version: >= 3.3
-Vcs-Browser: https://bazaar.launchpad.net/~solutions-engineering/cloud-installer/master
-Vcs-Bzr: lp:cloud-installer
+Vcs-Browser: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer
+Vcs-Git: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer.git
 
 Package: cloud-installer
 Architecture: all
@@ -32,6 +33,7 @@ Depends: gawk,
          nmap,
          pwgen,
          python3-all,
+         python3-macumba,
          python3-mock,
          python3-nose,
          python3-oauthlib,

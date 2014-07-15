@@ -40,7 +40,7 @@ def setup_logger(name=__name__):
     .. code::
 
         # Running cloud-status from cli
-        $ UCI_LOGLEVEL=INFO cloud-status
+        $ UCI_LOGLEVEL=DEBUG cloud-status
 
     :params str name: logger name
     :returns: a log object
@@ -52,12 +52,12 @@ def setup_logger(name=__name__):
     LOGFILE = os.path.join(CONFIG_PATH, 'commands.log')
     commandslog = logging.FileHandler(LOGFILE, 'w')
     commandslog.setFormatter(logging.Formatter(
-        '%(levelname)-9s * %(asctime)s [PID:%(process)d] * %(name)s * '
+        '%(levelname)s * %(asctime)s [LINE:%(lineno)d] * %(name)s * '
         '%(message)s',
         datefmt='%m-%d %H:%M:%S'))
 
     logger = logging.getLogger('')
-    env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
+    env = os.environ.get('UCI_LOGLEVEL', 'INFO')
     logger.setLevel(env)
     logger.addHandler(commandslog)
 

@@ -26,9 +26,15 @@ class Machine:
         self._cpu_cores = self.hardware('cpu-cores')
         self._storage = self.hardware('root-disk')
         self._mem = self.hardware('memory')
-        self.agent_state = self.machine.get('agent-state', None)
-        self.agent_state_info = self.machine.get('agent-state-info', None)
-        self.dns_name = self.machine.get('dns-name', '')
+        self.agent = self.machine.get('Agent', None)
+        self.agent_state = self.machine.get('AgentState', None)
+        self.agent_state_info = self.machine.get('AgentStateInfo', None)
+        self.agent_version = self.machine.get('AgentVersion', None)
+        self.dns_name = self.machine.get('DNSName', '')
+        self.instance_id = self.machine.get('InstanceId', '')
+        self.err = self.machine.get('Err', None)
+        self.has_vote = self.machine.get('HasVote')
+        self.wants_vote = self.machine.get('WantsVote')
 
     @property
     def cpu_cores(self):
@@ -90,7 +96,7 @@ class Machine:
         :returns: hardware of spec
         :rtype: str
         """
-        _machine = self.machine.get('hardware', None)
+        _machine = self.machine.get('Hardware', None)
         if _machine:
             _hardware_list = _machine.split(' ')
             for item in _hardware_list:
@@ -100,21 +106,12 @@ class Machine:
         return "N/A"
 
     @property
-    def instance_id(self):
-        """ Returns instance-id of a machine
-
-        :returns: instance-id of machine
-        :rtype: str
-        """
-        return self.machine.get('instance-id', '')
-
-    @property
     def containers(self):
         """ Return containers for machine
 
         :rtype: generator
         """
-        _containers = self.machine.get('containers', {}).items()
+        _containers = self.machine.get('Containers', {}).items()
         for container_id, container in _containers:
             yield Machine(container_id, container)
 

@@ -22,9 +22,11 @@ import signal
 import sys
 import argparse
 
-from cloudinstall import gui
+from cloudinstall.gui import PegasusGUI
+from cloudinstall.core import Controller
 from cloudinstall import utils
 from cloudinstall import log
+
 
 def sig_handler(signum, frame):
     utils.reset_blanking()
@@ -32,6 +34,7 @@ def sig_handler(signum, frame):
 
 for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
     signal.signal(sig, sig_handler)
+
 
 def parse_options(*args, **kwds):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
@@ -43,5 +46,6 @@ def parse_options(*args, **kwds):
 
 if __name__ == '__main__':
     opts = parse_options(sys.argv)
-    gui = gui.PegasusGUI(opts)
-    sys.exit(gui.run())
+    gui = PegasusGUI()
+    core = Controller(ui=gui, opts=opts)
+    sys.exit(core.start())

@@ -29,8 +29,8 @@ class CharmQuantum(CharmBase):
     related = ['mysql', 'nova-cloud-controller', 'rabbitmq-server']
     isolate = True
     optional = False
-    constraints = {'mem': '1G',
-                   'root-disk': '2G'}
+    constraints = {'mem': 2048,
+                   'root-disk': 20480}
 
     def post_proc(self):
         """ performs additional network configuration for charm """
@@ -38,7 +38,7 @@ class CharmQuantum(CharmBase):
         if unit:
             utils.remote_cp(
                 unit.machine_id,
-                src=os.path.join(self.tmpl_path, "quantum-network.sh"),
+                src=os.path.join(self.config.tmpl_path, "quantum-network.sh"),
                 dst="/tmp/quantum-network.sh")
             utils.remote_run(unit.machine_id,
                              cmds="sudo chmod +x /tmp/quantum-network.sh")
