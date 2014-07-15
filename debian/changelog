@@ -1,3 +1,9 @@
+cloud-installer (0.19+git20140715-0ubuntu1) utopic; urgency=medium
+
+  * Experimental branch
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 15 Jul 2014 10:24:26 -0400
+
 cloud-installer (0.17+git20140619-0ubuntu1) utopic; urgency=medium
 
   * Add neutron support
