@@ -280,13 +280,6 @@ stopLog()
 	fi
 }
 
-# Get $1 (defaults to 32) random alphanumeric characters.
-randomAlphaNum()
-{
-  num=${1:-32}
-  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $num | head -n 1
-}
-
 # Timestamp input
 #
 # ts file
