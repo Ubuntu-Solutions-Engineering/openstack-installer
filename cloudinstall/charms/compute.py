@@ -18,7 +18,6 @@
 
 import logging
 from cloudinstall.charms import CharmBase, DisplayPriorities
-from cloudinstall.pegasus import poll_state
 
 log = logging.getLogger('cloudinstall.charms.compute')
 
@@ -31,24 +30,20 @@ class CharmNovaCompute(CharmBase):
     display_priority = DisplayPriorities.Compute
     related = ['mysql', 'glance', 'nova-cloud-controller']
     isolate = True
-    constraints = {'mem': '4G',
-                   'root-disk': '40G'}
+    constraints = {'mem': 4096,
+                   'root-disk': 40960}
     allow_multi_units = True
 
     def set_relations(self):
         super(CharmNovaCompute, self).set_relations()
-        juju, _ = poll_state()
-        service = juju.service(self.charm_name)
+        service = self.juju_state.service(self.charm_name)
         has_amqp = list(filter(lambda r: 'amqp' in r.relation_name,
                         service.relations))
         if len(has_amqp) == 0:
             log.debug("Setting amqp relation for compute.")
-            ret = self.client.add_relation("{c}:amqp".format(
-                                           c=self.charm_name),
-                                           "rabbitmq-server:amqp")
-            if ret:
-                log.error("Problem relating nova-compute to rabbitmq")
-                return True
+            self.juju.add_relation("{c}:amqp".format(
+                                   c=self.charm_name),
+                                   "rabbitmq-server:amqp")
             return False
 
 __charm_class__ = CharmNovaCompute

@@ -1,0 +1,5 @@
+Some of the ui design decisions were based off Alejandro Gomez' turses project:
+
+https://github.com/alejandrogomez/turses
+
+Thanks for that :)

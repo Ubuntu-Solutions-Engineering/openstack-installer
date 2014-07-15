@@ -20,7 +20,7 @@
 
 import logging
 
-log = logging.getLogger('c.service')
+log = logging.getLogger('cloudinstall.service')
 
 
 class Unit:
@@ -37,7 +37,7 @@ class Unit:
         :returns: agent state
         :rtype: str
         """
-        return self.unit.get('agent-state', 'unknown')
+        return self.unit.get('AgentState', 'unknown')
 
     @property
     def machine_id(self):
@@ -46,7 +46,7 @@ class Unit:
         :returns: machine id
         :rtype: str
         """
-        return self.unit.get('machine', '-1')
+        return self.unit.get('Machine', '-1')
 
     @property
     def public_address(self):
@@ -55,7 +55,7 @@ class Unit:
         :returns: address of unit
         :rtype: str
         """
-        return self.unit.get('public-address', None)
+        return self.unit.get('PublicAddress', None)
 
     @property
     def agent_state_info(self):
@@ -65,7 +65,7 @@ class Unit:
         :returns: error
         :rtype: str
         """
-        return self.unit.get('agent-state-info', None)
+        return self.unit.get('AgentStateInfo', None)
 
     @property
     def is_compute(self):
@@ -131,23 +131,10 @@ class Service:
     def __init__(self, service_name, service):
         self.service_name = service_name
         self.service = service
-
-    @property
-    def charm(self):
-        """ Charm
-
-        :returns: Charm Path
-        :rtype: str
-        """
-        return self.service.get('charm', '')
-
-    @property
-    def exposed(self):
-        """ Exposed
-
-        :returns: if service is exposed
-        :rtype: bool
-        """
+        self.charm = self.service.get('Charm')
+        self.exposed = self.service.get('Exposed')
+        self.networks = self.service.get('Networks')
+        self.life = self.service.get('Life')
 
     def unit(self, name):
         """ Single unit entry
@@ -161,7 +148,7 @@ class Service:
                 return True
             return False
 
-        return next(filter(_match, self.units), Unit('unknown', []))
+        return next(filter(_match, self.units), Unit('unknown', {}))
 
     @property
     def units(self):
@@ -170,7 +157,7 @@ class Service:
         :returns: iterator of associated units for service
         :rtype: Unit()
         """
-        for unit_name, units in self.service.get('units', {}).items():
+        for unit_name, units in self.service.get('Units', {}).items():
             yield Unit(unit_name, units)
 
     def relation(self, name):
@@ -192,7 +179,7 @@ class Service:
         :returns: iterator of relations for service
         :rtype: Relation()
         """
-        relations = self.service.get('relations', {})
+        relations = self.service.get('Relations', {})
         for relation_name, relation in relations.items():
             yield Relation(relation_name, relation)
 

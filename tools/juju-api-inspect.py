@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
-import os
 import sys
 sys.path.insert(0, '../cloudinstall')
-from cloudinstall.juju.client import JujuClient
+from macumba import JujuClient
 from pprint import pprint
-import json
-import time
 
-JUJU_PASS = os.environ['JUJU_PASS'] if os.environ['JUJU_PASS'] else randomString()
-JUJU_URL = os.environ['JUJU_URL'] if os.environ['JUJU_URL'] else 'wss://juju-bootstrap.master:17070/'
+JUJU_PASS = 'pass'
+JUJU_URL = 'wss://localhost:17070/'
 
 if __name__ == '__main__':
-    ws = JujuClient(JUJU_URL)
-    ws.login(JUJU_PASS)
-    ws.info()
+    ws = JujuClient(url=JUJU_URL, password=JUJU_PASS)
+    ws.login()
+    t = ws.status()
+    pprint(t)
+    #ws.add_machine()
+    # ws.deploy('mysql')
+    # ws.deploy('wordpress', dict(charm_url='cs:precise/wordpress-24'))
+    # ws.deploy('juju-gui')
+    #
+    # ws.add_relation('mysql', 'wordpress')
+    # ws.add_unit('mysql')
     ws.close()

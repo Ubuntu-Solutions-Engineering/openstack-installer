@@ -17,23 +17,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import yaml
 from os import path
 import sys
+import yaml
 from queue import Queue
 import time
+import requests
 
-from cloudinstall import pegasus, utils
-from cloudinstall.juju.client import JujuClient
-from cloudinstall.juju import JujuState
+from cloudinstall import utils
+from cloudinstall.config import Config
 
 log = logging.getLogger('cloudinstall.charms')
 
 CHARM_CONFIG_FILENAME = path.expanduser("~/.cloud-install/charmconf.yaml")
 CHARM_CONFIG = {}
+CHARM_CONFIG_RAW = None
 if path.exists(CHARM_CONFIG_FILENAME):
     with open(CHARM_CONFIG_FILENAME) as f:
-        CHARM_CONFIG = yaml.load(f.read())
+        CHARM_CONFIG_RAW = f.read()
+        CHARM_CONFIG = yaml.load(CHARM_CONFIG_RAW)
+
+
+def query_cs(charm, series='trusty'):
+    """ This helper routine will query the charm store to pull latest revisions
+    and charmstore url for the api.
+
+    :param str charm: charm name
+    :param str series: series, defaults. trusty
+    """
+    charm_store_url = 'https://manage.jujucharms.com/api/3/charm'
+    url = path.join(charm_store_url, series, charm)
+    r = requests.get(url)
+    return r.json()
 
 
 class DisplayPriorities:
@@ -71,47 +86,20 @@ class CharmBase:
     allow_multi_units = False
     optional = False
     disabled = False
-    machine_id = False
+    machine_id = ""
 
-    def __init__(self, juju_state=None, machine=None):
+    def __init__(self, juju=None, juju_state=None, machine=None):
         """ initialize
 
         :param state: :class:JujuState
         :param machine: :class:Machine
         """
+        self.config = Config()
         self.charm_path = None
         self.exposed = False
-        self.juju_state = juju_state
-        assert isinstance(self.juju_state, JujuState)
         self.machine = machine
-        self.client = JujuClient()
-
-    @property
-    def tmpl_path(self):
-        """ template path """
-        return "/usr/share/cloud-installer/templates"
-
-    @property
-    def cfg_path(self):
-        """ top level configuration path """
-        return path.expanduser('~/.cloud-install')
-
-    @property
-    def is_single(self):
-        return pegasus.SINGLE_SYSTEM
-
-    @property
-    def is_multi(self):
-        return pegasus.MULTI_SYSTEM
-
-    def openstack_password(self):
-        PASSWORD_FILE = path.join(self.cfg_path, 'openstack.passwd')
-        try:
-            with open(PASSWORD_FILE) as f:
-                OPENSTACK_PASSWORD = f.read().strip()
-        except IOError:
-            OPENSTACK_PASSWORD = 'password'
-        return OPENSTACK_PASSWORD
+        self.juju = juju
+        self.juju_state = juju_state
 
     def _openstack_env(self, user, password, tenant, auth_url):
         """ setup openstack environment vars """
@@ -171,18 +159,21 @@ export OS_REGION_NAME=RegionOne
         is needed this should be overridden.
         """
         kwds = {}
-        kwds['machine_id'] = self.machine_id
+        kwds['ToMachineSpec'] = str(self.machine_id)
+        kwds['NumUnits'] = 1
 
         if self.charm_name in CHARM_CONFIG:
-            kwds['configfile'] = CHARM_CONFIG_FILENAME
+            kwds['ConfigYAML'] = CHARM_CONFIG_RAW
 
         if self.isolate:
-            kwds['machine_id'] = None
-            kwds['instances'] = 1
-            kwds['constraints'] = self.constraints
-            self.client.deploy(self.charm_name, kwds)
+            del kwds['ToMachineSpec']
+            kwds['Constraints'] = self.constraints
+            self.juju.deploy(self.charm_name, kwds)
         else:
-            self.client.deploy(self.charm_name, kwds)
+            self.juju.deploy(self.charm_name, kwds)
+        log.debug('Deployed {c} with params: {p}'.format(
+            c=self.charm_name,
+            p=kwds))
 
     def set_relations(self):
         """ Setup charm relations
@@ -193,8 +184,8 @@ export OS_REGION_NAME=RegionOne
             services = self.juju_state.service(self.charm_name)
             for charm in self.related:
                 if not self.is_related(charm, services.relations):
-                    err = self.client.add_relation(self.charm_name,
-                                                   charm)
+                    err = self.juju.add_relation(self.charm_name,
+                                                 charm)
                     if err:
                         log.error("Relation not ready for "
                                   "{c}, requeueing.".format(c=self.charm_name))
@@ -218,10 +209,12 @@ export OS_REGION_NAME=RegionOne
         """
         if not svc_name:
             svc_name = self.charm_name
-        log.debug("Checking availability for {c}.".format(c=svc_name))
-        juju, _ = pegasus.poll_state()
-        svc = juju.service(svc_name)
+        svc = self.juju_state.service(svc_name)
+        log.debug("Checking availability for {c}: {s}.".format(
+            c=svc_name,
+            s=svc))
         unit = svc.unit(svc_name)
+        log.debug("Unit state: {}".format(unit.agent_state))
         if unit.agent_state == "started":
             return unit
         return False
