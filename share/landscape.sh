@@ -26,7 +26,7 @@ deployLandscape()
 	mkfifo -m 0600 "$TMP/deployer-out"
 
 	# Randomize landscape's internal databse password.
-	sed -i -e "s/look-a-different-password/$(pwgen -s 32 1)/" \
+	sed -i -e "s/look-a-different-password/$(pwgen -s 32)/" \
 		$TEMPLATES/landscape-deployments.yaml
 
 	sudo -H -u "$INSTALL_USER" \

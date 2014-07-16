@@ -40,7 +40,7 @@ def setup_logger(name=__name__):
     .. code::
 
         # Running cloud-status from cli
-        $ UCI_LOGLEVEL=DEBUG cloud-status
+        $ UCI_LOGLEVEL=INFO cloud-status
 
     :params str name: logger name
     :returns: a log object
@@ -62,4 +62,3 @@ def setup_logger(name=__name__):
     logger.addHandler(commandslog)
 
     return logger
-log = setup_logger()

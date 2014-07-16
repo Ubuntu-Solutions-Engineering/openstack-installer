@@ -60,6 +60,24 @@ configMaasBridge()
 	printf "\t%s\n" "bridge_ports $1"
 }
 
+# interfaces config
+#
+# configMaasInterface config
+#
+# See createMaasBridge
+#
+configMaasInterface()
+{
+	echo "## WARNING: This file has been modified by cloud-install"
+	echo "##"
+	echo "## cloud-install redefines interfaces in"
+	echo "## /etc/network/interfaces.d/cloud-install.cfg."
+	echo "## You must edit or remove /etc/network/interfaces.d/cloud-install.cfg if you"
+	echo "## want to re-enable interfaces here."
+	echo
+	cat "$1"
+}
+
 # Configure DNS
 #
 # configureDns
@@ -70,6 +88,7 @@ configureDns()
 	    > /etc/bind/named.conf.options
 	service bind9 restart
 	sed -e '/^iface lo inet loopback$/a\
+\	# added by cloud-install\
 \	dns-nameservers 127.0.0.1' -i /etc/network/interfaces
 	# lp 1102507
 	ifdown lo; ifup lo
@@ -170,7 +189,9 @@ createMaasBridge()
 		[ -e "$cfg" ] || continue
 		configureMaasInterfaces $1 $TMP/bridge.cfg "$cfg" \
 		    > $TMP/interfaces.cfg
-		mv $TMP/interfaces.cfg "$cfg"
+		if ! diff $TMP/interfaces.cfg "$cfg" > /dev/null; then
+			configMaasInterface $TMP/interfaces.cfg > "$cfg"
+		fi
 	done
 	if ! grep -Eq '^[[:blank:]]*source /etc/network/interfaces\.d/\*\.cfg[[:blank:]]*$' \
 	    /etc/network/interfaces; then

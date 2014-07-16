@@ -28,20 +28,22 @@
 
 OPT_HELP=h
 OPT_INSTALL=i
+OPT_UNINSTALL=u
 OPT_CONFIGFILE=c
 OPT_ENABLESWIFT=s
-OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_ENABLESWIFT}${OPT_HELP}
+OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}
 USAGE="\
-cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_ENABLESWIFT}${OPT_HELP}]
+cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}]
 
 Create an Ubuntu Openstack Cloud! (requires root privileges)
 
 Options:
-  -$OPT_CONFIGFILE <file> - POSIX shell script to be sourced by installer
-      automating install by pre-setting menu responses.
-  -$OPT_ENABLESWIFT enable swift-storage
-  -$OPT_INSTALL  install only (don't invoke cloud-status)
-  -$OPT_HELP  print this message"
+  -$OPT_CONFIGFILE    <file> - POSIX shell script to be sourced by installer
+              automating install by pre-setting menu responses.
+  -$OPT_ENABLESWIFT    enable swift-storage
+  -$OPT_INSTALL    install only (don't invoke cloud-status)
+  -$OPT_UNINSTALL    uninstall the cloud
+  -$OPT_HELP    print this message"
 
 usage()
 {
@@ -62,6 +64,10 @@ while getopts $OPTS opt; do
 	$OPT_ENABLESWIFT)
 		enableswift="--enable-swift"
 		;;
+    $OPT_UNINSTALL)
+        /usr/share/cloud-installer/tools/cloud-uninstall $@
+        exit 0
+        ;;
 	$OPT_HELP)
 		usage
 		exit 0
@@ -128,5 +134,5 @@ else
 fi
 if [ -z "$install" ]; then
 	exitInstall
-	cd "/home/$INSTALL_USER"; exec sudo -H -u "$INSTALL_USER" cloud-status $enableswift
+	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER" cloud-status $enableswift
 fi
