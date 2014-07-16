@@ -58,7 +58,7 @@ case $WHAT in
     fi
 
     cp /etc/cloud-installer/interfaces.cloud.bak /etc/network/interfaces
-    cp -r /etc/cloud-installer/interfaces.cloud.d.bak /etc/network/interfaces.d
+    cp -r /etc/cloud-installer/interfaces.cloud.d.bak/* /etc/network/interfaces.d
     rm /etc/network/interfaces.d/cloud-install.cfg
 
     if [ -n "$interface" ]; then
@@ -76,7 +76,7 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Please run with either single-system or multi-system as an argument.
     echo Example:
-    echo   sudo cloud-uninstall single-system
+    echo   sudo cloud-install -u single-system
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     exit 1
     ;;
