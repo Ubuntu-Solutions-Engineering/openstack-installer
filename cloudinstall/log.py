@@ -49,8 +49,10 @@ def setup_logger(name=__name__):
     HOME = os.getenv('HOME')
     CONFIG_DIR = '.cloud-install'
     CONFIG_PATH = os.path.join(HOME, CONFIG_DIR)
+    if not os.path.isdir(CONFIG_PATH):
+        os.makedirs(CONFIG_PATH)
     LOGFILE = os.path.join(CONFIG_PATH, 'commands.log')
-    commandslog = logging.FileHandler(LOGFILE, 'w')
+    commandslog = logging.FileHandler(LOGFILE, 'w+')
     commandslog.setFormatter(logging.Formatter(
         '%(levelname)s * %(asctime)s [LINE:%(lineno)d] * %(name)s * '
         '%(message)s',

@@ -24,7 +24,10 @@ import argparse
 import os
 
 from cloudinstall.gui import PegasusGUI
+from cloudinstall.installgui import InstallGUI
+
 from cloudinstall.core import Controller
+from cloudinstall.install import InstallController
 from cloudinstall import utils
 from cloudinstall import log
 
@@ -43,6 +46,11 @@ def parse_options(*args, **kwds):
     parser.add_argument('--enable-swift', action='store_true',
                         dest='enable_swift', default=False,
                         help='Enable swift storage')
+    parser.add_argument('--install', action='store_true',
+                        dest='install', default=False,
+                        help='Perform installation prior to deploy.')
+    parser.add_argument('--install-type', dest='install_type',
+                        default='single', help='Install type [single,multi]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -52,6 +60,10 @@ if __name__ == '__main__':
         print("Plese run `sudo cloud-install` and then cloud-status")
         sys.exit(1)
     opts = parse_options(sys.argv)
+    if opts.install:
+        installui = InstallGUI()
+        installcore = InstallController(ui=gui, opts=opts)
+        installcore.start()
     gui = PegasusGUI()
     core = Controller(ui=gui, opts=opts)
     sys.exit(core.start())
