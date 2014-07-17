@@ -271,25 +271,6 @@ class Controller:
             log.debug("Polling will continue until all charms are finalized.")
             return True
 
-    def start(self):
-        """ Starts controller processing """
-        self.main_loop()
-
-    def main_loop(self):
-        if not hasattr(self, 'loop'):
-            self.loop = urwid.MainLoop(self.ui,
-                                       self.config.STYLES,
-                                       handle_mouse=True,
-                                       unhandled_input=self.header_hotkeys)
-            self.info_message("Getting this party started!")
-            self.authenticate_juju()
-            if self.config.is_multi:
-                self.authenticate_maas()
-            self.init_machine()
-
-        self.loop.set_alarm_in(0, self.update_alarm)
-        self.loop.run()
-
     def header_hotkeys(self, key):
         if key in ['q', 'Q']:
             self.exit()
@@ -406,3 +387,22 @@ class Controller:
 
         self.ui.render_nodes(nodes)
         self.redraw_screen()
+
+    def main_loop(self):
+        if not hasattr(self, 'loop'):
+            self.loop = urwid.MainLoop(self.ui,
+                                       self.config.STYLES,
+                                       handle_mouse=True,
+                                       unhandled_input=self.header_hotkeys)
+            self.info_message("Getting this party started!")
+            self.authenticate_juju()
+            if self.config.is_multi:
+                self.authenticate_maas()
+            self.init_machine()
+
+        self.loop.set_alarm_in(0, self.update_alarm)
+        self.loop.run()
+
+    def start(self):
+        """ Starts controller processing """
+        self.main_loop()
