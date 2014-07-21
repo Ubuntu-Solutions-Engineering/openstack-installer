@@ -95,15 +95,6 @@ configureDns()
 	ifdown lo; ifup lo
 }
 
-# Configure MAAS images
-#
-# configureMaasImages
-#
-configureMaasImages()
-{
-	cp $TEMPLATES/bootresources.yaml /etc/maas/bootresources.yaml
-}
-
 # Configure MAAS interfaces
 #
 # Comments out any interfaces configuration matching the specified interface

@@ -65,14 +65,13 @@ multiInstall()
 		dialogGaugePrompt 36 "Configuring DNS"
 		configureDns
 		dialogGaugePrompt 40 "Importing MAAS boot images"
-		configureMaasImages
 
 		if [ -n "$MAAS_HTTP_PROXY" ]; then
 			maas maas maas set-config name=http_proxy value="$MAAS_HTTP_PROXY" > /dev/null
 		fi
 
 		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
-			http_proxy=$MAAS_HTTP_PROXY HTTP_PROXY=$MAAS_HTTP_PROXY maas-import-pxe-files > /dev/null
+			http_proxy=$MAAS_HTTP_PROXY HTTP_PROXY=$MAAS_HTTP_PROXY maas-import-pxe-files --sources-file=/usr/share/cloud-installer/templates/bootresources.yaml > /dev/null
 			$maas_report_boot_images > /dev/null
 		fi
 
