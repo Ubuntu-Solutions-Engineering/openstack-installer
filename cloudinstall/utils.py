@@ -311,3 +311,16 @@ def container_ip(name):
                              '| grep --word-regexp {0}'.format(name))
     line = out['stdout'].split()[-3]
     return line
+
+
+def container_run(name, cmd):
+    """ run command in container
+
+    :param str name: name of container
+    :param str cmd: command to run
+    """
+    ip = container_ip(name)
+    out = get_command_output("SSHPASS=ubuntu sshpass -e ssh {0} "
+                             "-l ubuntu -o \"StrictHostKeyChecking no\" "
+                             "{1}".format(ip, cmd))
+    return out
