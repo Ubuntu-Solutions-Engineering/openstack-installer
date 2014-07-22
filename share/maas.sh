@@ -74,6 +74,7 @@ configMaasInterface()
 	echo "## /etc/network/interfaces.d/cloud-install.cfg."
 	echo "## You must edit or remove /etc/network/interfaces.d/cloud-install.cfg if you"
 	echo "## want to re-enable interfaces here."
+	echo "## See 'cloud-install -u', which will uninstall these changes."
 	echo
 	cat "$1"
 }
