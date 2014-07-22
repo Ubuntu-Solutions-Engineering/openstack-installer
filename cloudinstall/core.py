@@ -60,20 +60,27 @@ class Controller:
     @utils.async
     def wait_for_maas(self):
         """ install and configure maas """
+        random_status = ["Packages are being installed to a MAAS container.",
+                         "There's a few packages, it'll take just a minute",
+                         "Checkout http://maas.ubuntu.com/ while you wait."]
         is_connected = False
         count = 0
         while not is_connected:
+            self.info_message(
+                random_status[random.randrange(len(random_status))])
             count = count + 1
             self.step_info("Waiting for MAAS (tries {0})".format(count))
             uri = path.join('http://', utils.container_ip('maas'), 'MAAS')
-            log.info("Checking MAAS availability ({0})".format(uri))
+            log.debug("Checking MAAS availability ({0})".format(uri))
             try:
                 res = requests.get(uri)
                 is_connected = res.ok
             except:
-                self.step_info("MAAS not available yet, retrying ({0})".format(
-                    count))
+                self.step_info("Waiting for MAAS to be installed")
             time.sleep(10)
+
+        # Render nodeview, even though nothing is there yet.
+        self.render_nodes()
 
         # Maas installed, bootstrap juju
         self.bootstrap()
