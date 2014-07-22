@@ -293,6 +293,43 @@ ts()
 	awk '{ print strftime("%F %T"), $0; fflush() }' "$1"
 }
 
+# Create container
+#
+# createContainer name
+createContainer()
+{
+	lxc-create -t ubuntu -n $1
+	lxc-start -n $1 -d
+	lxc-wait -n maas -s RUNNING
+	chroot /var/lib/lxc/$1/rootfs sh -c "echo 'ubuntu ALL=NOPASSWD:ALL' > /etc/sudoers.d/ubuntu; chmod 440 /etc/sudoers.d/ubuntu"
+}
+
+# Destroy container
+#
+# destroyContainer name
+destroyContainer()
+{
+	lxc-stop -n $1
+	lxc-destroy -n $1
+}
+
+# Get container IP
+#
+# containerIP name
+containerIP()
+{
+	# lxc-ls --fancy $1|egrep -o 'RUNNING  [0-9.]+'|sed -e "s/RUNNING  //"
+	cat /var/lib/misc/*.leases | grep --word-regexp $1 | awk '{print $3}'
+}
+
+# Run in container
+#
+# attachRun name cmd
+attachRun()
+{
+	SSHPASS=ubuntu sshpass -e ssh `cat /var/lib/misc/*.leases | grep --word-regexp $1 | awk '{print $3}'` -l ubuntu -o "StrictHostKeyChecking no" $2
+}
+
 INSTALL_USER=${SUDO_USER:-root}
 INSTALL_HOME=$(getent passwd $INSTALL_USER | cut -d: -f6)
 

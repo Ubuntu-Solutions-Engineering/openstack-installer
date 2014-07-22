@@ -24,10 +24,7 @@ import argparse
 import os
 
 from cloudinstall.gui import PegasusGUI
-from cloudinstall.installgui import InstallGUI
-
 from cloudinstall.core import Controller
-from cloudinstall.install import InstallController
 from cloudinstall import utils
 from cloudinstall import log
 
@@ -55,15 +52,11 @@ def parse_options(*args, **kwds):
 
 if __name__ == '__main__':
     log.setup_logger()
-    if not os.path.exists(os.path.expanduser('~/.cloud-install')):
+    if not os.path.exists('/etc/cloud-installer'):
         print("It looks like you don't have a cloud installed.")
         print("Plese run `sudo cloud-install` and then cloud-status")
         sys.exit(1)
     opts = parse_options(sys.argv)
-    if opts.install:
-        installui = InstallGUI()
-        installcore = InstallController(ui=gui, opts=opts)
-        installcore.start()
     gui = PegasusGUI()
     core = Controller(ui=gui, opts=opts)
     sys.exit(core.start())

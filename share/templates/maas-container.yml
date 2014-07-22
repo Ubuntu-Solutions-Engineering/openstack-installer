@@ -1,0 +1,5 @@
+#cloud-config
+apt_sources:
+    - source: "ppa:cloud-installer/ppa"
+packages:
+    - cloud-install-multi
