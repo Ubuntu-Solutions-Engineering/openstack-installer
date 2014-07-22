@@ -23,9 +23,9 @@ Reference
    charms
    cloudinstall.juju
    cloudinstall.maas
+   core
    gui
    log
    machine
-   pegasus
    service
    utils
