@@ -41,16 +41,16 @@ From here you can build the entire package set by running:
 
 .. code::
 
-    $ make sbuild
-    # or, if you prefer not to use sbuild:
-    $ make deb
+   $ make sbuild
+   # or, if you prefer not to use sbuild:
+   $ make deb
 
 Once finished your packages will be stored in the top level directory
 where your cloud-installer project is kept.
 
 .. code::
 
-    $ ls ../*.deb
+   $ ls ../*.deb
 
 Running the cloud installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -59,22 +59,22 @@ Running the installer for test currently requires installing the packages.
 After building the packages using either 'make deb' or 'make sbuild', you can install and run with the 'run' target:
 
 .. code::
-
-    $ sudo make run type=single
-    # or
-    $ sudo make run type=multi
+   
+   $ sudo make run type=single
+   # or 
+   $ sudo make run type=multi
 
 You can also set the MAAS_HTTP_PROXY env var for the cloud-install command like this:
 
 .. code::
 
-    $ sudo make run type=single proxy=http://myproxy/
+   $ sudo make run type=single proxy=http://myproxy/
 
 If you are running the landscape installer, you will want to use the 'landscape' target:
 
 .. code::
 
-    $ sudo make landscape proxy=http://myproxy/
+   $ sudo make landscape proxy=http://myproxy/
 
 Running the Pegasus status screen
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -83,7 +83,7 @@ If you have run the installer and are working on changes to the status screen (i
 
 .. code::
 
-    $ make status
+   $ make status
 
 If you are testing the status screen's code for deploying charms, you may need to first start your juju environment over from scratch:
 
@@ -108,7 +108,7 @@ Documentation will be built in **docs/_build/html**, and requires **Sphinx** to 
 
 .. code::
 
-    $ cd docs && make html
+   $ cd docs && make html
 
 
 Running Tests
@@ -121,11 +121,13 @@ used.
 
 .. code::
 
-    $ JUJU_LIVE=1 nosetests3 test
+   $ JUJU_LIVE=1 nosetests3 test
 
 For the python code, using pep8 and pyflakes is encouraged:
 
 .. code::
 
-    $ make pyflakes
-    $ make pep8
+   $ make pyflakes
+   $ make pep8
+
+

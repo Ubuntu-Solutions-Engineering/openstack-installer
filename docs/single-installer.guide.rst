@@ -107,4 +107,4 @@ To uninstall and cleanup your system run the following
 
 .. code::
 
-    $ sudo cloud-install -u single-system
+    $ sudo cloud-install -u
