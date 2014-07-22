@@ -302,3 +302,12 @@ def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
 
         for name in fnmatch.filter(filelist, file_pattern):
             yield os.path.join(path, name)
+
+
+def container_ip(name):
+    """ gets container ip of named container
+    """
+    out = get_command_output('cat /var/lib/misc/*.leases '
+                             '| grep --word-regexp {0}'.format(name))
+    line = out['stdout'].split()[-3]
+    return line

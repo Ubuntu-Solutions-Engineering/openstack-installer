@@ -15,6 +15,7 @@ share/single.sh                        usr/share/cloud-installer/common
 share/templates/bootresources.yaml     usr/share/cloud-installer/templates
 share/templates/landscape-deployments.yaml    usr/share/cloud-installer/templates
 share/templates/lxc-host-only          usr/share/cloud-installer/templates
+share/templates/maas-container.yml     usr/share/cloud-installer/templates
 share/templates/nova-controller-setup.sh     usr/share/cloud-installer/templates
 share/templates/quantum-network.sh     usr/share/cloud-installer/templates
 tools/cloud-uninstall                  usr/share/cloud-installer/tools

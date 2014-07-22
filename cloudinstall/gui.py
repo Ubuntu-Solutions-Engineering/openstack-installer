@@ -27,6 +27,7 @@ from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    RadioButton, IntEdit, SimpleListWalker)
 
 from cloudinstall import utils
+from cloudinstall.ui import StatusBar, StepInfo
 
 log = logging.getLogger('cloudinstall.gui')
 
@@ -37,13 +38,6 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['stdout'])
 
 # Time to lock in seconds
 LOCK_TIME = 120
-
-
-class StepInfo(WidgetWrap):
-    def __init__(self, msg=None):
-        if not msg:
-            msg = "Processing."
-        super(StepInfo, self).__init__(AttrWrap(LineBox(Text(msg)), 'dialog'))
 
 
 class AddCharmDialog(WidgetWrap):
@@ -145,7 +139,6 @@ class NodeViewMode(WidgetWrap):
 
     def _build_widget(self, nodes, **kwargs):
         unit_info = []
-        m = []
         for node in nodes:
             for u in sorted(node.units, key=attrgetter('unit_name')):
                 info = "{unit_name} " \
@@ -182,33 +175,6 @@ class Header(WidgetWrap):
                   AttrWrap(Text('(F5) Refresh'), "border"),
                   AttrWrap(Text('(Q) Quit'), "border")]
         super(Header, self).__init__(Columns(header))
-
-
-class StatusBar(WidgetWrap):
-    """Displays text."""
-
-    INFO = "[INFO]"
-    ERROR = "[ERROR]"
-    ARROW = " => "
-
-    def __init__(self, text=''):
-        super(StatusBar, self).__init__(Text(text))
-
-    def message(self, text):
-        """Write `text` on the footer."""
-        self._w.set_text(text)
-
-    def error_message(self, text):
-        self.message([('error', self.ERROR),
-                      ('default', self.ARROW + text)])
-
-    def info_message(self, text):
-        self.message([('info', self.INFO),
-                      ('default', self.ARROW + text)])
-
-    def clear(self):
-        """Clear the text."""
-        self._w.set_text('')
 
 
 class PegasusGUI(WidgetWrap):

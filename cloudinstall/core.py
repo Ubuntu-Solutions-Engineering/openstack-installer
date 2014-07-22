@@ -18,6 +18,7 @@ import logging
 import urwid
 import time
 import random
+import requests
 from os import getenv, path
 
 from operator import attrgetter
@@ -55,6 +56,30 @@ class Controller:
         self.finalized_charm_classes = []
         self.single_net_configured = False
         self.lxc_root_tarball_configured = False
+
+    @utils.async
+    def wait_for_maas(self):
+        """ install and configure maas """
+        is_connected = False
+        count = 0
+        while not is_connected:
+            self.step_info("Waiting for MAAS (tries {0})".format(count))
+            uri = path.join('http://', utils.container_ip('maas'), 'MAAS')
+            log.info("Checking MAAS availability ({0})".format(uri))
+            try:
+                res = requests.get(uri)
+                is_connected = res.ok
+            except:
+                self.step_info("MAAS not available yet.")
+            count = count + 1
+            time.sleep(5)
+
+        self.bootstrap()
+
+    def bootstrap(self):
+        """ handles juju bootstrap
+        """
+        self.step_info("Bootstrapping environment.")
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -373,6 +398,12 @@ class Controller:
                 charm_q.watch_post_proc()
                 charm_q.is_running = True
 
+    # overlays
+    def step_info(self, message):
+        self.ui.hide_step_info()
+        self.ui.show_step_info(message)
+        self.redraw_screen()
+
     # - Footer
     def clear_status(self):
         self.ui.clear_status()
@@ -395,6 +426,8 @@ class Controller:
                                        handle_mouse=True,
                                        unhandled_input=self.header_hotkeys)
             self.info_message("Getting this party started!")
+            if self.opts.install and self.opts.install_type == "multi":
+                self.wait_for_maas()
             self.authenticate_juju()
             if self.config.is_multi:
                 self.authenticate_maas()
