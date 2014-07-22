@@ -21,9 +21,9 @@ Reference
    :maxdepth: 2
 
    charms
-   juju
-   maas
-   ui
+   cloudinstall.juju
+   cloudinstall.maas
+   cloudinstall.ui
    core
    gui
    log

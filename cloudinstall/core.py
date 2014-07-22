@@ -63,6 +63,7 @@ class Controller:
         is_connected = False
         count = 0
         while not is_connected:
+            count = count + 1
             self.step_info("Waiting for MAAS (tries {0})".format(count))
             uri = path.join('http://', utils.container_ip('maas'), 'MAAS')
             log.info("Checking MAAS availability ({0})".format(uri))
@@ -70,11 +71,15 @@ class Controller:
                 res = requests.get(uri)
                 is_connected = res.ok
             except:
-                self.step_info("MAAS not available yet.")
-            count = count + 1
-            time.sleep(5)
+                self.step_info("MAAS not available yet, retrying ({0})".format(
+                    count))
+            time.sleep(10)
 
+        # Maas installed, bootstrap juju
         self.bootstrap()
+
+        # Initialize authentication and machine
+        self.initialize()
 
     def bootstrap(self):
         """ handles juju bootstrap
@@ -324,6 +329,8 @@ class Controller:
     def update_node_states(self):
         """ Updating node states
         """
+        if not self.juju_state:
+            return
         deployed_services = sorted(self.juju_state.services,
                                    key=attrgetter('service_name'))
         deployed_service_names = [s.service_name for s in deployed_services]
@@ -419,6 +426,13 @@ class Controller:
         self.ui.render_nodes(nodes)
         self.redraw_screen()
 
+    def initialize(self):
+        """ authenticates against juju/maas and initializes a machine """
+        self.authenticate_juju()
+        if self.config.is_multi:
+            self.authenticate_maas()
+        self.init_machine()
+
     def main_loop(self):
         if not hasattr(self, 'loop'):
             self.loop = urwid.MainLoop(self.ui,
@@ -428,10 +442,8 @@ class Controller:
             self.info_message("Getting this party started!")
             if self.opts.install and self.opts.install_type == "multi":
                 self.wait_for_maas()
-            self.authenticate_juju()
-            if self.config.is_multi:
-                self.authenticate_maas()
-            self.init_machine()
+            else:
+                self.initialize()
 
         self.loop.set_alarm_in(0, self.update_alarm)
         self.loop.run()
