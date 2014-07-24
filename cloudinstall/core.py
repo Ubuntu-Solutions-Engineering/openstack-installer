@@ -100,7 +100,7 @@ class Controller:
             state_server = self.config.juju_env['state-servers'][0]
         self.juju = JujuClient(
             url=path.join('wss://', state_server),
-            password=self.config.password)
+            password=self.config.juju_api_password)
         self.juju.login()
         self.juju_state = JujuState(self.juju)
         log.debug('Authenticated against juju api.')
