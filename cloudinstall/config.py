@@ -32,6 +32,9 @@ class Config:
         ('error',        'white',      'dark red'),
     ]
 
+    def __init__(self):
+        self._juju_env = None
+
     @property
     def tmpl_path(self):
         """ template path """
@@ -53,6 +56,9 @@ class Config:
     @property
     def juju_env(self):
         """ parses current juju environment """
+        if self._juju_env:
+            return self._juju_env
+
         env_file = None
         if self.is_single:
             env_file = 'local.jenv'
@@ -68,12 +74,17 @@ class Config:
 
         if os.path.exists(env_path):
             with open(env_path) as f:
-                return yaml.load(f.read().strip())
+                self._juju_env = yaml.load(f.read().strip())
+            return self._juju_env
         raise ConfigException('Unable to load environments file. Is '
                               'juju bootstrapped?')
 
     @property
-    def password(self):
+    def juju_api_password(self):
+        return self.juju_env['password']
+
+    @property
+    def openstack_password(self):
         PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
         try:
             with open(PASSWORD_FILE) as f:
