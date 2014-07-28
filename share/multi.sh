@@ -121,6 +121,8 @@ setupMultiInstall()
 	    "$INSTALL_HOME/.cloud-install"
 	configCharmOptions $openstack_password > \
           "$INSTALL_HOME/.cloud-install/charmconf.yaml"
+	lxc-create -t ubuntu-cloud -n maas -- -u $INSTALL_HOME/.cloud-install/maas-container.yml
+	lxc-start -n maas -d
 }
 
 # Configure interface

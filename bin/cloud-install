@@ -118,10 +118,7 @@ if [ ! -e /etc/cloud-installer/installed ]; then
 
 	case $install_type in
 	Multi-system)
-        lxc-create -t ubuntu-cloud -n maas -- -u /usr/share/cloud-installer/templates/maas-container.yml
-        lxc-start -n maas -d
-		exitInstall
-        cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER" cloud-status --install --install-type="multi"
+        multiInstall
 		;;
 	"Single system")
 		singleInstall
