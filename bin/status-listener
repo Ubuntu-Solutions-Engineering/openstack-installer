@@ -1,0 +1,105 @@
+#!/usr/bin/env python2.7
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import kombu
+import os
+import yaml
+from subprocess import check_output, STDOUT
+import time
+import traceback
+
+STATUS_FILE_NAME = os.path.expanduser("~/.cloud-install/sync-status")
+ERROR_FILE_NAME = STATUS_FILE_NAME + ".error"
+
+def get_info():
+    "Read rabbitmq config from remote unit's relation data"
+    id_yaml = check_output(['juju', 'run', '--unit', 'glance-simplestreams-sync/0',
+                            'cat /etc/glance-simplestreams-sync/identity.yaml'],
+                           stderr=STDOUT)
+
+    id_conf = yaml.load(id_yaml)
+    hosts = id_conf.get('rabbit_hosts', None)
+    if hosts is not None:
+        host = hosts[0]
+    else:
+        host = id_conf['rabbit_host']
+
+    return (id_conf['rabbit_userid'],
+            id_conf['rabbit_password'],
+            host,
+            id_conf['rabbit_virtual_host'])
+
+
+status_message_exchange = kombu.Exchange("glance-simplestreams-sync-status")
+
+status_message_queue = kombu.Queue("glance-simplestreams-sync-status",
+                                   exchange=status_message_exchange)
+
+
+def atomic_write_file(filename, data):
+    tempname = filename + ".tmp"
+    with open(tempname, 'w') as f:
+        f.write(data)
+        f.flush()
+
+    os.rename(tempname, filename)
+
+
+def process_message(body, message):
+    if body['status'] == 'Error':
+        atomic_write_file(STATUS_FILE_NAME,
+                          "Sync status error, see\n{}".format(ERROR_FILE_NAME))
+        atomic_write_file(ERROR_FILE_NAME, body['message'])
+    else:
+        atomic_write_file(STATUS_FILE_NAME, body['message'])
+        atomic_write_file(ERROR_FILE_NAME, "")
+
+    message.ack()
+
+
+# Listen forever on rabbitmq port 
+if __name__ == "__main__":
+
+    atomic_write_file(STATUS_FILE_NAME,
+                      "Waiting for initial status.")
+
+    info_found = False
+    while not info_found:
+        try:
+            username, password, host, virtual_host = get_info()
+            info_found = True
+        except:
+            with open("{}.log".format(STATUS_FILE_NAME), 'w+') as f:
+                f.write(traceback.format_exc())
+                f.write("will reattempt to make connection.")
+            time.sleep(2)
+
+    try:
+        url = "amqp://{}:{}@{}/{}".format(username, password, host, virtual_host)
+
+        with kombu.BrokerConnection(url) as conn:
+            status_message_queue(conn.channel()).declare()
+
+            with conn.Consumer(status_message_queue,
+                               callbacks=[process_message]) as consumer:
+                while True:
+                    conn.drain_events()
+    except:
+        atomic_write_file(STATUS_FILE_NAME,
+                          "Sync status error, see\n{}".format(ERROR_FILE_NAME))
+        atomic_write_file(ERROR_FILE_NAME,
+                          traceback.format_exc())
