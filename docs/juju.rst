@@ -6,9 +6,3 @@
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. automodule:: cloudinstall.juju.client
-    :members:
-    :undoc-members:
-    :show-inheritance:
-

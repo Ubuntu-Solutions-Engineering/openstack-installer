@@ -34,14 +34,6 @@ cloudinstall Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`pegasus` Module
----------------------
-
-.. automodule:: cloudinstall.pegasus
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`service` Module
 ---------------------
 

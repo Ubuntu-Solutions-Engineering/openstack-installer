@@ -28,7 +28,7 @@ from cloudinstall.config import Config
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import MaasState
 from maasclient.auth import MaasAuth
-from maasclient.client import MaasClient
+from maasclient import MaasClient
 from cloudinstall.charms import CharmQueue, get_charm
 
 from macumba import JujuClient
