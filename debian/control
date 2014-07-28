@@ -59,7 +59,14 @@ Description: Ubuntu Openstack Installer
 Package: cloud-install-multi
 Section: admin
 Architecture: all
-Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, vlan, ${misc:Depends}
+Depends: juju-core,
+         lxc,
+         maas,
+         maas-dhcp,
+         maas-dns,
+         python3-maasclient,
+         vlan,
+         ${misc:Depends}
 Description: Ubuntu Openstack Installer (multi-system) - dependency package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
