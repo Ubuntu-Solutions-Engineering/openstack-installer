@@ -11,4 +11,7 @@ users:
 apt_sources:
     - source: "ppa:cloud-installer/ppa"
 packages:
-    - cloud-install-multi
+    - maas
+    - maas-dhcp
+    - maas-dns
+    - vlan

@@ -38,9 +38,8 @@ from multiprocessing import cpu_count
 log = logging.getLogger('cloudinstall.core')
 
 
-class Controller:
-    """ core controller for ui and juju deployments """
-
+class BaseController:
+    """ Base logic controller """
     def __init__(self, ui=None, opts=None):
         self.ui = ui
         self.opts = opts
@@ -50,12 +49,46 @@ class Controller:
         self.maas = None
         self.maas_state = None
         self.nodes = None
-        self.charm_modules = utils.load_charms()
         self.machine = None
+
+    # overlays
+    def step_info(self, message):
+        self.ui.hide_step_info()
+        self.ui.show_step_info(message)
+        self.redraw_screen()
+
+    # - Footer
+    def clear_status(self):
+        self.ui.clear_status()
+        self.redraw_screen()
+
+    def info_message(self, message):
+        self.ui.status_info_message(message)
+        self.redraw_screen()
+
+    # - Render
+    def render_nodes(self, nodes):
+        self.ui.render_nodes(nodes)
+        self.redraw_screen()
+
+    def redraw_screen(self):
+        if hasattr(self, "loop"):
+            try:
+                self.loop.draw_screen()
+            except AssertionError as message:
+                logging.critical(message)
+
+
+class Controller(BaseController):
+    """ core controller for ui and juju deployments """
+
+    def __init__(self, **kwds):
+        self.charm_modules = utils.load_charms()
         self.deployed_charm_classes = []
         self.finalized_charm_classes = []
         self.single_net_configured = False
         self.lxc_root_tarball_configured = False
+        super().__init__(**kwds)
 
     @utils.async
     def wait_for_maas(self):
@@ -80,18 +113,8 @@ class Controller:
             time.sleep(10)
 
         # Render nodeview, even though nothing is there yet.
-        self.render_nodes()
-
-        # Maas installed, bootstrap juju
-        self.bootstrap()
-
-        # Initialize authentication and machine
         self.initialize()
-
-    def bootstrap(self):
-        """ handles juju bootstrap
-        """
-        self.step_info("Bootstrapping environment.")
+        self.render_nodes([])
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -319,13 +342,6 @@ class Controller:
     def exit(self):
         raise urwid.ExitMainLoop()
 
-    def redraw_screen(self):
-        if hasattr(self, "loop"):
-            try:
-                self.loop.draw_screen()
-            except AssertionError as message:
-                logging.critical(message)
-
     def update_alarm(self, *args, **kwargs):
         # Do update here.
         log.debug("Updating.")
@@ -411,27 +427,6 @@ class Controller:
                 charm_q.watch_relations()
                 charm_q.watch_post_proc()
                 charm_q.is_running = True
-
-    # overlays
-    def step_info(self, message):
-        self.ui.hide_step_info()
-        self.ui.show_step_info(message)
-        self.redraw_screen()
-
-    # - Footer
-    def clear_status(self):
-        self.ui.clear_status()
-        self.redraw_screen()
-
-    def info_message(self, message):
-        self.ui.status_info_message(message)
-        self.redraw_screen()
-
-    # - Render
-    def render_nodes(self, nodes):
-
-        self.ui.render_nodes(nodes)
-        self.redraw_screen()
 
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
