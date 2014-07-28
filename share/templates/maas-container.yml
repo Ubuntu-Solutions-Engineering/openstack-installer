@@ -1,8 +1,14 @@
 #cloud-config
+groups:
+    - ubuntu
+users:
+    - default
+    - name: ubuntu
+      primary-group: ubuntu
+      groups: users
+      sudo: ALL=NOPASSWD:ALL
+      passwd: ubuntu
 apt_sources:
     - source: "ppa:cloud-installer/ppa"
 packages:
     - cloud-install-multi
-runcmd:
-    - "echo 'ubuntu ALL=NOPASSWD:ALL' > /etc/sudoers.d/ubuntu; chmod 440 /etc/sudoers.d/ubuntu"
-    - "echo 'ubuntu:ubuntu'|chpasswd"
