@@ -21,6 +21,7 @@ Reference
    :maxdepth: 2
 
    charms
+   config
    juju
    maas
    ui
