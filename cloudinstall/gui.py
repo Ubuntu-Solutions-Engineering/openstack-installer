@@ -18,13 +18,15 @@
 
 """ Pegasus - gui interface to  Installer """
 
+from __future__ import unicode_literals
 from operator import attrgetter
 import re
 import logging
+import functools
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
-                   RadioButton, IntEdit, SimpleListWalker)
+                   RadioButton, IntEdit, SimpleListWalker, Padding)
 
 from cloudinstall import utils
 from cloudinstall.ui import StatusBar, StepInfo
@@ -38,6 +40,8 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['stdout'])
 
 # Time to lock in seconds
 LOCK_TIME = 120
+
+padding = functools.partial(Padding, left=2, right=2, top=2, bottom=2)
 
 
 class AddCharmDialog(WidgetWrap):
@@ -68,7 +72,7 @@ class AddCharmDialog(WidgetWrap):
         self.lb = ListBox([ba, Text(""), self.buttons])
         self.w = LineBox(self.lb, title="Add unit")
         self.w = AttrMap(self.w, "dialog")
-        super(AddCharmDialog, self).__init__(self.w)
+        super().__init__(self.w)
 
     def yes(self, button):
         #selected = [r for r in self.boxes if
@@ -141,7 +145,7 @@ class NodeViewMode(WidgetWrap):
         unit_info = []
         for node in nodes:
             for u in sorted(node.units, key=attrgetter('unit_name')):
-                info = "{unit_name} " \
+                info = "\N{TRIANGULAR BULLET} {unit_name} " \
                        "({status})".format(unit_name=u.unit_name,
                                            status=u.agent_state)
 
@@ -170,11 +174,11 @@ class NodeViewMode(WidgetWrap):
 
 class Header(WidgetWrap):
     def __init__(self):
-        header = [AttrWrap(Text(TITLE_TEXT), "border"),
-                  AttrWrap(Text('(F6) Add units'), "border"),
-                  AttrWrap(Text('(F5) Refresh'), "border"),
-                  AttrWrap(Text('(Q) Quit'), "border")]
-        super(Header, self).__init__(Columns(header))
+        header = [AttrWrap(padding(Text(TITLE_TEXT)), "header title"),
+                  AttrWrap(padding(Text('(F6) Add units')), "border"),
+                  AttrWrap(padding(Text('(F5) Refresh')), "border"),
+                  AttrWrap(padding(Text('(Q) Quit')), "border")]
+        super().__init__(Columns(header))
 
 
 class PegasusGUI(WidgetWrap):
@@ -187,7 +191,7 @@ class PegasusGUI(WidgetWrap):
                            header=header,
                            footer=footer)
 
-        super(PegasusGUI, self).__init__(self.frame)
+        super().__init__(self.frame)
 
     def _build_overlay_widget(self,
                               top_w,
