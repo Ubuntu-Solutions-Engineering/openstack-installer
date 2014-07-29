@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-BACKTITLE="Cloud install"
+BACKTITLE="Ubuntu Openstack Installer"
 LOG=/var/log/cloud-install.log
 
 export PYTHONPATH=/usr/share/cloud-installer:$PYTHONPATH

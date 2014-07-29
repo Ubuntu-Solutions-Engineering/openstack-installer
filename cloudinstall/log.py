@@ -19,6 +19,7 @@
 """ Logging interface
 """
 
+from __future__ import unicode_literals
 import logging
 import os
 
@@ -59,7 +60,8 @@ def setup_logger(name=__name__):
                                            interval=1,
                                            backupCount=7)
     commandslog.setFormatter(logging.Formatter(
-        '%(levelname)s * %(asctime)s [LINE:%(lineno)d] * %(name)s * '
+        '%(levelname)s \N{BULLET} %(asctime)s [LINE:%(lineno)d] '
+        '\N{BULLET} %(name)s \N{BULLET} '
         '%(message)s',
         datefmt='%m-%d %H:%M:%S'))
 

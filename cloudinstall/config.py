@@ -25,7 +25,8 @@ class ConfigException(Exception):
 class Config:
     STYLES = [
         ('body',         'white',      'black',),
-        ('border',       'white',      'dark magenta'),
+        ('border',       'light gray',      'dark magenta'),
+        ('header title', 'light gray,bold', 'dark magenta'),
         ('focus',        'white',      'dark gray'),
         ('dialog',       'black',      'light gray'),
         ('list_title',   'black',      'light gray',),

@@ -10,8 +10,8 @@ Build-Depends: debhelper (>= 9),
                python-setuptools,
                python3-all,
                python3-coverage,
-               python3-macumba,
                python3-maasclient,
+               python3-macumba,
                python3-mock,
                python3-nose,
                python3-passlib,
@@ -34,8 +34,8 @@ Depends: gawk,
          nmap,
          pwgen,
          python3-all,
-         python3-macumba,
          python3-maasclient,
+         python3-macumba,
          python3-mock,
          python3-nose,
          python3-oauthlib,
@@ -61,13 +61,7 @@ Description: Ubuntu Openstack Installer
 Package: cloud-install-multi
 Section: admin
 Architecture: all
-Depends: juju-core,
-         lxc,
-         maas,
-         maas-dhcp,
-         maas-dns,
-         vlan,
-         ${misc:Depends}
+Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, vlan, ${misc:Depends}
 Description: Ubuntu Openstack Installer (multi-system) - dependency package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
