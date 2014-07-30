@@ -26,11 +26,10 @@ import functools
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
-                   RadioButton, IntEdit, SimpleListWalker, Padding, Pile,
-                   Divider)
-
+                   RadioButton, IntEdit, SimpleListWalker, Padding, Pile)
 from cloudinstall import utils
-from cloudinstall.ui import StatusBar, StepInfo
+from cloudinstall.ui import (StatusBar, StepInfo, ScrollableWidgetWrap,
+                             ScrollableListBox)
 
 log = logging.getLogger('cloudinstall.gui')
 
@@ -136,42 +135,48 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
         self.text.append(text)
 
 
-class NodeViewMode(WidgetWrap):
+class NodeViewMode(ScrollableWidgetWrap):
     def __init__(self, nodes, **kwargs):
         nodes = [] if nodes is None else nodes
         widget = self._build_widget(nodes, **kwargs)
-        super().__init__(widget)
+        ScrollableWidgetWrap.__init__(self, widget)
 
     def _build_widget(self, nodes, **kwargs):
-        unit_info = [AttrWrap(Text('Services'), 'list_title')]
-        node_pile = []
+        unit_info = []
         for node in nodes:
-            for u in sorted(node.units, key=attrgetter('unit_name')):
-                if u.agent_state == "error":
-                    status = ("error_icon", "\N{BULLET}")
-                else:
-                    status = ("success_icon", "\u2713")
-                node_pile.append(Text(["\u250C state: ",
-                                 status]))
+            node_pile = []
+            charm, node, state = node
+            if charm.menuable:
+                for u in node.units:
+                    machine = state.machine(u.machine_id)
+                    if u.agent_state == "error":
+                        status = ("error_icon", "\N{BULLET} ")
+                    else:
+                        status = ("success_icon", "\u2713 ")
+                    node_pile.append(('pack', Text(status)))
+                    if u.public_address:
+                        node_pile.append(
+                            ('pack',
+                             Text(u.public_address)))
 
-                if u.public_address:
-                    node_pile.append(Text("\u251C address: {address}".format(
-                        address=u.public_address)))
+                    if 'error' in u.agent_state:
+                        state_info = u.agent_state_info.lstrip()
+                        node_pile.append(Text(" Info: "
+                                              "{state_info}".format(
+                                                  state_info=state_info)))
+                    node_pile.append(Text(" \u2022 arch={0} mem={1} "
+                                          "storage={2}".format(
+                                              machine.arch,
+                                              machine.mem,
+                                              machine.storage
+                                          )))
+                    node_pile = [Columns(node_pile)]
 
-                if 'error' in u.agent_state:
-                    state_info = u.agent_state_info.lstrip()
-                    node_pile.append(Text("\u2514 info: {state_info}".format(
-                        state_info=state_info)))
+                unit_info.append(padding(LineBox(
+                    Pile(node_pile),
+                    title=charm.display_name)))
 
-                # unit_machine = self.juju_state.machine(u.machine_id)
-                # if unit_machine.agent_state is None and \
-                #    unit_machine.agent_state_info is not None:
-                #     info += "\nmachine info: " + unit_machine.agent_state_info
-
-                unit_info.append(padding(LineBox(Pile(node_pile),
-                                                 title=u.unit_name)))
-
-        return ListBox(SimpleListWalker(unit_info))
+        return ScrollableListBox(unit_info)
 
     def keypress(self, size, key):
         return key
@@ -264,6 +269,12 @@ class PegasusGUI(WidgetWrap):
 
     def status_info_message(self, message):
         self.frame.footer.info_message(message)
+
+    def status_dashboard_url(self, ip):
+        self.frame.footer.set_dashboard_url(ip)
+
+    def status_jujugui_url(self, ip):
+        self.frame.footer.set_jujugui_url(ip)
 
     def clear_status(self):
         self.frame.footer = None

@@ -29,7 +29,7 @@ class Config:
         ('header title', 'light gray,bold', 'dark magenta'),
         ('focus',        'white',      'dark gray'),
         ('dialog',       'black',      'light gray'),
-        ('list_title',   'black',      'light gray',),
+        ('status_extra',   'black,bold',      'light gray',),
         ('error',        'white',      'dark red'),
         ('info', 'light green', 'default'),
         ('error_icon',    'light red,bold',      'default'),

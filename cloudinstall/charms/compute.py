@@ -26,7 +26,8 @@ class CharmNovaCompute(CharmBase):
     """ Openstack Nova Compute directives """
 
     charm_name = 'nova-compute'
-    display_name = 'Nova Compute Node'
+    display_name = 'Compute'
+    menuable = True
     display_priority = DisplayPriorities.Compute
     related = ['mysql', 'glance', 'nova-cloud-controller']
     isolate = True

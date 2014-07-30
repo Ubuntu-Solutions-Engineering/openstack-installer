@@ -28,7 +28,8 @@ class CharmNovaCloudController(CharmBase):
     """ Openstack Nova Cloud Controller directives """
 
     charm_name = 'nova-cloud-controller'
-    display_name = 'Nova Cloud Controller'
+    display_name = 'Controller'
+    menuable = True
     related = ['mysql', 'rabbitmq-server', 'glance', 'keystone']
     allow_multi_units = True
 
