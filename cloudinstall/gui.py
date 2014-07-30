@@ -27,14 +27,14 @@ import functools
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
                    RadioButton, IntEdit, SimpleListWalker, Padding, Pile,
-                   Divider, Button)
+                   Divider)
 
 from cloudinstall import utils
 from cloudinstall.ui import StatusBar, StepInfo
 
 log = logging.getLogger('cloudinstall.gui')
 
-TITLE_TEXT = "Ubuntu Openstack Installer"
+TITLE_TEXT = "Ubuntu Openstack Installer - Dashboard"
 
 # - Properties ----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['stdout'])
