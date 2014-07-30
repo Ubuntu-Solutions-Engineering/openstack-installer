@@ -89,7 +89,8 @@ class JujuState:
         :returns: Service() of all loaded services
         :rtype: generator
         """
-        for name, service in self.juju.status()['Services'].items():
+        ret = self.juju.status()
+        for name, service in ret['Services'].items():
             yield Service(name, service)
 
     @property

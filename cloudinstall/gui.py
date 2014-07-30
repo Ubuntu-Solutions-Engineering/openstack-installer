@@ -26,7 +26,8 @@ import functools
 
 from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
-                   RadioButton, IntEdit, SimpleListWalker, Padding)
+                   RadioButton, IntEdit, SimpleListWalker, Padding, Pile,
+                   Divider, Button)
 
 from cloudinstall import utils
 from cloudinstall.ui import StatusBar, StepInfo
@@ -41,7 +42,7 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['stdout'])
 # Time to lock in seconds
 LOCK_TIME = 120
 
-padding = functools.partial(Padding, left=2, right=2, top=2, bottom=2)
+padding = functools.partial(Padding, left=2, right=2)
 
 
 class AddCharmDialog(WidgetWrap):
@@ -142,29 +143,33 @@ class NodeViewMode(WidgetWrap):
         super().__init__(widget)
 
     def _build_widget(self, nodes, **kwargs):
-        unit_info = []
+        unit_info = [AttrWrap(Text('Services'), 'list_title')]
+        node_pile = []
         for node in nodes:
             for u in sorted(node.units, key=attrgetter('unit_name')):
-                info = "\N{TRIANGULAR BULLET} {unit_name} " \
-                       "({status})".format(unit_name=u.unit_name,
-                                           status=u.agent_state)
+                if u.agent_state == "error":
+                    status = ("error_icon", "\N{BULLET}")
+                else:
+                    status = ("success_icon", "\u2713")
+                node_pile.append(Text(["\u250C state: ",
+                                 status]))
 
                 if u.public_address:
-                    info += "\naddress: {address}".format(
-                        address=u.public_address)
+                    node_pile.append(Text("\u251C address: {address}".format(
+                        address=u.public_address)))
 
                 if 'error' in u.agent_state:
                     state_info = u.agent_state_info.lstrip()
-                    info += "\ninfo: {state_info}".format(
-                        state_info=state_info)
+                    node_pile.append(Text("\u2514 info: {state_info}".format(
+                        state_info=state_info)))
 
                 # unit_machine = self.juju_state.machine(u.machine_id)
                 # if unit_machine.agent_state is None and \
                 #    unit_machine.agent_state_info is not None:
                 #     info += "\nmachine info: " + unit_machine.agent_state_info
 
-                info += "\n\n"
-                unit_info.append(Text(info))
+                unit_info.append(padding(LineBox(Pile(node_pile),
+                                                 title=u.unit_name)))
 
         return ListBox(SimpleListWalker(unit_info))
 
@@ -174,11 +179,17 @@ class NodeViewMode(WidgetWrap):
 
 class Header(WidgetWrap):
     def __init__(self):
-        header = [AttrWrap(padding(Text(TITLE_TEXT)), "header title"),
-                  AttrWrap(padding(Text('(F6) Add units')), "border"),
-                  AttrWrap(padding(Text('(F5) Refresh')), "border"),
-                  AttrWrap(padding(Text('(Q) Quit')), "border")]
-        super().__init__(Columns(header))
+        w = [AttrWrap(Divider(), "border")]
+        w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header title"))
+        w.append(AttrWrap(Divider(), "border"))
+        w.append(AttrWrap(Columns([
+            padding(AttrWrap(Button('(F6) Add units'), 'button')),
+            padding(AttrWrap(Button('(F5) Refresh'), 'button')),
+            padding(AttrWrap(Button('(Q) Quit'), 'button'))
+        ]), "border"))
+        w.append(AttrWrap(Divider(), "border"))
+        w = Pile(w)
+        super().__init__(w)
 
 
 class PegasusGUI(WidgetWrap):
