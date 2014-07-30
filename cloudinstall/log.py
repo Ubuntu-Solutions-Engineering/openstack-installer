@@ -66,7 +66,7 @@ def setup_logger(name=__name__):
         datefmt='%m-%d %H:%M:%S'))
 
     logger = logging.getLogger('')
-    env = os.environ.get('UCI_LOGLEVEL', 'INFO')
+    env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
     f = logging.Filter(name='cloudinstall')
     commandslog.addFilter(f)
     logger.setLevel(env)
