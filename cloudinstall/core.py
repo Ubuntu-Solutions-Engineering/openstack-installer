@@ -51,6 +51,11 @@ class BaseController:
         self.nodes = None
         self.machine = None
 
+    def initialize(self):
+        """ authenticates against juju/maas and initializes a machine """
+        self.authenticate_juju()
+        self.init_machine()
+
     # overlays
     def step_info(self, message):
         self.ui.hide_step_info()
