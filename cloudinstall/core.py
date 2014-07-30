@@ -72,7 +72,6 @@ class BaseController:
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
         self.authenticate_juju()
-        self.init_machine()
 
     # overlays
     def step_info(self, message):
