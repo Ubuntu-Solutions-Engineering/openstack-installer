@@ -34,7 +34,7 @@ class Config:
         ('info', 'light green', 'default'),
         ('error_icon',    'light red,bold',      'default'),
         ('success_icon',    'light green',      'default'),
-        ('button', 'white', 'dark gray')
+        ('button', 'light gray', 'dark gray')
     ]
 
     def __init__(self):

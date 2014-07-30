@@ -25,7 +25,7 @@ class CharmQuantum(CharmBase):
     """ quantum directives """
 
     charm_name = 'quantum-gateway'
-    # TODO: Charms are stilled called quantum, we want to display
+    # TODO: Charms are still called quantum, we want to display
     # them as Neutron
     display_name = 'Neutron'
     related = ['mysql', 'nova-cloud-controller', 'rabbitmq-server']

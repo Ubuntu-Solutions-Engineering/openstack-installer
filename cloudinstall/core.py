@@ -95,9 +95,9 @@ class BaseController:
                                        self.config.STYLES,
                                        handle_mouse=True,
                                        unhandled_input=self.header_hotkeys)
-            self.info_message("Getting this party started!")
+            self.info_message("Welcome ..")
 
-        self.loop.set_alarm_in(0, self.update_alarm)
+        self.loop.set_alarm_in(3, self.update_alarm)
         self.loop.run()
 
     def start(self):
@@ -106,7 +106,7 @@ class BaseController:
 
     def update_alarm(self, *args, **kwargs):
         # Do update here.
-        log.info("Updating node states.")
+        log.debug("Updating node states.")
         self.update_node_states()
         self.loop.set_alarm_in(10, self.update_alarm)
 
@@ -136,7 +136,6 @@ class BaseController:
                 if u.is_jujugui:
                     self.set_jujugui_url(u.public_address)
         self.render_nodes(self.nodes)
-        self.loop.set_alarm_in(10, self.update_alarm)
 
     def header_hotkeys(self, key):
         if key in ['q', 'Q']:
@@ -144,7 +143,11 @@ class BaseController:
         if key == 'f5':
             self.render_nodes(self.nodes)
         if key == 'f6':
-            self.ui.show_add_charm_info(self.charm_modules)
+            charm_modules = utils.load_charms()
+            charm_classes = [m.__charm_class__ for m in charm_modules
+                             if m.__charm_class__.allow_multi_units and
+                             not m.__charm_class__.disabled]
+            self.ui.show_add_charm_info(charm_classes)
 
 
 class Controller(BaseController):
@@ -447,22 +450,3 @@ class Controller(BaseController):
         if self.config.is_multi:
             self.authenticate_maas()
         self.init_machine()
-
-    def main_loop(self):
-        if not hasattr(self, 'loop'):
-            self.loop = urwid.MainLoop(self.ui,
-                                       self.config.STYLES,
-                                       handle_mouse=True,
-                                       unhandled_input=self.header_hotkeys)
-            self.info_message("Getting this party started!")
-            if self.opts.install and self.opts.install_type == "multi":
-                self.wait_for_maas()
-            else:
-                self.initialize()
-
-        self.loop.set_alarm_in(0, self.update_alarm)
-        self.loop.run()
-
-    def start(self):
-        """ Starts controller processing """
-        self.main_loop()
