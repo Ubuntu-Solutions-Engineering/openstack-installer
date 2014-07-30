@@ -189,9 +189,10 @@ class Header(WidgetWrap):
         w = []
         w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header title"))
         w.append(AttrWrap(Columns([
-            padding(AttrWrap(Button('(F6) Add units'), 'button')),
-            padding(AttrWrap(Button('(F5) Refresh'), 'button')),
-            padding(AttrWrap(Button('(Q) Quit'), 'button'))
+            ('pack', AttrWrap(Text('(F6) Add units', align='center'),
+                              'button')),
+            (18, AttrWrap(Text('(F5) Refresh', align='center'), 'button')),
+            ('pack', AttrWrap(Text('(Q) Quit', align='center'), 'button'))
         ]), "border"))
         w = Pile(w)
         super().__init__(w)
