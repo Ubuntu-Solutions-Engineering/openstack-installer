@@ -19,7 +19,6 @@
 """ Pegasus - gui interface to  Installer """
 
 from __future__ import unicode_literals
-from operator import attrgetter
 import re
 import logging
 import functools
@@ -71,7 +70,7 @@ class AddCharmDialog(WidgetWrap):
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
         self.lb = ListBox([ba, Text(""), self.buttons])
         self.w = LineBox(self.lb, title="Add unit")
-        self.w = AttrMap(self.w, "dialog")
+        self.w = AttrWrap(self.w, "dialog")
         super().__init__(self.w)
 
     def yes(self, button):
@@ -82,11 +81,14 @@ class AddCharmDialog(WidgetWrap):
         #n = self.count_editor.value()
         pass
 
+    def no(self, button):
+        pass
+
     def _wrap_focus(widgets, unfocused=None):
         try:
-            return [AttrMap(w, unfocused, "focus") for w in widgets]
+            return [AttrWrap(w, "focus") for w in widgets]
         except TypeError:
-            return AttrMap(widgets, unfocused, "focus")
+            return AttrWrap(widgets, "focus")
 
 
 class Banner(WidgetWrap):
