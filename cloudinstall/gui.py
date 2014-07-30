@@ -23,7 +23,7 @@ import re
 import logging
 import functools
 
-from urwid import (AttrWrap, AttrMap, Text, Columns, Overlay, LineBox,
+from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
                    RadioButton, IntEdit, SimpleListWalker, Padding, Pile)
 from cloudinstall import utils
@@ -91,7 +91,7 @@ class AddCharmDialog(WidgetWrap):
             return AttrWrap(widgets, "focus")
 
 
-class Banner(WidgetWrap):
+class Banner(ScrollableWidgetWrap):
     def __init__(self):
         self.text = []
         self.BANNER = [
@@ -130,7 +130,7 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
         for line in self.BANNER:
             self._insert_line(line)
 
-        return ListBox(SimpleListWalker(self.text))
+        return ScrollableListBox(self.text)
 
     def _insert_line(self, line):
         text = Text(line, align='center')
@@ -141,7 +141,7 @@ class NodeViewMode(ScrollableWidgetWrap):
     def __init__(self, nodes, **kwargs):
         nodes = [] if nodes is None else nodes
         widget = self._build_widget(nodes, **kwargs)
-        ScrollableWidgetWrap.__init__(self, widget)
+        super().__init__(widget)
 
     def _build_widget(self, nodes, **kwargs):
         unit_info = []
@@ -243,6 +243,18 @@ class PegasusGUI(WidgetWrap):
                                              height=height,
                                              min_width=min_width,
                                              min_height=min_height)
+
+    def focus_next(self):
+        self.frame.body.scroll_down()
+
+    def focus_previous(self):
+        self.frame.body.scroll_up()
+
+    def focus_first(self):
+        self.frame.body.scroll_top()
+
+    def focus_last(self):
+        self.frame.body.scroll_bottom()
 
     def hide_widget_on_top(self):
         """Hide the topmost widget (if any)."""
