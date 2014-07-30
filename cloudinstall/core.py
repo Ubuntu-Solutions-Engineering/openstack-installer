@@ -96,6 +96,7 @@ class BaseController:
                                        handle_mouse=True,
                                        unhandled_input=self.header_hotkeys)
             self.info_message("Welcome ..")
+            self.initialize()
 
         self.loop.set_alarm_in(3, self.update_alarm)
         self.loop.run()
