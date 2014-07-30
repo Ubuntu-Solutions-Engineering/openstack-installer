@@ -86,6 +86,7 @@ class CharmBase:
     allow_multi_units = False
     optional = False
     disabled = False
+    menuable = False
     machine_id = ""
 
     def __init__(self, juju=None, juju_state=None, machine=None):

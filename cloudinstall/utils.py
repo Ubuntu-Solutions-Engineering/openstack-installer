@@ -47,6 +47,14 @@ def load_charms():
     return charm_modules
 
 
+def load_charm_byname(name):
+    """ Load a charm by name
+
+    :param str name: name of charm
+    """
+    return import_module('cloudinstall.charms.{}'.format(name))
+
+
 def async(func):
     """
     Decorator for executing a function in a separate :class:`threading.Thread`.

@@ -28,6 +28,7 @@ class CharmCeph(CharmBase):
 
     charm_name = 'ceph'
     display_name = 'Ceph'
+    menuable = True
     display_priority = DisplayPriorities.Storage
     related = ['glance', 'mysql', 'rabbitmq-server']
     deploy_priority = 5

@@ -66,6 +66,14 @@ class BaseController:
         self.ui.status_info_message(message)
         self.redraw_screen()
 
+    def set_dashboard_url(self, ip):
+        self.ui.status_dashboard_url(ip)
+        self.redraw_screen()
+
+    def set_jujugui_url(self, ip):
+        self.ui.status_jujugui_url(ip)
+        self.redraw_screen()
+
     # - Render
     def render_nodes(self, nodes):
         self.ui.render_nodes(nodes)
@@ -97,6 +105,15 @@ class BaseController:
         self.main_loop()
 
     def update_alarm(self, *args, **kwargs):
+        # Do update here.
+        log.info("Updating node states.")
+        self.update_node_states()
+        self.loop.set_alarm_in(10, self.update_alarm)
+
+    @utils.async
+    def update_node_states(self):
+        """ Updating node states
+        """
         if not self.juju_state:
             return
         deployed_services = sorted(self.juju_state.services,
@@ -108,10 +125,16 @@ class BaseController:
                                 deployed_service_names],
                                key=attrgetter('charm_name'))
 
-        a = sorted([(c.display_priority, c.charm_name,
-                     s)
-                    for (c, s) in zip(charm_classes, deployed_services)])
-        self.nodes = [node for (_, _, node) in a]
+        a = [(c, s)
+             for (c, s) in zip(charm_classes, deployed_services)]
+        self.nodes = [(charm, node, self.juju_state)
+                      for (charm, node) in a]
+        for n in deployed_services:
+            for u in n.units:
+                if u.is_horizon:
+                    self.set_dashboard_url(u.public_address)
+                if u.is_jujugui:
+                    self.set_jujugui_url(u.public_address)
         self.render_nodes(self.nodes)
         self.loop.set_alarm_in(10, self.update_alarm)
 
@@ -375,50 +398,6 @@ class Controller(BaseController):
         else:
             log.debug("Polling will continue until all charms are finalized.")
             return True
-
-    def update_alarm(self, *args, **kwargs):
-        # Do update here.
-        log.debug("Updating.")
-        self.update_node_states()
-        self.loop.set_alarm_in(10, self.update_alarm)
-
-    @utils.async
-    def update_node_states(self):
-        """ Updating node states
-        """
-        if not self.juju_state:
-            return
-        deployed_services = sorted(self.juju_state.services,
-                                   key=attrgetter('service_name'))
-        deployed_service_names = [s.service_name for s in deployed_services]
-
-        charm_classes = sorted([m.__charm_class__ for m in utils.load_charms()
-                                if m.__charm_class__.charm_name in
-                                deployed_service_names],
-                               key=attrgetter('charm_name'))
-
-        a = sorted([(c.display_priority, c.charm_name,
-                     s)
-                    for (c, s) in zip(charm_classes, deployed_services)])
-        self.nodes = [node for (_, _, node) in a]
-        # for n in self.juju_state.services:
-        #     for i in n.units:
-        #         if i.is_horizon:
-        #             url = "Horizon: "
-        #             if i.public_address:
-        #                 url += "http://{}/horizon".format(i.public_address)
-        #                 self.info_message("Nodes are accessible")
-        #             else:
-        #                 url += "Pending"
-        #                 self.info_message("Nodes are still deploying")
-        #             self.horizon_url.set_text(url)
-        #         if i.is_jujugui:
-        #             if i.public_address:
-        #                 url = "Juju-GUI: http://{}/".format(i.public_address)
-        #             else:
-        #                 url = "Juju-GUI: Pending"
-        #             self.jujugui_url.set_text(url)
-        self.render_nodes(self.nodes)
 
     def add_charm(self, charm, count=0):
         self.charm_classes = [m.__charm_class__ for m in self.charm_modules

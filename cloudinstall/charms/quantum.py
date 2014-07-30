@@ -25,10 +25,13 @@ class CharmQuantum(CharmBase):
     """ quantum directives """
 
     charm_name = 'quantum-gateway'
-    display_name = 'Quantum'
+    # TODO: Charms are stilled called quantum, we want to display
+    # them as Neutron
+    display_name = 'Neutron'
     related = ['mysql', 'nova-cloud-controller', 'rabbitmq-server']
     isolate = True
     optional = False
+    menuable = True
     constraints = {'mem': 2048,
                    'root-disk': 20480}
 
