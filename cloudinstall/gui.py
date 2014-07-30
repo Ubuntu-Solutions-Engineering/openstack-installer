@@ -179,15 +179,13 @@ class NodeViewMode(WidgetWrap):
 
 class Header(WidgetWrap):
     def __init__(self):
-        w = [AttrWrap(Divider(), "border")]
+        w = []
         w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header title"))
-        w.append(AttrWrap(Divider(), "border"))
         w.append(AttrWrap(Columns([
             padding(AttrWrap(Button('(F6) Add units'), 'button')),
             padding(AttrWrap(Button('(F5) Refresh'), 'button')),
             padding(AttrWrap(Button('(Q) Quit'), 'button'))
         ]), "border"))
-        w.append(AttrWrap(Divider(), "border"))
         w = Pile(w)
         super().__init__(w)
 
