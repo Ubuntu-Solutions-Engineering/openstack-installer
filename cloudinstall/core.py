@@ -51,6 +51,24 @@ class BaseController:
         self.nodes = None
         self.machine = None
 
+    def authenticate_juju(self):
+        if not len(self.config.juju_env['state-servers']) > 0:
+            state_server = 'localhost:17070'
+        else:
+            state_server = self.config.juju_env['state-servers'][0]
+        self.juju = JujuClient(
+            url=path.join('wss://', state_server),
+            password=self.config.juju_api_password)
+        self.juju.login()
+        self.juju_state = JujuState(self.juju)
+        log.debug('Authenticated against juju api.')
+
+    def authenticate_maas(self):
+        log.debug('Authenticating maas api')
+        auth = MaasAuth()
+        auth.get_api_key('root')
+        self.maas = MaasClient(auth)
+
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
         self.authenticate_juju()
@@ -192,24 +210,6 @@ class Controller(BaseController):
         # Render nodeview, even though nothing is there yet.
         self.initialize()
         self.render_nodes([])
-
-    def authenticate_juju(self):
-        if not len(self.config.juju_env['state-servers']) > 0:
-            state_server = 'localhost:17070'
-        else:
-            state_server = self.config.juju_env['state-servers'][0]
-        self.juju = JujuClient(
-            url=path.join('wss://', state_server),
-            password=self.config.juju_api_password)
-        self.juju.login()
-        self.juju_state = JujuState(self.juju)
-        log.debug('Authenticated against juju api.')
-
-    def authenticate_maas(self):
-        log.debug('Authenticating maas api')
-        auth = MaasAuth()
-        auth.get_api_key('root')
-        self.maas = MaasClient(auth)
 
     @utils.async
     def init_machine(self):
