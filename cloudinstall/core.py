@@ -165,6 +165,10 @@ class BaseController:
             self.exit()
         if key == 'f5':
             self.render_nodes(self.nodes)
+        if key == 'j':
+            self.ui.focus_next()
+        if key == 'k':
+            self.ui.focus_previous()
         if key == 'f6':
             charm_modules = utils.load_charms()
             charm_classes = [m.__charm_class__ for m in charm_modules
@@ -221,7 +225,6 @@ class Controller(BaseController):
             nodes = []
             while len(nodes) == 0:
                 nodes = self.maas.nodes
-            self.ui.hide_maas_info()
             self.maas_state = MaasState(self.maas.nodes)
             self.maas.tag_fpi(self.maas_state)
             self.maas.nodes_accept_all()
