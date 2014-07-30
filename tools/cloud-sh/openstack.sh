@@ -54,9 +54,13 @@ waitForService()
 juju bootstrap
 waitForMachine 0
 
-juju add-machine --constraints "cpu-cores=$CORES mem=4G"
-juju deploy --config config.yaml --constraints "cpu-cores=$CORES mem=1G" quantum-gateway
-juju deploy --constraints "cpu-cores=$CORES mem=2G root-disk=20G" nova-compute
+juju add-machine --constraints "cpu-cores=$CORES mem=4G root-disk=20G"
+
+juju add-machine --constraints "cpu-cores=$CORES mem=1G"
+juju deploy --config config.yaml --to 2 quantum-gateway
+
+juju add-machine --constraints "cpu-cores=$CORES mem=2G root-disk=20G"
+juju deploy --config config.yaml --to 3 nova-compute
 
 waitForMachine 1
 juju scp lxc-network.sh 1:
