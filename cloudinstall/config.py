@@ -31,6 +31,10 @@ class Config:
         ('dialog',       'black',      'light gray'),
         ('list_title',   'black',      'light gray',),
         ('error',        'white',      'dark red'),
+        ('info', 'light green', 'default'),
+        ('error_icon',    'light red,bold',      'default'),
+        ('success_icon',    'light green',      'default'),
+        ('button', 'white', 'dark gray')
     ]
 
     def __init__(self):

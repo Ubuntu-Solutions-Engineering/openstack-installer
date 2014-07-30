@@ -78,6 +78,51 @@ class BaseController:
             except AssertionError as message:
                 logging.critical(message)
 
+    def exit(self):
+        raise urwid.ExitMainLoop()
+
+    def main_loop(self):
+        if not hasattr(self, 'loop'):
+            self.loop = urwid.MainLoop(self.ui,
+                                       self.config.STYLES,
+                                       handle_mouse=True,
+                                       unhandled_input=self.header_hotkeys)
+            self.info_message("Getting this party started!")
+
+        self.loop.set_alarm_in(0, self.update_alarm)
+        self.loop.run()
+
+    def start(self):
+        """ Starts controller processing """
+        self.main_loop()
+
+    def update_alarm(self, *args, **kwargs):
+        if not self.juju_state:
+            return
+        deployed_services = sorted(self.juju_state.services,
+                                   key=attrgetter('service_name'))
+        deployed_service_names = [s.service_name for s in deployed_services]
+
+        charm_classes = sorted([m.__charm_class__ for m in utils.load_charms()
+                                if m.__charm_class__.charm_name in
+                                deployed_service_names],
+                               key=attrgetter('charm_name'))
+
+        a = sorted([(c.display_priority, c.charm_name,
+                     s)
+                    for (c, s) in zip(charm_classes, deployed_services)])
+        self.nodes = [node for (_, _, node) in a]
+        self.render_nodes(self.nodes)
+        self.loop.set_alarm_in(10, self.update_alarm)
+
+    def header_hotkeys(self, key):
+        if key in ['q', 'Q']:
+            self.exit()
+        if key == 'f5':
+            self.render_nodes(self.nodes)
+        if key == 'f6':
+            self.ui.show_add_charm_info(self.charm_modules)
+
 
 class Controller(BaseController):
     """ core controller for ui and juju deployments """
@@ -330,17 +375,6 @@ class Controller(BaseController):
         else:
             log.debug("Polling will continue until all charms are finalized.")
             return True
-
-    def header_hotkeys(self, key):
-        if key in ['q', 'Q']:
-            self.exit()
-        if key == 'f5':
-            self.render_nodes(self.nodes)
-        if key == 'f6':
-            self.ui.show_add_charm_info(self.charm_modules)
-
-    def exit(self):
-        raise urwid.ExitMainLoop()
 
     def update_alarm(self, *args, **kwargs):
         # Do update here.

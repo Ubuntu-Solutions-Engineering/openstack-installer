@@ -15,6 +15,7 @@
 
 """ re-usable widgets """
 
+from __future__ import unicode_literals
 from urwid import WidgetWrap, Text, AttrWrap, LineBox
 
 
@@ -23,10 +24,10 @@ class StatusBar(WidgetWrap):
 
     INFO = "[INFO]"
     ERROR = "[ERROR]"
-    ARROW = " => "
+    ARROW = " \u21e8 "
 
     def __init__(self, text=''):
-        super(StatusBar, self).__init__(Text(text))
+        super().__init__(Text(text))
 
     def message(self, text):
         """Write `text` on the footer."""
@@ -49,4 +50,4 @@ class StepInfo(WidgetWrap):
     def __init__(self, msg=None):
         if not msg:
             msg = "Processing."
-        super(StepInfo, self).__init__(AttrWrap(LineBox(Text(msg)), 'dialog'))
+        super().__init__(AttrWrap(LineBox(Text(msg)), 'dialog'))
