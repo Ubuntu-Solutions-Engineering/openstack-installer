@@ -167,7 +167,7 @@ class BaseController:
             self.ui.focus_previous()
         if key == 'esc':
             self.ui.hide_widget_on_top()
-        if key in ['h', 'H']:
+        if key in ['h', 'H', '?']:
             self.ui.show_help_info()
         if key == 'f6':
             charm_modules = utils.load_charms()
