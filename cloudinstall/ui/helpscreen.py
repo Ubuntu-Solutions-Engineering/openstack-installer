@@ -16,10 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from urwid import Overlay, LineBox, ListBox, Text, AttrWrap
+from __future__ import unicode_literals
+from urwid import Text, AttrWrap, LineBox, WidgetWrap, Pile
+from cloudinstall.ui import ScrollableListBox, ScrollableWidgetWrap
 
-
-HELP_TEXT = ["""Press Enter to remove this dialog.
+HELP_TEXT = ["""Press ESC to remove this dialog.
 
 For full documentation, please refer to
 http://ubuntu-cloud-installer.readthedocs.org/en/latest/
@@ -84,42 +85,7 @@ details.
              ('bold', "End of Help Screen")]
 
 
-class ScrollableListBox(ListBox):
-    def focus_next(self):
-        try:
-            self.body.set_focus(self.body.get_next(
-                self.body.get_focus()[1])[1])
-        except:
-            pass
-
-    def focus_previous(self):
-        try:
-            self.body.set_focus(self.body.get_prev(
-                self.body.get_focus()[1])[1])
-        except:
-            pass
-
-
-class HelpScreen(Overlay):
-    def __init__(self, underlying, remove_func):
-        self.remove_func = remove_func
-        tl = [Text(t) for t in HELP_TEXT]
-        self.listbox = ScrollableListBox(tl)
-        w = LineBox(self.listbox, title="Help (scroll with up/down arrows)")
-        w = AttrWrap(w, "dialog")
-        Overlay.__init__(self, w, underlying,
-                         'center', 72,
-                         'middle', ('relative', 66),
-                         min_width=80,
-                         min_height=60)
-
-    def keypress(self, size, key):
-        if key == 'enter':
-            self.remove_func()
-            return None
-        if key == 'up':
-            self.listbox.focus_previous()
-        if key == 'down':
-            self.listbox.focus_next()
-        else:
-            return Overlay.keypress(self, size, key)
+class HelpScreen(ScrollableWidgetWrap):
+    def __init__(self):
+        text = [AttrWrap(Text(t), "dialog") for t in HELP_TEXT]
+        super().__init__(LineBox(Pile(text), title="Help \u21C5 Scroll"))

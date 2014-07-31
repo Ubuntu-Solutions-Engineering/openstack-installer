@@ -25,10 +25,10 @@ import functools
 
 from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
-                   RadioButton, IntEdit, SimpleListWalker, Padding, Pile)
+                   RadioButton, IntEdit, Padding, Pile)
 from cloudinstall import utils
 from cloudinstall.ui import (StatusBar, StepInfo, ScrollableWidgetWrap,
-                             ScrollableListBox)
+                             ScrollableListBox, helpscreen)
 
 log = logging.getLogger('cloudinstall.gui')
 
@@ -259,6 +259,13 @@ class PegasusGUI(WidgetWrap):
     def hide_widget_on_top(self):
         """Hide the topmost widget (if any)."""
         self._w = self.frame
+
+    def show_help_info(self):
+        widget = helpscreen.HelpScreen()
+        self.show_widget_on_top(widget, width=80, height=20)
+
+    def hide_help_info(self):
+        self.hide_widget_on_top()
 
     def show_step_info(self, msg=None):
         self.hide_step_info()
