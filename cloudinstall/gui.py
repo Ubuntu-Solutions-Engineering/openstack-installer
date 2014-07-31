@@ -27,8 +27,9 @@ from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
                    RadioButton, IntEdit, Padding, Pile)
 from cloudinstall import utils
-from cloudinstall.ui import (StatusBar, StepInfo, ScrollableWidgetWrap,
-                             ScrollableListBox, helpscreen)
+from cloudinstall.ui import (ScrollableWidgetWrap,
+                             ScrollableListBox)
+from cloudinstall.ui.helpscreen import HelpScreen
 
 log = logging.getLogger('cloudinstall.gui')
 
@@ -198,6 +199,71 @@ class Header(WidgetWrap):
         super().__init__(w)
 
 
+class StatusBar(WidgetWrap):
+    """Displays text."""
+
+    INFO = "[INFO]"
+    ERROR = "[ERROR]"
+    ARROW = " \u21e8 "
+
+    def __init__(self, text=''):
+        self._status_line = Text(text)
+        self._horizon_url = Text('')
+        self._jujugui_url = Text('')
+        self._openstack_rel = Text('Icehouse (2014.1.1)')
+        self._status_extra = self._build_status_extra()
+        status = Pile([self._status_line, self._status_extra])
+        super().__init__(status)
+
+    def _build_status_extra(self):
+        status = []
+        status.append(self._horizon_url)
+        status.append(self._jujugui_url)
+        status.append(('pack', self._openstack_rel))
+        return AttrWrap(Columns(status), 'status_extra')
+
+    def set_dashboard_url(self, ip=None):
+        """ sets horizon dashboard url """
+        text = "Openstack Dashboard: "
+        if not ip:
+            text += "(pending)"
+        else:
+            text += "http://{}/".format(ip)
+        return self._horizon_url.set_text(text)
+
+    def set_jujugui_url(self, ip=None):
+        """ sets juju gui url """
+        text = "JujuGUI: "
+        if not ip:
+            text += "(pending)"
+        else:
+            text += "http://{}/".format(ip)
+        return self._jujugui_url.set_text(text)
+
+    def message(self, text):
+        """Write `text` on the footer."""
+        self._status_line.set_text(text)
+
+    def error_message(self, text):
+        self.message([('error', self.ERROR),
+                      ('default', self.ARROW + text)])
+
+    def info_message(self, text):
+        self.message([('info', self.INFO),
+                      ('default', self.ARROW + text)])
+
+    def clear(self):
+        """Clear the text."""
+        self._w.set_text('')
+
+
+class StepInfo(WidgetWrap):
+    def __init__(self, msg=None):
+        if not msg:
+            msg = "Processing."
+        super().__init__(AttrWrap(LineBox(Text(msg)), 'dialog'))
+
+
 class PegasusGUI(WidgetWrap):
     def __init__(self):
         header = Header()
@@ -261,7 +327,7 @@ class PegasusGUI(WidgetWrap):
         self._w = self.frame
 
     def show_help_info(self):
-        widget = helpscreen.HelpScreen()
+        widget = HelpScreen()
         self.show_widget_on_top(widget, width=80, height=20)
 
     def hide_help_info(self):
