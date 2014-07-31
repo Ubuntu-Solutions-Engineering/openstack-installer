@@ -207,12 +207,8 @@ class Header(WidgetWrap):
     def __init__(self):
         w = []
         w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header_title"))
-        w.append(AttrWrap(Columns([
-            ('pack', AttrWrap(Text('(F6) Add units', align='center'),
-                              'button')),
-            (18, AttrWrap(Text('(F5) Refresh', align='center'), 'button')),
-            ('pack', AttrWrap(Text('(Q) Quit', align='center'), 'button'))
-        ]), "border"))
+        w.append(AttrWrap(Text('(A)dd units \N{BULLET} (R)efresh',
+                               align='center'), "header_menu"))
         w = Pile(w)
         super().__init__(w)
 
@@ -237,6 +233,7 @@ class StatusBar(WidgetWrap):
         status = []
         status.append(self._horizon_url)
         status.append(self._jujugui_url)
+        status.append((18, Text('(Q)uit | (H)elp \N{BULLET}')))
         status.append(('pack', self._openstack_rel))
         return AttrWrap(Columns(status), 'status_extra')
 
