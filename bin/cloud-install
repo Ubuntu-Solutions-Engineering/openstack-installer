@@ -122,6 +122,9 @@ if [ ! -e /etc/cloud-installer/installed ]; then
 		;;
 	"Single system")
 		singleInstall
+        # LP: 1351083, need to wait a few seconds for the api server to become
+        # responsive :\
+        sleep 10
 		;;
 	"Landscape managed")
 		install=true # install only implied

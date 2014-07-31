@@ -112,16 +112,19 @@ class BaseController:
         raise urwid.ExitMainLoop()
 
     def main_loop(self):
-        if not hasattr(self, 'loop'):
-            self.loop = urwid.MainLoop(self.ui,
-                                       self.config.STYLES,
-                                       handle_mouse=True,
-                                       unhandled_input=self.header_hotkeys)
-            self.info_message("Welcome ..")
-            self.initialize()
+        if not self.opts.noui:
+            if not hasattr(self, 'loop'):
+                self.loop = urwid.MainLoop(self.ui,
+                                           self.config.STYLES,
+                                           handle_mouse=True,
+                                           unhandled_input=self.header_hotkeys)
+                self.info_message("Welcome ..")
+                self.initialize()
 
-        self.loop.set_alarm_in(3, self.update_alarm)
-        self.loop.run()
+            self.loop.set_alarm_in(3, self.update_alarm)
+            self.loop.run()
+        else:
+            self.initialize()
 
     def start(self):
         """ Starts controller processing """
