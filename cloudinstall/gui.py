@@ -23,9 +23,10 @@ import re
 import logging
 import functools
 
-from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
+from urwid import (AttrWrap, Text, Columns, Overlay, LineBox, Divider,
                    ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
-                   RadioButton, IntEdit, Padding, Pile)
+                   RadioButton, IntEdit, Padding, Pile,
+                   SimpleListWalker)
 from cloudinstall import utils
 from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox)
@@ -48,31 +49,48 @@ class AddCharmDialog(WidgetWrap):
     """ Adding charm dialog """
 
     def __init__(self, charm_classes, **kwargs):
-        self.boxes = []
-        self.bgroup = []
+        self.charms = charm_classes
+        w = self._build_widget()
+        w = AttrWrap(w, "dialog")
+        super().__init__(w)
+
+    def _build_widget(self, **kwargs):
+        # Charm selections
+        num_of_items, charm_sel = self._insert_charm_selections()
+
+        # Control buttons
+        buttons = self._insert_buttons()
+
+        return LineBox(
+            BoxAdapter(
+                ListBox([charm_sel, Divider(), buttons]),
+                height=num_of_items+2),
+            title="Add unit")
+
+    def _insert_charm_selections(self):
         first_index = 0
-        for i, charm_class in enumerate(charm_classes):
+        boxes = []
+        bgroup = []
+        for i, charm_class in enumerate(self.charms):
             charm = charm_class
             if charm.name() and not first_index:
                 first_index = i
-            r = RadioButton(self.bgroup, charm.name())
+            r = RadioButton(bgroup, charm.name())
             r.text_label = charm.name()
-            self.boxes.append(r)
+            boxes.append(r)
 
-        self.count_editor = IntEdit("Number of units to add: ", 1)
-        self.boxes.append(self.count_editor)
-        wrapped_boxes = self._wrap_focus(self.boxes)
+        # Add input widget for specifying NumUnits
+        count_editor = IntEdit("Number of units to add: ", 1)
+        boxes.append(count_editor)
+        wrapped_boxes = self._wrap_focus(boxes)
+        items = ListBox(SimpleListWalker(wrapped_boxes))
+        items.set_focus(first_index)
+        return (len(boxes), BoxAdapter(items, len(boxes)))
 
+    def _insert_buttons(self):
         bs = [Button("Ok", self.yes), Button("Cancel", self.no)]
         wrapped_buttons = self._wrap_focus(bs)
-        self.buttons = Columns(wrapped_buttons)
-        self.items = ListBox(wrapped_boxes)
-        self.items.set_focus(first_index)
-        ba = BoxAdapter(self.items, height=len(wrapped_boxes))
-        self.lb = ListBox([ba, Text(""), self.buttons])
-        w = LineBox(self.lb, title="Add unit")
-        w = AttrWrap(w, "dialog")
-        super().__init__(Columns(self.items))
+        return Columns(wrapped_buttons)
 
     def yes(self, button):
         #selected = [r for r in self.boxes if
