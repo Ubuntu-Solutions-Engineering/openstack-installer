@@ -161,20 +161,24 @@ class BaseController:
         self.render_nodes(self.nodes)
 
     def header_hotkeys(self, key):
-        if key in ['q', 'Q']:
-            self.exit()
-        if key == 'f5':
-            self.render_nodes(self.nodes)
-        if key == 'j':
+        if key in ['j', 'down']:
             self.ui.focus_next()
-        if key == 'k':
+        if key in ['k', 'up']:
             self.ui.focus_previous()
+        if key == 'esc':
+            self.ui.hide_widget_on_top()
+        if key in ['h', 'H']:
+            self.ui.show_help_info()
         if key == 'f6':
             charm_modules = utils.load_charms()
             charm_classes = [m.__charm_class__ for m in charm_modules
                              if m.__charm_class__.allow_multi_units and
                              not m.__charm_class__.disabled]
             self.ui.show_add_charm_info(charm_classes)
+        if key in ['q', 'Q']:
+            self.exit()
+        if key == 'f5':
+            self.render_nodes(self.nodes)
 
 
 class Controller(BaseController):
