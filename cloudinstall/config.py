@@ -26,7 +26,7 @@ class Config:
     STYLES = [
         ('body',         'white',      'black',),
         ('border',       'light gray',      'dark magenta'),
-        ('header title', 'light gray,bold', 'dark magenta'),
+        ('header_title', 'light gray,bold', 'dark magenta'),
         ('focus',        'white',      'dark gray'),
         ('dialog',       'black',      'light gray'),
         ('status_extra',   'black,bold',      'light gray',),

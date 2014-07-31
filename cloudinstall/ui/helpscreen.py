@@ -17,17 +17,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from urwid import Text, AttrWrap, LineBox, WidgetWrap, Pile
+from urwid import Text, AttrWrap, LineBox, BoxAdapter
 from cloudinstall.ui import ScrollableListBox, ScrollableWidgetWrap
 
-HELP_TEXT = ["""Press ESC to remove this dialog.
+
+class HelpScreen(ScrollableWidgetWrap):
+    def __init__(self):
+        self.text = []
+        self.HELP_TEXT = [
+            """Press ESC to remove this dialog.
 
 For full documentation, please refer to
 http://ubuntu-cloud-installer.readthedocs.org/en/latest/
 
-""",
-             ('bold', "Overview"),
-             """
+            """,
+            ('header_title', "Overview"),
+            """
 
 - Header
 
@@ -52,9 +57,9 @@ The footer displays a status message, and the URLs for the two web
 dashboards installed, one for OpenStack Horizon and the other for the
 Juju GUI.
 
-""",
-             ('bold', "Command Reference"),
-             """
+            """,
+            ('header_title', "Command Reference"),
+            """
 
 - F5 refreshes the displayed state immediately
 
@@ -68,10 +73,9 @@ Juju GUI.
 
 - 'q' quits.
 
-""",
-
-             ('bold', "Troubleshooting"),
-             """
+            """,
+            ('header_title', "Troubleshooting"),
+            """
 
 The juju commands used to deploy the services listed are logged in
 ~/.cloud-install/commands.log
@@ -81,11 +85,21 @@ will be shown with the label "machine info" under the unit name in the
 main table. This indicates a failure to find a machine that matches
 the default constraints set for the service. See the log file for
 details.
-""",
-             ('bold', "End of Help Screen")]
+            """,
+            ('header_title', "End of Help Screen")]
+        w = self._create_text()
+        w = AttrWrap(w, 'dialog')
+        super().__init__(w)
 
+    def _create_text(self):
+        self.text = []
+        for line in self.HELP_TEXT:
+            self._insert_line(line)
+        return LineBox(BoxAdapter(
+            ScrollableListBox(self.text),
+            height=20),
+            title='Help \u21C5 Scroll')
 
-class HelpScreen(ScrollableWidgetWrap):
-    def __init__(self):
-        text = [AttrWrap(Text(t), "dialog") for t in HELP_TEXT]
-        super().__init__(LineBox(Pile(text), title="Help \u21C5 Scroll"))
+    def _insert_line(self, line):
+        text = Text(line)
+        self.text.append(text)

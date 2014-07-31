@@ -69,9 +69,9 @@ class AddCharmDialog(WidgetWrap):
         self.items.set_focus(first_index)
         ba = BoxAdapter(self.items, height=len(wrapped_boxes))
         self.lb = ListBox([ba, Text(""), self.buttons])
-        self.w = LineBox(self.lb, title="Add unit")
-        self.w = AttrWrap(self.w, "dialog")
-        super().__init__(self.w)
+        w = LineBox(self.lb, title="Add unit")
+        w = AttrWrap(w, "dialog")
+        super().__init__(Columns(self.items))
 
     def yes(self, button):
         #selected = [r for r in self.boxes if
@@ -84,7 +84,7 @@ class AddCharmDialog(WidgetWrap):
     def no(self, button):
         pass
 
-    def _wrap_focus(widgets, unfocused=None):
+    def _wrap_focus(self, widgets, unfocused=None):
         try:
             return [AttrWrap(w, "focus") for w in widgets]
         except TypeError:
@@ -187,7 +187,7 @@ class NodeViewMode(ScrollableWidgetWrap):
 class Header(WidgetWrap):
     def __init__(self):
         w = []
-        w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header title"))
+        w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header_title"))
         w.append(AttrWrap(Columns([
             ('pack', AttrWrap(Text('(F6) Add units', align='center'),
                               'button')),
