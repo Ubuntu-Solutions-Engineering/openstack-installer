@@ -346,7 +346,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_help_info(self):
         widget = HelpScreen()
-        self.show_widget_on_top(widget, width=80, height=20)
+        self.show_widget_on_top(widget, width=80, height=22)
 
     def hide_help_info(self):
         self.hide_widget_on_top()

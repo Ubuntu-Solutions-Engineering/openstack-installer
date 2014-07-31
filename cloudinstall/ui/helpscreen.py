@@ -25,9 +25,7 @@ class HelpScreen(ScrollableWidgetWrap):
     def __init__(self):
         self.text = []
         self.HELP_TEXT = [
-            """Press ESC to remove this dialog.
-
-For full documentation, please refer to
+            """For full documentation, please refer to
 http://ubuntu-cloud-installer.readthedocs.org/en/latest/
 
             """,
@@ -98,7 +96,7 @@ details.
         return LineBox(BoxAdapter(
             ScrollableListBox(self.text),
             height=20),
-            title='Help \u21C5 Scroll')
+            title='Help \u21C5 Scroll (ESC) Close')
 
     def _insert_line(self, line):
         text = Text(line)
