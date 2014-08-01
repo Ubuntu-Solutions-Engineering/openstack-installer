@@ -50,7 +50,7 @@ class CharmNovaCloudController(CharmBase):
                                 dst='/tmp/openstack-{u}-rc'.format(u=u))
             utils.remote_cp(
                 unit.machine_id,
-                src=os.path.join(self.tmpl_path,
+                src=os.path.join(self.config.tmpl_path,
                                  "nova-controller-setup.sh"),
                 dst="/tmp/nova-controller-setup.sh")
             utils.remote_cp(

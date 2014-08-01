@@ -187,7 +187,7 @@ class BaseController:
             charm_classes = [m.__charm_class__ for m in charm_modules
                              if m.__charm_class__.allow_multi_units and
                              not m.__charm_class__.disabled]
-            self.ui.show_add_charm_info(charm_classes)
+            self.ui.show_add_charm_info(charm_classes, self.add_charm)
         if key in ['q', 'Q']:
             self.exit()
         if key in ['r', 'R', 'f5']:
@@ -433,7 +433,10 @@ class Controller(BaseController):
             log.debug("Polling will continue until all charms are finalized.")
             return True
 
-    def add_charm(self, charm, count=0):
+    def add_charm(self, count=0, charm=None):
+        if not charm:
+            self.ui.hide_add_charm_info()
+            return
         self.charm_classes = [m.__charm_class__ for m in self.charm_modules
                               if m.__charm_class__.allow_multi_units and
                               not m.__charm_class__.disabled]
@@ -474,6 +477,8 @@ class Controller(BaseController):
                 charm_q.watch_relations()
                 charm_q.watch_post_proc()
                 charm_q.is_running = True
+        self.ui.hide_add_charm_info()
+        return
 
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """

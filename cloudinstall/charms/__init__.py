@@ -126,7 +126,7 @@ export OS_REGION_NAME=RegionOne
     def _openstack_env_path(self, user):
         """ path to openstack environment file """
         fname = "openstack-{u}-rc".format(u=user)
-        return path.join(self.cfg_path, fname)
+        return path.join(self.config.cfg_path, fname)
 
     def is_related(self, charm, relations):
         """ test for existence of charm relation
