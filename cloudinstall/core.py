@@ -374,8 +374,8 @@ class Controller(BaseController):
                 charm = charm_class(juju=self.juju,
                                     juju_state=self.juju_state,
                                     ui=self.ui)
-                self.info_message("checking if {c} "
-                                  "is deployed".format(c=charm))
+                self.info_message("Checking if {c} "
+                                  "is deployed".format(c=charm.display_name))
 
                 service_names = [s.service_name for s in
                                  self.juju_state.services]
@@ -387,7 +387,8 @@ class Controller(BaseController):
 
                 if charm.isolate:
                     self.info_message("Deploying {c} "
-                                      "to a new machine".format(c=charm))
+                                      "to a new machine".format(
+                                          c=charm.display_name))
                     charm.setup()
                 else:
                     # Hardcode lxc on same machine as they are
@@ -396,7 +397,7 @@ class Controller(BaseController):
                         mid=self.machine.machine_id)
                     self.info_message("Deploying {c} "
                                       "to machine {m}".format(
-                                          c=charm,
+                                          c=charm.display_name,
                                           m=charm.machine_id))
                     charm.setup()
                 self.deployed_charm_classes.append(charm_class)

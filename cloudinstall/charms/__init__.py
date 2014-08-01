@@ -177,7 +177,7 @@ export OS_REGION_NAME=RegionOne
             c=self.charm_name,
             p=kwds)
         log.debug(msg)
-        self.ui.status_info_message(msg)
+        self.ui.status_info_message("Deployed {0}.".format(self.display_name))
 
     def set_relations(self):
         """ Setup charm relations
