@@ -39,14 +39,13 @@ class Status:
 
     def message(self, text):
         """Write `text`"""
-        sys.stdout.write(text)
+        print(text)
 
     def error_message(self, text):
         self.message("{0} {1} {2}".format(self.ERROR, self.ARROW, text))
 
     def info_message(self, text):
-        self.message([('info', self.INFO),
-                      ('default', self.ARROW + text)])
+        self.message("{0} {1} {2}".format(self.INFO, self.ARROW, text))
 
     def clear(self):
         """Clear the text."""
@@ -59,7 +58,7 @@ class Console:
         self.status = Status()
 
     def status_message(self, text):
-        self.message(text)
+        self.status.message(text)
 
     def status_error_message(self, message):
         self.status.error_message(message)
@@ -71,4 +70,4 @@ class Console:
         self.status.clear()
 
     def render_nodes(self, nodes, **kwargs):
-        self.message(nodes)
+        self.status_info_message(nodes)
