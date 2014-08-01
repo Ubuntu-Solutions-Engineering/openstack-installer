@@ -1,5 +1,9 @@
 #!/bin/sh -e
 
+[ if -f /etc/network/interfaces.d/br-ex.cfg ]; then
+	echo "Quantum Network already configured." && exit 0
+fi
+
 ifdown eth0
 ovs-vsctl add-port br-ex eth0
 mac=$(ifconfig eth0 | grep -E -o "HWaddr [a-z0-9:]+" | sed -e "s/^HWaddr //")

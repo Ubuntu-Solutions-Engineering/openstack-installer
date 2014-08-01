@@ -22,7 +22,7 @@ This is meant for debugging the actual installing of services.
 
 from __future__ import unicode_literals
 import logging
-import sys
+from termcolor import colored
 
 log = logging.getLogger('cloudinstall.console')
 
@@ -30,8 +30,8 @@ log = logging.getLogger('cloudinstall.console')
 class Status:
     """Displays text."""
 
-    INFO = "[INFO]"
-    ERROR = "[ERROR]"
+    INFO = colored("[INFO]", 'green', attrs=['bold'])
+    ERROR = colored("[ERROR]", 'red', attrs=['bold'])
     ARROW = " \u21e8 "
 
     def __init__(self, text=''):
