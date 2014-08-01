@@ -23,10 +23,12 @@ import re
 import logging
 import functools
 
-from urwid import (AttrWrap, Text, Columns, Overlay, LineBox, Divider,
-                   ListBox, Filler, Button, BoxAdapter, Frame, WidgetWrap,
+from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
+                   ListBox, Filler, BoxAdapter, Frame, WidgetWrap,
                    RadioButton, IntEdit, Padding, Pile,
-                   SimpleListWalker)
+                   SimpleListWalker, Divider, Button,
+
+                   signals, emit_signal, connect_signal)
 from cloudinstall import utils
 from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox)
@@ -46,13 +48,44 @@ padding = functools.partial(Padding, left=2, right=2)
 
 
 class AddCharmDialog(WidgetWrap):
-    """ Adding charm dialog """
+    """ Adding charm dialog
 
-    def __init__(self, charm_classes, **kwargs):
+    :param list charms: list of charms that can be added
+    :param cb: callback routine to process submit/cancel actions
+    :returns: input from dialog
+    """
+
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, charm_classes, cb, **kwargs):
         self.charms = charm_classes
+        self.cb = cb
+        self.count_editor = None
+        self.boxes = []
+
         w = self._build_widget()
         w = AttrWrap(w, "dialog")
+
+        # Handle signals from add charm
+        connect_signal(self, 'done', cb)
         super().__init__(w)
+
+    def submit(self):
+        """ Handle OK submit """
+        selected = [r for r in self.boxes if
+                    r is not self.count_editor
+                    and r.get_state()][0]
+        _charm_to_deploy = selected.label
+        n = self.count_editor.value()
+        self.emit_done_signal(n, _charm_to_deploy)
+
+    def cancel(self):
+        """ Handle cancel action """
+        self.emit_done_signal()
+
+    def emit_done_signal(self, *args):
+        emit_signal(self, 'done', *args)
 
     def _build_widget(self, **kwargs):
         # Charm selections
@@ -69,7 +102,6 @@ class AddCharmDialog(WidgetWrap):
 
     def _insert_charm_selections(self):
         first_index = 0
-        boxes = []
         bgroup = []
         for i, charm_class in enumerate(self.charms):
             charm = charm_class
@@ -77,15 +109,15 @@ class AddCharmDialog(WidgetWrap):
                 first_index = i
             r = RadioButton(bgroup, charm.name())
             r.text_label = charm.name()
-            boxes.append(r)
+            self.boxes.append(r)
 
         # Add input widget for specifying NumUnits
-        count_editor = IntEdit("Number of units to add: ", 1)
-        boxes.append(count_editor)
-        wrapped_boxes = self._wrap_focus(boxes)
+        self.count_editor = IntEdit("Number of units to add: ", 1)
+        self.boxes.append(self.count_editor)
+        wrapped_boxes = self._wrap_focus(self.boxes)
         items = ListBox(SimpleListWalker(wrapped_boxes))
         items.set_focus(first_index)
-        return (len(boxes), BoxAdapter(items, len(boxes)))
+        return (len(self.boxes), BoxAdapter(items, len(self.boxes)))
 
     def _insert_buttons(self):
         bs = [Button("Ok", self.yes), Button("Cancel", self.no)]
@@ -93,15 +125,10 @@ class AddCharmDialog(WidgetWrap):
         return Columns(wrapped_buttons)
 
     def yes(self, button):
-        # selected = [r for r in self.boxes if
-        #            r is not self.count_editor
-        #            and r.get_state()][0]
-        # _charm_to_deploy = selected.label
-        # n = self.count_editor.value()
-        pass
+        self.submit()
 
     def no(self, button):
-        pass
+        self.cancel()
 
     def _wrap_focus(self, widgets, unfocused=None):
         try:
@@ -356,8 +383,8 @@ class PegasusGUI(WidgetWrap):
     def hide_step_info(self):
         self.hide_widget_on_top()
 
-    def show_add_charm_info(self, charms):
-        widget = AddCharmDialog(charms)
+    def show_add_charm_info(self, charms, cb):
+        widget = AddCharmDialog(charms, cb)
         self.show_widget_on_top(widget, width=50, height=20)
 
     def hide_add_charm_info(self):
