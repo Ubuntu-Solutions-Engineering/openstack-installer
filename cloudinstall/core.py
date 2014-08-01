@@ -16,6 +16,7 @@
 
 import logging
 import urwid
+import asyncio
 import time
 import random
 import requests
@@ -103,13 +104,19 @@ class BaseController:
 
     def redraw_screen(self):
         if hasattr(self, "loop"):
-            try:
-                self.loop.draw_screen()
-            except AssertionError as message:
-                logging.critical(message)
+            if not self.opts.noui:
+                try:
+                    self.loop.draw_screen()
+                except AssertionError as message:
+                    logging.critical(message)
+            else:
+                pass
 
     def exit(self):
-        raise urwid.ExitMainLoop()
+        if not self.opts.noui:
+            raise urwid.ExitMainLoop()
+        else:
+            raise self.loop.stop()
 
     def main_loop(self):
         if not self.opts.noui:
@@ -124,7 +131,10 @@ class BaseController:
             self.loop.set_alarm_in(3, self.update_alarm)
             self.loop.run()
         else:
+            log.debug("Running asyncio event loop for ConsoleUI")
+            self.loop = asyncio.get_event_loop()
             self.initialize()
+            self.loop.run_forever()
 
     def start(self):
         """ Starts controller processing """
@@ -225,6 +235,7 @@ class Controller(BaseController):
     @utils.async
     def init_machine(self):
         """ Handles initial deployment of a machine """
+        log.debug("Initializing machine")
         if self.config.is_multi:
             self.info_message("You need one node to act as "
                               "the cloud controller. "

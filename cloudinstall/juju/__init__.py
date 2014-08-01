@@ -56,7 +56,8 @@ class JujuState:
         :returns: machines known to juju (except bootstrap)
         :rtype: generator
         """
-        for machine_id, machine in self.juju.status()['Machines'].items():
+        ret = self.juju.status()
+        for machine_id, machine in ret['Machines'].items():
             if '0' == machine_id:
                 continue
             yield Machine(machine_id, machine)
