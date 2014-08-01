@@ -371,7 +371,9 @@ class Controller(BaseController):
 
         if len(undeployed_charm_classes) > 0:
             for charm_class in undeployed_charm_classes:
-                charm = charm_class(juju=self.juju, juju_state=self.juju_state)
+                charm = charm_class(juju=self.juju,
+                                    juju_state=self.juju_state,
+                                    ui=self.ui)
                 self.info_message("checking if {c} "
                                   "is deployed".format(c=charm))
 
@@ -407,7 +409,8 @@ class Controller(BaseController):
         if len(unfinalized_charm_classes) > 0:
             self.info_message("Setting charm relations and post processing")
             for charm_class in unfinalized_charm_classes:
-                charm = charm_class(juju=self.juju, juju_state=self.juju_state)
+                charm = charm_class(juju=self.juju, juju_state=self.juju_state,
+                                    ui=self.ui)
                 charm_q.add_relation(charm)
                 charm_q.add_post_proc(charm)
                 self.finalized_charm_classes.append(charm_class)

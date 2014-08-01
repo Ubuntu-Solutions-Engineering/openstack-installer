@@ -1,5 +1,9 @@
 #!/bin/sh -e
 
+if [ -f /etc/network/interfaces.d/bridge.cfg ]; then
+	echo "Bridge already configured" && exit 0
+fi
+
 apt-get update
 
 DEBIAN_FRONTEND=noninteractive apt-get -qy -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install lxc < /dev/null

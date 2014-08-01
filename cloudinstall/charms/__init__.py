@@ -89,7 +89,7 @@ class CharmBase:
     menuable = False
     machine_id = ""
 
-    def __init__(self, juju=None, juju_state=None, machine=None):
+    def __init__(self, juju=None, juju_state=None, machine=None, ui=None):
         """ initialize
 
         :param state: :class:JujuState
@@ -101,6 +101,7 @@ class CharmBase:
         self.machine = machine
         self.juju = juju
         self.juju_state = juju_state
+        self.ui = ui
 
     def _openstack_env(self, user, password, tenant, auth_url):
         """ setup openstack environment vars """
@@ -172,9 +173,11 @@ export OS_REGION_NAME=RegionOne
             self.juju.deploy(self.charm_name, kwds)
         else:
             self.juju.deploy(self.charm_name, kwds)
-        log.debug('Deployed {c} with params: {p}'.format(
+        msg = 'Deployed {c} with params: {p}'.format(
             c=self.charm_name,
-            p=kwds))
+            p=kwds)
+        log.debug(msg)
+        self.ui.status_info_message(msg)
 
     def set_relations(self):
         """ Setup charm relations
@@ -215,6 +218,8 @@ export OS_REGION_NAME=RegionOne
             c=svc_name,
             s=svc))
         unit = svc.unit(svc_name)
+        self.ui.status_info_message("Checking availability of {0}: {1}".format(
+            svc_name, unit.agent_state))
         log.debug("Unit state: {}".format(unit.agent_state))
         if unit.agent_state == "started":
             return unit
