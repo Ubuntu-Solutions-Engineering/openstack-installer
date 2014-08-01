@@ -23,6 +23,7 @@ import yaml
 from cloudinstall.service import Service
 
 
+@unittest.skip
 class ServiceTestCase(unittest.TestCase):
     def setUp(self):
         with open('test/juju-output/juju-status-single-install.yaml') as f:

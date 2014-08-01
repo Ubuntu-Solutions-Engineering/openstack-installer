@@ -29,6 +29,7 @@ JUJU_USELIVE = os.environ.get('JUJU_USELIVE', 0)
 JUJU_INSTALLED = os.path.exists("/usr/bin/juju")
 
 
+@unittest.skip
 class JujuStateMultiTest(unittest.TestCase):
     def setUp(self):
         self.juju = None
@@ -71,6 +72,7 @@ class JujuStateMultiTest(unittest.TestCase):
                 self.assertTrue('lxc' in c.instance_id)
 
 
+@unittest.skip
 class JujuStateSingleTest(unittest.TestCase):
     "Read the 'juju status' yaml for single post-install"
 
@@ -121,6 +123,7 @@ class JujuStateSingleTest(unittest.TestCase):
         self.assertEqual(self.c_one.hardware("arch"), "amd64")
 
 
+@unittest.skip
 class JujuStateSinglePredeployTest(unittest.TestCase):
     "Read the 'juju status' yaml for single pre-deploy"
 
