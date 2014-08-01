@@ -57,7 +57,7 @@ class JujuState:
         :rtype: generator
         """
         ret = self.juju.status()
-        for machine_id, machine in ret['Machines'].items():
+        for machine_id, machine in ret.get('Machines', {}).items():
             if '0' == machine_id:
                 continue
             yield Machine(machine_id, machine)
@@ -91,7 +91,7 @@ class JujuState:
         :rtype: generator
         """
         ret = self.juju.status()
-        for name, service in ret['Services'].items():
+        for name, service in ret.get('Services', {}).items():
             yield Service(name, service)
 
     @property
