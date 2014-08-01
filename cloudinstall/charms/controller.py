@@ -42,7 +42,7 @@ class CharmNovaCloudController(CharmBase):
             if not keystone:
                 return True
             for u in ['admin', 'ubuntu']:
-                env = self._openstack_env(u, self.openstack_password(),
+                env = self._openstack_env(u, self.config.openstack_password,
                                           u, keystone.public_address)
                 self._openstack_env_save(u, env)
                 utils.remote_cp(unit.machine_id,
@@ -60,7 +60,7 @@ class CharmNovaCloudController(CharmBase):
             err = utils.remote_run(unit.machine_id,
                                    cmds="/tmp/nova-controller-setup.sh "
                                         "{p}".format(
-                                            p=self.openstack_password()))
+                                            p=self.config.openstack_password))
             if err['ret'] == 1:
                 # something happened during nova setup, re-run
                 return True

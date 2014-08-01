@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-[ if -f /etc/network/interfaces.d/br-ex.cfg ]; then
+if [ -f /etc/network/interfaces.d/br-ex.cfg ]; then
 	echo "Quantum Network already configured." && exit 0
 fi
 
