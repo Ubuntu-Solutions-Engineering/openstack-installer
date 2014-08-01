@@ -437,9 +437,9 @@ class Controller(BaseController):
         if not charm:
             self.ui.hide_add_charm_info()
             return
-        self.charm_classes = [m.__charm_class__ for m in self.charm_modules
-                              if m.__charm_class__.allow_multi_units and
-                              not m.__charm_class__.disabled]
+        # self.charm_classes = [m.__charm_class__ for m in self.charm_modules
+        #                       if m.__charm_class__.allow_multi_units and
+        #                       not m.__charm_class__.disabled]
         svc = self.juju_state.service(charm)
         if svc.service:
             self.info_message("Adding {n} units of {charm}".format(
@@ -449,6 +449,10 @@ class Controller(BaseController):
             charm_q = CharmQueue()
             charm = get_charm(charm,
                               self.juju_state)
+            # Need to make sure newly queried charm has updated juju and state
+            charm.juju = self.juju
+            charm.juju_state = self.juju_state
+            log.debug("Add charm: {}".format(charm))
             if not charm.isolate:
                 charm.machine_id = 'lxc:{mid}'.format(mid="1")
 
