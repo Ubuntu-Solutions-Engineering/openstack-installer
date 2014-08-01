@@ -59,7 +59,7 @@ class DisplayPriorities:
     Other = 30
 
 
-def get_charm(charm_name, juju_state):
+def get_charm(charm_name, juju, juju_state, ui):
     """ returns single charm class
 
     :param str charm_name: name of charm to query
@@ -68,7 +68,7 @@ def get_charm(charm_name, juju_state):
     :returns: charm class
     """
     for charm in utils.load_charms():
-        c = charm.__charm_class__(juju_state)
+        c = charm.__charm_class__(juju=juju, juju_state=juju_state, ui=ui)
         if charm_name == c.name():
             return c
 
@@ -191,8 +191,10 @@ export OS_REGION_NAME=RegionOne
                     err = self.juju.add_relation(self.charm_name,
                                                  charm)
                     if err:
-                        log.error("Relation not ready for "
-                                  "{c}, requeueing.".format(c=self.charm_name))
+                        msg = "Relation not ready for " \
+                              "{c}, requeueing.".format(c=self.charm_name)
+                        log.error(msg)
+                        self.ui.status_error_message(msg)
                         return True
         return False
 

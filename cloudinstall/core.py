@@ -447,29 +447,31 @@ class Controller(BaseController):
             self.juju.add_unit(charm, count=int(count))
         else:
             charm_q = CharmQueue()
-            charm = get_charm(charm,
-                              self.juju_state)
-            # Need to make sure newly queried charm has updated juju and state
-            charm.juju = self.juju
-            charm.juju_state = self.juju_state
-            log.debug("Add charm: {}".format(charm))
-            if not charm.isolate:
-                charm.machine_id = 'lxc:{mid}'.format(mid="1")
+            charm_sel = get_charm(charm,
+                                  self.juju,
+                                  self.juju_state,
+                                  self.ui)
+            log.debug("Add charm: {}".format(charm_sel))
+            if not charm_sel.isolate:
+                charm_sel.machine_id = 'lxc:{mid}'.format(mid="1")
 
             self.info_message("Adding {} to environment".format(
-                charm))
-            charm_q.add_setup(charm)
-            charm_q.add_relation(charm)
-            charm_q.add_post_proc(charm)
+                charm_sel))
+            charm_q.add_setup(charm_sel)
+            charm_q.add_relation(charm_sel)
+            charm_q.add_post_proc(charm_sel)
 
             # Add charm dependencies
-            if len(charm.related) > 0:
-                for c in charm.related:
-                    svc = self.juju_state.service(charm)
+            if len(charm_sel.related) > 0:
+                for c in charm_sel.related:
+                    svc = self.juju_state.service(charm_sel)
                     if not svc.service:
                         self.info_message("Adding dependent "
                                           "charm {c}".format(c=c))
-                        charm_dep = get_charm(c, self.juju_state)
+                        charm_dep = get_charm(c,
+                                              self.juju,
+                                              self.juju_state,
+                                              self.ui)
                         if not charm_dep.isolate:
                             charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
                         charm_q.add_setup(charm_dep)

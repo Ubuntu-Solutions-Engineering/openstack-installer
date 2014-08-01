@@ -385,7 +385,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_add_charm_info(self, charms, cb):
         widget = AddCharmDialog(charms, cb)
-        self.show_widget_on_top(widget, width=50, height=20)
+        self.show_widget_on_top(widget, width=50, height=10)
 
     def hide_add_charm_info(self):
         self.hide_widget_on_top()
