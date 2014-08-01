@@ -93,11 +93,11 @@ class AddCharmDialog(WidgetWrap):
         return Columns(wrapped_buttons)
 
     def yes(self, button):
-        #selected = [r for r in self.boxes if
+        # selected = [r for r in self.boxes if
         #            r is not self.count_editor
         #            and r.get_state()][0]
-        #_charm_to_deploy = selected.label
-        #n = self.count_editor.value()
+        # _charm_to_deploy = selected.label
+        # n = self.count_editor.value()
         pass
 
     def no(self, button):
