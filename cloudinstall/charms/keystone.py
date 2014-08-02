@@ -26,4 +26,10 @@ class CharmKeystone(CharmBase):
     display_name = 'Keystone'
     related = ['mysql']
 
+    def setup(self):
+        keystone = self.wait_for_agent('mysql')
+        if not keystone:
+            return True
+        super().setup()
+
 __charm_class__ = CharmKeystone
