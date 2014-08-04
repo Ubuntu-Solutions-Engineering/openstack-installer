@@ -25,6 +25,6 @@ class CharmJujuGui(CharmBase):
     charm_name = 'juju-gui'
     display_name = 'Juju GUI'
     display_priority = DisplayPriorities.Other
-    deploy_priority = 0         # deploy before all other charms
+    deploy_priority = 1
 
 __charm_class__ = CharmJujuGui

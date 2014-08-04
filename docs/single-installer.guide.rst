@@ -95,6 +95,15 @@ Finally, once those nodes are displayed and the charms deployed the
 horizon dashboard will be available to you for managing your openstack
 cloud.
 
+Openstack Dashboard (Horizon)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The login credentials for the dashboard are:
+
+    username: ubuntu
+    password: "password that was set during installation"
+
+
 Troubleshooting
 ^^^^^^^^^^^^^^^
 
