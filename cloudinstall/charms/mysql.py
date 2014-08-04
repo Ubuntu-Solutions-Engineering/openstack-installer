@@ -24,5 +24,6 @@ class CharmMysql(CharmBase):
 
     charm_name = 'mysql'
     display_name = 'MySQL'
+    deploy_priority = 0
 
 __charm_class__ = CharmMysql

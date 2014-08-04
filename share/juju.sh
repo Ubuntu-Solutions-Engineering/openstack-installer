@@ -49,15 +49,90 @@ configMaasEnvironment()
 configLocalEnvironment()
 {
 	cat <<-EOF
-		default: local
+default: local
 
-		environments:
-		  local:
-		    type: local
-		    container: kvm
-		    lxc-clone: true
-		    admin-secret: $1
-		EOF
+environments:
+  local:
+    type: local
+    container: kvm
+    lxc-clone: true
+    admin-secret: $1
+       openstack:
+  openstack:
+    type: openstack
+
+    # use-floating-ip specifies whether a floating IP address is
+    # required to give the nodes a public IP address. Some
+    # installations assign public IP addresses by default without
+    # requiring a floating IP address.
+    #
+    # use-floating-ip: false
+
+    # use-default-secgroup specifies whether new machine instances
+    # should have the "default" Openstack security group assigned.
+    #
+    # use-default-secgroup: false
+
+    # network specifies the network label or uuid to bring machines up
+    # on, in the case where multiple networks exist. It may be omitted
+    # otherwise.
+    #
+    network: ext-net
+
+    # tools-metadata-url specifies the location of the Juju tools and
+    # metadata. It defaults to the global public tools metadata
+    # location https://streams.canonical.com/tools.
+    #
+    # tools-metadata-url:  https://your-tools-metadata-url
+
+    # image-metadata-url specifies the location of Ubuntu cloud image
+    # metadata. It defaults to the global public image metadata
+    # location https://cloud-images.ubuntu.com/releases.
+    #
+    # image-metadata-url:  https://your-image-metadata-url
+
+    # image-stream chooses a simplestreams stream to select OS images
+    # from, for example daily or released images (or any other stream
+    # available on simplestreams).
+    #
+    # image-stream: "released"
+
+    # auth-url defaults to the value of the environment variable
+    # OS_AUTH_URL, but can be specified here.
+    #
+    # auth-url: https://yourkeystoneurl:443/v2.0/
+
+    # tenant-name holds the openstack tenant name. It defaults to the
+    # environment variable OS_TENANT_NAME.
+    #
+    # tenant-name: <your tenant name>
+
+    # region holds the openstack region. It defaults to the
+    # environment variable OS_REGION_NAME.
+    #
+    region: RegionOne
+
+    # The auth-mode, username and password attributes are used for
+    # userpass authentication (the default).
+    #
+    # auth-mode holds the authentication mode. For user-password
+    # authentication, auth-mode should be "userpass" and username and
+    # password should be set appropriately; they default to the
+    # environment variables OS_USERNAME and OS_PASSWORD respectively.
+    #
+    # auth-mode: userpass
+    username: ubuntu
+    password: $1
+
+    # For key-pair authentication, auth-mode should be "keypair" and
+    # access-key and secret-key should be set appropriately; they
+    # default to the environment variables OS_ACCESS_KEY and
+    # OS_SECRET_KEY respectively.
+    #
+    # auth-mode: keypair
+    # access-key: <secret>
+    # secret-key: <secret>
+EOF
 }
 
 # Charm config

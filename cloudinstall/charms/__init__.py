@@ -265,7 +265,7 @@ class CharmQueue:
                 self.charm_setup_q.task_done()
             except:
                 log.exception("ignoring exception in setup watcher.")
-            time.sleep(1)
+            time.sleep(10)
 
     @utils.async
     def watch_relations(self):
@@ -279,7 +279,7 @@ class CharmQueue:
                 self.charm_relations_q.task_done()
             except:
                 log.exception("ignoring exception in relations watcher.")
-            time.sleep(1)
+            time.sleep(10)
 
     @utils.async
     def watch_post_proc(self):

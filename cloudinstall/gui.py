@@ -20,9 +20,11 @@
 
 from __future__ import unicode_literals
 import re
+import sys
 import logging
 import functools
 
+import urwid
 from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, BoxAdapter, Frame, WidgetWrap,
                    RadioButton, IntEdit, Padding, Pile,
@@ -248,7 +250,7 @@ class StatusBar(WidgetWrap):
         if not ip:
             text += "(pending)"
         else:
-            text += "http://{}/".format(ip)
+            text += "http://{}/dashboard".format(ip)
         return self._horizon_url.set_text(text)
 
     def set_jujugui_url(self, ip=None):
@@ -284,8 +286,27 @@ class StepInfo(WidgetWrap):
         super().__init__(AttrWrap(LineBox(Text(msg)), 'dialog'))
 
 
+def _check_encoding():
+    """Set the Urwid global byte encoding to utf-8.
+
+    Exit the application if, for some reasons, the change does not have effect.
+    """
+    urwid.set_encoding('utf-8')
+    if not urwid.supports_unicode():
+        # Note: the following message must only include ASCII characters.
+        msg = (
+            'Error: your terminal does not seem to support UTF-8 encoding.\n'
+            'Please check your locale settings.\n'
+            'On Ubuntu, running the following might fix the problem:\n'
+            '  sudo locale-gen en_US.UTF-8\n'
+            '  sudo dpkg-reconfigure locales'
+        )
+        sys.exit(msg.encode('ascii'))
+
+
 class PegasusGUI(WidgetWrap):
     def __init__(self):
+        _check_encoding()  # Make sure terminal supports utf8
         header = Header()
         body = Banner()
         footer = StatusBar('')
