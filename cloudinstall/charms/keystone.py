@@ -27,8 +27,8 @@ class CharmKeystone(CharmBase):
     related = ['mysql']
 
     def setup(self):
-        keystone = self.wait_for_agent('mysql')
-        if not keystone:
+        mysql = self.wait_for_agent('mysql')
+        if not mysql:
             return True
         super().setup()
 
