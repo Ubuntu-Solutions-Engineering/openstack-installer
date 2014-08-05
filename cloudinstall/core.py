@@ -76,7 +76,6 @@ class BaseController:
 
     # overlays
     def step_info(self, message):
-        self.ui.hide_step_info()
         self.ui.show_step_info(message)
         self.redraw_screen()
 
@@ -308,12 +307,12 @@ class Controller(BaseController):
 
     def configure_lxc_network(self):
         # upload our lxc-host-only template and setup bridge
-        self.info_message('Copying templates to machine.')
+        self.info_message('Copying network specifications to machine.')
         utils.remote_cp(
             self.machine.machine_id,
             src="/usr/share/cloud-installer/templates/lxc-host-only",
             dst="/tmp/lxc-host-only")
-        self.info_message('Executing remote templates.')
+        self.info_message('Updating network configuration for machine.')
         utils.remote_run(self.machine.machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only")
         utils.remote_run(self.machine.machine_id,
@@ -353,7 +352,7 @@ class Controller(BaseController):
         self.init_deploy_charms()
 
     def init_deploy_charms(self):
-        self.info_message("Starting install on machines")
+        self.info_message("Verifying service deployments")
         charm_classes = sorted([m.__charm_class__ for m in self.charm_modules
                                 if not m.__charm_class__.optional and
                                 not m.__charm_class__.disabled],
@@ -426,7 +425,10 @@ class Controller(BaseController):
                       f=self.finalized_charm_classes))
 
         if len(self.finalized_charm_classes) == len(charm_classes):
-            self.info_message("Systems are a go!")
+            self.info_message(
+                "Services deployed, relationships may still be"
+                " pending. Please wait for all services to be checked before"
+                " deploying compute nodes.")
             self.render_nodes(self.nodes)
             return False
         else:

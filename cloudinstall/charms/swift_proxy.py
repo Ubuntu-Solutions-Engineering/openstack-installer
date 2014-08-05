@@ -31,5 +31,6 @@ class CharmSwiftProxy(CharmBase):
                    'root-disk': '8G'}
     optional = True
     allow_multi_units = False
+    menuable = True
 
 __charm_class__ = CharmSwiftProxy

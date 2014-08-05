@@ -34,6 +34,7 @@ class CharmSwift(CharmBase):
     isolate = True
     optional = True
     allow_multi_units = True
+    menuable = True
 
     def setup(self):
         """Custom setup for swift-storage to get replicas from config"""

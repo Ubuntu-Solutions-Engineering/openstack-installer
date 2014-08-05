@@ -26,6 +26,7 @@ class CharmKeystone(CharmBase):
     display_name = 'Keystone'
     related = ['mysql']
     deploy_priority = 0
+    menuable = True
 
     # def setup(self):
     #     mysql = self.wait_for_agent('mysql')
