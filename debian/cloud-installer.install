@@ -3,6 +3,7 @@ bin/cloud-status                       usr/share/cloud-installer
 bin/configure-landscape                usr/share/cloud-installer/bin
 bin/ip_range.py                        usr/share/cloud-installer/bin
 bin/maas-report-boot-images            usr/share/cloud-installer/bin
+bin/status-listener                    usr/share/cloud-installer/bin
 share/common.sh                        usr/share/cloud-installer/common
 share/configure.sh                     usr/share/cloud-installer/common
 share/display.sh                       usr/share/cloud-installer/common
