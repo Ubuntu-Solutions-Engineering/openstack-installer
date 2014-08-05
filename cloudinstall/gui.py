@@ -167,7 +167,7 @@ class Banner(ScrollableWidgetWrap):
 
 class NodeViewMode(ScrollableWidgetWrap):
     def __init__(self, nodes, **kwargs):
-        self.glance_sync_status = Text('')
+        self.glance_sync_status = Text(' Sync Status: Pending')
         nodes = [] if nodes is None else nodes
         widget = self._build_widget(nodes, **kwargs)
         super().__init__(widget)
@@ -183,7 +183,8 @@ class NodeViewMode(ScrollableWidgetWrap):
                     if charm.name() == 'glance-simplestreams-sync':
                         node_cols = [
                             node_cols,
-                            Text('Sync Status: {0}'.format(get_sync_status()))]
+                            self.glance_sync_status.set_text(
+                                'Sync Status: {0}'.format(get_sync_status()))]
                         node_cols = Pile(node_cols)
                 node_pile.append(node_cols)
 
@@ -236,7 +237,6 @@ class NodeViewMode(ScrollableWidgetWrap):
                                   "{state_info}".format(
                                       state_info=state_info)))
         return Columns(node_cols)
-
 
 
 class Header(WidgetWrap):
