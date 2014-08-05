@@ -167,9 +167,9 @@ class BaseController:
                       for (charm, node) in a]
         for n in deployed_services:
             for u in n.units:
-                if u.is_horizon:
+                if u.is_horizon and u.agent_state == "started":
                     self.set_dashboard_url(u.public_address)
-                if u.is_jujugui:
+                if u.is_jujugui and u.agent_state == "started":
                     self.set_jujugui_url(u.public_address)
         self.render_nodes(self.nodes)
 

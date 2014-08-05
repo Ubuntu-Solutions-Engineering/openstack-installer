@@ -33,6 +33,7 @@ class Config:
         ('error',        'white',      'dark red'),
         ('info', 'light green', 'default'),
         ('error_icon',    'light red,bold',      'default'),
+        ('pending_icon',    'yellow',      'default'),
         ('success_icon',    'light green',      'default'),
         ('button', 'light gray', 'dark gray')
     ]

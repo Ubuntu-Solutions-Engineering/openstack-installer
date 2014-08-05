@@ -100,8 +100,8 @@ Openstack Dashboard (Horizon)
 
 The login credentials for the dashboard are:
 
-    username: ubuntu
-    password: "password that was set during installation"
+* username: **ubuntu**
+* password: **"password that was set during installation"**
 
 
 Troubleshooting

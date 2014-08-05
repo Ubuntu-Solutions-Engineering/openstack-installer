@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Make sure to flush your nat table before applying new rules
+# iptables -t nat -F
+#
+# Usage:
+# sudo ./port-forward public-ip dest-ip port
+
+iptables -t nat -A PREROUTING -p tcp -d $1 --dport $3 -j DNAT --to-destination $2:$3

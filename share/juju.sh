@@ -57,7 +57,7 @@ environments:
     container: kvm
     lxc-clone: true
     admin-secret: $1
-       openstack:
+
   openstack:
     type: openstack
 
