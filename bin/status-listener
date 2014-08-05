@@ -25,11 +25,14 @@ import traceback
 STATUS_FILE_NAME = os.path.expanduser("~/.cloud-install/sync-status")
 ERROR_FILE_NAME = STATUS_FILE_NAME + ".error"
 
+
 def get_info():
     "Read rabbitmq config from remote unit's relation data"
-    id_yaml = check_output(['juju', 'run', '--unit', 'glance-simplestreams-sync/0',
-                            'cat /etc/glance-simplestreams-sync/identity.yaml'],
-                           stderr=STDOUT)
+    id_yaml = check_output(
+        ['juju', 'run', '--unit',
+         'glance-simplestreams-sync/0',
+         'cat /etc/glance-simplestreams-sync/identity.yaml'],
+        stderr=STDOUT)
 
     id_conf = yaml.load(id_yaml)
     hosts = id_conf.get('rabbit_hosts', None)
@@ -71,7 +74,7 @@ def process_message(body, message):
     message.ack()
 
 
-# Listen forever on rabbitmq port 
+# Listen forever on rabbitmq port
 if __name__ == "__main__":
 
     atomic_write_file(STATUS_FILE_NAME,
@@ -89,7 +92,8 @@ if __name__ == "__main__":
             time.sleep(2)
 
     try:
-        url = "amqp://{}:{}@{}/{}".format(username, password, host, virtual_host)
+        url = "amqp://{}:{}@{}/{}".format(username, password, host,
+                                          virtual_host)
 
         with kombu.BrokerConnection(url) as conn:
             status_message_queue(conn.channel()).declare()
