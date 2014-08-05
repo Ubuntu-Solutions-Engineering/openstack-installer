@@ -39,6 +39,8 @@ class CharmQuantum(CharmBase):
         """ performs additional network configuration for charm """
         unit = self.wait_for_agent()
         if unit:
+            self.ui.status_info_message("Updating network parameters "
+                                        "for Neutron")
             utils.remote_cp(
                 unit.machine_id,
                 src=os.path.join(self.config.tmpl_path, "quantum-network.sh"),

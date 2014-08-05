@@ -23,6 +23,7 @@ import re
 import sys
 import logging
 import functools
+import random
 
 import urwid
 from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
@@ -175,45 +176,52 @@ class NodeViewMode(ScrollableWidgetWrap):
             node_pile = []
             charm, node, state = node
             if charm.menuable:
+                node_cols = []
                 for u in node.units:
                     machine = state.machine(u.machine_id)
                     if u.agent_state == "error":
                         status = ("error_icon", "\N{BULLET} ")
                     elif u.agent_state == "pending":
-                        status = ("pending_icon", "\N{BULLET} ")
+                        pending_status = [("pending_icon", "\N{BULLET} "),
+                                          ("pending_icon_on", "\N{BULLET} ")]
+                        status = pending_status[random.randrange(
+                            len(pending_status)]
                     else:
                         status = ("success_icon", "\u2713 ")
-                    node_pile.append(('pack', Text(status)))
+                    node_cols.append(('pack', Text(status)))
                     if u.public_address:
-                        node_pile.append(
+                        node_cols.append(
                             ('pack',
                              Text(u.public_address)))
                     else:
-                        node_pile.append(
+                        node_cols.append(
                             ('pack',
                              Text('IP Pending')))
 
+                    if machine.arch == "N/A":
+                        node_cols.append(
+                            Text(" \u2022 Container"))
+                    else:
+                        node_cols.append(
+                            Text(" \u2022 arch={0} mem={1} "
+                                 "storage={2}".format(
+                                     machine.arch,
+                                     machine.mem,
+                                     machine.storage,
+                                     )))
                     if 'error' in u.agent_state:
                         state_info = u.agent_state_info.lstrip()
-                        node_pile.append(Text(" Info: "
+                        node_cols.append(Text(" Info: "
                                               "{state_info}".format(
                                                   state_info=state_info)))
-                    node_pile.append(Text(" \u2022 arch={0} mem={1} "
-                                          "storage={2}".format(
-                                              machine.arch,
-                                              machine.mem,
-                                              machine.storage
-                                          )))
-                    node_pile = [Columns(node_pile)]
+                node_pile.append(Columns(node_cols))
 
                 unit_info.append(padding(LineBox(
                     Pile(node_pile),
                     title=charm.display_name)))
+                unit_info.append(Divider())
 
         return ScrollableListBox(unit_info)
-
-    def keypress(self, size, key):
-        return key
 
 
 class Header(WidgetWrap):
@@ -252,16 +260,16 @@ class StatusBar(WidgetWrap):
 
     def set_dashboard_url(self, ip=None):
         """ sets horizon dashboard url """
-        text = "Openstack Dashboard: "
+        text = "Openstack Dashboard:\n"
         if not ip:
             text += "(pending)"
         else:
-            text += "http://{}/dashboard".format(ip)
+            text += "http://{}/horizon".format(ip)
         return self._horizon_url.set_text(text)
 
     def set_jujugui_url(self, ip=None):
         """ sets juju gui url """
-        text = "JujuGUI: "
+        text = "JujuGUI:\n"
         if not ip:
             text += "(pending)"
         else:
@@ -375,7 +383,9 @@ class PegasusGUI(WidgetWrap):
 
     def show_help_info(self):
         widget = HelpScreen()
-        self.show_widget_on_top(widget, width=80, height=22)
+        self.show_widget_on_top(widget, width=80, height=22,
+                                align="center", valign="middle",
+                                min_height=10)
 
     def hide_help_info(self):
         self.hide_widget_on_top()
@@ -383,7 +393,8 @@ class PegasusGUI(WidgetWrap):
     def show_step_info(self, msg=None):
         self.hide_step_info()
         widget = StepInfo(msg)
-        self.show_widget_on_top(widget, width=50, height=10)
+        self.show_widget_on_top(widget, width=50, height=3, align="center",
+                                valign="middle", min_height=10)
 
     def hide_step_info(self):
         self.hide_widget_on_top()

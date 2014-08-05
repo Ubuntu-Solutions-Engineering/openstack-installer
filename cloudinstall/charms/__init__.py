@@ -194,7 +194,7 @@ export OS_REGION_NAME=RegionOne
                         msg = "Relation not ready for " \
                               "{c}, requeueing.".format(c=self.charm_name)
                         log.error(msg)
-                        self.ui.status_error_message(msg)
+                        self.ui.status_info_message(msg)
                         return True
         return False
 
