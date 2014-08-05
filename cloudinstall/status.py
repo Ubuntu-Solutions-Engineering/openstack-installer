@@ -31,6 +31,7 @@ log = logging.getLogger('cloudinstall.status')
 
 def get_sync_status():
     global status_subprocess
+    not_found_message = ""
     if status_subprocess is None:
         status_listener_path = os.environ.get("SYNC_STATUS_LISTENER_PATH",
                                               SYNC_STATUS_LISTENER_PATH)
@@ -38,9 +39,11 @@ def get_sync_status():
         try:
             status_subprocess = subprocess.Popen([status_listener_path])
             atexit.register(status_subprocess.kill)
+            not_found_message = "Waiting for initial status."
         except OSError:
             log.exception("Error starting status listener")
             status_subprocess = None
+            return ""
 
     if os.path.exists(STATUS_FILE_NAME):
         with open(STATUS_FILE_NAME) as sf:
@@ -48,5 +51,5 @@ def get_sync_status():
         log.debug("got status '{}' from listener file".format(status))
         return status
     else:
-        log.debug("No status file found, returning empty status.")
-        return ""
+        log.debug("No status file, returning {}.".format(not_found_message))
+        return not_found_message
