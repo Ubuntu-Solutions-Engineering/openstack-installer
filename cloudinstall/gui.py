@@ -180,18 +180,16 @@ class NodeViewMode(ScrollableWidgetWrap):
             if charm.menuable:
                 for u in node.units:
                     node_cols = self._build_node_columns(u, state)
-                    if charm.name() == 'glance-simplestreams-sync':
-                        node_cols = [
-                            node_cols,
-                            self.glance_sync_status.set_text(
-                                'Sync Status: {0}'.format(get_sync_status()))]
-                        node_cols = Pile(node_cols)
                 node_pile.append(node_cols)
 
                 unit_info.append(padding(LineBox(
                     Pile(node_pile),
-                    title=charm.display_name)))
-                unit_info.append(Divider())
+                    title=charm.display_name,
+                    lline=' ',
+                    blcorner=' ',
+                    rline=' ',
+                    bline=' ',
+                    brcorner=' ')))
 
         return ScrollableListBox(unit_info)
 
@@ -205,16 +203,17 @@ class NodeViewMode(ScrollableWidgetWrap):
             pending_status = [("pending_icon", "\N{BULLET} "),
                               ("pending_icon_on", "\N{BULLET} "),
                               ("pending_icon", "\N{BULLET} "),
+                              ("pending_icon_on", "\N{BULLET} "),
+                              ("pending_icon", "\N{BULLET} "),
                               ("pending_icon_on", "\N{BULLET} ")]
-            status = pending_status[random.randrange(
-                len(pending_status))]
+            status = pending_status[random.randrange(len(pending_status))]
         else:
             status = ("success_icon", "\u2713 ")
         node_cols.append(('pack', Text(status)))
         if unit.public_address:
             node_cols.append(
                 ('pack',
-                 Text(unit.public_address)))
+                 Text("{0:<12}".format(unit.public_address))))
         else:
             node_cols.append(
                 ('pack',
@@ -222,15 +221,18 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         if machine.arch == "N/A":
             node_cols.append(
-                Text(" \u2022 Container"))
+                Text(" | Container"))
         else:
             node_cols.append(
-                Text(" \u2022 arch={0} mem={1} "
+                Text(" | arch={0} mem={1} "
                      "storage={2}".format(
                          machine.arch,
                          machine.mem,
                          machine.storage,
                          )))
+        if 'glance-simplestreams-sync' in unit.unit_name:
+            node_cols.append(('pack', Text(
+                'Sync Status: {0}'.format(get_sync_status()))))
         if 'error' in unit.agent_state:
             state_info = unit.agent_state_info.lstrip()
             node_cols.append(Text(" Info: "
@@ -243,8 +245,9 @@ class Header(WidgetWrap):
     def __init__(self):
         w = []
         w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header_title"))
-        w.append(AttrWrap(Text('(A)dd units \N{BULLET} (R)efresh',
-                               align='center'), "header_menu"))
+        w.append(AttrWrap(Text(
+            '(A)dd units \N{BULLET} (H)elp \N{BULLET} '
+            '(R)efresh \N{BULLET} (Q)uit', align='center'), "header_menu"))
         w = Pile(w)
         super().__init__(w)
 
@@ -267,15 +270,13 @@ class StatusBar(WidgetWrap):
 
     def _build_status_extra(self):
         status = []
-        status.append(self._horizon_url)
-        status.append(self._jujugui_url)
-        status.append((18, Text('(Q)uit | (H)elp \N{BULLET}')))
+        status.append(Pile([self._horizon_url, self._jujugui_url]))
         status.append(('pack', self._openstack_rel))
         return AttrWrap(Columns(status), 'status_extra')
 
     def set_dashboard_url(self, ip=None):
         """ sets horizon dashboard url """
-        text = "Openstack Dashboard:\n"
+        text = "Openstack Dashboard: "
         if not ip:
             text += "(pending)"
         else:
@@ -284,7 +285,7 @@ class StatusBar(WidgetWrap):
 
     def set_jujugui_url(self, ip=None):
         """ sets juju gui url """
-        text = "JujuGUI:\n"
+        text = "{0:<21}".format("JujuGUI:")
         if not ip:
             text += "(pending)"
         else:
