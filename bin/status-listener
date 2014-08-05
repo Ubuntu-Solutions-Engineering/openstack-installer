@@ -77,9 +77,6 @@ def process_message(body, message):
 # Listen forever on rabbitmq port
 if __name__ == "__main__":
 
-    atomic_write_file(STATUS_FILE_NAME,
-                      "Waiting for initial status.")
-
     info_found = False
     while not info_found:
         try:
