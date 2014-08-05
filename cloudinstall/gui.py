@@ -33,6 +33,7 @@ from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
 
                    signals, emit_signal, connect_signal)
 from cloudinstall import utils
+from cloudinstall.status import get_sync_status
 from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox)
 from cloudinstall.ui.helpscreen import HelpScreen
@@ -166,6 +167,7 @@ class Banner(ScrollableWidgetWrap):
 
 class NodeViewMode(ScrollableWidgetWrap):
     def __init__(self, nodes, **kwargs):
+        self.glance_sync_status = Text('')
         nodes = [] if nodes is None else nodes
         widget = self._build_widget(nodes, **kwargs)
         super().__init__(widget)
@@ -176,45 +178,14 @@ class NodeViewMode(ScrollableWidgetWrap):
             node_pile = []
             charm, node, state = node
             if charm.menuable:
-                node_cols = []
                 for u in node.units:
-                    machine = state.machine(u.machine_id)
-                    if u.agent_state == "error":
-                        status = ("error_icon", "\N{BULLET} ")
-                    elif u.agent_state == "pending":
-                        pending_status = [("pending_icon", "\N{BULLET} "),
-                                          ("pending_icon_on", "\N{BULLET} ")]
-                        status = pending_status[random.randrange(
-                            len(pending_status)]
-                    else:
-                        status = ("success_icon", "\u2713 ")
-                    node_cols.append(('pack', Text(status)))
-                    if u.public_address:
-                        node_cols.append(
-                            ('pack',
-                             Text(u.public_address)))
-                    else:
-                        node_cols.append(
-                            ('pack',
-                             Text('IP Pending')))
-
-                    if machine.arch == "N/A":
-                        node_cols.append(
-                            Text(" \u2022 Container"))
-                    else:
-                        node_cols.append(
-                            Text(" \u2022 arch={0} mem={1} "
-                                 "storage={2}".format(
-                                     machine.arch,
-                                     machine.mem,
-                                     machine.storage,
-                                     )))
-                    if 'error' in u.agent_state:
-                        state_info = u.agent_state_info.lstrip()
-                        node_cols.append(Text(" Info: "
-                                              "{state_info}".format(
-                                                  state_info=state_info)))
-                node_pile.append(Columns(node_cols))
+                    node_cols = self._build_node_columns(u, state)
+                    if charm.name() == 'glance-simplestreams-sync':
+                        node_cols = [
+                            node_cols,
+                            Text('Sync Status: {0}'.format(get_sync_status()))]
+                        node_cols = Pile(node_cols)
+                node_pile.append(node_cols)
 
                 unit_info.append(padding(LineBox(
                     Pile(node_pile),
@@ -222,6 +193,50 @@ class NodeViewMode(ScrollableWidgetWrap):
                 unit_info.append(Divider())
 
         return ScrollableListBox(unit_info)
+
+    def _build_node_columns(self, unit, state):
+        """ builds columns of node status """
+        node_cols = []
+        machine = state.machine(unit.machine_id)
+        if unit.agent_state == "error":
+            status = ("error_icon", "\N{BULLET} ")
+        elif unit.agent_state == "pending":
+            pending_status = [("pending_icon", "\N{BULLET} "),
+                              ("pending_icon_on", "\N{BULLET} "),
+                              ("pending_icon", "\N{BULLET} "),
+                              ("pending_icon_on", "\N{BULLET} ")]
+            status = pending_status[random.randrange(
+                len(pending_status))]
+        else:
+            status = ("success_icon", "\u2713 ")
+        node_cols.append(('pack', Text(status)))
+        if unit.public_address:
+            node_cols.append(
+                ('pack',
+                 Text(unit.public_address)))
+        else:
+            node_cols.append(
+                ('pack',
+                 Text('IP Pending')))
+
+        if machine.arch == "N/A":
+            node_cols.append(
+                Text(" \u2022 Container"))
+        else:
+            node_cols.append(
+                Text(" \u2022 arch={0} mem={1} "
+                     "storage={2}".format(
+                         machine.arch,
+                         machine.mem,
+                         machine.storage,
+                         )))
+        if 'error' in unit.agent_state:
+            state_info = unit.agent_state_info.lstrip()
+            node_cols.append(Text(" Info: "
+                                  "{state_info}".format(
+                                      state_info=state_info)))
+        return Columns(node_cols)
+
 
 
 class Header(WidgetWrap):
