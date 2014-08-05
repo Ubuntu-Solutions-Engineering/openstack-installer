@@ -179,6 +179,8 @@ class NodeViewMode(ScrollableWidgetWrap):
                     machine = state.machine(u.machine_id)
                     if u.agent_state == "error":
                         status = ("error_icon", "\N{BULLET} ")
+                    elif u.agent_state == "pending":
+                        status = ("pending_icon", "\N{BULLET} ")
                     else:
                         status = ("success_icon", "\u2713 ")
                     node_pile.append(('pack', Text(status)))
@@ -186,6 +188,10 @@ class NodeViewMode(ScrollableWidgetWrap):
                         node_pile.append(
                             ('pack',
                              Text(u.public_address)))
+                    else:
+                        node_pile.append(
+                            ('pack',
+                             Text('IP Pending')))
 
                     if 'error' in u.agent_state:
                         state_info = u.agent_state_info.lstrip()
