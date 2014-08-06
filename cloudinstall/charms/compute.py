@@ -40,7 +40,8 @@ class CharmNovaCompute(CharmBase):
         if not controller:
             return True
         for charm in self.related:
-            log.debug("Adding relation to {0}".format(charm))
+            log.debug("{1} adding relation to {0}".format(
+                charm, self.display_name))
             self.juju.add_relation(self.charm_name,
                                    charm)
 

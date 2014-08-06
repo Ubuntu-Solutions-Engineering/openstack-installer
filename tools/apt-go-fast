@@ -1,0 +1,54 @@
+#!/bin/sh
+set -e
+[ -e "/usr/bin/apt-get.distrib" ] ||
+   sudo dpkg-divert --local --rename --add /usr/bin/apt-get
+
+sudo tee /usr/bin/apt-get >/dev/null <<"EOF"
+#!/bin/sh
+a=" $* "
+emd="eatmydata"
+if ! command -v eatmydata >/dev/null 2>&1; then
+   emd=""
+   if [ "$(id -u)" = "0" ] &&
+      [ "${a#* install }" != "$a" -o "${a#* upgrade }" != "$a" -o \
+        "${a#* dist-upgrade }" != "$a" ]; then
+     # we are root, this is install, so install emd
+     echo "=== first installing libeatmydata ===" 1>&2
+     out=$(DEBIAN_FRONTEND=noninteractive "$0.distrib" install \
+           --quiet --assume-yes libeatmydata 2>&1)
+     ret=$?
+     if [ $ret -ne 0 ]; then
+        echo "FAILED: $out" 1>&2;
+        echo "failed to install libeatmydata."
+        exit $ret
+     fi
+     emd="eatmydata"
+  fi
+fi 1>&2 </dev/null
+exec $emd "$0.distrib" "$@"
+EOF
+sudo chmod 755 /usr/bin/apt-get
+
+slists="/etc/apt/sources.list /etc/cloud/templates/sources.list.ubuntu.tmpl"
+for f in $slists; do
+   [ -f "$f" ] || continue
+   sudo sed -i.dist "s,^deb-src,#deb-src," "$f"
+   # maybe you dont want to disable security
+   sudo sed -i "/^deb[^-].*security.ubuntu.com/s/^/#/" "$f"
+done
+
+farchs=$(dpkg --print-foreign-architectures)
+case "$farchs" in
+   *i386*)
+      { sudo dpkg --remove-architecture i386 >/dev/null 2>&1 ||
+         sudo rm /etc/dpkg/dpkg.cfg.d/multiarch; } &&
+         echo "got rid of i386" ||
+         echo "failed to remove arch i386"
+      ;;
+esac
+
+f="/etc/apt/apt.conf.d/99notranslations"
+if [ ! -f "$f" ]; then
+   echo 'Acquire::Languages "none";' | sudo tee "$f" >/dev/null;
+   sudo rm -r /var/lib/apt/lists/*Translation*;
+fi

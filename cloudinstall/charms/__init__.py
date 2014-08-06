@@ -54,6 +54,7 @@ def query_cs(charm, series='trusty'):
 class DisplayPriorities:
     """A fake enum"""
     Core = 0
+    Error = 1
     Compute = 10
     Storage = 20
     Other = 30
