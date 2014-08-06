@@ -19,4 +19,5 @@ share/templates/lxc-host-only          usr/share/cloud-installer/templates
 share/templates/maas-container.yml     usr/share/cloud-installer/templates
 share/templates/nova-controller-setup.sh     usr/share/cloud-installer/templates
 share/templates/quantum-network.sh     usr/share/cloud-installer/templates
+tools/apt-go-fast                      usr/share/cloud-installer/tools
 tools/cloud-uninstall                  usr/share/cloud-installer/tools

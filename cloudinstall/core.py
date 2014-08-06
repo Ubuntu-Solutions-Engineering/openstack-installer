@@ -223,22 +223,22 @@ class Controller(BaseController):
         is_connected = False
         count = 0
         while not is_connected:
+            self.render_node_install_wait()
             self.info_message(
                 random_status[random.randrange(len(random_status))])
             count = count + 1
-            self.step_info("Waiting for MAAS (tries {0})".format(count))
+            self.info_message("Waiting for MAAS (tries {0})".format(count))
             uri = path.join('http://', utils.container_ip('maas'), 'MAAS')
             log.debug("Checking MAAS availability ({0})".format(uri))
             try:
                 res = requests.get(uri)
                 is_connected = res.ok
             except:
-                self.step_info("Waiting for MAAS to be installed")
+                self.info_message("Waiting for MAAS to be installed")
             time.sleep(10)
 
         # Render nodeview, even though nothing is there yet.
         self.initialize()
-        self.render_nodes([])
 
     @utils.async
     def init_machine(self):
@@ -444,9 +444,6 @@ class Controller(BaseController):
         if not charm:
             self.ui.hide_add_charm_info()
             return
-        # self.charm_classes = [m.__charm_class__ for m in self.charm_modules
-        #                       if m.__charm_class__.allow_multi_units and
-        #                       not m.__charm_class__.disabled]
         svc = self.juju_state.service(charm)
         if svc.service:
             self.info_message("Adding {n} units of {charm}".format(
