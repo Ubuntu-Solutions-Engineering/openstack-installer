@@ -2,6 +2,12 @@
 
 . /tmp/openstack-admin-rc
 
+neutron net-list|grep -q ubuntu-net
+RET=$?
+if [ ${RET} -eq 0 ]; then
+	echo "Neutron network already created." && exit 0
+fi
+
 # adjust tiny image
 nova flavor-delete m1.tiny
 nova flavor-create m1.tiny 1 512 8 1

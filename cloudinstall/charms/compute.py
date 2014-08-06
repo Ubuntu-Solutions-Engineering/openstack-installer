@@ -36,7 +36,14 @@ class CharmNovaCompute(CharmBase):
     allow_multi_units = True
 
     def set_relations(self):
-        super(CharmNovaCompute, self).set_relations()
+        controller = self.wait_for_agent('nova-cloud-controller')
+        if not controller:
+            return True
+        for charm in self.related:
+            log.debug("Adding relation to {0}".format(charm))
+            self.juju.add_relation(self.charm_name,
+                                   charm)
+
         service = self.juju_state.service(self.charm_name)
         has_amqp = list(filter(lambda r: 'amqp' in r.relation_name,
                         service.relations))
