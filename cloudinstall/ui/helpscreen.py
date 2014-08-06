@@ -59,15 +59,15 @@ Juju GUI.
             ('header_title', "Command Reference"),
             """
 
-- F5 refreshes the displayed state immediately
+- (R/F5) refreshes the displayed state immediately
 
-- F6 brings up a dialog box for adding additional units. This is how
+- (A/a/F6) brings up a dialog box for adding additional units. This is how
   to add compute units or a storage service. This dialog takes care of
   launching required dependencies, so for example, launching swift
   here will add a swift-proxy service and enough swift-storage nodes
   to meet the replica criterion (currently 3).
 
-- '?' displays this help screen.
+- '(H/h/?)' displays this help screen.
 
 - 'q' quits.
 
