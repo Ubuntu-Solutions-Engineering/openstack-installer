@@ -157,8 +157,10 @@ class Service:
         :returns: iterator of associated units for service
         :rtype: Unit()
         """
+        units_list = []
         for unit_name, units in self.service.get('Units', {}).items():
-            yield Unit(unit_name, units)
+            units_list.append(Unit(unit_name, units))
+        return units_list
 
     def relation(self, name):
         """ Single relation entry

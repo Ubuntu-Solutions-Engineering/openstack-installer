@@ -57,6 +57,18 @@ environments:
     container: kvm
     lxc-clone: true
     admin-secret: $1
+
+  openstack:
+    type: openstack
+    use-floating-ip: true
+    use-default-secgroup: true
+    network: ubuntu-net
+    auth-url: http://keystoneurl:5000/v2.0/
+    tenant-name: ubuntu
+    region: RegionOne
+    auth-mode: userpass
+    username: ubuntu
+    password: $1
 EOF
 }
 
@@ -86,7 +98,7 @@ quantum-gateway:
 nova-cloud-controller:
   network-manager: Neutron
 glance-simplestreams-sync:
-  use_swift: False
+  use_swift: True
 EOF
 }
 

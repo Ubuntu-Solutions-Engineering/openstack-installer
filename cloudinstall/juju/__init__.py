@@ -44,29 +44,33 @@ class JujuState:
 
         :param str machine_id: machine machine_id
         :returns: machine
-        :rtype: cloudinstall.machine.Machine()
+        :rtype: :class:`~cloudinstall.machine.Machine`
         """
-        r = next(filter(lambda x: x.machine_id == machine_id,
-                 self.machines()), Machine(-1, {}))
-        return r
+        for m in self.machines():
+            if m.machine_id == machine_id:
+                return m
+        return Machine(-1, {})
 
     def machines(self):
         """ Machines property
 
         :returns: machines known to juju (except bootstrap)
-        :rtype: generator
+        :rtype: list
         """
         ret = self.juju.status()
+        machines = []
+
         for machine_id, machine in ret.get('Machines', {}).items():
             if '0' == machine_id:
                 continue
-            yield Machine(machine_id, machine)
+            machines.append(Machine(machine_id, machine))
+        return machines
 
     def machines_allocated(self):
         """ Machines allocated property
 
         :returns: all machines in an allocated state (see self.valid_states)
-        :rtype: iter
+        :rtype: list
         """
         return [m for m in self.machines()
                 if m.agent_state in self.valid_states or
@@ -77,22 +81,27 @@ class JujuState:
 
         :param str name: service/charm name
         :returns: a service entry or None
-        :rtype: Service()
+        :rtype: :class:`~cloudinstall.service.Service`
         """
-        r = next(filter(lambda s: s.service_name == name,
-                        self.services), Service(name, {}))
-        return r
+        for s in self.services:
+            if s.service_name == name:
+                return s
+        return Service(name, {})
 
     @property
     def services(self):
         """ Juju services property
 
         :returns: Service() of all loaded services
-        :rtype: generator
+        :rtype: list
         """
         ret = self.juju.status()
+        services = []
+
         for name, service in ret.get('Services', {}).items():
-            yield Service(name, service)
+            services.append(Service(name, service))
+
+        return services
 
     @property
     def networks(self):

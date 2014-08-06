@@ -39,6 +39,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
 from cloudinstall.ui.helpscreen import HelpScreen
 
 log = logging.getLogger('cloudinstall.gui')
+sys.excepthook = utils.global_exchandler
 
 TITLE_TEXT = "Ubuntu Openstack Installer - Dashboard"
 
@@ -144,12 +145,15 @@ class AddCharmDialog(WidgetWrap):
 class Banner(ScrollableWidgetWrap):
     def __init__(self):
         self.text = []
+
         self.BANNER = [
             "",
             "",
             "Ubuntu Openstack Installer",
             "",
-            "By Canonical, Ltd."
+            "By Canonical, Ltd.",
+            "",
+
         ]
         super().__init__(self._create_text())
 
@@ -165,9 +169,53 @@ class Banner(ScrollableWidgetWrap):
         self.text.append(text)
 
 
+class NodeInstallWaitMode(ScrollableWidgetWrap):
+    def __init__(self):
+        super().__init__(self._build_node_waiting())
+
+    def _build_node_waiting(self):
+        """ creates a loading screen if nodes do not exist yet """
+        text = Text("\n\n\nInstaller is initializing nodes. "
+                    "Please wait.\n\n\n",
+                    align="center")
+        load_box = [AttrWrap(Text("\u2582",
+                                  align="center"), "pending_icon_on"),
+                    AttrWrap(Text("\u2581",
+                                  align="center"),
+                             "pending_icon_on"),
+                    AttrWrap(Text("\u2583",
+                                  align="center"), "pending_icon_on"),
+                    AttrWrap(Text("\u2584",
+                                  align="center"),
+                             "pending_icon_on"),
+                    AttrWrap(Text("\u2585",
+                                  align="center"),
+                             "pending_icon_on"),
+                    AttrWrap(Text("\u2586",
+                                  align="center"),
+                             "pending_icon_on"),
+                    AttrWrap(Text("\u2587",
+                                  align="center"),
+                             "pending_icon_on"),
+                    AttrWrap(Text("\u2588",
+                                  align="center"),
+                             "pending_icon_on")]
+
+        # Add loading boxes
+        random.shuffle(load_box)
+        loading_boxes = []
+        loading_boxes.append(('weight', 1, Text('')))
+        for i in load_box:
+            loading_boxes.append(('pack',
+                                 load_box[random.randrange(len(load_box))]))
+        loading_boxes.append(('weight', 1, Text('')))
+        loading_boxes = Columns(loading_boxes)
+
+        return ScrollableListBox([text, loading_boxes])
+
+
 class NodeViewMode(ScrollableWidgetWrap):
     def __init__(self, nodes, **kwargs):
-        self.glance_sync_status = Text(' Sync Status: Pending')
         nodes = [] if nodes is None else nodes
         widget = self._build_widget(nodes, **kwargs)
         super().__init__(widget)
@@ -176,8 +224,9 @@ class NodeViewMode(ScrollableWidgetWrap):
         unit_info = []
         for node in nodes:
             node_pile = []
+            node_cols = []
             charm, node, state = node
-            if charm.menuable:
+            if charm.menuable and len(node.units) > 0:
                 for u in node.units:
                     node_cols = self._build_node_columns(u, state)
                 node_pile.append(node_cols)
@@ -444,4 +493,8 @@ class PegasusGUI(WidgetWrap):
 
     def render_nodes(self, nodes, **kwargs):
         self.frame.body = NodeViewMode(nodes)
+        self.frame.set_body(self.frame.body)
+
+    def render_node_install_wait(self, **kwargs):
+        self.frame.body = NodeInstallWaitMode()
         self.frame.set_body(self.frame.body)

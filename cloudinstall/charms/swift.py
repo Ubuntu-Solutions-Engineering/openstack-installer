@@ -16,9 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 from cloudinstall.charms import (CharmBase, CHARM_CONFIG,
-                                 CHARM_CONFIG_FILENAME,
+                                 CHARM_CONFIG_RAW,
                                  DisplayPriorities)
+
+log = logging.getLogger('cloudinstall.charms.compute')
 
 
 class CharmSwift(CharmBase):
@@ -32,9 +35,8 @@ class CharmSwift(CharmBase):
     deploy_priority = 5
     default_replicas = 3
     isolate = True
-    optional = True
+    optional = False
     allow_multi_units = True
-    menuable = True
 
     def setup(self):
         """Custom setup for swift-storage to get replicas from config"""
@@ -47,8 +49,11 @@ class CharmSwift(CharmBase):
         kwds = dict(NumUnits=num_replicas)
 
         if self.charm_name in CHARM_CONFIG:
-            kwds['ConfigYAML'] = CHARM_CONFIG_FILENAME
+            kwds['ConfigYAML'] = CHARM_CONFIG_RAW
 
+        log.debug('Deployed {c} with params: {p}'.format(
+            c=self.charm_name,
+            p=kwds))
         self.juju.deploy(self.charm_name, kwds)
 
     def post_proc(self):

@@ -19,6 +19,7 @@ import urwid
 import asyncio
 import time
 import random
+import sys
 import requests
 from os import getenv, path
 
@@ -37,6 +38,7 @@ from multiprocessing import cpu_count
 
 
 log = logging.getLogger('cloudinstall.core')
+sys.excepthook = utils.global_exchandler
 
 
 class BaseController:
@@ -99,6 +101,10 @@ class BaseController:
     # - Render
     def render_nodes(self, nodes):
         self.ui.render_nodes(nodes)
+        self.redraw_screen()
+
+    def render_node_install_wait(self):
+        self.ui.render_node_install_wait()
         self.redraw_screen()
 
     def redraw_screen(self):
@@ -170,6 +176,9 @@ class BaseController:
                     self.set_dashboard_url(u.public_address)
                 if u.is_jujugui and u.agent_state == "started":
                     self.set_jujugui_url(u.public_address)
+        if not self.nodes:
+            self.render_node_install_wait()
+            return
         self.render_nodes(self.nodes)
 
     def header_hotkeys(self, key):
@@ -291,15 +300,11 @@ class Controller(BaseController):
             return None
 
     def get_started_machine(self):
-        random_status = ["Continually polling for a machine to "
-                         "be in a ready state. Please Wait.",
-                         "Don't worry, still waiting for a machine."]
         started_machines = sorted([m for m in
                                    self.juju_state.machines_allocated()
                                    if m.agent_state == 'started'],
                                   key=lambda m: int(m.machine_id))
-        self.info_message(
-            random_status[random.randrange(len(random_status))])
+        self.info_message("Waiting for an available machine.")
 
         if len(started_machines) > 0:
             return started_machines[0]
