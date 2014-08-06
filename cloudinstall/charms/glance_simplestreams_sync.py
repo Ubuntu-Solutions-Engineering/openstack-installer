@@ -97,6 +97,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
                     repodir=CHARMS_DIR,
                     distro=CURRENT_DISTRO)
 
+        # TODO: See if this is supported by juju api
         cmd = ('juju deploy --repository={repodir}'
                ' local:{distro}/glance-simplestreams-sync'
                ' --to {machine_id}').format(**kwds)
