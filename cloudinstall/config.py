@@ -96,8 +96,8 @@ class Config:
         else:
             raise ConfigException("~/.juju/environments.yaml unavailable, "
                                   "is juju bootstrapped?")
-        if key in env_yaml[provider]:
-            env_yaml[provider][key] = val
+        if key in env_yaml['environments'][provider]:
+            env_yaml['environments'][provider][key] = val
         with open(_env_yaml, 'w') as f:
             _env_yaml_raw = yaml.safe_dump_all(env_yaml)
             f.write(_env_yaml_raw)
