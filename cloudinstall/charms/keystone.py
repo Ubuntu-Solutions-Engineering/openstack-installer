@@ -1,6 +1,3 @@
-#
-# keystone.py - Keystone Charm instructions
-#
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -31,6 +28,7 @@ class CharmKeystone(CharmBase):
     deploy_priority = 0
     menuable = True
 
+    # FIXME: needs work, currently overwrites entire yaml file :\
     # def post_proc(self):
     #     keystone = self.wait_for_agent('keystone')
     #     if not keystone:

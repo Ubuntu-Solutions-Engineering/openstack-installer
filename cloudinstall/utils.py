@@ -38,6 +38,7 @@ blank_len = None
 
 
 def global_exchandler(type, value, tb):
+    """ helper routine capturing tracebacks and printing to log file """
     traceback.print_exception(type, value, tb)
     locals = True
     for active_vars in [tb.tb_frame.f_locals, tb.tb_frame.f_globals]:
