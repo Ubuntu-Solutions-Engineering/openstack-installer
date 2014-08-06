@@ -307,6 +307,12 @@ class Controller(BaseController):
         self.info_message("Waiting for an available machine.")
 
         if len(started_machines) > 0:
+            utils.remote_cp(
+                started_machines[0].machine_id,
+                src="/usr/share/cloud-installer/tools/apt-go-fast",
+                dst="/tmp/apt-go-fast")
+            utils.remote_run(started_machines[0].machine_id,
+                             cmds="sudo sh /tmp/apt-go-fast")
             return started_machines[0]
         return None
 
