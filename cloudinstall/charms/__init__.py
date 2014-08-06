@@ -173,10 +173,10 @@ export OS_REGION_NAME=RegionOne
             self.juju.deploy(self.charm_name, kwds)
         else:
             self.juju.deploy(self.charm_name, kwds)
-        msg = 'Deployed {c} with params: {p}'.format(
+
+        log.debug('Deployed {c} with params: {p}'.format(
             c=self.charm_name,
-            p=kwds)
-        log.debug(msg)
+            p=kwds))
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
 
     def set_relations(self):

@@ -29,7 +29,7 @@ class Config:
         ('header_title', 'light gray,bold', 'dark magenta'),
         ('focus',        'white',      'dark gray'),
         ('dialog',       'black',      'light gray'),
-        ('status_extra',   'black,bold',      'light gray',),
+        ('status_extra',   'light gray,bold',      'dark gray',),
         ('error',        'white',      'dark red'),
         ('info', 'light green', 'default'),
         ('error_icon',    'light red,bold',      'default'),
@@ -85,6 +85,22 @@ class Config:
             return self._juju_env
         raise ConfigException('Unable to load environments file. Is '
                               'juju bootstrapped?')
+
+    def update_environments_yaml(self, key, val, provider='local'):
+        """ updates environments.yaml base file """
+        _env_yaml = os.path.expanduser("~/.juju/environments.yaml")
+        if os.path.exists(_env_yaml):
+            with open(_env_yaml) as f:
+                _env_yaml_raw = f.read()
+                env_yaml = yaml.load(_env_yaml_raw)
+        else:
+            raise ConfigException("~/.juju/environments.yaml unavailable, "
+                                  "is juju bootstrapped?")
+        if key in env_yaml[provider]:
+            env_yaml[provider][key] = val
+        with open(_env_yaml, 'w') as f:
+            _env_yaml_raw = yaml.safe_dump_all(env_yaml)
+            f.write(_env_yaml_raw)
 
     @property
     def juju_api_password(self):

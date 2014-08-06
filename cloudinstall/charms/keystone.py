@@ -16,7 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 from cloudinstall.charms import CharmBase
+
+log = logging.getLogger('cloudinstall.charms.keystone')
 
 
 class CharmKeystone(CharmBase):
@@ -28,10 +31,18 @@ class CharmKeystone(CharmBase):
     deploy_priority = 0
     menuable = True
 
-    # def setup(self):
-    #     mysql = self.wait_for_agent('mysql')
-    #     if not mysql:
-    #         return True
-    #     super().setup()
+    def post_proc(self):
+        keystone = self.wait_for_agent('keystone')
+        if not keystone:
+            return True
+        service = self.juju_state.service('keystone')
+        if len(service.units) > 0:
+            unit = service.units[0]
+        self.config.update_environments_yaml(
+            key='auth-url',
+            val='http://{0}:5000/v2.0/'.format(unit.public_address),
+            provider='openstack'
+        )
+        log.debug("Updated keystone auth-url in openstack provider.")
 
 __charm_class__ = CharmKeystone

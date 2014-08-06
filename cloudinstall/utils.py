@@ -24,6 +24,7 @@ import string
 import random
 import fnmatch
 import logging
+import traceback
 from threading import Thread
 from functools import wraps
 from time import strftime
@@ -34,6 +35,18 @@ log = logging.getLogger('cloudinstall.utils')
 
 # String with number of minutes, or None.
 blank_len = None
+
+
+def global_exchandler(type, value, tb):
+    traceback.print_exception(type, value, tb)
+    locals = True
+    for active_vars in [tb.tb_frame.f_locals, tb.tb_frame.f_globals]:
+        header = 'Locals:' if locals else 'Globals:'
+        log.debug(header)
+        for k, v in active_vars.items():
+            if not (k.startswith('__') and k.endswith('__')):
+                log.debug('\t{} = {}'.format(k, v))
+        locals = False
 
 
 def load_charms():

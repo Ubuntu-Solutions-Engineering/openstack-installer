@@ -1,9 +1,5 @@
 #!/bin/sh -e
 
-if [ -f /tmp/openstack-admin-rc ]; then
-	echo "Looks like the controller was already configured." && exit 0
-fi
-
 . /tmp/openstack-admin-rc
 
 # adjust tiny image

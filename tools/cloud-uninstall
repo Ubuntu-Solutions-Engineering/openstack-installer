@@ -101,5 +101,6 @@ if [ ${RET} -eq 0 ]; then
   fi
 fi
 
-rm -rf ~/.juju ~/.cloud-install || true
+# FIXME: Probably shouldnt blindly remove known_hosts
+rm -rf ~/.juju ~/.cloud-install ~/.ssh/known_hosts || true
 rm -rf /etc/cloud-installer || true

@@ -31,7 +31,7 @@ class CharmNovaCloudController(CharmBase):
     display_name = 'Controller'
     menuable = True
     related = ['mysql', 'rabbitmq-server', 'glance', 'keystone']
-    allow_multi_units = True
+    allow_multi_units = False
 
     def post_proc(self):
         """ post processing for nova-cloud-controller """

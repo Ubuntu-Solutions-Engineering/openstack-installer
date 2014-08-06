@@ -29,7 +29,7 @@ class CharmSwiftProxy(CharmBase):
     deploy_priority = 5
     constraints = {'mem': '1G',
                    'root-disk': '8G'}
-    optional = True
+    optional = False
     allow_multi_units = False
     menuable = True
 
