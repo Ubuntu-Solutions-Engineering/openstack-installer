@@ -98,7 +98,7 @@ quantum-gateway:
 nova-cloud-controller:
   network-manager: Neutron
 glance-simplestreams-sync:
-  use_swift: True
+  use_swift: False
 EOF
 }
 
