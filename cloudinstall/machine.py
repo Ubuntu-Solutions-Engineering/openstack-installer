@@ -31,7 +31,6 @@ class Machine:
         self.agent_state_info = self.machine.get('AgentStateInfo', None)
         self.agent_version = self.machine.get('AgentVersion', None)
         self.dns_name = self.machine.get('DNSName', '')
-        self.instance_id = self.machine.get('InstanceId', '')
         self.err = self.machine.get('Err', None)
         self.has_vote = self.machine.get('HasVote')
         self.wants_vote = self.machine.get('WantsVote')
