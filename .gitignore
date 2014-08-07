@@ -15,3 +15,4 @@ debian/cloud-install-landscape/
 *.swp
 # the dependencies deb
 *.deb
+.ropeproject
