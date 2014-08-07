@@ -12,6 +12,7 @@ Guides
    developer.setup
    single-installer.guide
    multi-installer.guide
+   using-juju-in-openstack.guide
 
 
 Reference
