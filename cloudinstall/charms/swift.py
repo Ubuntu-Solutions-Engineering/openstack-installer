@@ -32,7 +32,7 @@ class CharmSwift(CharmBase):
     deploy_priority = 5
     default_replicas = 3
     isolate = True
-    optional = False
+    optional = True
     allow_multi_units = True
 
     def setup(self):
