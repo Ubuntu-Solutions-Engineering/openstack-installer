@@ -74,12 +74,16 @@ status:
 ../cloud-installer*.deb: deb
 	echo "rule to make .deb automatically"
 
-# sudo make run type=multi proxy=http://localhost:3128/
-.PHONY: run
-run: ../cloud-installer*.deb
+.PHONY: install
+install: ../cloud-installer*.deb
 	-dpkg -i ../cloud-installer*deb
 	-dpkg -i ../cloud-install-${type}*deb
 	apt-get -yy install -f
+
+
+# sudo make run type=multi proxy=http://localhost:3128/
+.PHONY: run
+run: install
 	MAAS_HTTP_PROXY=${proxy} cloud-install
 
 # sudo make landscape
