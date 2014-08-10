@@ -13,7 +13,7 @@ tarball: $(NAME)_$(VERSION).orig.tar.gz
 
 .PHONY: install-dependencies
 install-dependencies:
-	sudo apt-get install devscripts equivs
+	sudo apt-get -yy install devscripts equivs
 	sudo mk-build-deps -i debian/control
 
 .PHONY: uninstall-dependencies

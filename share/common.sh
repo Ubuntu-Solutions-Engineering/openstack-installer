@@ -300,5 +300,6 @@ INSTALL_HOME=$(getent passwd $INSTALL_USER | cut -d: -f6)
 configure_landscape=/usr/share/cloud-installer/bin/configure-landscape
 ip_range=/usr/share/cloud-installer/bin/ip_range.py
 maas_report_boot_images=/usr/share/cloud-installer/bin/maas-report-boot-images
+parse_image_config=/usr/share/cloud-installer/bin/parse-image-config.py
 
 TEMPLATES=/usr/share/cloud-installer/templates

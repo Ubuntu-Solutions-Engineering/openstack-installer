@@ -119,8 +119,10 @@ setupMultiInstall()
 	chmod 0600 "$INSTALL_HOME/.cloud-install/openstack.passwd"
 	chown -R "$INSTALL_USER:$INSTALL_USER" \
 	    "$INSTALL_HOME/.cloud-install"
-	configCharmOptions $openstack_password > \
-          "$INSTALL_HOME/.cloud-install/charmconf.yaml"
+        charmconf_filename="$INSTALL_HOME/.cloud-install/charmconf.yaml"
+	configCharmOptions $openstack_password > $charmconf_filename
+        $parse_image_config $charmconf_filename arches=$sync_image_arches \
+            releases=$sync_image_releases
 }
 
 # Configure interface
