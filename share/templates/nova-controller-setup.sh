@@ -2,8 +2,11 @@
 
 . /tmp/openstack-admin-rc
 
-neutron net-list|grep -q ubuntu-net
-RET=$?
+{
+	neutron net-list|grep -q ubuntu-net
+	RET=$?
+} || true
+
 if [ ${RET} -eq 0 ]; then
 	echo "Neutron network already created." && exit 0
 fi
