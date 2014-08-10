@@ -31,9 +31,11 @@ OPT_INSTALL=i
 OPT_UNINSTALL=u
 OPT_CONFIGFILE=c
 OPT_ENABLESWIFT=s
-OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}
+OPT_IMG_REL=r
+OPT_IMG_ARCH=a
+OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:
 USAGE="\
-cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}]
+cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:]
 
 Create an Ubuntu Openstack Cloud! (requires root privileges)
 
@@ -43,6 +45,10 @@ Options:
   -$OPT_ENABLESWIFT    enable swift-storage
   -$OPT_INSTALL    install only (don't invoke cloud-status)
   -$OPT_UNINSTALL    uninstall the cloud
+  -$OPT_IMG_ARCH    <arch,...> comma-separated list of architectures to filter available cloud images
+              with which to populate Glance, e.g. amd64,arm64
+  -$OPT_IMG_REL    <rel,...> comma-separated list of Ubuntu releases to filter available cloud images
+              with which to populate Glance, e.g. precise,trusty
   -$OPT_HELP    print this message"
 
 usage()
@@ -75,6 +81,12 @@ while getopts $OPTS opt; do
 	$OPT_CONFIGFILE)
 		configfile=$OPTARG
 		;;
+        $OPT_IMG_ARCH)
+                sync_image_arches=$OPTARG
+                ;;
+        $OPT_IMG_REL)
+                sync_image_releases=$OPTARG
+                ;;
 	\?)
 		usageError "Unknown argument: $OPTARG"
 		exit 1
