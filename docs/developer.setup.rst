@@ -93,12 +93,19 @@ If you are testing the status screen's code for deploying charms, you may need t
     $ juju bootstrap
     $ make status
 
-Increase logging for Troubleshooting
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changing the log level
+^^^^^^^^^^^^^^^^^^^^^^
+
+The cloud-status program logs to ~/.cloud-install/commands.log. The
+default log level for that log is "DEBUG". Most of the program logs at
+the DEBUG level, which is the most verbose that is currently defined.
+If you want a different log level, you can set the UCI_LOGLEVEL
+environment variable. Your choices are "DEBUG", "INFO", "WARNING",
+"ERROR", and "CRITICAL".
 
 .. code::
 
-    $ UCI_LOGLEVEL=DEBUG cloud-status
+    $ UCI_LOGLEVEL=ERROR cloud-status
 
 
 Building documentation
