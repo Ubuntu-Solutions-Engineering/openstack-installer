@@ -4,8 +4,7 @@ Multi Installer Guide
 Pre-requisites
 ^^^^^^^^^^^^^^
 
-Multi-Installer has been tested on Ubuntu Server, which is the recommended OS.
-for the cloud installer.
+Multi-Installer has been tested on Ubuntu Server, which is the recommended OS for the cloud installer.
 
 Add the `cloud-installer` ppa to your system.
 
