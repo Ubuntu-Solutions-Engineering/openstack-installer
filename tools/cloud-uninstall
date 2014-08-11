@@ -1,7 +1,9 @@
 #!/bin/bash
 
-if [ "$#" -eq 1 ]; then
+if [ "$#" -eq 1 ] && [ $1 != '-u' ]; then
   WHAT=$1
+elif [ "$#" -eq 2 ]; then
+  WHAT=$2
 elif [ -f ~/.cloud-install/multi ]; then
   WHAT=multi-system
 elif [ -f ~/.cloud-install/single ]; then
