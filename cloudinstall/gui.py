@@ -229,7 +229,7 @@ class NodeViewMode(ScrollableWidgetWrap):
             if charm.menuable and len(node.units) > 0:
                 for u in node.units:
                     node_cols = self._build_node_columns(u, state)
-                node_pile.append(node_cols)
+                    node_pile.append(node_cols)
 
                 unit_info.append(padding(LineBox(
                     Pile(node_pile),
