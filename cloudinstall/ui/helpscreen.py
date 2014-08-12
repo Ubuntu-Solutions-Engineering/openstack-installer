@@ -78,11 +78,11 @@ Juju GUI.
 The juju commands used to deploy the services listed are logged in
 ~/.cloud-install/commands.log
 
-* In a multi-install, MAAS may return a "409 CONFLICT" error, which
-will be shown with the label "machine info" under the unit name in the
-main table. This indicates a failure to find a machine that matches
-the default constraints set for the service. See the log file for
-details.
+* In a multi-install, MAAS may be unable to find machines that match
+the default constraints set for one of the services the installer
+deploys. This will be shown in the table under the service's heading,
+along with detail about what those constraints were.
+
             """,
             ('header_title', "End of Help Screen")]
         w = self._create_text()
