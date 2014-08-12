@@ -161,23 +161,27 @@ export OS_REGION_NAME=RegionOne
         The default should be sufficient but if more functionality
         is needed this should be overridden.
         """
-        kwds = {}
-        kwds['ToMachineSpec'] = str(self.machine_id)
-        kwds['NumUnits'] = 1
+        machine_spec = str(self.machine_id)
+        num_units = 1
+        config_yaml = ""
+        constraints = None
 
         if self.charm_name in CHARM_CONFIG:
-            kwds['ConfigYAML'] = CHARM_CONFIG_RAW
+            config_yaml = CHARM_CONFIG_RAW
 
         if self.isolate:
-            del kwds['ToMachineSpec']
-            kwds['Constraints'] = self.constraints
-            self.juju.deploy(self.charm_name, kwds)
-        else:
-            self.juju.deploy(self.charm_name, kwds)
+            machine_spec = ""
+            constraints = self.constraints
 
-        log.debug('Deployed {c} with params: {p}'.format(
-            c=self.charm_name,
-            p=kwds))
+        self.juju.deploy(self.charm_name, self.charm_name, num_units,
+                         config_yaml, constraints, machine_spec)
+
+        log.debug('Deployed {} with params: {} {} {} {}'.format(
+            self.charm_name,
+            machine_spec,
+            num_units,
+            config_yaml,
+            constraints))
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
 
     def set_relations(self):

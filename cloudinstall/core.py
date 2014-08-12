@@ -454,7 +454,7 @@ class Controller(BaseController):
         if svc.service:
             self.info_message("Adding {n} units of {charm}".format(
                 n=count, charm=charm))
-            self.juju.add_unit(charm, count=int(count))
+            self.juju.add_unit(charm, num_units=int(count))
         else:
             charm_q = CharmQueue()
             charm_sel = get_charm(charm,
