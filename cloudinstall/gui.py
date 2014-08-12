@@ -310,9 +310,9 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         err_info = ""
 
-        if (unit.agent_state == 'pending' and
-            unit_machine.agent_state is '' and
-            unit_machine.agent_state_info is not None):
+        if unit.agent_state == 'pending' and \
+           unit_machine.agent_state is '' and \
+           unit_machine.agent_state_info is not None:
 
             # detect MAAS API errors, returned as 409 conflict:
             if "409" in unit_machine.agent_state_info:
