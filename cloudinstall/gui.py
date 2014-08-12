@@ -23,6 +23,7 @@ import re
 import sys
 import logging
 import functools
+from operator import attrgetter
 import random
 
 import urwid
@@ -225,15 +226,16 @@ class NodeViewMode(ScrollableWidgetWrap):
         for node in nodes:
             node_pile = []
             node_cols = []
-            charm, node, state = node
-            if charm.menuable and len(node.units) > 0:
-                for u in node.units:
-                    node_cols = self._build_node_columns(u, state)
+            charm_class, service, juju_state = node
+            if charm_class.menuable and len(service.units) > 0:
+                for u in sorted(service.units, key=attrgetter('unit_name')):
+                    node_cols = self._build_node_columns(u, juju_state,
+                                                         charm_class)
                     node_pile.append(node_cols)
 
                 unit_info.append(padding(LineBox(
                     Pile(node_pile),
-                    title=charm.display_name,
+                    title=charm_class.display_name,
                     lline=' ',
                     blcorner=' ',
                     rline=' ',
@@ -242,12 +244,15 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         return ScrollableListBox(unit_info)
 
-    def _build_node_columns(self, unit, state):
+    def _build_node_columns(self, unit, juju_state, charm_class):
         """ builds columns of node status """
         node_cols = []
-        machine = state.machine(unit.machine_id)
-        if unit.agent_state == "error":
-            status = ("error_icon", "\N{BULLET} ")
+        machine = juju_state.machine(unit.machine_id)
+
+        error_info = self._detect_errors(unit, juju_state, charm_class)
+
+        if error_info:
+            status = ("error_icon", "\N{TETRAGRAM FOR FAILURE} ")
         elif unit.agent_state == "pending":
             pending_status = [("pending_icon", "\N{BULLET} "),
                               ("pending_icon_on", "\N{BULLET} "),
@@ -263,31 +268,64 @@ class NodeViewMode(ScrollableWidgetWrap):
             node_cols.append(
                 ('pack',
                  Text("{0:<12}".format(unit.public_address))))
+        elif error_info:
+            node_cols.append(('pack', Text("{:<12}".format("Error"))))
         else:
             node_cols.append(
                 ('pack',
-                 Text('{:<12}'.format('IP Pending'))))
+                 Text("{:<12}".format("IP Pending"))))
 
-        if machine.arch == "N/A":
-            node_cols.append(
-                Text(" | Container"))
+        if error_info:
+            node_cols.append(('pack', Text(" | {}".format(error_info))))
+
         else:
-            node_cols.append(
-                Text(" | arch={0} mem={1} "
-                     "storage={2}".format(
-                         machine.arch,
-                         machine.mem,
-                         machine.storage,
-                         )))
+            if machine.arch == "N/A":
+                node_cols.append(
+                    Text(" | Container"))
+            else:
+                node_cols.append(
+                    Text(" | arch={0} mem={1} "
+                         "storage={2}".format(
+                             machine.arch,
+                             machine.mem,
+                             machine.storage,
+                             )))
+
         if 'glance-simplestreams-sync' in unit.unit_name:
             node_cols.append(('pack', Text(
                 'Sync Status: {0}'.format(get_sync_status()))))
-        if 'error' in unit.agent_state:
-            state_info = unit.agent_state_info.lstrip()
-            node_cols.append(Text(" Info: "
-                                  "{state_info}".format(
-                                      state_info=state_info)))
+
         return Columns(node_cols)
+
+    def _detect_errors(self, unit, juju_state, charm_class):
+        """Look in multiple places for an error.
+
+        Return error info string if present,
+        or None if no error is found
+        """
+        unit_machine = juju_state.machine(unit.machine_id)
+
+        if unit.agent_state == "error":
+            return unit.agent_state_info.lstrip()
+
+        err_info = ""
+
+        if unit.agent_state == 'pending' and \
+           unit_machine.agent_state is '' and \
+           unit_machine.agent_state_info is not None:
+
+            # detect MAAS API errors, returned as 409 conflict:
+            if "409" in unit_machine.agent_state_info:
+                if charm_class.constraints is not None:
+                    err_info = "Found no machines meeting constraints: "
+                    err_info += ', '.join(["{}='{}'".format(k, v) for k, v
+                                           in charm_class.constraints.items()])
+                else:
+                    err_info += "No machines available for unit."
+            else:
+                err_info += unit_machine.agent_state_info
+            return err_info
+        return None
 
 
 class Header(WidgetWrap):
