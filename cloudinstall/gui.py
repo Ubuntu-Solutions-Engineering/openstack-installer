@@ -266,7 +266,7 @@ class NodeViewMode(ScrollableWidgetWrap):
         else:
             node_cols.append(
                 ('pack',
-                 Text('IP Pending')))
+                 Text('{:<12}'.format('IP Pending'))))
 
         if machine.arch == "N/A":
             node_cols.append(
