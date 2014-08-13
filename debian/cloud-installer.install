@@ -14,6 +14,7 @@ share/landscape.sh                     usr/share/cloud-installer/common
 share/maas.sh                          usr/share/cloud-installer/common
 share/multi.sh                         usr/share/cloud-installer/common
 share/single.sh                        usr/share/cloud-installer/common
+share/templates/base-userdata.yml     usr/share/cloud-installer/templates
 share/templates/bootresources.yaml     usr/share/cloud-installer/templates
 share/templates/landscape-deployments.yaml    usr/share/cloud-installer/templates
 share/templates/lxc-host-only          usr/share/cloud-installer/templates
