@@ -16,3 +16,5 @@ debian/cloud-install-landscape/
 # the dependencies deb
 *.deb
 .ropeproject
+.coverage
+cover

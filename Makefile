@@ -71,6 +71,9 @@ test: $(HOME)/.cloud-install
 travis-test: $(HOME)/.cloud-install
 	nosetests $(NOSE_ARGS)
 
+gooview:
+	PYTHONPATH=$(shell pwd):$(PYTHONPATH) tools/gooview.py
+
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
 
