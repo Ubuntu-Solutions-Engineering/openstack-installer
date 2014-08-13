@@ -64,7 +64,7 @@ pep8:
 
 test:
 	mkdir -p $(HOME)/.cloud-install
-	nosetests3 -v --with-cover --cover-package=cloudinstall --cover-html test --cover-inclusive cloudinstall
+	python3 `which nosetests` -v --with-cover --cover-package=cloudinstall --cover-html test --cover-inclusive cloudinstall
 
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
