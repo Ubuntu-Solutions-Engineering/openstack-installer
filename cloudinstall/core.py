@@ -502,5 +502,5 @@ class Controller(DisplayController):
 
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
-        super(Controller, self).initialize()
+        super().initialize()
         self.init_machine()
