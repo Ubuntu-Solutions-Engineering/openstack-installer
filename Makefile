@@ -56,10 +56,10 @@ update_version:
 ci-test: pyflakes pep8 travis-test
 
 pyflakes:
-	python3 `which pyflakes` cloudinstall
+	python3 `which pyflakes` cloudinstall test
 
 pep8:
-	pep8 cloudinstall
+	pep8 cloudinstall test
 
 $(HOME)/.cloud-install:
 	mkdir -p $(HOME)/.cloud-install
