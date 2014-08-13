@@ -24,19 +24,17 @@ import os
 sys.path.insert(0, '../cloudinstall')
 
 from cloudinstall import gui, log
-from cloudinstall.core import BaseController
+from cloudinstall.core import DisplayController
 from cloudinstall.config import Config
 from cloudinstall.juju import JujuState
 from macumba import JujuClient
 
+class FakeOpts:
+    noui = False
+    enable_swift = False
+
 if __name__ == '__main__':
     log.setup_logger()
-    cfg = Config()
-    ui = BaseController(ui=gui.PegasusGUI())
-    ui.juju = JujuClient(
-        url=os.path.join('wss://',
-                         cfg.juju_env['state-servers'][0]),
-        password=cfg.juju_api_password)
-    ui.juju.login()
-    ui.juju_state = JujuState(ui.juju)
+    ui = DisplayController(ui=gui.PegasusGUI(),
+                           opts=FakeOpts())
     sys.exit(ui.start())
