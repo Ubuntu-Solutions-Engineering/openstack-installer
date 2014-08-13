@@ -41,8 +41,9 @@ log = logging.getLogger('cloudinstall.core')
 sys.excepthook = utils.global_exchandler
 
 
-class BaseController:
-    """ Base logic controller """
+class DisplayController:
+    """ Controller for displaying juju and maas state."""
+
     def __init__(self, ui=None, opts=None):
         self.ui = ui
         self.opts = opts
@@ -67,14 +68,17 @@ class BaseController:
         log.debug('Authenticated against juju api.')
 
     def authenticate_maas(self):
-        log.debug('Authenticating maas api')
         auth = MaasAuth()
         auth.get_api_key('root')
         self.maas = MaasClient(auth)
+        self.maas_state = MaasState(self.maas.nodes)
+        log.debug('Authenticated against maas api.')
 
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
         self.authenticate_juju()
+        if self.config.is_multi:
+            self.authenticate_maas()
 
     # overlays
     def step_info(self, message):
@@ -203,8 +207,8 @@ class BaseController:
             self.render_nodes(self.nodes)
 
 
-class Controller(BaseController):
-    """ core controller for ui and juju deployments """
+class Controller(DisplayController):
+    """ Controller for Juju deployments and Maas machine init """
 
     def __init__(self, **kwds):
         self.charm_modules = utils.load_charms()
@@ -498,7 +502,5 @@ class Controller(BaseController):
 
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
-        self.authenticate_juju()
-        if self.config.is_multi:
-            self.authenticate_maas()
+        super().initialize()
         self.init_machine()
