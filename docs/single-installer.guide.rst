@@ -66,6 +66,11 @@ Optional Flags
     Enabling swift storage requires at least 3 instances and another additional
     instance for swift-proxy.
 
+.. note::
+
+    If you wish to deploy services to this openstack using juju you will need
+    to enable swift storage.
+
 An initial dialog box will appear asking you to select which type of
 install, choose **Single system**.
 
