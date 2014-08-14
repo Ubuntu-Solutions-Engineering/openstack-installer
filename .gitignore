@@ -18,3 +18,4 @@ debian/cloud-install-landscape/
 .ropeproject
 .coverage
 cover
+*~

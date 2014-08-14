@@ -28,7 +28,7 @@ from operator import attrgetter
 from cloudinstall import utils
 from cloudinstall.config import Config
 from cloudinstall.juju import JujuState
-from cloudinstall.maas import MaasState
+from cloudinstall.maas import MaasState, MaasMachineStatus
 from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from cloudinstall.charms import CharmQueue, get_charm
@@ -71,7 +71,7 @@ class DisplayController:
         auth = MaasAuth()
         auth.get_api_key('root')
         self.maas = MaasClient(auth)
-        self.maas_state = MaasState(self.maas.nodes)
+        self.maas_state = MaasState(self.maas)
         log.debug('Authenticated against maas api.')
 
     def initialize(self):
@@ -256,8 +256,8 @@ class Controller(DisplayController):
             nodes = []
             while len(nodes) == 0:
                 nodes = self.maas.nodes
-            self.maas_state = MaasState(self.maas.nodes)
-            self.maas.tag_fpi(self.maas_state)
+
+            self.maas.tag_fpi(self.maas.nodes)
             self.maas.nodes_accept_all()
             self.maas.tag_name(self.maas_state)
 
@@ -274,7 +274,7 @@ class Controller(DisplayController):
                   "{machines}".format(machines=allocated))
 
         if self.config.is_multi:
-            maas_allocated = list(self.maas_state.machines_allocated())
+            maas_allocated = self.maas_state.machines(MaasMachineStatus.READY)
             if len(allocated) == 0 and len(maas_allocated) == 0:
                 err_msg = "No machines allocated to juju. " \
                           "Please pxe boot a machine."
