@@ -18,6 +18,27 @@
 
 from cloudinstall.machine import Machine
 
+from enum import Enum, unique
+
+
+@unique
+class MaasMachineStatus(Enum):
+    """Symbolic names for maas API status numbers.
+
+    -1, UNKNOWN is never returned by maas API. It's used here to
+    denote a MaasMachine object that wasn't created from a Maas API
+    return.
+    """
+    UNKNOWN = -1
+    DECLARED = 0
+    COMMISSIONING = 1
+    FAILED_TESTS = 2
+    MISSING = 3
+    READY = 4
+    RESERVED = 5
+    ALLOCATED = 6
+    RETIRED = 7
+
 
 class MaasMachine(Machine):
     """ Single maas machine """
@@ -35,20 +56,11 @@ class MaasMachine(Machine):
     def status(self):
         """ Status of machine state
 
-        Those statuses are defined as follows:
-        DECLARED = 0
-        COMMISSIONING = 1
-        FAILED_TESTS = 2
-        MISSING = 3
-        READY = 4
-        RESERVED = 5
-        ALLOCATED = 6
-        RETIRED = 7
-
-        :returns: status
-        :rtype: int
+        :returns: status enum
+        :rtype: MaasMachineStatus
         """
-        return self.machine.get('status', 0)
+        return MaasMachineStatus(self.machine.get('status',
+                                                  MaasMachineStatus.UNKNOWN))
 
     @property
     def zone(self):
@@ -191,20 +203,8 @@ class MaasMachine(Machine):
 class MaasState:
     """ Represents global MaaS state """
 
-    DECLARED = 0
-    COMMISSIONING = 1
-    FAILED_TESTS = 2
-    MISSING = 3
-    READY = 4
-    RESERVED = 5
-    ALLOCATED = 6
-    RETIRED = 7
-
-    def __init__(self, maas):
-        self.maas = maas
-
-    def __iter__(self):
-        return iter(self.maas)
+    def __init__(self, maas_client):
+        self.maas_client = maas_client
 
     def machine(self, instance_id):
         """ Return single machine state
@@ -218,32 +218,21 @@ class MaasState:
                 return m
         return None
 
-    def machines(self):
-        """ Maas Machines
+    def machines(self, state=None):
+        """Maas Machines
 
-        :returns: machines known to maas
-        :rtype: generator
+        :param state
+
+        :returns: machines known to Maas, except for juju bootstrap
+        machine, matching state type, or all if state=None
+
+        :rtype: list of MaasMachine
+
         """
-        for machine in self.maas:
-            if 'juju-bootstrap.maas' in machine['hostname']:
-                continue
-            yield MaasMachine(-1, machine)
 
-    def machines_allocated(self):
-        """ Maas machines in an allocated(ready) state
-
-        :returns: all machines in an allocated(ready) state
-        :rtype: iter:
-        """
-        return [m for m in self.machines()
-                if m.status == self.READY]
-
-    def num_in_state(self, state):
-        """ Number of machines in a particular state
-
-        :param str state: a machine state
-        :returns: number of machines in `status`
-        :rtype: int
-        """
-        return len(list(filter(lambda m: int(m.status) == state,
-                               self.machines())))
+        all_machines = [MaasMachine(-1, m) for m in self.maas_client.nodes
+                        if m['hostname'] != 'juju-bootstrap.maas']
+        if state:
+            return [m for m in all_machines if m.status == state]
+        else:
+            return all_machines
