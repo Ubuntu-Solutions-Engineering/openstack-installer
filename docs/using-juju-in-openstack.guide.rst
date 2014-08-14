@@ -4,6 +4,11 @@ Using Juju in Openstack
 Once the Openstack cloud has been deployed there are only a couple of steps
 to enable juju to deploy charms into the private cloud.
 
+.. note::
+
+    Juju requires swift storage so this needs to have been enabled 
+    during the install.
+
 Update ~/.juju/environments.yaml
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
