@@ -259,7 +259,7 @@ class Controller(DisplayController):
 
             self.maas.tag_fpi(self.maas.nodes)
             self.maas.nodes_accept_all()
-            self.maas.tag_name(self.maas_state)
+            self.maas.tag_name(self.maas.nodes)
 
         while not self.machine:
             self.machine = self.get_controller_machine()
