@@ -248,7 +248,6 @@ class NodeViewMode(ScrollableWidgetWrap):
     def _build_node_columns(self, unit, charm_class):
         """ builds columns of node status """
         node_cols = []
-        machine = self.juju_state.machine(unit.machine_id)
 
         error_info = self._detect_errors(unit, charm_class)
 
@@ -278,25 +277,47 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         if error_info:
             node_cols.append(('pack', Text(" | {}".format(error_info))))
-
         else:
-            if machine.arch == "N/A":
-                node_cols.append(
-                    Text(" | Container"))
-            else:
-                node_cols.append(
-                    Text(" | arch={0} mem={1} "
-                         "storage={2}".format(
-                             machine.arch,
-                             machine.mem,
-                             machine.storage,
-                             )))
+            node_cols.append(Text([" | "] + self._get_hardware_info(unit)))
 
         if 'glance-simplestreams-sync' in unit.unit_name:
             node_cols.append(('pack', Text(
                 'Sync Status: {0}'.format(get_sync_status()))))
 
         return Columns(node_cols)
+
+    def _get_hardware_info(self, unit):
+        """Get hardware info from juju or maas
+
+        Returns list of text and formatting tuples
+        """
+        juju_machine = self.juju_state.machine(unit.machine_id)
+        maas_machine = self.maas_state.machine(juju_machine.instance_id)
+
+        m = juju_machine
+        if juju_machine.arch == "N/A":
+            if maas_machine:
+                m = maas_machine
+            else:
+                # no matching maas machine, might be a container:
+                base_machine = self.juju_state.base_machine(unit.machine_id)
+                m = self.maas_state.machine(base_machine.instance_id)
+
+                container_id = unit.machine_id.split('/')[-1]
+                base_id = base_machine.machine_id
+
+                return ["Container {} (Machine {}: ".format(container_id,
+                                                            base_id)] \
+                    + self._hardware_info_for_machine(m) + [")"]
+
+        return ["Machine {}: ".format(juju_machine.machine_id)] \
+            + self._hardware_info_for_machine(m)
+
+    def _hardware_info_for_machine(self, m):
+        return [('label', 'arch'), ' {}  '.format(m.arch),
+                ('label', 'cores'), ' {}  '.format(m.cpu_cores),
+                ('label', 'mem'), ' {}  '.format(m.mem),
+                ('label', 'storage'), ' {}'.format(m.storage)]
 
     def _detect_errors(self, unit, charm_class):
         """Look in multiple places for an error.
