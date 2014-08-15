@@ -20,7 +20,7 @@
 import os
 import unittest
 from unittest.mock import MagicMock, PropertyMock
-import yaml
+import json
 
 from cloudinstall.maas import MaasMachine, MaasMachineStatus, MaasState
 
@@ -32,12 +32,12 @@ class MaasMachineTestCase(unittest.TestCase):
     def setUp(self):
         self.empty_machine = MaasMachine(-1, {})
 
-        onedeclared = yaml.load(open(os.path.join(DATA_DIR,
-                                                  'bootstrap+1declared.yaml')))
+        onedeclared = json.load(open(os.path.join(DATA_DIR,
+                                                  'bootstrap+1declared.json')))
         self.m_declared = MaasMachine(-1, onedeclared[1])
 
-        oneready = yaml.load(open(os.path.join(DATA_DIR,
-                                               'bootstrap+1ready.yaml')))
+        oneready = json.load(open(os.path.join(DATA_DIR,
+                                               'bootstrap+1ready.json')))
         self.m_ready = MaasMachine(-1, oneready[1])
 
     def test_empty_machine_unknonw_status(self):
@@ -52,20 +52,20 @@ class MaasMachineTestCase(unittest.TestCase):
 
 class MaasStateTestCase(unittest.TestCase):
     def setUp(self):
-        bootstrap_only = yaml.load(open(os.path.join(DATA_DIR,
-                                                     'bootstrap-only.yaml')))
+        bootstrap_only = json.load(open(os.path.join(DATA_DIR,
+                                                     'bootstrap-only.json')))
         self.mock_client_bootstrap_only = MagicMock()
         p = PropertyMock(return_value=bootstrap_only)
         type(self.mock_client_bootstrap_only).nodes = p
 
-        onedeclared = yaml.load(open(os.path.join(DATA_DIR,
-                                                  'bootstrap+1declared.yaml')))
+        onedeclared = json.load(open(os.path.join(DATA_DIR,
+                                                  'bootstrap+1declared.json')))
         self.mock_client_onedeclared = MagicMock()
         p = PropertyMock(return_value=onedeclared)
         type(self.mock_client_onedeclared).nodes = p
 
-        oneready = yaml.load(open(os.path.join(DATA_DIR,
-                                               'bootstrap+1ready.yaml')))
+        oneready = json.load(open(os.path.join(DATA_DIR,
+                                               'bootstrap+1ready.json')))
         self.mock_client_oneready = MagicMock()
         p = PropertyMock(return_value=oneready)
         type(self.mock_client_oneready).nodes = p
