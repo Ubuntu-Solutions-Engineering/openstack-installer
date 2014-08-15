@@ -103,8 +103,8 @@ class DisplayController:
         self.redraw_screen()
 
     # - Render
-    def render_nodes(self, nodes):
-        self.ui.render_nodes(nodes)
+    def render_nodes(self, nodes, juju_state, maas_state):
+        self.ui.render_nodes(nodes, juju_state, maas_state)
         self.redraw_screen()
 
     def render_node_install_wait(self):
@@ -170,10 +170,8 @@ class DisplayController:
                                 deployed_service_names],
                                key=attrgetter('charm_name'))
 
-        a = [(c, s)
-             for (c, s) in zip(charm_classes, deployed_services)]
-        self.nodes = [(charm, node, self.juju_state)
-                      for (charm, node) in a]
+        self.nodes = zip(charm_classes, deployed_services)
+
         for n in deployed_services:
             for u in n.units:
                 if u.is_horizon and u.agent_state == "started":
@@ -183,7 +181,8 @@ class DisplayController:
         if not self.nodes:
             self.render_node_install_wait()
             return
-        self.render_nodes(self.nodes)
+
+        self.render_nodes(self.nodes, self.juju_state, self.maas_state)
 
     def header_hotkeys(self, key):
         if key in ['j', 'down']:
@@ -204,7 +203,7 @@ class DisplayController:
             self.exit()
         if key in ['r', 'R', 'f5']:
             self.info_message("View was refreshed.")
-            self.render_nodes(self.nodes)
+            self.render_nodes(self.nodes, self.juju_state, self.maas_state)
 
 
 class Controller(DisplayController):
@@ -444,7 +443,7 @@ class Controller(DisplayController):
                 "Services deployed, relationships may still be"
                 " pending. Please wait for all services to be checked before"
                 " deploying compute nodes.")
-            self.render_nodes(self.nodes)
+            self.render_nodes(self.nodes, self.juju_state, self.maas_state)
             return False
         else:
             log.debug("Polling will continue until all charms are finalized.")

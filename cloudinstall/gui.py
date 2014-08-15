@@ -216,8 +216,10 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
 
 
 class NodeViewMode(ScrollableWidgetWrap):
-    def __init__(self, nodes, **kwargs):
+    def __init__(self, nodes, juju_state, maas_state, **kwargs):
         nodes = [] if nodes is None else nodes
+        self.juju_state = juju_state
+        self.maas_state = maas_state
         widget = self._build_widget(nodes, **kwargs)
         super().__init__(widget)
 
@@ -226,11 +228,10 @@ class NodeViewMode(ScrollableWidgetWrap):
         for node in nodes:
             node_pile = []
             node_cols = []
-            charm_class, service, juju_state = node
+            charm_class, service = node
             if charm_class.menuable and len(service.units) > 0:
                 for u in sorted(service.units, key=attrgetter('unit_name')):
-                    node_cols = self._build_node_columns(u, juju_state,
-                                                         charm_class)
+                    node_cols = self._build_node_columns(u, charm_class)
                     node_pile.append(node_cols)
 
                 unit_info.append(padding(LineBox(
@@ -244,12 +245,12 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         return ScrollableListBox(unit_info)
 
-    def _build_node_columns(self, unit, juju_state, charm_class):
+    def _build_node_columns(self, unit, charm_class):
         """ builds columns of node status """
         node_cols = []
-        machine = juju_state.machine(unit.machine_id)
+        machine = self.juju_state.machine(unit.machine_id)
 
-        error_info = self._detect_errors(unit, juju_state, charm_class)
+        error_info = self._detect_errors(unit, charm_class)
 
         if error_info:
             status = ("error_icon", "\N{TETRAGRAM FOR FAILURE} ")
@@ -297,13 +298,13 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         return Columns(node_cols)
 
-    def _detect_errors(self, unit, juju_state, charm_class):
+    def _detect_errors(self, unit, charm_class):
         """Look in multiple places for an error.
 
         Return error info string if present,
         or None if no error is found
         """
-        unit_machine = juju_state.machine(unit.machine_id)
+        unit_machine = self.juju_state.machine(unit.machine_id)
 
         if unit.agent_state == "error":
             return unit.agent_state_info.lstrip()
@@ -529,8 +530,8 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer = None
         self.frame.set_footer(self.frame.footer)
 
-    def render_nodes(self, nodes, **kwargs):
-        self.frame.body = NodeViewMode(nodes)
+    def render_nodes(self, nodes, juju_state, maas_state, **kwargs):
+        self.frame.body = NodeViewMode(nodes, juju_state, maas_state)
         self.frame.set_body(self.frame.body)
 
     def render_node_install_wait(self, **kwargs):
