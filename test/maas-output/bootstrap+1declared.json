@@ -1,0 +1,63 @@
+[
+    {
+        "status": 6, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-6e99d892-1f2d-11e4-ba2f-eca86bfb9aa4/macs/00%3A16%3A3e%3Af5%3Ac8%3A3c/", 
+                "mac_address": "00:16:3e:f5:c8:3c"
+            }
+        ], 
+        "hostname": "juju-bootstrap.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": null, 
+        "netboot": true, 
+        "cpu_count": 0, 
+        "storage": 0, 
+        "owner": "root", 
+        "system_id": "node-6e99d892-1f2d-11e4-ba2f-eca86bfb9aa4", 
+        "architecture": "amd64/generic", 
+        "memory": 0, 
+        "power_type": "virsh", 
+        "tag_names": [
+            "use-fastpath-installer"
+        ], 
+        "ip_addresses": [
+            "10.0.100.3"
+        ], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-6e99d892-1f2d-11e4-ba2f-eca86bfb9aa4/"
+    }, 
+    {
+        "status": 0, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "389wq.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 0, 
+        "storage": 0,
+        "owner": "root", 
+        "system_id": "node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4", 
+        "architecture": "amd64/generic", 
+        "memory": 0, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/"
+    }
+]
