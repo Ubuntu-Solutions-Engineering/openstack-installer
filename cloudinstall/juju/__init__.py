@@ -66,6 +66,30 @@ class JujuState:
             machines.append(Machine(machine_id, machine))
         return machines
 
+    def machine_or_container(self, machine_id):
+        """ returns machine or container matching the id
+        """
+        for machine in self.machines():
+            if '0' == machine_id:
+                continue
+            if machine.machine_id == machine_id:
+                return machine
+            for container in machine.containers:
+                if container.machine_id == machine_id:
+                    return container
+        return None
+
+    def base_machine(self, machine_id):
+        """ returns machine if given a numeric machine id,
+        or machine hosting the container if given a container id
+
+        NOTE: KVMs are treated as base machines.
+        """
+        base_id = machine_id
+        if 'lxc' in machine_id:
+            base_id = machine_id.split('/')[0]
+        return self.machine(base_id)
+
     def machines_allocated(self):
         """ Machines allocated property
 

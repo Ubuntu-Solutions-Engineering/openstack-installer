@@ -36,6 +36,15 @@ class Machine:
         self.wants_vote = self.machine.get('WantsVote')
 
     @property
+    def instance_id(self):
+        """ Returns InstanceId
+
+        :returns: instance ID
+        :rtype: str
+        """
+        return self.machine.get('InstanceId', None)
+
+    @property
     def cpu_cores(self):
         """ Return number of cpu-cores
 
