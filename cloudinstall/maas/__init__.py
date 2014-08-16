@@ -91,7 +91,7 @@ class MaasMachine(Machine):
             _storage_in_gb = int(self.machine.get('storage')) / 1024
         except ValueError:
             return "N/A"
-        return "{size}G".format(size=str(_storage_in_gb))
+        return "{size:.2f}G".format(size=_storage_in_gb)
 
     @property
     def arch(self):

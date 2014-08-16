@@ -216,8 +216,10 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
 
 
 class NodeViewMode(ScrollableWidgetWrap):
-    def __init__(self, nodes, **kwargs):
+    def __init__(self, nodes, juju_state, maas_state, **kwargs):
         nodes = [] if nodes is None else nodes
+        self.juju_state = juju_state
+        self.maas_state = maas_state
         widget = self._build_widget(nodes, **kwargs)
         super().__init__(widget)
 
@@ -226,11 +228,10 @@ class NodeViewMode(ScrollableWidgetWrap):
         for node in nodes:
             node_pile = []
             node_cols = []
-            charm_class, service, juju_state = node
+            charm_class, service = node
             if charm_class.menuable and len(service.units) > 0:
                 for u in sorted(service.units, key=attrgetter('unit_name')):
-                    node_cols = self._build_node_columns(u, juju_state,
-                                                         charm_class)
+                    node_cols = self._build_node_columns(u, charm_class)
                     node_pile.append(node_cols)
 
                 unit_info.append(padding(LineBox(
@@ -244,12 +245,11 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         return ScrollableListBox(unit_info)
 
-    def _build_node_columns(self, unit, juju_state, charm_class):
+    def _build_node_columns(self, unit, charm_class):
         """ builds columns of node status """
         node_cols = []
-        machine = juju_state.machine(unit.machine_id)
 
-        error_info = self._detect_errors(unit, juju_state, charm_class)
+        error_info = self._detect_errors(unit, charm_class)
 
         if error_info:
             status = ("error_icon", "\N{TETRAGRAM FOR FAILURE} ")
@@ -277,19 +277,8 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         if error_info:
             node_cols.append(('pack', Text(" | {}".format(error_info))))
-
         else:
-            if machine.arch == "N/A":
-                node_cols.append(
-                    Text(" | Container"))
-            else:
-                node_cols.append(
-                    Text(" | arch={0} mem={1} "
-                         "storage={2}".format(
-                             machine.arch,
-                             machine.mem,
-                             machine.storage,
-                             )))
+            node_cols.append(Text([" | "] + self._get_hardware_info(unit)))
 
         if 'glance-simplestreams-sync' in unit.unit_name:
             node_cols.append(('pack', Text(
@@ -297,13 +286,46 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         return Columns(node_cols)
 
-    def _detect_errors(self, unit, juju_state, charm_class):
+    def _get_hardware_info(self, unit):
+        """Get hardware info from juju or maas
+
+        Returns list of text and formatting tuples
+        """
+        juju_machine = self.juju_state.machine(unit.machine_id)
+        maas_machine = self.maas_state.machine(juju_machine.instance_id)
+
+        m = juju_machine
+        if juju_machine.arch == "N/A":
+            if maas_machine:
+                m = maas_machine
+            else:
+                # no matching maas machine, might be a container:
+                base_machine = self.juju_state.base_machine(unit.machine_id)
+                m = self.maas_state.machine(base_machine.instance_id)
+
+                container_id = unit.machine_id.split('/')[-1]
+                base_id = base_machine.machine_id
+
+                return ["Container {} (Machine {}: ".format(container_id,
+                                                            base_id)] \
+                    + self._hardware_info_for_machine(m) + [")"]
+
+        return ["Machine {}: ".format(juju_machine.machine_id)] \
+            + self._hardware_info_for_machine(m)
+
+    def _hardware_info_for_machine(self, m):
+        return [('label', 'arch'), ' {}  '.format(m.arch),
+                ('label', 'cores'), ' {}  '.format(m.cpu_cores),
+                ('label', 'mem'), ' {}  '.format(m.mem),
+                ('label', 'storage'), ' {}'.format(m.storage)]
+
+    def _detect_errors(self, unit, charm_class):
         """Look in multiple places for an error.
 
         Return error info string if present,
         or None if no error is found
         """
-        unit_machine = juju_state.machine(unit.machine_id)
+        unit_machine = self.juju_state.machine(unit.machine_id)
 
         if unit.agent_state == "error":
             return unit.agent_state_info.lstrip()
@@ -529,8 +551,8 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer = None
         self.frame.set_footer(self.frame.footer)
 
-    def render_nodes(self, nodes, **kwargs):
-        self.frame.body = NodeViewMode(nodes)
+    def render_nodes(self, nodes, juju_state, maas_state, **kwargs):
+        self.frame.body = NodeViewMode(nodes, juju_state, maas_state)
         self.frame.set_body(self.frame.body)
 
     def render_node_install_wait(self, **kwargs):
