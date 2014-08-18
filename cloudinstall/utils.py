@@ -30,6 +30,7 @@ from functools import wraps
 from time import strftime
 from importlib import import_module
 import pkgutil
+import sys
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -39,7 +40,9 @@ blank_len = None
 
 def global_exchandler(type, value, tb):
     """ helper routine capturing tracebacks and printing to log file """
-    traceback.print_exception(type, value, tb)
+    tb_list = traceback.format_exception(type, value, tb)
+    log.debug("".join(tb_list))
+
     locals = True
     for active_vars in [tb.tb_frame.f_locals, tb.tb_frame.f_globals]:
         header = 'Locals:' if locals else 'Globals:'
@@ -48,6 +51,14 @@ def global_exchandler(type, value, tb):
             if not (k.startswith('__') and k.endswith('__')):
                 log.debug('\t{} = {}'.format(k, v))
         locals = False
+
+
+class ExceptionLoggingThread(Thread):
+    def run(self):
+        try:
+            super().run()
+        except Exception:
+            global_exchandler(*sys.exc_info())
 
 
 def load_charms():
@@ -71,11 +82,11 @@ def load_charm_byname(name):
 
 def async(func):
     """
-    Decorator for executing a function in a separate :class:`threading.Thread`.
+    Decorator for executing a function in a separate thread.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        thread = Thread(target=func, args=args, kwargs=kwargs)
+        thread = ExceptionLoggingThread(target=func, args=args, kwargs=kwargs)
         thread.daemon = True
         return thread.start()
     return wrapper
