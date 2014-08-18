@@ -301,19 +301,29 @@ class NodeViewMode(ScrollableWidgetWrap):
             if maas_machine:
                 m = maas_machine
             else:
-                # no matching maas machine, might be a container:
-                base_machine = self.juju_state.base_machine(unit.machine_id)
-                m = self.maas_state.machine(base_machine.instance_id)
-
-                container_id = unit.machine_id.split('/')[-1]
-                base_id = base_machine.machine_id
-
-                return ["Container {} (Machine {}: ".format(container_id,
-                                                            base_id)] \
-                    + self._hardware_info_for_machine(m) + [")"]
+                return self._get_container_info(unit)
 
         return ["Machine {}: ".format(juju_machine.machine_id)] \
             + self._hardware_info_for_machine(m)
+
+    def _get_container_info(self, unit):
+        """Attempt to get hardware info of host machine for a unit that looks
+        like a container.
+
+        """
+        base_machine = self.juju_state.base_machine(unit.machine_id)
+
+        if base_machine.arch == "N/A" and self.maas_state is not None:
+            m = self.maas_state.machine(base_machine.instance_id)
+        else:
+            m = base_machine
+
+        container_id = unit.machine_id.split('/')[-1]
+        base_id = base_machine.machine_id
+
+        return ["Container {} (Machine {}: ".format(container_id,
+                                                    base_id)] \
+            + self._hardware_info_for_machine(m) + [")"]
 
     def _hardware_info_for_machine(self, m):
         return [('label', 'arch'), ' {}  '.format(m.arch),
