@@ -170,7 +170,7 @@ class DisplayController:
                                 deployed_service_names],
                                key=attrgetter('charm_name'))
 
-        self.nodes = zip(charm_classes, deployed_services)
+        self.nodes = list(zip(charm_classes, deployed_services))
 
         for n in deployed_services:
             for u in n.units:
@@ -178,7 +178,7 @@ class DisplayController:
                     self.set_dashboard_url(u.public_address)
                 if u.is_jujugui and u.agent_state == "started":
                     self.set_jujugui_url(u.public_address)
-        if not self.nodes:
+        if len(self.nodes) == 0:
             self.render_node_install_wait()
             return
 
