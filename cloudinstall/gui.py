@@ -292,6 +292,7 @@ class NodeViewMode(ScrollableWidgetWrap):
         Returns list of text and formatting tuples
         """
         juju_machine = self.juju_state.machine(unit.machine_id)
+        maas_machine = None
         if self.maas_state:
             maas_machine = self.maas_state.machine(juju_machine.instance_id)
 
