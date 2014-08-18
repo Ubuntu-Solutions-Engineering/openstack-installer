@@ -69,5 +69,5 @@ class Console:
     def clear_status(self):
         self.status.clear()
 
-    def render_nodes(self, nodes, **kwargs):
+    def render_nodes(self, nodes, juju_state, maas_state, **kwargs):
         self.status_info_message(nodes)
