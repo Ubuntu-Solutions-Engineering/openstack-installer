@@ -42,6 +42,7 @@ class Config:
 
     def __init__(self):
         self._juju_env = None
+        self.node_install_wait_interval = 0.2
 
     @property
     def tmpl_path(self):
