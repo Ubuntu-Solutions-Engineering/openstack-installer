@@ -54,6 +54,7 @@ class DisplayController:
         self.maas_state = None
         self.nodes = None
         self.machine = None
+        self.node_install_wait_alarm = None
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -107,9 +108,17 @@ class DisplayController:
         self.ui.render_nodes(nodes, juju_state, maas_state)
         self.redraw_screen()
 
-    def render_node_install_wait(self):
+    def render_node_install_wait(self, loop=None, user_data=None):
         self.ui.render_node_install_wait()
         self.redraw_screen()
+        self.node_install_wait_alarm = self.loop.set_alarm_in(
+            self.config.node_install_wait_interval,
+            self.render_node_install_wait)
+
+    def stop_rendering(self, alarm):
+        if alarm:
+            self.loop.remove_alarm(alarm)
+        alarm = None
 
     def redraw_screen(self):
         if hasattr(self, "loop"):
@@ -137,6 +146,7 @@ class DisplayController:
                 self.info_message("Welcome ..")
                 self.initialize()
 
+            self.render_node_install_wait()
             self.loop.set_alarm_in(3, self.update_alarm)
             self.loop.run()
         else:
@@ -179,10 +189,10 @@ class DisplayController:
                 if u.is_jujugui and u.agent_state == "started":
                     self.set_jujugui_url(u.public_address)
         if len(self.nodes) == 0:
-            self.render_node_install_wait()
             return
-
-        self.render_nodes(self.nodes, self.juju_state, self.maas_state)
+        else:
+            self.stop_rendering(self.node_install_wait_alarm)
+            self.render_nodes(self.nodes, self.juju_state, self.maas_state)
 
     def header_hotkeys(self, key):
         if key in ['j', 'down']:
