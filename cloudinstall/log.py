@@ -40,10 +40,19 @@ def setup_logger(name=__name__):
     * INFO
     * DEBUG
 
+    .. note::
+
+        This filters only cloudinstall logging info. Set your environment
+        var to `UCI_NOFILTER` to see debugging log statements from imported
+        libraries (ie macumba)
+
     .. code::
 
         # Running cloud-status from cli
         $ UCI_LOGLEVEL=INFO cloud-status
+
+        # Disable log filtering
+        $ UCI_NOFILTER=1 cloud-status
 
     :params str name: logger name
     :returns: a log object
@@ -67,8 +76,10 @@ def setup_logger(name=__name__):
 
     logger = logging.getLogger('')
     env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
-    f = logging.Filter(name='cloudinstall')
-    commandslog.addFilter(f)
+    no_filter = os.environ.get('UCI_NOFILTER', None)
+    if not no_filter:
+        f = logging.Filter(name='cloudinstall')
+        commandslog.addFilter(f)
     logger.setLevel(env)
     logger.addHandler(commandslog)
 
