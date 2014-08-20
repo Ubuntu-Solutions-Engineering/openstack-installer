@@ -147,7 +147,7 @@ class DisplayController:
                 self.initialize()
 
             self.render_node_install_wait()
-            self.loop.set_alarm_in(3, self.update_alarm)
+            self.update_alarm()
             self.loop.run()
         else:
             log.debug("Running asyncio event loop for ConsoleUI")
