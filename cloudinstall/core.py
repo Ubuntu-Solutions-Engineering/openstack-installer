@@ -165,7 +165,6 @@ class DisplayController:
         self.update_node_states()
         self.loop.set_alarm_in(10, self.update_alarm)
 
-    @utils.async
     def update_node_states(self):
         """ Updating node states
         """
