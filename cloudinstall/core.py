@@ -432,8 +432,8 @@ class Controller(DisplayController):
 
                 name = charm.display_name
                 if deploy_err:
-                    self.info_message("{} is waiting for another service,"
-                                      " will re-try in a few seconds.".format(name))
+                    self.info_message("{} is waiting for another service, will"
+                                      " re-try in a few seconds.".format(name))
                     break
                 else:
                     log.debug("Issued deploy for {}".format(name))
@@ -445,12 +445,11 @@ class Controller(DisplayController):
             if num_remaining > 0:
                 log.debug("{} charms pending deploy.".format(num_remaining))
                 log.debug("deployed_charm_classes={}".format(
-                              PrettyLog(self.deployed_charm_classes)))
+                    PrettyLog(self.deployed_charm_classes)))
 
                 time.sleep(5)
 
         self.enqueue_deployed_charms()
-
 
     def enqueue_deployed_charms(self):
         """Send all deployed charms to CharmQueue for relation setting and

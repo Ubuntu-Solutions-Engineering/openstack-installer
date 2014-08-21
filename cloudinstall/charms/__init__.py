@@ -181,8 +181,8 @@ export OS_REGION_NAME=RegionOne
             constraints = self.constraints
 
         try:
-            rv = self.juju.deploy(self.charm_name, self.charm_name, num_units,
-                                  config_yaml, constraints, machine_spec)
+            self.juju.deploy(self.charm_name, self.charm_name, num_units,
+                             config_yaml, constraints, machine_spec)
         except MacumbaError:
             log.exception("Error deploying")
             return True
