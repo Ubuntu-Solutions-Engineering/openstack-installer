@@ -432,8 +432,8 @@ class Controller(DisplayController):
 
                 name = charm.display_name
                 if deploy_err:
-                    self.info_message("{} is waiting for another service."
-                                      " Will re-try in a few seconds".format(name))
+                    self.info_message("{} is waiting for another service,"
+                                      " will re-try in a few seconds.".format(name))
                     break
                 else:
                     log.debug("Issued deploy for {}".format(name))
