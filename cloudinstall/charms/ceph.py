@@ -15,6 +15,7 @@
 
 import logging
 
+from macumba import MacumbaError
 from cloudinstall.charms import CharmBase, DisplayPriorities
 
 log = logging.getLogger('cloudinstall.charms.ceph')
@@ -41,13 +42,18 @@ class CharmCeph(CharmBase):
         """ Custom setup for ceph """
         if not self.has_quorum():
             log.debug("Insufficient machines allocated - ceph can't deploy.")
-            return
+            return True
         if not self.is_multi:
             log.debug("Ceph not currently supported on single installs")
-            return
+            return True
+        try:
+            self.juju.deploy(charm=self.charm_name,
+                             service_name=self.charm_name,
+                             num_units=self.default_instances)
+        except MacumbaError:
+            log.exception("Error deploying")
+            return True
+        return False
 
-        self.juju.deploy(charm=self.charm_name,
-                         service_name=self.charm_name,
-                         num_units=self.default_instances)
 
 __charm_class__ = CharmCeph

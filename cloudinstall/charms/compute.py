@@ -51,5 +51,6 @@ class CharmNovaCompute(CharmBase):
                                    c=self.charm_name),
                                    "rabbitmq-server:amqp")
             return False
+        return False
 
 __charm_class__ = CharmNovaCompute
