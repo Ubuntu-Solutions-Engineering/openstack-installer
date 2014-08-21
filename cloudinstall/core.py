@@ -32,6 +32,7 @@ from cloudinstall.maas import MaasState, MaasMachineStatus
 from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from cloudinstall.charms import CharmQueue, get_charm
+from cloudinstall.log import PrettyLog
 
 from macumba import JujuClient
 from multiprocessing import cpu_count
@@ -444,8 +445,8 @@ class Controller(DisplayController):
 
         log.debug("at end of process(), deployed_charm_classes={d}"
                   "finalized_charm_classes={f}".format(
-                      d=self.deployed_charm_classes,
-                      f=self.finalized_charm_classes))
+                      d=PrettyLog(self.deployed_charm_classes),
+                      f=PrettyLog(self.finalized_charm_classes)))
 
         if len(self.finalized_charm_classes) == len(charm_classes):
             self.info_message(
