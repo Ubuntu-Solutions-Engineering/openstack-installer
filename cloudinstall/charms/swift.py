@@ -43,15 +43,12 @@ class CharmSwift(CharmBase):
         else:
             num_replicas = self.default_replicas
 
-        kwds = dict(NumUnits=num_replicas)
-
-        if self.charm_name in CHARM_CONFIG:
-            kwds['ConfigYAML'] = CHARM_CONFIG_RAW
-
-        log.debug('Deployed {c} with params: {p}'.format(
-            c=self.charm_name,
-            p=kwds))
-        self.juju.deploy(self.charm_name, kwds)
+        log.debug('Deployed {c}'.format(
+            c=self.charm_name))
+        self.juju.deploy(charm=self.charm_name,
+                         service_name=self.charm_name,
+                         num_units=num_replicas,
+                         config_yaml=CHARM_CONFIG_RAW)
 
     def post_proc(self):
         self.juju.set_config('glance-simplestreams-sync',
