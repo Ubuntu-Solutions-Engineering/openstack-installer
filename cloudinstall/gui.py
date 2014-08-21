@@ -249,21 +249,35 @@ class NodeViewMode(ScrollableWidgetWrap):
         """ builds columns of node status """
         node_cols = []
 
+        status_txt = "[{}] ".format(unit.agent_state)
+
+        # unit.agent_state may be "pending" despite errors elsewhere,
+        # so we check for error_info first.
+        # if the agent_state is "error", _detect_errors returns that.
         error_info = self._detect_errors(unit, charm_class)
 
         if error_info:
             status = ("error_icon", "\N{TETRAGRAM FOR FAILURE} ")
+            if unit.agent_state != "error":
+                status_txt = "[{} (error)] ".format(unit.agent_state)
         elif unit.agent_state == "pending":
-            pending_status = [("pending_icon", "\N{BULLET} "),
-                              ("pending_icon_on", "\N{BULLET} "),
-                              ("pending_icon", "\N{BULLET} "),
-                              ("pending_icon_on", "\N{BULLET} "),
-                              ("pending_icon", "\N{BULLET} "),
-                              ("pending_icon_on", "\N{BULLET} ")]
-            status = pending_status[random.randrange(len(pending_status))]
-        else:
+            pending_status = [("pending_icon", "\N{CIRCLED BULLET} "),
+                              ("pending_icon", "\N{CIRCLED WHITE BULLET} "),
+                              ("pending_icon_on", "\N{FISHEYE} ")]
+            status = random.choice(pending_status)
+        elif unit.agent_state == "installed":
+            status = ("pending_icon", "\N{WATCH} ")
+        elif unit.agent_state == "started":
             status = ("success_icon", "\u2713 ")
-        node_cols.append(('pack', Text(status)))
+        elif unit.agent_state == "stopped":
+            status = ("error_icon", "\N{BLACK FLAG} ")
+        elif unit.agent_state == "down":
+            status = ("error_icon", "\N{DOWNWARDS BLACK ARROW} ")
+        else:
+            # shouldn't get here
+            status = "? "
+
+        node_cols.append(('pack', Text([status, status_txt])))
         if unit.public_address:
             node_cols.append(
                 ('pack',
