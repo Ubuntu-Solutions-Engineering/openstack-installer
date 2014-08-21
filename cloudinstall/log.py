@@ -22,8 +22,17 @@
 from __future__ import unicode_literals
 import logging
 import os
+import pprint
 
 from logging.handlers import TimedRotatingFileHandler
+
+
+class PrettyLog():
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __repr__(self):
+        return pprint.pformat(self.obj)
 
 
 def setup_logger(name=__name__):
@@ -69,7 +78,8 @@ def setup_logger(name=__name__):
                                            interval=1,
                                            backupCount=7)
     commandslog.setFormatter(logging.Formatter(
-        '%(levelname)s \N{BULLET} %(asctime)s [LINE:%(lineno)d] '
+        '%(levelname)s \N{BULLET} %(asctime)s '
+        '[LINE:%(lineno)d, FUNC:%(funcName)s] '
         '\N{BULLET} %(name)s \N{BULLET} '
         '%(message)s',
         datefmt='%m-%d %H:%M:%S'))
