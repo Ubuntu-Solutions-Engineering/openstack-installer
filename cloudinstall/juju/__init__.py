@@ -19,6 +19,7 @@
 """ Represents a juju status """
 
 import logging
+import time
 
 from cloudinstall.config import Config
 from cloudinstall.machine import Machine
@@ -37,7 +38,18 @@ class JujuState:
         """
         self.config = Config()
         self.juju = juju
+        self.start_time = time.time()
+        self._juju_status = None
         self.valid_states = ['pending', 'started', 'down']
+
+    def status(self):
+        """ Cache juju status
+        """
+        elapsed_time = time.time() - self.start_time
+        if not self._juju_status or elapsed_time > 20:
+            self._juju_status = self.juju.status()
+            self.start_time = time.time()
+        return self._juju_status
 
     def machine(self, machine_id):
         """ Return single machine state
@@ -57,7 +69,7 @@ class JujuState:
         :returns: machines known to juju (except bootstrap)
         :rtype: list
         """
-        ret = self.juju.status()
+        ret = self.status()
         machines = []
 
         for machine_id, machine in ret.get('Machines', {}).items():
@@ -119,7 +131,7 @@ class JujuState:
         :returns: Service() of all loaded services
         :rtype: list
         """
-        ret = self.juju.status()
+        ret = self.status()
         services = []
 
         for name, service in ret.get('Services', {}).items():
@@ -131,4 +143,4 @@ class JujuState:
     def networks(self):
         """ Juju netwoks property
         """
-        return self.juju.status()['Networks']
+        return self.status()['Networks']
