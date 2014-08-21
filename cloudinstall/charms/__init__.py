@@ -204,7 +204,7 @@ export OS_REGION_NAME=RegionOne
         if len(self.related) > 0:
             services = self.juju_state.service(self.charm_name)
             unit = services.unit(self.charm_name)
-            if not "started" in unit.agent_state:
+            if unit.agent_state != "started":
                 return True
             for charm in self.related:
                 if not self.is_related(charm, services.relations):
