@@ -321,9 +321,13 @@ class NodeViewMode(ScrollableWidgetWrap):
         container_id = unit.machine_id.split('/')[-1]
         base_id = base_machine.machine_id
 
-        return ["Container {} (Machine {}: ".format(container_id,
-                                                    base_id)] \
-            + self._hardware_info_for_machine(m) + [")"]
+        rl = ["Container {} (Machine {}".format(container_id,
+                                                base_id)]
+        if m:
+            rl += [":  "] + self._hardware_info_for_machine(m) + [")"]
+        else:
+            rl += [")"]
+        return rl
 
     def _hardware_info_for_machine(self, m):
         return [('label', 'arch'), ' {}  '.format(m.arch),
