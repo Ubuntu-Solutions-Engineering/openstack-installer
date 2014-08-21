@@ -203,11 +203,15 @@ export OS_REGION_NAME=RegionOne
         """
         if len(self.related) > 0:
             services = self.juju_state.service(self.charm_name)
+            unit = services.unit(self.charm_name)
+            if not "started" in unit.agent_state:
+                return True
             for charm in self.related:
                 if not self.is_related(charm, services.relations):
-                    err = self.juju.add_relation(self.charm_name,
-                                                 charm)
-                    if err:
+                    try:
+                        self.juju.add_relation(self.charm_name,
+                                               charm)
+                    except:
                         msg = "Relation not ready for " \
                               "{c}, requeueing.".format(c=self.charm_name)
                         log.error(msg)

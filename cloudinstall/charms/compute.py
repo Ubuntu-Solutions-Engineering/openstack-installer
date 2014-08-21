@@ -39,17 +39,30 @@ class CharmNovaCompute(CharmBase):
         for charm in self.related:
             log.debug("{1} adding relation to {0}".format(
                 charm, self.display_name))
-            self.juju.add_relation(self.charm_name,
-                                   charm)
+            try:
+                if "mysql" in charm:
+                    self.juju.add_relation(
+                        "{0}:shared-db".format(self.charm_name),
+                        "{0}:shared-db".format(charm))
+                else:
+                    self.juju.add_relation(self.charm_name,
+                                           charm)
+            except:
+                log.debug("{0} not ready for relation".format(charm))
+                return True
 
         service = self.juju_state.service(self.charm_name)
         has_amqp = list(filter(lambda r: 'amqp' in r.relation_name,
                         service.relations))
         if len(has_amqp) == 0:
             log.debug("Setting amqp relation for compute.")
-            self.juju.add_relation("{c}:amqp".format(
-                                   c=self.charm_name),
-                                   "rabbitmq-server:amqp")
+            try:
+                self.juju.add_relation("{c}:amqp".format(
+                                       c=self.charm_name),
+                                       "rabbitmq-server:amqp")
+            except:
+                log.debug("Not ready to set amqp relation.")
+                return True
             return False
         return False
 
