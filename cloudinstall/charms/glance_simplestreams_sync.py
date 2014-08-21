@@ -90,8 +90,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
         except:
             log.exception("problem downloading stable branch."
                           " Falling back to charm store version.")
-            super(CharmGlanceSimplestreamsSync, self).setup()
-            return
+            return super().setup()
 
         kwds = dict(machine_id=self.machine_id,
                     repodir=CHARMS_DIR,
@@ -116,6 +115,8 @@ class CharmGlanceSimplestreamsSync(CharmBase):
         except subprocess.CalledProcessError as e:
             log.warning("Deploy error. rc={} out={}".format(e.returncode,
                                                             e.output))
+            return True
+        return False
 
     def set_relations(self):
         if os.path.exists(os.path.join(CHARMS_DIR, CURRENT_DISTRO,
