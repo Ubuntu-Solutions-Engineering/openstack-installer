@@ -35,7 +35,7 @@ class CharmCeph(CharmBase):
     allow_multi_units = True
 
     def has_quorum(self):
-        return len(list(self.state[2].machines_allocated())) >= 3
+        return len(self.juju_state.machines_allocated()) >= 3
 
     def setup(self):
         """ Custom setup for ceph """
@@ -46,7 +46,8 @@ class CharmCeph(CharmBase):
             log.debug("Ceph not currently supported on single installs")
             return
 
-        self.juju.deploy(self.charm_name,
-                         dict(NumUnits=self.default_instances))
+        self.juju.deploy(charm=self.charm_name,
+                         service_name=self.charm_name,
+                         num_units=self.default_instances)
 
 __charm_class__ = CharmCeph
