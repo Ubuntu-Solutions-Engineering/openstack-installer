@@ -165,7 +165,7 @@ class DisplayController:
         # Do update here.
         log.debug("Updating node states.")
         self.update_node_states()
-        self.loop.set_alarm_in(10, self.update_alarm)
+        self.loop.set_alarm_in(1, self.update_alarm)
 
     def update_node_states(self):
         """ Updating node states
