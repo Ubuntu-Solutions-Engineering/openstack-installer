@@ -18,6 +18,7 @@
 
 """ Represents a juju status """
 
+from collections import Counter
 import logging
 import time
 
@@ -50,6 +51,29 @@ class JujuState:
             self._juju_status = self.juju.status()
             self.start_time = time.time()
         return self._juju_status
+
+    def machines_summary(self):
+        """ Returns summary of known machines and their status
+        Excludes bootstrap.
+        """
+        m_status = self.status().get('Machines', {}).values()
+
+        def get_info_string(m):
+            s = m.get('AgentState')
+            if s == '':
+                s = 'unknown'
+            si = m.get('AgentStateInfo')
+            if si:
+                s += " " + si
+            l = m.get('Life', None)
+            if l:
+                s += " " + l
+            return s
+
+        d = Counter([get_info_string(m)
+                     for m in m_status
+                     if m['Id'] != '0'])
+        return d
 
     def machine(self, machine_id):
         """ Return single machine state
