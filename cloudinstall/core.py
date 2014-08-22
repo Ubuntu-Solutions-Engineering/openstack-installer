@@ -317,16 +317,23 @@ class Controller(DisplayController):
                                    self.juju_state.machines_allocated()
                                    if m.agent_state == 'started'],
                                   key=lambda m: int(m.machine_id))
-        self.info_message("Waiting for an available machine.")
 
         if len(started_machines) > 0:
-            utils.remote_cp(
-                started_machines[0].machine_id,
-                src="/usr/share/cloud-installer/tools/apt-go-fast",
-                dst="/tmp/apt-go-fast")
-            utils.remote_run(started_machines[0].machine_id,
+            controller_id = started_machines[0].machine_id
+            utils.remote_cp(controller_id,
+                            src="/usr/share/cloud-installer/tools/apt-go-fast",
+                            dst="/tmp/apt-go-fast")
+            utils.remote_run(controller_id,
                              cmds="sudo sh /tmp/apt-go-fast")
+            self.info_message("Using machine {} as controller host.".format(
+                controller_id))
             return started_machines[0]
+
+        status_string = ", ".join(["{} {}".format(v, k) for k, v in
+                                   self.juju_state.machines_summary().items()])
+        self.info_message("Waiting for a machine."
+                          " Machines summary: {}".format(status_string))
+
         return None
 
     def configure_lxc_network(self):
