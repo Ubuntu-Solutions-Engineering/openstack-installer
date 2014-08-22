@@ -329,10 +329,14 @@ class Controller(DisplayController):
                 controller_id))
             return started_machines[0]
 
-        status_string = ", ".join(["{} {}".format(v, k) for k, v in
-                                   self.juju_state.machines_summary().items()])
-        self.info_message("Waiting for a machine."
-                          " Machines summary: {}".format(status_string))
+        machines_summary_items = self.juju_state.machines_summary().items()
+        if len(machines_summary_items) > 0:
+            status_string = ", ".join(["{} {}".format(v, k) for k, v in
+                                       machines_summary_items])
+            self.info_message("Waiting for a machine."
+                              " Machines summary: {}".format(status_string))
+        else:
+            self.info_message("Waiting for a machine.")
 
         return None
 
