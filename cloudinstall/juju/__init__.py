@@ -44,13 +44,23 @@ class JujuState:
         self.valid_states = ['pending', 'started', 'down']
 
     def status(self):
-        """ Cache juju status
+        """Returns juju status.
+        Caches value for 20 seconds.
+
+        Call invalidate_status_cache() to force next status call to
+        fetch from server.
         """
         elapsed_time = time.time() - self.start_time
         if not self._juju_status or elapsed_time > 20:
             self._juju_status = self.juju.status()
             self.start_time = time.time()
         return self._juju_status
+
+    def invalidate_status_cache(self):
+        """Invalidates cache of status.  Use this to force fetching from
+        server more often than every 20 seconds.
+        """
+        self._juju_status = None
 
     def machines_summary(self):
         """ Returns summary of known machines and their status
