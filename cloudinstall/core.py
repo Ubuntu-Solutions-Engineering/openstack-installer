@@ -163,7 +163,6 @@ class DisplayController:
 
     def update_alarm(self, *args, **kwargs):
         # Do update here.
-        log.debug("Updating node states.")
         self.update_node_states()
         self.loop.set_alarm_in(1, self.update_alarm)
 
@@ -271,8 +270,9 @@ class Controller(DisplayController):
             self.maas.tag_name(self.maas.nodes)
 
         while not self.machine:
+            self.juju_state.invalidate_status_cache()
             self.machine = self.get_controller_machine()
-            time.sleep(15)
+            time.sleep(10)
 
         # Step 2
         self.init_machine_setup()
@@ -302,15 +302,14 @@ class Controller(DisplayController):
             if max_cpus >= 2:
                 max_cpus = max_cpus // 2
 
-            allocated = list(self.juju_state.machines_allocated())
-            if self.config.is_single and len(allocated) == 0:
+            if len(allocated) == 0:
                 self.info_message("Allocating a new machine.")
                 self.juju.add_machine(constraints={'mem': 3072,
                                                    'root-disk': 20480,
                                                    'cpu-cores': max_cpus})
             return self.get_started_machine()
         else:
-            return None
+            raise Exception("Config error - not single or multi")
 
     def get_started_machine(self):
         started_machines = sorted([m for m in
