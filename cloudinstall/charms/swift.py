@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from macumba import MacumbaError
 from cloudinstall.charms import (CharmBase, CHARM_CONFIG,
                                  CHARM_CONFIG_RAW,
                                  DisplayPriorities)
@@ -45,10 +46,15 @@ class CharmSwift(CharmBase):
 
         log.debug('Deployed {c}'.format(
             c=self.charm_name))
-        self.juju.deploy(charm=self.charm_name,
-                         service_name=self.charm_name,
-                         num_units=num_replicas,
-                         config_yaml=CHARM_CONFIG_RAW)
+        try:
+            self.juju.deploy(charm=self.charm_name,
+                             service_name=self.charm_name,
+                             num_units=num_replicas,
+                             config_yaml=CHARM_CONFIG_RAW)
+        except MacumbaError:
+            log.exception("Error during deploy")
+            return True
+        return False
 
     def post_proc(self):
         self.juju.set_config('glance-simplestreams-sync',

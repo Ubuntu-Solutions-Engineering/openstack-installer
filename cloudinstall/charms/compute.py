@@ -64,5 +64,6 @@ class CharmNovaCompute(CharmBase):
                 log.debug("Not ready to set amqp relation.")
                 return True
             return False
+        return False
 
 __charm_class__ = CharmNovaCompute
