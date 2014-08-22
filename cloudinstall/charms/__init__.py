@@ -228,25 +228,32 @@ export OS_REGION_NAME=RegionOne
         """
         pass
 
-    def wait_for_agent(self, svc_name=None):
+    def wait_for_agent(self, svcs=[]):
         """ Waits for service agent to be reachable
 
         :rtype: Unit()
-        :returns: unit if ready
+        :returns: True if all svcs are started, False otherwise
         """
-        if not svc_name:
-            svc_name = self.charm_name
-        svc = self.juju_state.service(svc_name)
-        log.debug("Checking availability for {c}: {s}.".format(
-            c=svc_name,
-            s=svc))
-        unit = svc.unit(svc_name)
-        self.ui.status_info_message("Checking availability of {0}: {1}".format(
-            svc_name, unit.agent_state))
-        log.debug("Unit state: {}".format(unit.agent_state))
-        if unit.agent_state == "started":
-            return unit
-        return False
+        status_res = []
+
+        if not svcs:
+            svcs.append(self.charm_name)
+
+        for svc_name in svcs:
+            svc = self.juju_state.service(svc_name)
+            log.debug("Checking availability for {c}: {s}.".format(
+                c=svc_name,
+                s=svc))
+            unit = svc.unit(svc_name)
+            self.ui.status_info_message(
+                "Checking availability of {0}: {1}".format(
+                    svc_name, unit.agent_state))
+            log.debug("Unit state: {}".format(unit.agent_state))
+            if unit.agent_state == "started":
+                status_res.append(True)
+            else:
+                status_res.append(False)
+        return all(is_started for is_started in status_res)
 
     def _pubkey(self):
         """ return ssh pub key """
