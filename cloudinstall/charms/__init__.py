@@ -236,7 +236,7 @@ export OS_REGION_NAME=RegionOne
         """
         status_res = []
 
-        if not svcs:
+        if len(svcs) == 0:
             svcs.append(self.charm_name)
 
         for svc_name in svcs:
@@ -253,7 +253,7 @@ export OS_REGION_NAME=RegionOne
                 status_res.append(True)
             else:
                 status_res.append(False)
-        return all(is_started for is_started in status_res)
+        return all(status_res)
 
     def _pubkey(self):
         """ return ssh pub key """
