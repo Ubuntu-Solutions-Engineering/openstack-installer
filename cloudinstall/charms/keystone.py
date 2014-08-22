@@ -29,7 +29,7 @@ class CharmKeystone(CharmBase):
     menuable = True
 
     def setup(self):
-        mysql = self.wait_for_agent('mysql')
+        mysql = self.wait_for_agent(['mysql'])
         if not mysql:
             log.debug("mysql not yet available, deferring keystone deploy")
             return True

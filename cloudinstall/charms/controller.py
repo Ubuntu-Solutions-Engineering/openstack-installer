@@ -35,7 +35,7 @@ class CharmNovaCloudController(CharmBase):
         unit = self.wait_for_agent()
         if unit:
             # We need to get keystone public_address for auth_url here
-            keystone = self.wait_for_agent('keystone')
+            keystone = self.wait_for_agent(['keystone'])
             if not keystone:
                 return True
             for u in ['admin', 'ubuntu']:
