@@ -25,8 +25,16 @@ class CharmKeystone(CharmBase):
     charm_name = 'keystone'
     display_name = 'Keystone'
     related = ['mysql']
-    deploy_priority = 0
+    deploy_priority = 1
     menuable = True
+
+    def setup(self):
+        mysql = self.wait_for_agent('mysql')
+        if not mysql:
+            log.debug("mysql not yet available, deferring keystone deploy")
+            return True
+        log.debug("mysql is available, deploying keystone")
+        return super().setup()
 
     # FIXME: needs work, currently overwrites entire yaml file :\
     # def post_proc(self):

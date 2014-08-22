@@ -24,6 +24,7 @@ from queue import Queue
 import time
 import requests
 
+from macumba import MacumbaError
 from cloudinstall import utils
 from cloudinstall.config import Config
 
@@ -160,6 +161,12 @@ export OS_REGION_NAME=RegionOne
 
         The default should be sufficient but if more functionality
         is needed this should be overridden.
+
+        returns True if deploy command was deferred for some reason.
+        returns False if no error occurred and deploy command was issued.
+
+        Note that the False (no-error) return value does not indicate
+        that service is up and running.
         """
         machine_spec = str(self.machine_id)
         num_units = 1
@@ -173,8 +180,12 @@ export OS_REGION_NAME=RegionOne
             machine_spec = ""
             constraints = self.constraints
 
-        self.juju.deploy(self.charm_name, self.charm_name, num_units,
-                         config_yaml, constraints, machine_spec)
+        try:
+            self.juju.deploy(self.charm_name, self.charm_name, num_units,
+                             config_yaml, constraints, machine_spec)
+        except MacumbaError:
+            log.exception("Error deploying")
+            return True
 
         log.debug('Deployed {} with params: {} {} {} {}'.format(
             self.charm_name,
@@ -183,6 +194,7 @@ export OS_REGION_NAME=RegionOne
             config_yaml,
             constraints))
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
+        return False
 
     def set_relations(self):
         """ Setup charm relations
@@ -192,7 +204,7 @@ export OS_REGION_NAME=RegionOne
         if len(self.related) > 0:
             services = self.juju_state.service(self.charm_name)
             unit = services.unit(self.charm_name)
-            if not "started" in unit.agent_state:
+            if unit.agent_state != "started":
                 return True
             for charm in self.related:
                 if not self.is_related(charm, services.relations):

@@ -93,6 +93,7 @@ class DisplayController:
         self.redraw_screen()
 
     def info_message(self, message):
+        log.info(message)
         self.ui.status_info_message(message)
         self.redraw_screen()
 
@@ -222,7 +223,6 @@ class Controller(DisplayController):
     def __init__(self, **kwds):
         self.charm_modules = utils.load_charms()
         self.deployed_charm_classes = []
-        self.finalized_charm_classes = []
         self.single_net_configured = False
         self.lxc_root_tarball_configured = False
         super().__init__(**kwds)
@@ -376,6 +376,10 @@ class Controller(DisplayController):
         self.init_deploy_charms()
 
     def init_deploy_charms(self):
+        """Deploy charms in order, waiting for any deferred charms.
+        Then enqueue all charms for further processing and return.
+        """
+
         self.info_message("Verifying service deployments")
         charm_classes = sorted([m.__charm_class__ for m in self.charm_modules
                                 if not m.__charm_class__.optional and
@@ -389,11 +393,12 @@ class Controller(DisplayController):
                         m.__charm_class__.name() == "swift-proxy":
                     charm_classes.append(m.__charm_class__)
 
-        undeployed_charm_classes = [c for c in charm_classes
-                                    if c not in self.deployed_charm_classes]
+        def undeployed_charm_classes():
+            return [c for c in charm_classes
+                    if c not in self.deployed_charm_classes]
 
-        if len(undeployed_charm_classes) > 0:
-            for charm_class in undeployed_charm_classes:
+        while len(undeployed_charm_classes()) > 0:
+            for charm_class in undeployed_charm_classes():
                 charm = charm_class(juju=self.juju,
                                     juju_state=self.juju_state,
                                     ui=self.ui)
@@ -412,7 +417,8 @@ class Controller(DisplayController):
                     self.info_message("Deploying {c} "
                                       "to a new machine".format(
                                           c=charm.display_name))
-                    charm.setup()
+                    deploy_err = charm.setup()
+
                 else:
                     # Hardcode lxc on same machine as they are
                     # created on-demand.
@@ -422,42 +428,54 @@ class Controller(DisplayController):
                                       "to machine {m}".format(
                                           c=charm.display_name,
                                           m=charm.machine_id))
-                    charm.setup()
-                self.deployed_charm_classes.append(charm_class)
+                    deploy_err = charm.setup()
+
+                name = charm.display_name
+                if deploy_err:
+                    self.info_message("{} is waiting for another service, will"
+                                      " re-try in a few seconds.".format(name))
+                    break
+                else:
+                    log.debug("Issued deploy for {}".format(name))
+                    self.deployed_charm_classes.append(charm_class)
+
                 self.redraw_screen()
 
-        unfinalized_charm_classes = [c for c in self.deployed_charm_classes
-                                     if c not in self.finalized_charm_classes]
+            num_remaining = len(undeployed_charm_classes())
+            if num_remaining > 0:
+                log.debug("{} charms pending deploy.".format(num_remaining))
+                log.debug("deployed_charm_classes={}".format(
+                    PrettyLog(self.deployed_charm_classes)))
+
+                time.sleep(5)
+
+        self.enqueue_deployed_charms()
+
+    def enqueue_deployed_charms(self):
+        """Send all deployed charms to CharmQueue for relation setting and
+        post-proc.
+        """
+
+        log.debug("Starting CharmQueue for relation setting and"
+                  " post-processing enqueueing {}".format(
+                      [c.charm_name for c in self.deployed_charm_classes]))
 
         charm_q = CharmQueue()
-        if len(unfinalized_charm_classes) > 0:
-            self.info_message("Setting charm relations and post processing")
-            for charm_class in unfinalized_charm_classes:
-                charm = charm_class(juju=self.juju, juju_state=self.juju_state,
-                                    ui=self.ui)
-                charm_q.add_relation(charm)
-                charm_q.add_post_proc(charm)
-                self.finalized_charm_classes.append(charm_class)
-            if not charm_q.is_running:
-                charm_q.watch_relations()
-                charm_q.watch_post_proc()
-                charm_q.is_running = True
+        for charm_class in self.deployed_charm_classes:
+            charm = charm_class(juju=self.juju, juju_state=self.juju_state,
+                                ui=self.ui)
+            charm_q.add_relation(charm)
+            charm_q.add_post_proc(charm)
 
-        log.debug("at end of process(), deployed_charm_classes={d}"
-                  "finalized_charm_classes={f}".format(
-                      d=PrettyLog(self.deployed_charm_classes),
-                      f=PrettyLog(self.finalized_charm_classes)))
+        charm_q.watch_relations()
+        charm_q.watch_post_proc()
+        charm_q.is_running = True
 
-        if len(self.finalized_charm_classes) == len(charm_classes):
-            self.info_message(
-                "Services deployed, relationships may still be"
-                " pending. Please wait for all services to be checked before"
-                " deploying compute nodes.")
-            self.render_nodes(self.nodes, self.juju_state, self.maas_state)
-            return False
-        else:
-            log.debug("Polling will continue until all charms are finalized.")
-            return True
+        self.info_message(
+            "Services deployed, relationships may still be"
+            " pending. Please wait for all services to be checked before"
+            " deploying compute nodes.")
+        self.render_nodes(self.nodes, self.juju_state, self.maas_state)
 
     def add_charm(self, count=0, charm=None):
         if not charm:
