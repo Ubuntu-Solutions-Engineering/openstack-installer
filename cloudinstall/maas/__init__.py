@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from cloudinstall.machine import Machine
-
+import time
 from enum import Enum, unique
 
 
@@ -205,6 +205,17 @@ class MaasState:
 
     def __init__(self, maas_client):
         self.maas_client = maas_client
+        self._maas_client_nodes = None
+        self.start_time = time.time()
+
+    def nodes(self):
+        """ Cache MAAS nodes
+        """
+        elapsed_time = time.time() - self.start_time
+        if not self._maas_client_nodes or elapsed_time > 20:
+            self._maas_client_nodes = self.maas_client.nodes
+            self.start_time = time.time()
+        return self._maas_client_nodes
 
     def machine(self, instance_id):
         """ Return single machine state
@@ -230,7 +241,7 @@ class MaasState:
 
         """
 
-        all_machines = [MaasMachine(-1, m) for m in self.maas_client.nodes
+        all_machines = [MaasMachine(-1, m) for m in self.nodes()
                         if m['hostname'] != 'juju-bootstrap.maas']
         if state:
             return [m for m in all_machines if m.status == state]
