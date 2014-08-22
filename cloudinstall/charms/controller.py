@@ -32,37 +32,40 @@ class CharmNovaCloudController(CharmBase):
 
     def post_proc(self):
         """ post processing for nova-cloud-controller """
-        unit = self.wait_for_agent()
-        if unit:
-            # We need to get keystone public_address for auth_url here
-            keystone = self.wait_for_agent(['keystone'])
-            if not keystone:
-                return True
-            for u in ['admin', 'ubuntu']:
-                env = self._openstack_env(u, self.config.openstack_password,
-                                          u, keystone.public_address)
-                self._openstack_env_save(u, env)
-                utils.remote_cp(unit.machine_id,
-                                src=self._openstack_env_path(u),
-                                dst='/tmp/openstack-{u}-rc'.format(u=u))
-            utils.remote_cp(
-                unit.machine_id,
-                src=os.path.join(self.config.tmpl_path,
-                                 "nova-controller-setup.sh"),
-                dst="/tmp/nova-controller-setup.sh")
-            utils.remote_cp(
-                unit.machine_id,
-                src=self._pubkey(),
-                dst="/tmp/id_rsa.pub")
-            err = utils.remote_run(unit.machine_id,
-                                   cmds="/tmp/nova-controller-setup.sh "
-                                        "{p}".format(
-                                            p=self.config.openstack_password))
-            if err['ret'] == 1:
-                # something happened during nova setup, re-run
-                return True
-            return False
-        return True
+        if not self.wait_for_agent(['keystone', self.charm_name]):
+            return True
+        svc = self.juju_state.service(self.charm_name)
+        unit = svc.unit(self.charm_name)
+        k_svc = self.juju_state.service('keystone')
+        keystone = k_svc.unit('keystone')
+
+        if unit.machine_id == '-1':
+            return True
+
+        for u in ['admin', 'ubuntu']:
+            env = self._openstack_env(u, self.config.openstack_password,
+                                      u, keystone.public_address)
+            self._openstack_env_save(u, env)
+            utils.remote_cp(unit.machine_id,
+                            src=self._openstack_env_path(u),
+                            dst='/tmp/openstack-{u}-rc'.format(u=u))
+        utils.remote_cp(
+            unit.machine_id,
+            src=os.path.join(self.config.tmpl_path,
+                             "nova-controller-setup.sh"),
+            dst="/tmp/nova-controller-setup.sh")
+        utils.remote_cp(
+            unit.machine_id,
+            src=self._pubkey(),
+            dst="/tmp/id_rsa.pub")
+        err = utils.remote_run(unit.machine_id,
+                               cmds="/tmp/nova-controller-setup.sh "
+                                    "{p}".format(
+                                        p=self.config.openstack_password))
+        if err['ret'] == 1:
+            # something happened during nova setup, re-run
+            return True
+        return False
 
 
 __charm_class__ = CharmNovaCloudController
