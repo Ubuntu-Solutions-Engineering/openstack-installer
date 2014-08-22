@@ -212,9 +212,9 @@ export OS_REGION_NAME=RegionOne
                         self.juju.add_relation(self.charm_name,
                                                charm)
                     except:
-                        msg = "Relation not ready for " \
-                              "{c}, requeueing.".format(c=self.charm_name)
-                        log.error(msg)
+                        msg = "Relation {}-{} not ready, " \
+                              "requeueing.".format(self.charm_name, charm)
+                        log.exception("failure in add_relation {}".format(msg))
                         self.ui.status_info_message(msg)
                         return True
         return False
