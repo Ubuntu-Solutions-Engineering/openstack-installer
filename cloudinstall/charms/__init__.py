@@ -228,16 +228,17 @@ export OS_REGION_NAME=RegionOne
         """
         pass
 
-    def wait_for_agent(self, svcs=[]):
+    def wait_for_agent(self, svcs=None):
         """ Waits for service agent to be reachable
 
+        :param svcs: List of services to check or empty for calling service
         :rtype: Unit()
         :returns: True if all svcs are started, False otherwise
         """
         status_res = []
 
-        if len(svcs) == 0:
-            svcs.append(self.charm_name)
+        if not svcs:
+            svcs = [self.charm_name]
 
         for svc_name in svcs:
             svc = self.juju_state.service(svc_name)
