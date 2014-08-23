@@ -37,20 +37,25 @@ class CharmQuantum(CharmBase):
 
     def post_proc(self):
         """ performs additional network configuration for charm """
-        unit = self.wait_for_agent()
-        if unit:
-            self.ui.status_info_message("Updating network parameters "
-                                        "for Neutron")
-            utils.remote_cp(
-                unit.machine_id,
-                src=os.path.join(self.config.tmpl_path, "quantum-network.sh"),
-                dst="/tmp/quantum-network.sh")
-            utils.remote_run(unit.machine_id,
-                             cmds="sudo chmod +x /tmp/quantum-network.sh")
-            utils.remote_run(unit.machine_id,
-                             cmds="sudo /tmp/quantum-network.sh")
-            return False
-        return True
+        if not self.wait_for_agent():
+            return True
+        svc = self.juju_state.service(self.charm_name)
+        unit = svc.unit(self.charm_name)
+
+        if unit.machine_id == '-1':
+            return True
+
+        self.ui.status_info_message("Updating network parameters "
+                                    "for Neutron")
+        utils.remote_cp(
+            unit.machine_id,
+            src=os.path.join(self.config.tmpl_path, "quantum-network.sh"),
+            dst="/tmp/quantum-network.sh")
+        utils.remote_run(unit.machine_id,
+                         cmds="sudo chmod +x /tmp/quantum-network.sh")
+        utils.remote_run(unit.machine_id,
+                         cmds="sudo /tmp/quantum-network.sh")
+        return False
 
 
 __charm_class__ = CharmQuantum

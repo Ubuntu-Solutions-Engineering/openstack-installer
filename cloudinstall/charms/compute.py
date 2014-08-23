@@ -33,9 +33,9 @@ class CharmNovaCompute(CharmBase):
     allow_multi_units = True
 
     def set_relations(self):
-        controller = self.wait_for_agent(['nova-cloud-controller'])
-        if not controller:
+        if not self.wait_for_agent(['nova-cloud-controller']):
             return True
+
         for charm in self.related:
             log.debug("{1} adding relation to {0}".format(
                 charm, self.display_name))
