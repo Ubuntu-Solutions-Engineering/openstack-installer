@@ -266,7 +266,7 @@ class NodeViewMode(ScrollableWidgetWrap):
                               ("pending_icon_on", "\N{FISHEYE} ")]
             status = random.choice(pending_status)
         elif unit.agent_state == "installed":
-            status = ("pending_icon", "\N{WATCH} ")
+            status = ("pending_icon", "\N{HOURGLASS} ")
         elif unit.agent_state == "started":
             status = ("success_icon", "\u2713 ")
         elif unit.agent_state == "stopped":
