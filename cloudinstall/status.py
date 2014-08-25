@@ -50,5 +50,4 @@ def get_sync_status():
             status = sf.read()
         return status
     else:
-        log.debug("No status file, returning {}.".format(not_found_message))
         return not_found_message
