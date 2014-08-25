@@ -55,6 +55,8 @@ class CharmQuantum(CharmBase):
                          cmds="sudo chmod +x /tmp/quantum-network.sh")
         utils.remote_run(unit.machine_id,
                          cmds="sudo /tmp/quantum-network.sh")
+        self.ui.status_info_message(
+            "Neutron deployed and configured, images will now be synced.")
         return False
 
 
