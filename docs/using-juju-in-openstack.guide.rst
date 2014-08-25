@@ -6,7 +6,7 @@ to enable juju to deploy charms into the private cloud.
 
 .. note::
 
-    Juju requires swift storage so this needs to have been enabled 
+    Juju requires swift storage so this needs to have been enabled
     during the install.
 
 Update ~/.juju/environments.yaml
@@ -40,6 +40,12 @@ Once the environments are updated simple run:
 .. code::
 
     $ juju switch openstack
+    $ juju metadata generate-image -i <image_id> -s trusty
+    $ juju metadata generate-tools -d $HOME
     $ juju bootstrap
 
 Now you can deploy charms within your Openstack cloud.
+
+.. note::
+
+    <image_id> is found in the horizon dashboard `http://<public-ip>/horizon/project/images/`
