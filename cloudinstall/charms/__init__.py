@@ -267,11 +267,12 @@ export OS_REGION_NAME=RegionOne
 class CharmQueue:
     """ charm queue for handling relations in the background
     """
-    def __init__(self):
+    def __init__(self, ui):
         self.charm_relations_q = Queue()
         self.charm_setup_q = Queue()
         self.charm_post_proc_q = Queue()
         self.is_running = False
+        self.ui = ui
 
     def add_relation(self, charm):
         self.charm_relations_q.put(charm)
@@ -293,7 +294,9 @@ class CharmQueue:
                     self.charm_setup_q.put(charm)
                 self.charm_setup_q.task_done()
             except:
-                log.exception("ignoring exception in setup watcher.")
+                msg = "Exception in setup watcher, re-trying."
+                log.exception(msg)
+                self.ui.status_error_message(msg)
             time.sleep(10)
 
     @utils.async
@@ -307,7 +310,9 @@ class CharmQueue:
                     self.charm_relations_q.put(charm)
                 self.charm_relations_q.task_done()
             except:
-                log.exception("ignoring exception in relations watcher.")
+                msg "Exception in relations watcher, re-trying."
+                log.exception(msg)
+                self.ui.status_error_message(msg)
             time.sleep(10)
 
     @utils.async
@@ -321,5 +326,7 @@ class CharmQueue:
                     self.charm_post_proc_q.put(charm)
                 self.charm_post_proc_q.task_done()
             except:
-                log.exception("ignoring exception in post-processing watcher.")
+                msg = "Exception in post-processing watcher, re-trying."
+                log.exception(msg)
+                self.ui.status_error_message(msg)
             time.sleep(10)

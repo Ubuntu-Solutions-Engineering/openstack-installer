@@ -97,6 +97,11 @@ class DisplayController:
         self.ui.status_info_message(message)
         self.redraw_screen()
 
+    def error_message(self, message):
+        log.debug(message)
+        self.ui.status_error_message(message)
+        self.redraw_screen()
+
     def set_dashboard_url(self, ip):
         self.ui.status_dashboard_url(ip)
         self.redraw_screen()
@@ -287,8 +292,7 @@ class Controller(DisplayController):
             if len(allocated) == 0 and len(maas_allocated) == 0:
                 err_msg = "No machines allocated to juju. " \
                           "Please pxe boot a machine."
-                log.debug(err_msg)
-                self.ui.status_error_message(err_msg)
+                self.error_message(err_msg)
                 return None
             elif len(allocated) == 0 and len(maas_allocated) > 0:
                 self.info_message("Adding maas machine to juju")
@@ -418,8 +422,8 @@ class Controller(DisplayController):
                 service_names = [s.service_name for s in
                                  self.juju_state.services]
                 if charm.name() in service_names:
-                    self.ui.status_error_message("{c} is already deployed"
-                                                 ", skipping".format(c=charm))
+                    self.info_message("{c} is already deployed"
+                                      ", skipping".format(c=charm))
                     self.deployed_charm_classes.append(charm_class)
                     continue
 
@@ -470,7 +474,7 @@ class Controller(DisplayController):
                   " post-processing enqueueing {}".format(
                       [c.charm_name for c in self.deployed_charm_classes]))
 
-        charm_q = CharmQueue()
+        charm_q = CharmQueue(ui=self.ui)
         for charm_class in self.deployed_charm_classes:
             charm = charm_class(juju=self.juju, juju_state=self.juju_state,
                                 ui=self.ui)
@@ -497,7 +501,7 @@ class Controller(DisplayController):
                 n=count, charm=charm))
             self.juju.add_unit(charm, num_units=int(count))
         else:
-            charm_q = CharmQueue()
+            charm_q = CharmQueue(ui=self.ui)
             charm_sel = get_charm(charm,
                                   self.juju,
                                   self.juju_state,
