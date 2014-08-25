@@ -18,7 +18,7 @@
 import kombu
 import os
 import yaml
-from subprocess import check_output, STDOUT
+from subprocess import check_output
 import time
 import traceback
 
@@ -31,8 +31,7 @@ def get_info():
     id_yaml = check_output(
         ['juju', 'run', '--unit',
          'glance-simplestreams-sync/0',
-         'cat /etc/glance-simplestreams-sync/identity.yaml'],
-        stderr=STDOUT)
+         'cat /etc/glance-simplestreams-sync/identity.yaml'])
 
     id_conf = yaml.load(id_yaml)
     hosts = id_conf.get('rabbit_hosts', None)
