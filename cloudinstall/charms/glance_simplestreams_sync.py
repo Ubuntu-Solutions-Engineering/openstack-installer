@@ -85,8 +85,6 @@ class CharmGlanceSimplestreamsSync(CharmBase):
         try:
             self.download_stable()
             log.debug("done: downloaded to " + CHARMS_DIR)
-
-            log.debug("adding rabbitmq-server to relations list")
         except:
             log.exception("problem downloading stable branch."
                           " Falling back to charm store version.")
@@ -121,8 +119,9 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     def set_relations(self):
         if os.path.exists(os.path.join(CHARMS_DIR, CURRENT_DISTRO,
                                        'glance-simplestreams-sync')):
-            self.related.append('rabbitmq-server')
-            log.debug("Added rabbitmq to relation list")
+            if 'rabbitmq-server' not in self.related:
+                self.related.append('rabbitmq-server')
+                log.debug("Added rabbitmq to relation list")
 
         return super(CharmGlanceSimplestreamsSync, self).set_relations()
 
