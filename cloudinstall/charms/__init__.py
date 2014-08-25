@@ -310,7 +310,7 @@ class CharmQueue:
                     self.charm_relations_q.put(charm)
                 self.charm_relations_q.task_done()
             except:
-                msg "Exception in relations watcher, re-trying."
+                msg = "Exception in relations watcher, re-trying."
                 log.exception(msg)
                 self.ui.status_error_message(msg)
             time.sleep(10)
