@@ -48,7 +48,6 @@ def get_sync_status():
     if os.path.exists(STATUS_FILE_NAME):
         with open(STATUS_FILE_NAME) as sf:
             status = sf.read()
-        log.debug("got status '{}' from listener file".format(status))
         return status
     else:
         log.debug("No status file, returning {}.".format(not_found_message))
