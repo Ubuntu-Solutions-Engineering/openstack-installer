@@ -449,7 +449,7 @@ class Controller(DisplayController):
                     log.debug("Issued deploy for {}".format(name))
                     self.deployed_charm_classes.append(charm_class)
 
-                self.redraw_screen()
+                self.juju_state.invalidate_status_cache()
 
             num_remaining = len(undeployed_charm_classes())
             if num_remaining > 0:
