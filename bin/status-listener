@@ -16,24 +16,35 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import kombu
+import logging
 import os
-import yaml
-from subprocess import check_output
+from subprocess import Popen, PIPE
 import time
-import traceback
+import yaml
 
-STATUS_FILE_NAME = os.path.expanduser("~/.cloud-install/sync-status")
-ERROR_FILE_NAME = STATUS_FILE_NAME + ".error"
+
+CLOUD_INSTALL_DIR = os.path.expanduser("~/.cloud-install/")
+LOG_FILE_NAME = os.path.join(CLOUD_INSTALL_DIR, "status-listener.log")
+STATUS_FILE_NAME = os.path.join(CLOUD_INSTALL_DIR, "sync-status")
 
 
 def get_info():
     "Read rabbitmq config from remote unit's relation data"
-    id_yaml = check_output(
-        ['juju', 'run', '--unit',
-         'glance-simplestreams-sync/0',
-         'cat /etc/glance-simplestreams-sync/identity.yaml'])
 
-    id_conf = yaml.load(id_yaml)
+    read_id_proc = Popen(['juju', 'run', '--unit',
+                          'glance-simplestreams-sync/0',
+                          'cat /etc/glance-simplestreams-sync/identity.yaml'],
+                         stdout=PIPE, stderr=PIPE)
+
+    (id_stdout, id_stderr) = read_id_proc.communicate()
+
+    if read_id_proc.returncode != 0:
+        logging.error("error return from reading config: {}"
+                      "\nout{}\nerr:{}".format(
+                          read_id_proc.returncode, id_stdout, id_stderr))
+        raise Exception("Error in reading config from /0 unit")
+
+    id_conf = yaml.load(id_stdout)
     hosts = id_conf.get('rabbit_hosts', None)
     if hosts is not None:
         host = hosts[0]
@@ -64,17 +75,21 @@ def atomic_write_file(filename, data):
 def process_message(body, message):
     if body['status'] == 'Error':
         atomic_write_file(STATUS_FILE_NAME,
-                          "Sync status error, see\n{}".format(ERROR_FILE_NAME))
-        atomic_write_file(ERROR_FILE_NAME, body['message'])
+                          "Sync status error, see\n{}".format(LOG_FILE_NAME))
+        logging.error("Received error message: {}".format(body['message']))
     else:
         atomic_write_file(STATUS_FILE_NAME, body['message'])
-        atomic_write_file(ERROR_FILE_NAME, "")
+        logging.info("Received message {}".format(body['message']))
 
     message.ack()
 
 
 # Listen forever on rabbitmq port
-if __name__ == "__main__":
+def main():
+    fmt = "%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(msg)s"
+    logging.basicConfig(filename=LOG_FILE_NAME,
+                        format=fmt,
+                        level=logging.INFO)
 
     info_found = False
     while not info_found:
@@ -82,9 +97,7 @@ if __name__ == "__main__":
             username, password, host, virtual_host = get_info()
             info_found = True
         except:
-            with open("{}.log".format(STATUS_FILE_NAME), 'w+') as f:
-                f.write(traceback.format_exc())
-                f.write("will reattempt to make connection.")
+            logging.exception("Error connecting. Will reattempt after 2sec.")
             time.sleep(2)
 
     try:
@@ -96,10 +109,16 @@ if __name__ == "__main__":
 
             with conn.Consumer(status_message_queue,
                                callbacks=[process_message]) as consumer:
+                consumer        # pyflakes
                 while True:
                     conn.drain_events()
     except:
         atomic_write_file(STATUS_FILE_NAME,
-                          "Sync status error, see\n{}".format(ERROR_FILE_NAME))
-        atomic_write_file(ERROR_FILE_NAME,
-                          traceback.format_exc())
+                          "Sync status error, see\n{}".format(LOG_FILE_NAME))
+        logging.exception("Exception listening for status.")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except:
+        logging.exception("uncaught exception in status-listener main")
