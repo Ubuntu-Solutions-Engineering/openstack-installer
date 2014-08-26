@@ -25,13 +25,15 @@ SYNC_STATUS_LISTENER_PATH = "/usr/share/cloud-installer/bin/status-listener"
 STATUS_FILE_NAME = os.path.expanduser("~/.cloud-install/sync-status")
 
 status_subprocess = None
+not_found_message = ""
 
 log = logging.getLogger('cloudinstall.status')
 
 
 def get_sync_status():
     global status_subprocess
-    not_found_message = ""
+    global not_found_message
+
     if status_subprocess is None:
         status_listener_path = os.environ.get("SYNC_STATUS_LISTENER_PATH",
                                               SYNC_STATUS_LISTENER_PATH)
