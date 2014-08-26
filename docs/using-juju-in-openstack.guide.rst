@@ -35,14 +35,14 @@ The credentials are already filled out for you, however, you'll need to set the
 Bootstrap Juju
 ^^^^^^^^^^^^^^
 
-Once the environments are updated simple run:
+Once the environments are updated run:
 
 .. code::
 
     $ juju switch openstack
     $ juju metadata generate-image -i <image_id> -s trusty
-    $ juju metadata generate-tools -d $HOME
-    $ juju bootstrap
+    $ juju sync-tools
+    $ juju bootstrap --metadata-source /home/ubuntu
 
 Now you can deploy charms within your Openstack cloud.
 
