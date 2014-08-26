@@ -292,11 +292,14 @@ class NodeViewMode(ScrollableWidgetWrap):
         if error_info:
             node_cols.append(('pack', Text(" | {}".format(error_info))))
         else:
-            node_cols.append(Text([" | "] + self._get_hardware_info(unit)))
+            hw_text = Text([" | "] + self._get_hardware_info(unit))
 
-        if 'glance-simplestreams-sync' in unit.unit_name:
-            node_cols.append(('pack', Text(
-                'Sync Status: {0}'.format(get_sync_status()))))
+            if 'glance-simplestreams-sync' in unit.unit_name:
+                status_oneline = get_sync_status().replace("\n", " - ")
+                sync_text = Text('   ' + status_oneline)
+                node_cols.append(Pile([hw_text, sync_text]))
+            else:
+                node_cols.append(hw_text)
 
         return Columns(node_cols)
 
