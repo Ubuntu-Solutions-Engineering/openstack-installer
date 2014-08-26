@@ -412,6 +412,10 @@ class Controller(DisplayController):
                     if c not in self.deployed_charm_classes]
 
         while len(undeployed_charm_classes()) > 0:
+            pending_names = [c.display_name for c in
+                             undeployed_charm_classes()]
+            self.ui.set_pending_deploys(pending_names)
+
             for charm_class in undeployed_charm_classes():
                 charm = charm_class(juju=self.juju,
                                     juju_state=self.juju_state,
@@ -454,6 +458,9 @@ class Controller(DisplayController):
                     self.deployed_charm_classes.append(charm_class)
 
                 self.juju_state.invalidate_status_cache()
+                pending_names = [c.display_name for c in
+                                 undeployed_charm_classes()]
+                self.ui.set_pending_deploys(pending_names)
 
             num_remaining = len(undeployed_charm_classes())
             if num_remaining > 0:
@@ -463,6 +470,7 @@ class Controller(DisplayController):
 
                 time.sleep(5)
 
+        self.ui.set_pending_deploys([])
         self.enqueue_deployed_charms()
 
     def enqueue_deployed_charms(self):
