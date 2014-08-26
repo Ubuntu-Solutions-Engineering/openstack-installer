@@ -402,12 +402,14 @@ class StatusBar(WidgetWrap):
     ARROW = " \u21e8 "
 
     def __init__(self, text=''):
+        self._pending_deploys = Text('')
         self._status_line = Text(text)
         self._horizon_url = Text('')
         self._jujugui_url = Text('')
         self._openstack_rel = Text('Icehouse (2014.1.1)')
         self._status_extra = self._build_status_extra()
-        status = Pile([self._status_line, self._status_extra])
+        status = Pile([self._pending_deploys,
+                       self._status_line, self._status_extra])
         super().__init__(status)
 
     def _build_status_extra(self):
@@ -445,6 +447,13 @@ class StatusBar(WidgetWrap):
     def info_message(self, text):
         self.message([('info', self.INFO),
                       ('default', self.ARROW + text)])
+
+    def set_pending_deploys(self, pending_deploys):
+        if len(pending_deploys) > 0:
+            msg = "Pending deploys: " + ", ".join(pending_deploys)
+            self._pending_deploys.set_text(msg)
+        else:
+            self._pending_deploys.set_text('')
 
     def clear(self):
         """Clear the text."""
@@ -563,6 +572,9 @@ class PegasusGUI(WidgetWrap):
 
     def hide_add_charm_info(self):
         self.hide_widget_on_top()
+
+    def set_pending_deploys(self, pending_charms):
+        self.frame.footer.set_pending_deploys(pending_charms)
 
     def status_message(self, text):
         self.frame.footer.message(text)
