@@ -17,6 +17,7 @@
 import logging
 import urwid
 import asyncio
+from enum import Enum, unique
 import time
 import random
 import sys
@@ -33,6 +34,7 @@ from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from cloudinstall.charms import CharmQueue, get_charm
 from cloudinstall.log import PrettyLog
+from cloudinstall.placement import PlacementController
 
 from macumba import JujuClient
 from multiprocessing import cpu_count
@@ -40,6 +42,14 @@ from multiprocessing import cpu_count
 
 log = logging.getLogger('cloudinstall.core')
 sys.excepthook = utils.global_exchandler
+
+
+@unique
+class ControllerState(Enum):
+    """Names for current screen state"""
+    INSTALL_WAIT = 0
+    PLACEMENT = 1
+    SERVICES = 2
 
 
 class DisplayController:
@@ -55,7 +65,8 @@ class DisplayController:
         self.maas_state = None
         self.nodes = None
         self.machine = None
-        self.node_install_wait_alarm = None
+        self.placement_controller = None
+        self.current_state = ControllerState.INSTALL_WAIT
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -79,8 +90,19 @@ class DisplayController:
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
         self.authenticate_juju()
-        if self.config.is_multi:
-            self.authenticate_maas()
+        if not self.config.is_multi:
+            return
+
+        self.authenticate_maas()
+
+        if not self.opts.placement:
+            return
+
+        self.current_state = ControllerState.PLACEMENT
+        self.placement_controller = PlacementController(
+            self.maas_state)
+        self.placement_controller.set_all_assignments(
+            self.placement_controller.gen_defaults())
 
     # overlays
     def step_info(self, message):
@@ -118,14 +140,10 @@ class DisplayController:
     def render_node_install_wait(self, loop=None, user_data=None):
         self.ui.render_node_install_wait()
         self.redraw_screen()
-        self.node_install_wait_alarm = self.loop.set_alarm_in(
-            self.config.node_install_wait_interval,
-            self.render_node_install_wait)
 
-    def stop_rendering(self, alarm):
-        if alarm:
-            self.loop.remove_alarm(alarm)
-        alarm = None
+    def render_placement_view(self):
+        self.ui.render_placement_view(self.placement_controller)
+        self.redraw_screen()
 
     def redraw_screen(self):
         if hasattr(self, "loop"):
@@ -153,7 +171,6 @@ class DisplayController:
                 self.info_message("Welcome ..")
                 self.initialize()
 
-            self.render_node_install_wait()
             self.update_alarm()
             self.loop.run()
         else:
@@ -167,9 +184,19 @@ class DisplayController:
         self.main_loop()
 
     def update_alarm(self, *args, **kwargs):
-        # Do update here.
-        self.update_node_states()
-        self.loop.set_alarm_in(1, self.update_alarm)
+        interval = 1
+
+        if self.current_state == ControllerState.PLACEMENT:
+            self.render_placement_view()
+
+        elif self.current_state == ControllerState.INSTALL_WAIT:
+            self.render_node_install_wait()
+            interval = self.config.node_install_wait_interval
+
+        else:
+            self.update_node_states()
+
+        self.loop.set_alarm_in(interval, self.update_alarm)
 
     def update_node_states(self):
         """ Updating node states
@@ -196,7 +223,6 @@ class DisplayController:
         if len(self.nodes) == 0:
             return
         else:
-            self.stop_rendering(self.node_install_wait_alarm)
             self.render_nodes(self.nodes, self.juju_state, self.maas_state)
 
     def header_hotkeys(self, key):
@@ -544,4 +570,5 @@ class Controller(DisplayController):
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
         super().initialize()
-        self.init_machine()
+        if not self.opts.placement:
+            self.init_machine()
