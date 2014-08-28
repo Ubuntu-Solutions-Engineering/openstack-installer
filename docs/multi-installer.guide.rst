@@ -11,6 +11,7 @@ Add the `cloud-installer` ppa to your system.
 .. code::
 
    $ sudo apt-add-repository ppa:juju/stable
+   $ sudo apt-add-repository ppa:maas-maintainers/stable
    $ sudo apt-add-repository ppa:cloud-installer/ppa
    $ sudo apt-get update
 
