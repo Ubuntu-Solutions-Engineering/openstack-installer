@@ -38,6 +38,7 @@ from cloudinstall.status import get_sync_status
 from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox)
 from cloudinstall.ui.helpscreen import HelpScreen
+from cloudinstall.placement import PlacementView
 
 log = logging.getLogger('cloudinstall.gui')
 sys.excepthook = utils.global_exchandler
@@ -477,6 +478,7 @@ def _check_encoding():
 
 
 class PegasusGUI(WidgetWrap):
+
     def __init__(self):
         _check_encoding()  # Make sure terminal supports utf8
         header = Header()
@@ -590,4 +592,8 @@ class PegasusGUI(WidgetWrap):
 
     def render_node_install_wait(self, **kwargs):
         self.frame.body = NodeInstallWaitMode()
+        self.frame.set_body(self.frame.body)
+
+    def render_placement_view(self, controller):
+        self.frame.body = PlacementView(controller)
         self.frame.set_body(self.frame.body)

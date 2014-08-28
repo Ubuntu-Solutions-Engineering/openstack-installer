@@ -49,6 +49,9 @@ def parse_options(*args, **kwds):
     parser.add_argument('--no-ui', action='store_true',
                         dest='noui', default=False,
                         help='Perform installation without UI.')
+    parser.add_argument('--placement', action='store_true',
+                        dest='placement', default=False,
+                        help='Start on machine placement view, do not deploy')
     return parser.parse_args()
 
 if __name__ == '__main__':
