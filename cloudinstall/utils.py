@@ -43,15 +43,6 @@ def global_exchandler(type, value, tb):
     tb_list = traceback.format_exception(type, value, tb)
     log.debug("".join(tb_list))
 
-    locals = True
-    for active_vars in [tb.tb_frame.f_locals, tb.tb_frame.f_globals]:
-        header = 'Locals:' if locals else 'Globals:'
-        log.debug(header)
-        for k, v in active_vars.items():
-            if not (k.startswith('__') and k.endswith('__')):
-                log.debug('\t{} = {}'.format(k, v))
-        locals = False
-
 
 class ExceptionLoggingThread(Thread):
     def run(self):

@@ -489,6 +489,7 @@ class PegasusGUI(WidgetWrap):
                            header=header,
                            footer=footer)
 
+        self.placement_view = PlacementView()
         super().__init__(self.frame)
 
     def _build_overlay_widget(self,
@@ -595,5 +596,5 @@ class PegasusGUI(WidgetWrap):
         self.frame.set_body(self.frame.body)
 
     def render_placement_view(self, controller):
-        self.frame.body = PlacementView(controller)
-        self.frame.set_body(self.frame.body)
+        self.placement_view.update_from_controller(controller)
+        self.frame.body = self.placement_view
