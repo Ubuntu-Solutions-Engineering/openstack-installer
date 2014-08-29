@@ -18,7 +18,7 @@ import logging
 
 import pprint
 
-from urwid import (Button, Columns, Divider, Filler,
+from urwid import (Button, Columns, Filler,
                    Padding, Pile, Text, WidgetWrap)
 
 from cloudinstall.utils import load_charms
@@ -68,6 +68,13 @@ class PlacementController:
                              if m.instance_id == m_id), None)
         return None
 
+    def remove_assignment(self, m, cc):
+        assignments = self.assignments[m.instance_id]
+        assignments.remove(cc)
+
+    def clear_assignments(self, m):
+        del self.assignments[m.instance_id]
+
     def assignments_for_machine(self, m):
         return self.assignments[m.instance_id]
 
@@ -102,14 +109,79 @@ class PlacementController:
         return assignments
 
 
-class PlacementView(WidgetWrap):
-    """Handles display of machines and services.
-    """
-
-    def __init__(self, controller):
+class MachineWidget(WidgetWrap):
+    def __init__(self, machine, controller):
+        self.machine = machine
         self.controller = controller
         w = self.build_widgets()
+        self.update()
         super().__init__(w)
+
+    def build_widgets(self):
+        self.machine_info_widget = Text(repr(self.machine))
+        self.assignments_widget = Text("")
+        self.change_button = Button("clear", on_press=self.do_clear)
+        return Pile([self.machine_info_widget,
+                     self.assignments_widget,
+                     self.change_button])
+
+    def do_clear(self, sender):
+        self.controller.clear_assignments(self.machine)
+
+    def update(self):
+        self.assignments = self.controller.assignments_for_machine(
+            self.machine)
+
+        astr = 'assignments: ' + ', '.join([c.display_name for c in
+                                            self.assignments])
+        self.assignments_widget.set_text(astr)
+
+
+class ServiceWidget(WidgetWrap):
+    def __init__(self, charm_class, controller):
+        self.charm_class = charm_class
+        self.controller = controller
+        w = self.build_widgets()
+        self.update()
+        super().__init__(w)
+
+    def build_widgets(self):
+        self.charm_info_widget = Text(self.charm_class.display_name)
+        self.assignment_widget = Text("")
+        self.change_button = Button("clear",
+                                    on_press=self.do_clear)
+        return Pile([self.charm_info_widget,
+                     self.assignment_widget,
+                     Padding(self.change_button, width='pack', align='right')])
+
+    def do_clear(self, sender):
+        m = self.controller.machine_for_charm(self.charm_class)
+        self.controller.remove_assignment(m, self.charm_class)
+
+    def update(self):
+        m = self.controller.machine_for_charm(self.charm_class)
+        self.assignment_widget.set_text(repr(m))
+
+
+class PlacementView(WidgetWrap):
+    """Handles display of machines and services.
+
+    displays nothing if self.controller is not set.
+    set it to a PlacementController.
+    """
+
+    def __init__(self):
+        self.controller = None
+        self.machine_widgets = []
+        self.service_widgets = []
+        w = self.build_widgets()
+        super().__init__(w)
+
+    def update_from_controller(self, controller):
+        self.controller = controller
+
+        self.update_machine_widgets()
+        self.update_service_widgets()
 
     def scroll_down(self):
         pass
@@ -118,49 +190,51 @@ class PlacementView(WidgetWrap):
         pass
 
     def build_widgets(self):
-        self.machine_list = Pile([Text("Machines")] +
-                                 self.machine_widgets())
+        self.update_machine_widgets()
+        self.machine_pile = Pile([Text("Machines")] +
+                                 self.machine_widgets)
 
-        self.service_list = Pile([Text("Services")] +
-                                 self.service_widgets())
+        self.update_service_widgets()
+        self.service_pile = Pile([Text("Services")] +
+                                 self.service_widgets)
         self.info_pane = Pile([Text("Info?")])
 
-        cols = Columns([self.machine_list,
-                        self.service_list,
+        cols = Columns([self.machine_pile,
+                        self.service_pile,
                         self.info_pane])
 
         return Filler(cols, valign='top')
 
-    def machine_widgets(self):
-        mw = []
+    def update_machine_widgets(self):
+        if self.controller is None:
+            return
+
+        def find_widget(m):
+            return next((mw for mw in self.machine_widgets if
+                         mw.machine.instance_id == m.instance_id), None)
+
         for m in self.controller.machines():
-            mw += [Padding(self.widget_for_machine(m),
-                           min_width=24,
-                           left=2, right=2),
-                   Button("change"),
-                   Divider()]
-        return mw
+            mw = find_widget(m)
+            if mw is None:
+                mw = MachineWidget(m, self.controller)
+                self.machine_widgets.append(mw)
+                options = self.machine_pile.options()
+                self.machine_pile.contents.append((mw, options))
+            mw.update()
 
-    def widget_for_machine(self, machine):
-        assignments = self.controller.assignments_for_machine(machine)
+    def update_service_widgets(self):
+        if self.controller is None:
+            return
 
-        astr = 'assignments: ' + ', '.join([c.display_name for c in
-                                            assignments])
+        def find_widget(cc):
+            return next((sw for sw in self.service_widgets if
+                         sw.charm_class.charm_name == cc.charm_name), None)
 
-        return Pile([Text(repr(machine)),
-                     Text(astr)])
-
-    def service_widgets(self):
-        sw = []
         for cc in self.controller.charm_classes():
-            sw += [Padding(self.widget_for_charm_class(cc),
-                           min_width=24,
-                           left=2, right=2),
-                   Button("change"),
-                   Divider()]
-        return sw
-
-    def widget_for_charm_class(self, cc):
-        m = self.controller.machine_for_charm(cc)
-        return Pile([Text(cc.display_name),
-                     Text(repr(m))])
+            sw = find_widget(cc)
+            if sw is None:
+                sw = ServiceWidget(cc, self.controller)
+                self.service_widgets.append(sw)
+                options = self.service_pile.options()
+                self.service_pile.contents.append((sw, options))
+            sw.update()
