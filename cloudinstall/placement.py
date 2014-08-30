@@ -25,6 +25,8 @@ from cloudinstall.utils import load_charms
 
 log = logging.getLogger('cloudinstall.placement')
 
+BUTTON_SIZE = 12
+
 
 class PlaceholderMachine:
     """A dummy machine that doesn't map to an existing maas machine"""
@@ -32,6 +34,10 @@ class PlaceholderMachine:
     def __init__(self, instance_id, name):
         self.instance_id = instance_id
         self.name = name        # TODO name or display_name or what?
+
+    @property
+    def hostname(self):
+        return self.name
 
     def __repr__(self):
         return "<Placeholder Machine: {}>".format(self.name)
@@ -118,12 +124,15 @@ class MachineWidget(WidgetWrap):
         super().__init__(w)
 
     def build_widgets(self):
-        self.machine_info_widget = Text(repr(self.machine))
+        self.machine_info_widget = Text("\N{TAPE DRIVE} {}".format(
+            self.machine.hostname))
         self.assignments_widget = Text("")
         self.change_button = Button("clear", on_press=self.do_clear)
-        return Pile([self.machine_info_widget,
-                     self.assignments_widget,
-                     self.change_button])
+        p = Pile([self.machine_info_widget,
+                  self.assignments_widget,
+                  Padding(self.change_button,
+                          width=BUTTON_SIZE, align='right')])
+        return Padding(p, left=2, right=2)
 
     def do_clear(self, sender):
         self.controller.clear_assignments(self.machine)
@@ -132,7 +141,7 @@ class MachineWidget(WidgetWrap):
         self.assignments = self.controller.assignments_for_machine(
             self.machine)
 
-        astr = 'assignments: ' + ', '.join([c.display_name for c in
+        astr = '  assignments: ' + ', '.join([c.display_name for c in
                                             self.assignments])
         self.assignments_widget.set_text(astr)
 
@@ -146,21 +155,30 @@ class ServiceWidget(WidgetWrap):
         super().__init__(w)
 
     def build_widgets(self):
-        self.charm_info_widget = Text(self.charm_class.display_name)
+        self.charm_info_widget = Text("\N{GEAR} {}".format(
+            self.charm_class.display_name))
         self.assignment_widget = Text("")
         self.change_button = Button("clear",
                                     on_press=self.do_clear)
-        return Pile([self.charm_info_widget,
-                     self.assignment_widget,
-                     Padding(self.change_button, width='pack', align='right')])
+        p = Pile([self.charm_info_widget,
+                  self.assignment_widget,
+                  Padding(self.change_button,
+                          width=BUTTON_SIZE, align='right')])
+        return Padding(p, left=2, right=2)
 
     def do_clear(self, sender):
         m = self.controller.machine_for_charm(self.charm_class)
-        self.controller.remove_assignment(m, self.charm_class)
+        if m is not None:
+            self.controller.remove_assignment(m, self.charm_class)
 
     def update(self):
         m = self.controller.machine_for_charm(self.charm_class)
-        self.assignment_widget.set_text(repr(m))
+        if m is None:
+            self.assignment_widget.set_text("  \N{DOTTED CIRCLE} Unassigned")
+        else:
+            self.assignment_widget.set_text("  \N{TAPE DRIVE} {}".format(
+            m.hostname))
+
 
 
 class PlacementView(WidgetWrap):
