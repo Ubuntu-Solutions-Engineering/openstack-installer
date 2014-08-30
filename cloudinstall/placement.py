@@ -208,6 +208,8 @@ class PlacementView(WidgetWrap):
         pass
 
     def build_widgets(self):
+        self.charm_store_pile = Pile([Text("Add Charms")])
+
         self.update_machine_widgets()
         self.machine_pile = Pile([Text("Machines")] +
                                  self.machine_widgets)
@@ -217,9 +219,9 @@ class PlacementView(WidgetWrap):
                                  self.service_widgets)
         self.info_pane = Pile([Text("Info?")])
 
-        cols = Columns([self.machine_pile,
+        cols = Columns([self.charm_store_pile,
                         self.service_pile,
-                        self.info_pane])
+                        self.machine_pile])
 
         return Filler(cols, valign='top')
 
