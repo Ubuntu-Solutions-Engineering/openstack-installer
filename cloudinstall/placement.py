@@ -18,14 +18,14 @@ import logging
 
 import pprint
 
-from urwid import (Button, Columns, Filler, GridFlow,
-                   Padding, Pile, Text, WidgetWrap)
+from urwid import (Button, Columns, Divider, Filler, GridFlow, LineBox,
+                   Overlay, Padding, Pile, Text, WidgetWrap)
 
 from cloudinstall.utils import load_charms
 
 log = logging.getLogger('cloudinstall.placement')
 
-BUTTON_SIZE = 12
+BUTTON_SIZE = 20
 
 
 class PlaceholderMachine:
@@ -33,11 +33,31 @@ class PlaceholderMachine:
 
     def __init__(self, instance_id, name):
         self.instance_id = instance_id
-        self.name = name        # TODO name or display_name or what?
+        self.display_name = name
+        self.constraints = defaultdict(lambda: '-')
+
+    @property
+    def arch(self):
+        return self.constraints['arch']
+
+    @property
+    def cpu_cores(self):
+        return self.constraints['cpu_cores']
+
+    @property
+    def mem(self):
+        return self.constraints['mem']
+
+    @property
+    def storage(self):
+        return self.constraints['storage']
 
     @property
     def hostname(self):
-        return self.name
+        return self.display_name
+
+    def matches(self, constraints):
+        return True             # TODO
 
     def __repr__(self):
         return "<Placeholder Machine: {}>".format(self.name)
@@ -61,18 +81,21 @@ class PlacementController:
                 if not m.__charm_class__.disabled]
 
     def assign(self, instance_id, charm_class):
-        for m, l in self.assignments.items():
-            if charm_class in l:
-                l.remove(charm_class)
-        self.assignments[instance_id] = charm_class
+        if not charm_class.allow_multi_units:
+            for m, l in self.assignments.items():
+                if charm_class in l:
+                    l.remove(charm_class)
+        self.assignments[instance_id].append(charm_class)
 
-    def machine_for_charm(self, charm_class):
-        machines = self.machines()
-        for m_id, l in self.assignments.items():
-            if charm_class in l:
-                return next((m for m in machines
-                             if m.instance_id == m_id), None)
-        return None
+    def machines_for_charm(self, charm_class):
+        all_machines = self.machines()
+        machines = []
+        for m_id, assignment_list in self.assignments.items():
+            if charm_class in assignment_list:
+                m = next((m for m in all_machines
+                          if m.instance_id == m_id), None)
+                machines.append(m)
+        return machines
 
     def remove_assignment(self, m, cc):
         assignments = self.assignments[m.instance_id]
@@ -116,18 +139,32 @@ class PlacementController:
 
 
 class MachineWidget(WidgetWrap):
-    def __init__(self, machine, controller, actions):
+    def __init__(self, machine, controller, actions=None,
+                 show_hardware=False):
         self.machine = machine
         self.controller = controller
-        self.actions = actions
+        if actions is None:
+            self.actions = []
+        else:
+            self.actions = actions
+        self.show_hardware = show_hardware
         w = self.build_widgets()
         self.update()
         super().__init__(w)
+
+    def hardware_info_markup(self):
+        m = self.machine
+        return [('label', 'arch'), ' {}  '.format(m.arch),
+                ('label', 'cores'), ' {}  '.format(m.cpu_cores),
+                ('label', 'mem'), ' {}  '.format(m.mem),
+                ('label', 'storage'), ' {}'.format(m.storage)]
 
     def build_widgets(self):
         self.machine_info_widget = Text("\N{TAPE DRIVE} {}".format(
             self.machine.hostname))
         self.assignments_widget = Text("")
+
+        self.hardware_widget = Text(self.hardware_info_markup())
 
         buttons = []
         for label, func in self.actions:
@@ -136,26 +173,37 @@ class MachineWidget(WidgetWrap):
 
         button_grid = GridFlow(buttons, BUTTON_SIZE, 1, 1, 'right')
 
-        p = Pile([self.machine_info_widget,
-                  self.assignments_widget,
-                  button_grid])
+        pl = [self.machine_info_widget, self.assignments_widget]
+        if self.show_hardware:
+            pl.append(self.hardware_widget)
+        pl.append(button_grid)
+
+        p = Pile(pl)
 
         return Padding(p, left=2, right=2)
 
     def update(self):
-        self.assignments = self.controller.assignments_for_machine(
-            self.machine)
+        al = self.controller.assignments_for_machine(self.machine)
+        astr = "  "
+        if len(al) == 0:
+            astr += "\N{EMPTY SET}"
+        else:
+            astr += ", ".join(["\N{GEAR} {}".format(c.display_name)
+                               for c in al])
 
-        astr = '  assignments: ' + ', '.join([c.display_name for c in
-                                              self.assignments])
         self.assignments_widget.set_text(astr)
 
 
 class ServiceWidget(WidgetWrap):
-    def __init__(self, charm_class, controller, actions):
+    def __init__(self, charm_class, controller, actions=None,
+                 show_constraints=False):
         self.charm_class = charm_class
         self.controller = controller
-        self.actions = actions
+        if actions is None:
+            self.actions = []
+        else:
+            self.actions = actions
+        self.show_constraints = show_constraints
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -166,7 +214,15 @@ class ServiceWidget(WidgetWrap):
     def build_widgets(self):
         self.charm_info_widget = Text("\N{GEAR} {}".format(
             self.charm_class.display_name))
-        self.assignment_widget = Text("")
+        self.assignments_widget = Text("")
+
+        if self.charm_class.constraints is None:
+            c_str = "no constraints set"
+        else:
+            cpairs = ["{}={}".format(k, v) for k, v in
+                      self.charm_class.constraints.items()]
+            c_str = 'constraints: ' + ', '.join(cpairs)
+        self.constraints_widget = Text(c_str)
 
         buttons = []
         for label, func in self.actions:
@@ -175,18 +231,24 @@ class ServiceWidget(WidgetWrap):
 
         button_grid = GridFlow(buttons, BUTTON_SIZE, 1, 1, 'right')
 
-        p = Pile([self.charm_info_widget,
-                  self.assignment_widget,
-                  button_grid])
+        pl = [self.charm_info_widget, self.assignments_widget]
+        if self.show_constraints:
+            pl.append(self.constraints_widget)
+        pl.append(button_grid)
+
+        p = Pile(pl)
         return Padding(p, left=2, right=2)
 
     def update(self):
-        m = self.controller.machine_for_charm(self.charm_class)
-        if m is None:
-            self.assignment_widget.set_text("  \N{DOTTED CIRCLE} Unassigned")
+        ml = self.controller.machines_for_charm(self.charm_class)
+
+        t = "  "
+        if len(ml) == 0:
+            t += "\N{DOTTED CIRCLE}"
         else:
-            self.assignment_widget.set_text("  \N{TAPE DRIVE} {}".format(
-                m.hostname))
+            t += ", ".join(["\N{TAPE DRIVE} {}".format(m.hostname)
+                            for m in ml])
+        self.assignments_widget.set_text(t)
 
 
 class MachinesList(WidgetWrap):
@@ -196,12 +258,19 @@ class MachinesList(WidgetWrap):
     actions - a list of ('label', function) pairs that wil be used to
     create buttons for each machine.  The machine will be passed to
     the function as userdata.
+
+    constraints - a dict of constraints to filter the machines list.
+    only machines matching all the constraints will be shown.
     """
 
-    def __init__(self, controller, actions):
+    def __init__(self, controller, actions, constraints=None):
         self.controller = controller
         self.actions = actions
         self.machine_widgets = []
+        if constraints is None:
+            self.constraints = {}
+        else:
+            self.constraints = constraints
         w = self.build_widgets()
         super().__init__(w)
 
@@ -212,7 +281,11 @@ class MachinesList(WidgetWrap):
         return True
 
     def build_widgets(self):
-        self.machine_pile = Pile([Text("Machines")] +
+        if len(self.constraints) > 0:
+            cstr = " matching constraints"
+        else:
+            cstr = ""
+        self.machine_pile = Pile([Text("Machines" + cstr)] +
                                  self.machine_widgets)
         return self.machine_pile
 
@@ -222,7 +295,8 @@ class MachinesList(WidgetWrap):
             return next((mw for mw in self.machine_widgets if
                          mw.machine.instance_id == m.instance_id), None)
 
-        for m in self.controller.machines():
+        for m in [m for m in self.controller.machines()
+                  if m.matches(self.constraints)]:
             mw = find_widget(m)
             if mw is None:
                 mw = self.add_machine_widget(m)
@@ -283,6 +357,97 @@ class ServicesList(WidgetWrap):
         return sw
 
 
+class MachineChooser(WidgetWrap):
+    """Presents list of machines to assign a service to.
+    Supports multiple selection if the service does.
+    """
+
+    def __init__(self, controller, charm_class, parent_widget):
+        self.controller = controller
+        self.charm_class = charm_class
+        self.parent_widget = parent_widget
+        w = self.build_widgets()
+        super().__init__(w)
+
+    def build_widgets(self):
+
+        if self.charm_class.allow_multi_units:
+            machine_string = "machines"
+            plural_string = "s"
+        else:
+            machine_string = "a machine"
+            plural_string = ""
+        instructions = Text("Select {} to host {}".format(
+            machine_string, self.charm_class.display_name))
+
+        self.service_widget = ServiceWidget(self.charm_class,
+                                            self.controller,
+                                            show_constraints=True)
+
+        constraints = self.charm_class.constraints
+        self.machines_list = MachinesList(self.controller,
+                                          [('Select', self.do_select)],
+                                          constraints=constraints)
+        self.machines_list.update()
+        p = Pile([instructions, Divider(), self.service_widget,
+                  Divider('-'), self.machines_list,
+                  GridFlow([Button('Close',
+                                   on_press=self.close_pressed)],
+                           BUTTON_SIZE, 1, 1, 'right')])
+
+        return LineBox(p, title="Select Machine{}".format(plural_string))
+
+    def do_select(self, sender, machine):
+        self.controller.assign(machine.instance_id, self.charm_class)
+        self.machines_list.update()
+        self.service_widget.update()
+
+    def close_pressed(self, sender):
+        self.parent_widget.remove_overlay(self)
+
+
+class ServiceChooser(WidgetWrap):
+    """Presents list of services to put on a machine.
+
+    Supports multiple selection, implying separate containers using
+    --to.
+
+    """
+
+    def __init__(self, controller, machine, parent_widget):
+        self.controller = controller
+        self.machine = machine
+        self.parent_widget = parent_widget
+        w = self.build_widgets()
+        super().__init__(w)
+
+    def build_widgets(self):
+
+        instructions = Text("Select services to add to {}".format(
+            self.machine.hostname))
+
+        self.machine_widget = MachineWidget(self.machine,
+                                            self.controller,
+                                            show_hardware=True)
+        self.services_list = ServicesList(self.controller,
+                                          [('Select', self.do_select)])
+        self.services_list.update()
+        p = Pile([instructions, Divider(), self.machine_widget,
+                  Divider('-'), self.services_list,
+                  GridFlow([Button('Close',
+                                   on_press=self.close_pressed)],
+                           BUTTON_SIZE, 1, 1, 'right')])
+
+        return LineBox(p, title="Select Services")
+
+    def do_select(self, sender, charm_class):
+        self.controller.assign(self.machine.instance_id, charm_class)
+        self.services_list.update()
+
+    def close_pressed(self, sender):
+        self.parent_widget.remove_overlay(self)
+
+
 class PlacementView(WidgetWrap):
     """Handles display of machines and services.
 
@@ -310,11 +475,15 @@ class PlacementView(WidgetWrap):
         self.charm_store_pile = Pile([Text("Add Charms")])
 
         self.machines_list = MachinesList(self.controller,
-                                          [('Clear', self.do_clear_machine)])
+                                          [('Clear', self.do_clear_machine),
+                                           ('Pick Services',
+                                            self.do_show_service_chooser)])
         self.machines_list.update()
 
         self.services_list = ServicesList(self.controller,
-                                          [('Clear', self.do_clear_service)])
+                                          [('Clear', self.do_clear_service),
+                                           ('Pick Machine(s)',
+                                            self.do_show_machine_chooser)])
         self.services_list.update()
 
         cols = Columns([self.charm_store_pile,
@@ -327,6 +496,30 @@ class PlacementView(WidgetWrap):
         self.controller.clear_assignments(machine)
 
     def do_clear_service(self, sender, charm_class):
-        m = self.controller.machine_for_charm(charm_class)
-        if m is not None:
+        for m in self.controller.machines_for_charm(charm_class):
             self.controller.remove_assignment(m, charm_class)
+
+    def do_show_service_chooser(self, sender, machine):
+        self.show_overlay(Filler(ServiceChooser(self.controller,
+                                                machine,
+                                                self)))
+
+    def do_show_machine_chooser(self, sender, charm_class):
+        self.show_overlay(Filler(MachineChooser(self.controller,
+                                                charm_class,
+                                                self)))
+
+    def show_overlay(self, overlay_widget):
+        self.orig_w = self._w
+        self._w = Overlay(top_w=overlay_widget,
+                          bottom_w=self._w,
+                          align='center',
+                          width=('relative', 60),
+                          min_width=80,
+                          valign='middle',
+                          height=('relative', 80))
+
+    def remove_overlay(self, overlay_widget):
+        # urwid note: we could also get orig_w as
+        # self._w.contents[0][0], but this is clearer:
+        self._w = self.orig_w
