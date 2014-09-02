@@ -372,7 +372,14 @@ def mb_to_human(num):
         return '0 B'
 
     i = 0
-    while num >= 1024 and i < len(suffixes) -1:
+    while num >= 1024 and i < len(suffixes)-1:
         num /= 1024
         i += 1
     return "{:.2f} {}".format(num, suffixes[i])
+
+
+def format_constraint(k, v):
+    vs = str(v)
+    if vs.isdecimal():
+        vs = mb_to_human(v)
+    return "{}={}".format(k, vs)
