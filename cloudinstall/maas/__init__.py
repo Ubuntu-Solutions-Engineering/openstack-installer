@@ -17,8 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from cloudinstall.machine import Machine
-import time
+from cloudinstall.utils import human_to_mb
 from enum import Enum, unique
+import logging
+import time
+
+
+log = logging.getLogger('cloudinstall.maas')
 
 
 @unique
@@ -192,10 +197,36 @@ class MaasMachine(Machine):
         return self.machine.get('owner', 'root')
 
     def matches(self, constraints):
-        return True
-        # TODO
-        # for k, v in constraints.items():
-        #     if self.machine.
+        """Checks hardware against constraints.
+        returns tuple of (bool, list-of-failed constraints)
+        success will be (True, [])
+        """
+        kmap = dict(mem='memory',
+                    arch='architecture',
+                    storage='storage',
+                    cpu_cores='cpu_count')
+        kmap['root-disk'] = 'storage'
+
+        cons_checks = []
+
+        if constraints is None:
+            return (True, [])
+
+        for k, v in constraints.items():
+            if k == 'arch':
+                if self.machine.get(kmap[k]) != v:
+                    cons_checks.append(k)
+            else:
+                mval = self.machine.get(kmap[k])
+                if not str(v).isdecimal():
+                    v = human_to_mb(v)
+
+                if mval < v:
+                    cons_checks.append(k)
+
+        rval = (len(cons_checks) == 0), cons_checks
+        log.debug("returning {}".format(rval))
+        return rval
 
     def __repr__(self):
         return "<MaasMachine({dns_name},{state},{mem}," \

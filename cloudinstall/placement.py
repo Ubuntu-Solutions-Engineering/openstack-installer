@@ -21,7 +21,7 @@ import pprint
 from urwid import (Button, Columns, Divider, Filler, GridFlow, LineBox,
                    Overlay, Padding, Pile, Text, WidgetWrap)
 
-from cloudinstall.utils import load_charms
+from cloudinstall.utils import load_charms, format_constraint
 
 log = logging.getLogger('cloudinstall.placement')
 
@@ -34,7 +34,7 @@ class PlaceholderMachine:
     def __init__(self, instance_id, name):
         self.instance_id = instance_id
         self.display_name = name
-        self.constraints = defaultdict(lambda: '-')
+        self.constraints = defaultdict(lambda: '')
 
     @property
     def arch(self):
@@ -57,7 +57,7 @@ class PlaceholderMachine:
         return self.display_name
 
     def matches(self, constraints):
-        return True             # TODO
+        return (True, [])
 
     def __repr__(self):
         return "<Placeholder Machine: {}>".format(self.name)
@@ -164,7 +164,7 @@ class MachineWidget(WidgetWrap):
             self.machine.hostname))
         self.assignments_widget = Text("")
 
-        self.hardware_widget = Text(self.hardware_info_markup())
+        self.hardware_widget = Text(["  "] + self.hardware_info_markup())
 
         buttons = []
         for label, func in self.actions:
@@ -217,11 +217,11 @@ class ServiceWidget(WidgetWrap):
         self.assignments_widget = Text("")
 
         if self.charm_class.constraints is None:
-            c_str = "no constraints set"
+            c_str = "  no constraints set"
         else:
-            cpairs = ["{}={}".format(k, v) for k, v in
+            cpairs = [format_constraint(k, v) for k, v in
                       self.charm_class.constraints.items()]
-            c_str = 'constraints: ' + ', '.join(cpairs)
+            c_str = "  constraints: " + ', '.join(cpairs)
         self.constraints_widget = Text(c_str)
 
         buttons = []
@@ -261,9 +261,14 @@ class MachinesList(WidgetWrap):
 
     constraints - a dict of constraints to filter the machines list.
     only machines matching all the constraints will be shown.
+
+    show_hardware - bool, whether or not to show the hardware details
+    for each of the machines
+
     """
 
-    def __init__(self, controller, actions, constraints=None):
+    def __init__(self, controller, actions, constraints=None,
+                 show_hardware=False):
         self.controller = controller
         self.actions = actions
         self.machine_widgets = []
@@ -271,6 +276,7 @@ class MachinesList(WidgetWrap):
             self.constraints = {}
         else:
             self.constraints = constraints
+        self.show_hardware = show_hardware
         w = self.build_widgets()
         super().__init__(w)
 
@@ -295,15 +301,17 @@ class MachinesList(WidgetWrap):
             return next((mw for mw in self.machine_widgets if
                          mw.machine.instance_id == m.instance_id), None)
 
-        for m in [m for m in self.controller.machines()
-                  if m.matches(self.constraints)]:
+        for m in self.controller.machines():
+            if not m.matches(self.constraints)[0]:
+                continue
             mw = find_widget(m)
             if mw is None:
                 mw = self.add_machine_widget(m)
             mw.update()
 
     def add_machine_widget(self, machine):
-        mw = MachineWidget(machine, self.controller, self.actions)
+        mw = MachineWidget(machine, self.controller, self.actions,
+                           self.show_hardware)
         self.machine_widgets.append(mw)
         options = self.machine_pile.options()
         self.machine_pile.contents.append((mw, options))
@@ -317,12 +325,21 @@ class ServicesList(WidgetWrap):
     actions - a list of ('label', function) pairs that wil be used to
     create buttons for each machine.  The machine will be passed to
     the function as userdata.
+
+    machine - a machine instance to query for constraint checking
+
+    show_constraints - bool, whether or not to show the constraints
+    for the various services
+
     """
 
-    def __init__(self, controller, actions):
+    def __init__(self, controller, actions, machine=None,
+                 show_constraints=False):
         self.controller = controller
         self.actions = actions
         self.service_widgets = []
+        self.machine = machine
+        self.show_constraints = show_constraints
         w = self.build_widgets()
         super().__init__(w)
 
@@ -344,13 +361,16 @@ class ServicesList(WidgetWrap):
                          sw.charm_class.charm_name == cc.charm_name), None)
 
         for cc in self.controller.charm_classes():
+            if self.machine and not self.machine.matches(cc.constraints)[0]:
+                continue
             sw = find_widget(cc)
             if sw is None:
                 sw = self.add_service_widget(cc)
             sw.update()
 
     def add_service_widget(self, charm_class):
-        sw = ServiceWidget(charm_class, self.controller, self.actions)
+        sw = ServiceWidget(charm_class, self.controller, self.actions,
+                           self.show_constraints)
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))
@@ -387,7 +407,8 @@ class MachineChooser(WidgetWrap):
         constraints = self.charm_class.constraints
         self.machines_list = MachinesList(self.controller,
                                           [('Select', self.do_select)],
-                                          constraints=constraints)
+                                          constraints=constraints,
+                                          show_hardware=True)
         self.machines_list.update()
         p = Pile([instructions, Divider(), self.service_widget,
                   Divider('-'), self.machines_list,
@@ -430,7 +451,9 @@ class ServiceChooser(WidgetWrap):
                                             self.controller,
                                             show_hardware=True)
         self.services_list = ServicesList(self.controller,
-                                          [('Select', self.do_select)])
+                                          [('Select', self.do_select)],
+                                          machine=self.machine,
+                                          show_constraints=True)
         self.services_list.update()
         p = Pile([instructions, Divider(), self.machine_widget,
                   Divider('-'), self.services_list,
