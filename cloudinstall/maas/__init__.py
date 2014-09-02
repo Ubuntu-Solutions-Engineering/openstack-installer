@@ -191,6 +191,12 @@ class MaasMachine(Machine):
         """
         return self.machine.get('owner', 'root')
 
+    def matches(self, constraints):
+        return True
+        # TODO
+        # for k, v in constraints.items():
+        #     if self.machine.
+
     def __repr__(self):
         return "<MaasMachine({dns_name},{state},{mem}," \
             "{storage},{cpus})>".format(dns_name=self.hostname,
@@ -198,6 +204,9 @@ class MaasMachine(Machine):
                                         mem=self.mem,
                                         storage=self.storage,
                                         cpus=self.cpu_cores)
+
+    def __str__(self):
+        return repr(self)
 
 
 class MaasState:
