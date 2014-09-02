@@ -27,6 +27,7 @@ configBindOptions()
 	cat <<"EOF"
 options {
 	directory "/var/cache/bind";
+	dnssec-validation auto;
 
 	forwarders {
 EOF
@@ -36,6 +37,7 @@ EOF
 	cat <<"EOF"
 	};
 
+	include "/etc/bind/maas/named.conf.options.inside.maas";
 	auth-nxdomain no;
 	listen-on-v6 { any; };
 };
