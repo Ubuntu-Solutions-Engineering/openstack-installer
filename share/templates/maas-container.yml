@@ -10,6 +10,7 @@ users:
       passwd: ubuntu
 apt_sources:
     - source: "ppa:cloud-installer/ppa"
+    - source: "ppa:maas-maintainers/stable"
 packages:
     - maas
     - maas-dhcp
