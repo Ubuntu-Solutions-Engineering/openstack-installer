@@ -126,24 +126,29 @@ class PlacementController:
 
         maas_machines = self.maas_state.machines()
 
-        def machine_or_first_avail(index):
-            if len(maas_machines) > index:
-                return maas_machines[index]
-            else:
-                return self.first_available
+        def satisfying_machine_or_first_avail(constraints):
+            for machine in maas_machines:
+                if satisfies(machine, constraints):
+                    maas_machines.remove(machine)
+                    return machine
 
-        cur_machine = 0
-        m_controller = machine_or_first_avail(cur_machine)
-        cur_machine += 1
+            return self.first_available
+
+        isolated_charms, controller_charms = [], []
 
         for charm_class in self.charm_classes():
-
             if charm_class.isolate:
-                machine = machine_or_first_avail(cur_machine)
-                cur_machine += 1
-                assignments[machine.instance_id].append(charm_class)
+                isolated_charms.append(charm_class)
             else:
-                assignments[m_controller.instance_id].append(charm_class)
+                controller_charms.append(charm_class)
+
+        for charm_class in isolated_charms:
+            machine = satisfying_machine_or_first_avail(charm_class.constraints)
+            assignments[machine.instance_id].append(charm_class)
+
+        controller_machine = satisfying_machine_or_first_avail({})
+        for charm_class in controller_charms:
+            assignments[controller_machine.instance_id].append(charm_class)
 
         log.debug("Assignments generated: " + pprint.pformat(assignments))
         return assignments
