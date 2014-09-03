@@ -16,6 +16,60 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+from cloudinstall.utils import human_to_mb
+
+log = logging.getLogger('cloudinstall.machine')
+
+
+def satisfies(machine, constraints):
+    """Evaluates whether a machine's hardware matches constraints.
+
+    returns tuple of (bool, list-of-failed constraint keys)
+
+    success will be (True, [])
+
+    If constraints is None or an empty dict, then any machine will be
+    evaluated as satisfying the constraints.
+
+    Note that if a machine has '*' as a value, that value satisfies
+    any constraint.
+
+    """
+    kmap = dict(mem='memory',
+                arch='architecture',
+                storage='storage',
+                cpu_cores='cpu_count')
+    kmap['root-disk'] = 'storage'
+
+    cons_checks = []
+
+    if constraints is None:
+        return (True, [])
+
+    for k, v in constraints.items():
+        if k == 'arch':
+            mval = machine.machine[kmap[k]]
+            if mval != '*' and mval != v:
+                cons_checks.append(k)
+        else:
+            mval = machine.machine[kmap[k]]
+
+            if mval == '*':
+                # '*' always satisfies.
+                continue
+
+            if not str(v).isdecimal():
+                v = human_to_mb(v)
+
+            if mval < v:
+                cons_checks.append(k)
+
+    rval = (len(cons_checks) == 0), cons_checks
+    log.debug("returning {} for satisfies({},{})".format(
+        rval, machine, constraints))
+    return rval
+
 
 class Machine:
     """ Base machine class """
