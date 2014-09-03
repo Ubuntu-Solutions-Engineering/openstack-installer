@@ -21,6 +21,7 @@ import pprint
 from urwid import (Button, Columns, Divider, Filler, GridFlow, LineBox,
                    Overlay, Padding, Pile, Text, WidgetWrap)
 
+from cloudinstall.machine import satisfies
 from cloudinstall.utils import load_charms, format_constraint
 
 log = logging.getLogger('cloudinstall.placement')
@@ -34,7 +35,11 @@ class PlaceholderMachine:
     def __init__(self, instance_id, name):
         self.instance_id = instance_id
         self.display_name = name
-        self.constraints = defaultdict(lambda: '')
+        self.constraints = defaultdict(lambda: '*')
+
+    @property
+    def machine(self):
+        return self.constraints
 
     @property
     def arch(self):
@@ -56,11 +61,8 @@ class PlaceholderMachine:
     def hostname(self):
         return self.display_name
 
-    def matches(self, constraints):
-        return (True, [])
-
     def __repr__(self):
-        return "<Placeholder Machine: {}>".format(self.name)
+        return "<Placeholder Machine: {}>".format(self.display_name)
 
 
 class PlacementController:
@@ -302,7 +304,7 @@ class MachinesList(WidgetWrap):
                          mw.machine.instance_id == m.instance_id), None)
 
         for m in self.controller.machines():
-            if not m.matches(self.constraints)[0]:
+            if not satisfies(m, self.constraints)[0]:
                 continue
             mw = find_widget(m)
             if mw is None:
@@ -361,7 +363,8 @@ class ServicesList(WidgetWrap):
                          sw.charm_class.charm_name == cc.charm_name), None)
 
         for cc in self.controller.charm_classes():
-            if self.machine and not self.machine.matches(cc.constraints)[0]:
+            if self.machine and not satisfies(self.machine,
+                                              cc.constraints)[0]:
                 continue
             sw = find_widget(cc)
             if sw is None:
