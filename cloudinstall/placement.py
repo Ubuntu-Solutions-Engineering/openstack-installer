@@ -69,18 +69,27 @@ class PlacementController:
     """Keeps state of current machines and their assigned services.
     """
 
-    def __init__(self, maas_state):
+    def __init__(self, maas_state, opts):
         self.maas_state = maas_state
         self.assignments = defaultdict(list)  # instance_id -> [charm class]
         self.first_available = PlaceholderMachine("first-available",
                                                   "First Available")
+        self.opts = opts
 
     def machines(self):
         return [self.first_available] + self.maas_state.machines()
 
     def charm_classes(self):
-        return [m.__charm_class__ for m in load_charms()
-                if not m.__charm_class__.disabled]
+        cl = [m.__charm_class__ for m in load_charms()
+              if not m.__charm_class__.optional and
+              not m.__charm_class__.disabled]
+
+        if self.opts.enable_swift:
+            for m in load_charms():
+                n = m.__charm_class__.name()
+                if n == "swift-storage" or n == "swift-proxy":
+                    cl.append(m.__charm_class__)
+        return cl
 
     def assign(self, instance_id, charm_class):
         if not charm_class.allow_multi_units:

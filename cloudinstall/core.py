@@ -100,7 +100,7 @@ class DisplayController:
 
         self.current_state = ControllerState.PLACEMENT
         self.placement_controller = PlacementController(
-            self.maas_state)
+            self.maas_state, self.opts)
         self.placement_controller.set_all_assignments(
             self.placement_controller.gen_defaults())
 
