@@ -142,7 +142,8 @@ class DisplayController:
         self.redraw_screen()
 
     def render_placement_view(self):
-        self.ui.render_placement_view(self.placement_controller)
+        self.ui.render_placement_view(self,
+                                      self.placement_controller)
         self.redraw_screen()
 
     def redraw_screen(self):
@@ -283,6 +284,11 @@ class Controller(DisplayController):
         # Render nodeview, even though nothing is there yet.
         self.initialize()
 
+    def commit_placement(self):
+        self.current_state = ControllerState.SERVICES
+        self.render_nodes(self.nodes, self.juju_state, self.maas_state)
+        self.init_machine()
+
     @utils.async
     def init_machine(self):
         """ Handles initial deployment of a machine """
@@ -307,6 +313,8 @@ class Controller(DisplayController):
 
         # Step 2
         self.init_machine_setup()
+        self.deploy_using_placement()
+        self.enqueue_deployed_charms()
 
     def get_controller_machine(self):
         allocated = list(self.juju_state.machines_allocated())
@@ -412,9 +420,6 @@ class Controller(DisplayController):
                               'on machine {}'.format(
                                   self.machine.machine_id))
 
-        # Step 3
-        self.init_deploy_charms()
-
     def init_deploy_charms(self):
         """Deploy charms in order, waiting for any deferred charms.
         Then enqueue all charms for further processing and return.
@@ -489,7 +494,86 @@ class Controller(DisplayController):
 
                 time.sleep(5)
 
-        self.enqueue_deployed_charms()
+    def deploy_using_placement(self):
+        """Deploy charms using machine placement from placement controller,
+        waiting for any deferred charms.  Then enqueue all charms for
+        further processing and return.
+        """
+
+        self.info_message("Verifying service deployments")
+
+        charm_classes = sorted(self.placement_controller.charm_classes(),
+                               key=attrgetter('deploy_priority'))
+
+        def undeployed_charm_classes():
+            return [c for c in charm_classes
+                    if c not in self.deployed_charm_classes]
+
+        while len(undeployed_charm_classes()) > 0:
+            for charm_class in undeployed_charm_classes():
+                self.info_message("Checking if {c} is deployed".format(
+                    c=charm_class.display_name))
+
+                service_names = [s.service_name for s in
+                                 self.juju_state.services]
+
+                if charm_class.charm_name in service_names:
+                    self.info_message("{c} is already deployed, "
+                                      "skipping".format(
+                                          c=charm_class.display_name))
+                    self.deployed_charm_classes.append(charm_class)
+                    continue
+
+                err = self.try_deploy(charm_class)
+                name = charm_class.display_name
+                if err:
+                    self.info_message("{} is waiting for another service, will"
+                                      " re-try in a few seconds.".format(name))
+                    break
+                else:
+                    log.debug("Issued deploy for {}".format(name))
+                    self.deployed_charm_classes.append(charm_class)
+
+                self.juju_state.invalidate_status_cache()
+
+            num_remaining = len(undeployed_charm_classes())
+            if num_remaining > 0:
+                log.debug("{} charms pending deploy.".format(num_remaining))
+                log.debug("deployed_charm_classes={}".format(
+                    PrettyLog(self.deployed_charm_classes)))
+
+                time.sleep(5)
+
+    def try_deploy(self, charm_class):
+        "returns True if deploy is deferred and should be tried again."
+        # TODO for each placeholder, do a juju add-machine?  -- is
+        # that how we deal with ensuring that charms end up on the
+        # same placeholder?
+
+        # TODO: dealing with n > 1, machines_for_charm could just give us dupes
+        # TODO: how to deal with LXC?
+        charm = charm_class(juju=self.juju,
+                            juju_state=self.juju_state,
+                            ui=self.ui)
+
+        machines = self.placement_controller.machines_for_charm(charm_class)
+        errs = []
+        for m in machines:
+            self.info_message("Deploying {c} "
+                              "to machine {m}".format(
+                                  c=charm_class.display_name,
+                                  m=m.hostname))
+            # import pdb
+            # pdb.set_trace()
+            deploy_err = charm.deploy(m)
+            if deploy_err:
+                errs.append(m)
+
+        had_err = len(errs) > 0
+        if had_err:
+            log.warning("saw errors deploying to these machines: {}".format(
+                errs))
+        return had_err
 
     def enqueue_deployed_charms(self):
         """Send all deployed charms to CharmQueue for relation setting and
@@ -538,7 +622,7 @@ class Controller(DisplayController):
 
             self.info_message("Adding {} to environment".format(
                 charm_sel))
-            charm_q.add_setup(charm_sel)
+            charm_q.add_deploy(charm_sel)
             charm_q.add_relation(charm_sel)
             charm_q.add_post_proc(charm_sel)
 
@@ -555,12 +639,12 @@ class Controller(DisplayController):
                                               self.ui)
                         if not charm_dep.isolate:
                             charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
-                        charm_q.add_setup(charm_dep)
+                        charm_q.add_deploy(charm_dep)
                         charm_q.add_relation(charm_dep)
                         charm_q.add_post_proc(charm_dep)
 
             if not charm_q.is_running:
-                charm_q.watch_setup()
+                charm_q.watch_deploy()
                 charm_q.watch_relations()
                 charm_q.watch_post_proc()
                 charm_q.is_running = True

@@ -78,7 +78,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
             shutil.rmtree(dest)
         os.renames(src, dest)
 
-    def setup(self):
+    def deploy(self, machine):
         """Temporary override to get local copy of charm."""
 
         log.debug("downloading stable branch from github")
@@ -88,16 +88,18 @@ class CharmGlanceSimplestreamsSync(CharmBase):
         except:
             log.exception("problem downloading stable branch."
                           " Falling back to charm store version.")
-            return super().setup()
+            return super().deploy(machine)
 
-        kwds = dict(machine_id=self.machine_id,
+        self.add_machine_tag_constraint(machine)
+
+        kwds = dict(constraints=self.constraints_arg(),
                     repodir=CHARMS_DIR,
                     distro=CURRENT_DISTRO)
 
         # TODO: See if this is supported by juju api
         cmd = ('juju deploy --repository={repodir}'
                ' local:{distro}/glance-simplestreams-sync'
-               ' --to {machine_id}').format(**kwds)
+               ' --constraints {constraints}').format(**kwds)
 
         if self.charm_name in CHARM_CONFIG:
             cmd += ' --config ' + CHARM_CONFIG_FILENAME

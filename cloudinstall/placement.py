@@ -32,8 +32,11 @@ BUTTON_SIZE = 20
 class PlaceholderMachine:
     """A dummy machine that doesn't map to an existing maas machine"""
 
+    is_placeholder = True
+
     def __init__(self, instance_id, name):
         self.instance_id = instance_id
+        self.system_id = instance_id
         self.display_name = name
         self.constraints = defaultdict(lambda: '*')
 
@@ -127,8 +130,10 @@ class PlacementController:
         maas_machines = self.maas_state.machines()
 
         def satisfying_machine_or_first_avail(constraints):
+            log.debug("looking for machine to satisfy {}".format(constraints))
+
             for machine in maas_machines:
-                if satisfies(machine, constraints):
+                if satisfies(machine, constraints)[0]:
                     maas_machines.remove(machine)
                     return machine
 
@@ -143,8 +148,8 @@ class PlacementController:
                 controller_charms.append(charm_class)
 
         for charm_class in isolated_charms:
-            machine = satisfying_machine_or_first_avail(charm_class.constraints)
-            assignments[machine.instance_id].append(charm_class)
+            m = satisfying_machine_or_first_avail(charm_class.constraints)
+            assignments[m.instance_id].append(charm_class)
 
         controller_machine = satisfying_machine_or_first_avail({})
         for charm_class in controller_charms:
@@ -495,8 +500,9 @@ class PlacementView(WidgetWrap):
     set it to a PlacementController.
     """
 
-    def __init__(self, controller):
-        self.controller = controller
+    def __init__(self, display_controller, placement_controller):
+        self.display_controller = display_controller
+        self.placement_controller = placement_controller
         w = self.build_widgets()
         super().__init__(w)
         self.update()
@@ -512,15 +518,20 @@ class PlacementView(WidgetWrap):
         pass
 
     def build_widgets(self):
-        self.charm_store_pile = Pile([Text("Add Charms")])
+        pl = [Text("Add Charms"),
+              Padding(Button(('info', "DEPLOY NOW"),
+                             on_press=self.do_commit_and_deploy),
+                      align='center')]
 
-        self.machines_list = MachinesList(self.controller,
+        self.charm_store_pile = Pile(pl)
+
+        self.machines_list = MachinesList(self.placement_controller,
                                           [('Clear', self.do_clear_machine),
                                            ('Pick Services',
                                             self.do_show_service_chooser)])
         self.machines_list.update()
 
-        self.services_list = ServicesList(self.controller,
+        self.services_list = ServicesList(self.placement_controller,
                                           [('Clear', self.do_clear_service),
                                            ('Pick Machine(s)',
                                             self.do_show_machine_chooser)])
@@ -533,21 +544,24 @@ class PlacementView(WidgetWrap):
         return Filler(cols, valign='top')
 
     def do_clear_machine(self, sender, machine):
-        self.controller.clear_assignments(machine)
+        self.placement_controller.clear_assignments(machine)
 
     def do_clear_service(self, sender, charm_class):
-        for m in self.controller.machines_for_charm(charm_class):
-            self.controller.remove_assignment(m, charm_class)
+        for m in self.placement_controller.machines_for_charm(charm_class):
+            self.placement_controller.remove_assignment(m, charm_class)
 
     def do_show_service_chooser(self, sender, machine):
-        self.show_overlay(Filler(ServiceChooser(self.controller,
+        self.show_overlay(Filler(ServiceChooser(self.placement_controller,
                                                 machine,
                                                 self)))
 
     def do_show_machine_chooser(self, sender, charm_class):
-        self.show_overlay(Filler(MachineChooser(self.controller,
+        self.show_overlay(Filler(MachineChooser(self.placement_controller,
                                                 charm_class,
                                                 self)))
+
+    def do_commit_and_deploy(self, sender):
+        self.display_controller.commit_placement()
 
     def show_overlay(self, overlay_widget):
         self.orig_w = self._w

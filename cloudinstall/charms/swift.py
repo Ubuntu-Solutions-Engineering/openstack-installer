@@ -36,13 +36,15 @@ class CharmSwift(CharmBase):
     optional = True
     allow_multi_units = True
 
-    def setup(self):
-        """Custom setup for swift-storage to get replicas from config"""
+    def deploy(self, machine):
+        """Custom deploy for swift-storage to get replicas from config"""
         if 'swift-proxy' in CHARM_CONFIG:
             num_replicas = CHARM_CONFIG.get('replicas',
                                             self.default_replicas)
         else:
             num_replicas = self.default_replicas
+
+        # TODO do deploy constraints
 
         log.debug('Deployed {c}'.format(
             c=self.charm_name))

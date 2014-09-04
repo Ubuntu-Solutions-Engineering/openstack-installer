@@ -66,13 +66,13 @@ def satisfies(machine, constraints):
                 cons_checks.append(k)
 
     rval = (len(cons_checks) == 0), cons_checks
-    log.debug("returning {} for satisfies({},{})".format(
-        rval, machine, constraints))
     return rval
 
 
 class Machine:
     """ Base machine class """
+
+    is_placeholder = False
 
     def __init__(self, machine_id, machine):
         self.machine_id = machine_id

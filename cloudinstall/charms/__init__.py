@@ -82,14 +82,13 @@ class CharmBase:
     display_name = None
     related = []
     isolate = False
-    constraints = None
+    constraints = {}
     deploy_priority = sys.maxsize
     display_priority = DisplayPriorities.Core
     allow_multi_units = False
     optional = False
     disabled = False
     menuable = False
-    machine_id = ""
 
     def __init__(self, juju=None, juju_state=None, machine=None, ui=None):
         """ initialize
@@ -156,7 +155,26 @@ export OS_REGION_NAME=RegionOne
             return class_.charm_name
         return class_.__name__.lower()
 
-    def setup(self):
+    def constraints_arg(self):
+        """ converts self.constraints into arg form for juju CLI"""
+        args = []
+        for k, v in self.constraints.items():
+            args.append("{}={}".format(k, ','.join(v)))
+        all_args = " ".join(args)
+        return "\"{}\"".format(all_args)
+
+    def add_machine_tag_constraint(self, machine):
+        if machine.is_placeholder:
+            log.debug("IGNORING machine TAG for placeholder machine")
+            return  # TODO
+
+        if not 'tags' in self.constraints:
+            self.constraints['tags'] = []
+        tags = self.constraints['tags']
+        if machine.instance_id not in tags:
+            self.constraints['tags'].append(machine.system_id)
+
+    def deploy(self, machine, num_units=1):
         """ Deploy charm and configuration options
 
         The default should be sufficient but if more functionality
@@ -168,21 +186,17 @@ export OS_REGION_NAME=RegionOne
         Note that the False (no-error) return value does not indicate
         that service is up and running.
         """
-        machine_spec = str(self.machine_id)
-        num_units = 1
         config_yaml = ""
-        constraints = None
+        self.add_machine_tag_constraint(machine)
+        machine_spec = ""  # TODO still needed for lxc?
 
         if self.charm_name in CHARM_CONFIG:
             config_yaml = CHARM_CONFIG_RAW
 
-        if self.isolate:
-            machine_spec = ""
-            constraints = self.constraints
-
         try:
+            # TODO - ok to pass self.constraints as an empty dict?
             self.juju.deploy(self.charm_name, self.charm_name, num_units,
-                             config_yaml, constraints, machine_spec)
+                             config_yaml, self.constraints, machine_spec)
         except MacumbaError:
             log.exception("Error deploying")
             return True
@@ -192,7 +206,7 @@ export OS_REGION_NAME=RegionOne
             machine_spec,
             num_units,
             config_yaml,
-            constraints))
+            self.constraints))
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
         return False
 
@@ -269,7 +283,7 @@ class CharmQueue:
     """
     def __init__(self, ui):
         self.charm_relations_q = Queue()
-        self.charm_setup_q = Queue()
+        self.charm_deploy_q = Queue()
         self.charm_post_proc_q = Queue()
         self.is_running = False
         self.ui = ui
@@ -277,24 +291,23 @@ class CharmQueue:
     def add_relation(self, charm):
         self.charm_relations_q.put(charm)
 
-    def add_setup(self, charm):
-        self.charm_setup_q.put(charm)
+    def add_deploy(self, charm):
+        self.charm_deploy_q.put(charm)
 
     def add_post_proc(self, charm):
         self.charm_post_proc_q.put(charm)
 
-    @utils.async
-    def watch_setup(self):
-        log.debug("Starting charm setup watcher.")
+    def watch_deploy(self):
+        log.debug("Starting charm deploy watcher.")
         while True:
             try:
-                charm = self.charm_setup_q.get()
-                err = charm.setup()
+                charm = self.charm_deploy_q.get()
+                err = charm.deploy()  # TODO call with machine placement
                 if err:
-                    self.charm_setup_q.put(charm)
-                self.charm_setup_q.task_done()
+                    self.charm_deploy_q.put(charm)
+                self.charm_deploy_q.task_done()
             except:
-                msg = "Exception in setup watcher, re-trying."
+                msg = "Exception in deploy watcher, re-trying."
                 log.exception(msg)
                 self.ui.status_error_message(msg)
             time.sleep(10)
