@@ -595,8 +595,10 @@ class PegasusGUI(WidgetWrap):
         self.frame.body = NodeInstallWaitMode()
         self.frame.set_body(self.frame.body)
 
-    def render_placement_view(self, controller):
+    def render_placement_view(self, display_controller,
+                              placement_controller):
         if self.placement_view is None:
-            self.placement_view = PlacementView(controller)
+            self.placement_view = PlacementView(display_controller,
+                                                placement_controller)
         self.placement_view.update()
         self.frame.body = self.placement_view

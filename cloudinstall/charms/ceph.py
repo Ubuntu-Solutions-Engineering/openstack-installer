@@ -38,7 +38,7 @@ class CharmCeph(CharmBase):
     def has_quorum(self):
         return len(self.juju_state.machines_allocated()) >= 3
 
-    def setup(self):
+    def deploy(self, machine):
         """ Custom setup for ceph """
         if not self.has_quorum():
             log.debug("Insufficient machines allocated - ceph can't deploy.")
