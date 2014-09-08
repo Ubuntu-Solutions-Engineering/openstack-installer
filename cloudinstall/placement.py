@@ -18,13 +18,14 @@ import logging
 
 import pprint
 
-from urwid import (Button, Columns, Divider, Filler, GridFlow, LineBox,
-                   Overlay, Padding, Pile, Text, WidgetWrap)
+from urwid import (AttrMap, Button, Columns, Divider, Filler, GridFlow,
+                   LineBox, Overlay, Padding, Pile, Text, WidgetWrap)
 
 from cloudinstall.machine import satisfies
 from cloudinstall.utils import load_charms, format_constraint
 
 log = logging.getLogger('cloudinstall.placement')
+
 
 BUTTON_SIZE = 20
 
@@ -75,12 +76,11 @@ class PlacementController:
     def __init__(self, maas_state, opts):
         self.maas_state = maas_state
         self.assignments = defaultdict(list)  # instance_id -> [charm class]
-        self.first_available = PlaceholderMachine("first-available",
-                                                  "First Available")
         self.opts = opts
+        self.unplaced_services = set()
 
     def machines(self):
-        return [self.first_available] + self.maas_state.machines()
+        return self.maas_state.machines()
 
     def charm_classes(self):
         cl = [m.__charm_class__ for m in load_charms()
@@ -100,6 +100,7 @@ class PlacementController:
                 if charm_class in l:
                     l.remove(charm_class)
         self.assignments[instance_id].append(charm_class)
+        self.reset_unplaced()
 
     def machines_for_charm(self, charm_class):
         all_machines = self.machines()
@@ -114,30 +115,44 @@ class PlacementController:
     def remove_assignment(self, m, cc):
         assignments = self.assignments[m.instance_id]
         assignments.remove(cc)
+        self.reset_unplaced()
 
     def clear_assignments(self, m):
         del self.assignments[m.instance_id]
+        self.reset_unplaced()
 
     def assignments_for_machine(self, m):
         return self.assignments[m.instance_id]
 
     def set_all_assignments(self, assignments):
         self.assignments = assignments
+        self.reset_unplaced()
+
+    def reset_unplaced(self):
+        self.unplaced_services = set()
+        for cc in self.charm_classes():
+            ms = self.machines_for_charm(cc)
+            if len(ms) == 0:
+                self.unplaced_services.add(cc)
 
     def gen_defaults(self):
+        """Generates an assignments dictionary based on constraints.  Does not
+        touch controller state. use
+        set_all_assignments(gen_defaults()) to set the controller's
+        state to these defaults.
+        """
+
         assignments = defaultdict(list)
 
         maas_machines = self.maas_state.machines()
 
-        def satisfying_machine_or_first_avail(constraints):
-            log.debug("looking for machine to satisfy {}".format(constraints))
-
+        def satisfying_machine(constraints):
             for machine in maas_machines:
                 if satisfies(machine, constraints)[0]:
                     maas_machines.remove(machine)
                     return machine
 
-            return self.first_available
+            return None
 
         isolated_charms, controller_charms = [], []
 
@@ -148,12 +163,14 @@ class PlacementController:
                 controller_charms.append(charm_class)
 
         for charm_class in isolated_charms:
-            m = satisfying_machine_or_first_avail(charm_class.constraints)
-            assignments[m.instance_id].append(charm_class)
+            m = satisfying_machine(charm_class.constraints)
+            if m:
+                assignments[m.instance_id].append(charm_class)
 
-        controller_machine = satisfying_machine_or_first_avail({})
-        for charm_class in controller_charms:
-            assignments[controller_machine.instance_id].append(charm_class)
+        controller_machine = satisfying_machine({})
+        if controller_machine:
+            for charm_class in controller_charms:
+                assignments[controller_machine.instance_id].append(charm_class)
 
         log.debug("Assignments generated: " + pprint.pformat(assignments))
         return assignments
@@ -181,20 +198,27 @@ class MachineWidget(WidgetWrap):
                 ('label', 'storage'), ' {}'.format(m.storage)]
 
     def build_widgets(self):
-        self.machine_info_widget = Text("\N{TAPE DRIVE} {}".format(
-            self.machine.hostname))
+        if self.machine.instance_id == 'unplaced':
+            self.machine_info_widget = Text(('info',
+                                             "\N{DOTTED CIRCLE} Unplaced"))
+        else:
+            self.machine_info_widget = Text("\N{TAPE DRIVE} {}".format(
+                self.machine.hostname))
         self.assignments_widget = Text("")
 
         self.hardware_widget = Text(["  "] + self.hardware_info_markup())
 
         buttons = []
         for label, func in self.actions:
-            b = Button(label, on_press=func, user_data=self.machine)
+            if label == 'Clear' and self.machine.instance_id == 'unplaced':
+                continue
+            b = AttrMap(Button(label, on_press=func, user_data=self.machine),
+                        'button')
             buttons.append(b)
 
         button_grid = GridFlow(buttons, BUTTON_SIZE, 1, 1, 'right')
 
-        pl = [self.machine_info_widget, self.assignments_widget]
+        pl = [Divider(' '), self.machine_info_widget, self.assignments_widget]
         if self.show_hardware:
             pl.append(self.hardware_widget)
         pl.append(button_grid)
@@ -217,7 +241,8 @@ class MachineWidget(WidgetWrap):
 
 class ServiceWidget(WidgetWrap):
     def __init__(self, charm_class, controller, actions=None,
-                 show_constraints=False):
+                 show_constraints=False,
+                 show_assignments=False):
         self.charm_class = charm_class
         self.controller = controller
         if actions is None:
@@ -225,6 +250,7 @@ class ServiceWidget(WidgetWrap):
         else:
             self.actions = actions
         self.show_constraints = show_constraints
+        self.show_assignments = show_assignments
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -247,12 +273,16 @@ class ServiceWidget(WidgetWrap):
 
         buttons = []
         for label, func in self.actions:
-            b = Button(label, on_press=func, user_data=self.charm_class)
+            b = AttrMap(Button(label, on_press=func,
+                               user_data=self.charm_class),
+                        'button')
             buttons.append(b)
 
         button_grid = GridFlow(buttons, BUTTON_SIZE, 1, 1, 'right')
 
-        pl = [self.charm_info_widget, self.assignments_widget]
+        pl = [self.charm_info_widget]
+        if self.show_assignments:
+            pl.append(self.assignments_widget)
         if self.show_constraints:
             pl.append(self.constraints_widget)
         pl.append(button_grid)
@@ -336,6 +366,10 @@ class MachinesList(WidgetWrap):
         self.machine_widgets.append(mw)
         options = self.machine_pile.options()
         self.machine_pile.contents.append((mw, options))
+
+        self.machine_pile.contents.append((AttrMap(Padding(Divider('\u23bc'),
+                                                           left=2, right=2),
+                                                   'label'), options))
         return mw
 
 
@@ -355,11 +389,12 @@ class ServicesList(WidgetWrap):
     """
 
     def __init__(self, controller, actions, machine=None,
-                 show_constraints=False):
+                 unplaced_only=False, show_constraints=False):
         self.controller = controller
         self.actions = actions
         self.service_widgets = []
         self.machine = machine
+        self.unplaced_only = unplaced_only
         self.show_constraints = show_constraints
         w = self.build_widgets()
         super().__init__(w)
@@ -375,17 +410,23 @@ class ServicesList(WidgetWrap):
                                  self.service_widgets)
         return self.service_pile
 
+    def find_service_widget(self, cc):
+        return next((sw for sw in self.service_widgets if
+                     sw.charm_class.charm_name == cc.charm_name), None)
+
     def update(self):
-
-        def find_widget(cc):
-            return next((sw for sw in self.service_widgets if
-                         sw.charm_class.charm_name == cc.charm_name), None)
-
         for cc in self.controller.charm_classes():
             if self.machine and not satisfies(self.machine,
                                               cc.constraints)[0]:
+                self.remove_service_widget(cc)
                 continue
-            sw = find_widget(cc)
+
+            if self.unplaced_only and \
+               cc not in self.controller.unplaced_services:
+                self.remove_service_widget(cc)
+                continue
+
+            sw = self.find_service_widget(cc)
             if sw is None:
                 sw = self.add_service_widget(cc)
             sw.update()
@@ -396,7 +437,26 @@ class ServicesList(WidgetWrap):
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))
+        self.service_pile.contents.append((AttrMap(Padding(Divider('\u23bc'),
+                                                           left=2, right=2),
+                                                   'label'), options))
         return sw
+
+    def remove_service_widget(self, charm_class):
+        sw = self.find_service_widget(charm_class)
+
+        if sw is None:
+            return
+
+        sw_idx = 0
+        for w, opts in self.service_pile.contents:
+            if w == sw:
+                break
+            sw_idx += 1
+
+        c = self.service_pile.contents[:sw_idx] + \
+            self.service_pile.contents[sw_idx + 2:]
+        self.service_pile.contents = c
 
 
 class MachineChooser(WidgetWrap):
@@ -433,7 +493,7 @@ class MachineChooser(WidgetWrap):
                                           show_hardware=True)
         self.machines_list.update()
         p = Pile([instructions, Divider(), self.service_widget,
-                  Divider('-'), self.machines_list,
+                  Divider(), self.machines_list,
                   GridFlow([Button('Close',
                                    on_press=self.close_pressed)],
                            BUTTON_SIZE, 1, 1, 'right')])
@@ -478,7 +538,7 @@ class ServiceChooser(WidgetWrap):
                                           show_constraints=True)
         self.services_list.update()
         p = Pile([instructions, Divider(), self.machine_widget,
-                  Divider('-'), self.services_list,
+                  Divider(), self.services_list,
                   GridFlow([Button('Close',
                                    on_press=self.close_pressed)],
                            BUTTON_SIZE, 1, 1, 'right')])
@@ -507,10 +567,6 @@ class PlacementView(WidgetWrap):
         super().__init__(w)
         self.update()
 
-    def update(self):
-        self.machines_list.update()
-        self.services_list.update()
-
     def scroll_down(self):
         pass
 
@@ -518,30 +574,62 @@ class PlacementView(WidgetWrap):
         pass
 
     def build_widgets(self):
-        pl = [Text("Add Charms"),
-              Padding(Button(('info', "DEPLOY NOW"),
-                             on_press=self.do_commit_and_deploy),
-                      align='center')]
 
-        self.charm_store_pile = Pile(pl)
+        unplaced_service_actions = [("Choose Machine",
+                                     self.do_show_machine_chooser)]
+        self.unplaced_services_list = ServicesList(self.placement_controller,
+                                                   unplaced_service_actions,
+                                                   unplaced_only=True,
+                                                   show_constraints=True)
+
+        pl = [Text("Machine Placement"),
+              Pile([]),         # placeholder replaced in update()
+              self.unplaced_services_list,
+              Button(('button', "Reset to default placement"),
+                     on_press=self.do_reset_to_defaults)]
+
+        self.pending_pile = Pile(pl)
 
         self.machines_list = MachinesList(self.placement_controller,
                                           [('Clear', self.do_clear_machine),
-                                           ('Pick Services',
-                                            self.do_show_service_chooser)])
+                                           ('Edit Services',
+                                            self.do_show_service_chooser)],
+                                          show_hardware=True)
         self.machines_list.update()
 
-        self.services_list = ServicesList(self.placement_controller,
-                                          [('Clear', self.do_clear_service),
-                                           ('Pick Machine(s)',
-                                            self.do_show_machine_chooser)])
-        self.services_list.update()
+        self.machine_detail_view = Pile([Text("TODO")])
 
-        cols = Columns([self.charm_store_pile,
-                        self.services_list,
-                        self.machines_list])
+        cols = Columns([self.pending_pile,
+                        self.machines_list,
+                        self.machine_detail_view])
 
         return Filler(cols, valign='top')
+
+    def update(self):
+        self.unplaced_services_list.update()
+        self.machines_list.update()
+
+        if len(self.placement_controller.unplaced_services) == 0:
+            self.pending_pile.contents[1] = (self.deploy_widgets(),
+                                             self.pending_pile.options())
+        else:
+            self.pending_pile.contents[1] = (self.unplaced_warning_widgets(),
+                                             self.pending_pile.options())
+
+    def deploy_widgets(self):
+        return Pile([Text("You have placed all the core OpenStack services"
+                          " on a machine, and can now deploy."),
+                     Button(('info', "DEPLOY NOW"),
+                            on_press=self.do_commit_and_deploy)])
+
+    def unplaced_warning_widgets(self):
+        return Pile([Text(('info', "NOTE")),
+                     Text("The following core services must be placed "
+                          "before deploying:")])
+
+    def do_reset_to_defaults(self, sender):
+        self.placement_controller.set_all_assignments(
+            self.placement_controller.gen_defaults())
 
     def do_clear_machine(self, sender, machine):
         self.placement_controller.clear_assignments(machine)
