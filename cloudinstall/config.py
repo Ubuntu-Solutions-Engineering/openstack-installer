@@ -37,7 +37,8 @@ class Config:
         ('pending_icon_on',    'light blue,bold',      'default'),
         ('pending_icon',    'dark blue',      'default'),
         ('success_icon',    'light green',      'default'),
-        ('button', 'light gray', 'dark gray')
+        ('button', 'light gray', 'dark gray'),
+        ('divider_line', 'light gray', 'default')
     ]
 
     def __init__(self):
