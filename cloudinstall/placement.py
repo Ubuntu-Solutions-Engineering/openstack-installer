@@ -447,7 +447,7 @@ class ServicesList(WidgetWrap):
 
         if sw is None:
             return
-
+        self.service_widgets.remove(sw)
         sw_idx = 0
         for w, opts in self.service_pile.contents:
             if w == sw:
