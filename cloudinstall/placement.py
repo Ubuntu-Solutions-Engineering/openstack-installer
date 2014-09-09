@@ -22,6 +22,7 @@ from urwid import (AttrMap, Button, Columns, Divider, Filler, GridFlow,
                    LineBox, Overlay, Padding, Pile, Text, WidgetWrap)
 
 from cloudinstall.machine import satisfies
+from cloudinstall.ui import InfoDialog
 from cloudinstall.utils import load_charms, format_constraint
 
 log = logging.getLogger('cloudinstall.placement')
@@ -135,16 +136,50 @@ class PlacementController:
             if len(ms) == 0:
                 self.unplaced_services.add(cc)
 
-    def gen_defaults(self):
-        """Generates an assignments dictionary based on constraints.  Does not
-        touch controller state. use
-        set_all_assignments(gen_defaults()) to set the controller's
-        state to these defaults.
+    def autoplace_unplaced_services(self):
+        """Attempt to find machines for all unplaced services using only empty
+        machines.
+
+        Returns a pair (success, message) where success is True if all
+        services are placed. message is an info message for the user.
         """
+
+        empty_machines = [m for m in self.machines()
+                          if len(self.assignments[m.instance_id]) == 0]
+
+        unplaced_defaults = self.gen_defaults(list(self.unplaced_services),
+                                              empty_machines)
+
+        for mid, charm_classes in unplaced_defaults.items():
+            self.assignments[mid] = charm_classes
+
+        self.reset_unplaced()
+
+        if len(self.unplaced_services) > 0:
+            msg = ("Not enough empty machines could be found for the required"
+                   " services. Please add machines or finish placement "
+                   "manually.")
+            return (False, msg)
+        return (True, "")
+
+    def gen_defaults(self, charm_classes=None, maas_machines=None):
+        """Generates an assignments dictionary for the given charm classes and
+        machines, based on constraints.
+
+        Does not alter controller state.
+
+        Use set_all_assignments(gen_defaults()) to clear and reset the
+        controller's state to these defaults.
+
+        """
+
+        if charm_classes is None:
+            charm_classes = self.charm_classes()
 
         assignments = defaultdict(list)
 
-        maas_machines = self.maas_state.machines()
+        if maas_machines is None:
+            maas_machines = self.maas_state.machines()
 
         def satisfying_machine(constraints):
             for machine in maas_machines:
@@ -156,7 +191,7 @@ class PlacementController:
 
         isolated_charms, controller_charms = [], []
 
-        for charm_class in self.charm_classes():
+        for charm_class in charm_classes:
             if charm_class.isolate:
                 isolated_charms.append(charm_class)
             else:
@@ -581,10 +616,16 @@ class PlacementView(WidgetWrap):
                                                    unplaced_service_actions,
                                                    unplaced_only=True,
                                                    show_constraints=True)
+        self.autoplace_button = Button(('button',
+                                        "Auto-place remaining services"),
+                                       on_press=self.do_autoplace)
+        self.unplaced_services_pile = Pile([self.unplaced_services_list,
+                                            self.autoplace_button,
+                                            Divider()])
 
         pl = [Text("Machine Placement"),
               Pile([]),         # placeholder replaced in update()
-              self.unplaced_services_list,
+              Pile([]),
               Button(('button', "Reset to default placement"),
                      on_press=self.do_reset_to_defaults)]
 
@@ -612,8 +653,12 @@ class PlacementView(WidgetWrap):
         if len(self.placement_controller.unplaced_services) == 0:
             self.pending_pile.contents[1] = (self.deploy_widgets(),
                                              self.pending_pile.options())
+            self.pending_pile.contents[2] = (Divider(),
+                                             self.pending_pile.options())
         else:
             self.pending_pile.contents[1] = (self.unplaced_warning_widgets(),
+                                             self.pending_pile.options())
+            self.pending_pile.contents[2] = (self.unplaced_services_pile,
                                              self.pending_pile.options())
 
     def deploy_widgets(self):
@@ -630,6 +675,12 @@ class PlacementView(WidgetWrap):
     def do_reset_to_defaults(self, sender):
         self.placement_controller.set_all_assignments(
             self.placement_controller.gen_defaults())
+
+    def do_autoplace(self, sender):
+        ok, msg = self.placement_controller.autoplace_unplaced_services()
+        if not ok:
+            self.show_overlay(Filler(InfoDialog(msg,
+                                                self.remove_overlay)))
 
     def do_clear_machine(self, sender, machine):
         self.placement_controller.clear_assignments(machine)

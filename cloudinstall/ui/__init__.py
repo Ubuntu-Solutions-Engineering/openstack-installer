@@ -16,8 +16,8 @@
 """ re-usable widgets """
 
 from __future__ import unicode_literals
-from urwid import (WidgetWrap, ListBox,
-                   SimpleListWalker)
+from urwid import (Button, WidgetWrap, LineBox, ListBox,
+                   Pile, SimpleListWalker, Text)
 
 
 class Scrollable:
@@ -107,3 +107,18 @@ class ScrollableWidgetWrap(WidgetWrap, Scrollable):
 
     def scroll_bottom(self):
         self._w.scroll_bottom()
+
+
+class InfoDialog(WidgetWrap):
+    """A widget that displays a message and a close button."""
+
+    def __init__(self, message, close_func):
+        self.close_func = close_func
+        button = Button("Close", self.do_close)
+        box = LineBox(Pile([Text(message),
+                            button]),
+                      title="Info")
+        super().__init__(box)
+
+    def do_close(self, sender):
+        self.close_func(self)
