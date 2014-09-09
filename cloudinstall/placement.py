@@ -619,15 +619,18 @@ class PlacementView(WidgetWrap):
         self.autoplace_button = Button(('button',
                                         "Auto-place remaining services"),
                                        on_press=self.do_autoplace)
+        self.reset_button = Button(('button',
+                                    "Reset to default placement"),
+                                   on_press=self.do_reset_to_defaults)
+
         self.unplaced_services_pile = Pile([self.unplaced_services_list,
                                             self.autoplace_button,
                                             Divider()])
 
         pl = [Text("Machine Placement"),
-              Pile([]),         # placeholder replaced in update()
+              Pile([]),         # placeholders replaced in update()
               Pile([]),
-              Button(('button', "Reset to default placement"),
-                     on_press=self.do_reset_to_defaults)]
+              Pile([])]
 
         self.pending_pile = Pile(pl)
 
@@ -659,6 +662,14 @@ class PlacementView(WidgetWrap):
             self.pending_pile.contents[1] = (self.unplaced_warning_widgets(),
                                              self.pending_pile.options())
             self.pending_pile.contents[2] = (self.unplaced_services_pile,
+                                             self.pending_pile.options())
+
+        defs = self.placement_controller.gen_defaults()
+        if self.placement_controller.assignments == defs:
+            self.pending_pile.contents[3] = (Divider(),
+                                             self.pending_pile.options())
+        else:
+            self.pending_pile.contents[3] = (self.reset_button,
                                              self.pending_pile.options())
 
     def deploy_widgets(self):
