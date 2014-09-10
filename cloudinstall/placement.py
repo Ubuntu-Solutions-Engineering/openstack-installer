@@ -182,7 +182,6 @@ class PlacementController:
         controller's state to these defaults.
 
         """
-
         if charm_classes is None:
             charm_classes = self.charm_classes()
 
@@ -597,32 +596,27 @@ class ServiceChooser(WidgetWrap):
         self.parent_widget.remove_overlay(self)
 
 
-class PlacementView(WidgetWrap):
-    """Handles display of machines and services.
-
-    displays nothing if self.controller is not set.
-    set it to a PlacementController.
+class ControlColumn(WidgetWrap):
+    """Handles display of the left-hand column with dynamic buttons and
+    list of unplaced services.
     """
-
-    def __init__(self, display_controller, placement_controller):
+    def __init__(self, display_controller, placement_controller,
+                 placement_view):
         self.display_controller = display_controller
         self.placement_controller = placement_controller
+        self.placement_view = placement_view
         w = self.build_widgets()
         super().__init__(w)
         self.update()
 
-    def scroll_down(self):
-        pass
-
-    def scroll_up(self):
-        pass
+    def selectable(self):
+        return True
 
     def build_widgets(self):
-
-        unplaced_service_actions = [("Choose Machine",
-                                     self.do_show_machine_chooser)]
+        actions = [("Choose Machine",
+                    self.placement_view.do_show_machine_chooser)]
         self.unplaced_services_list = ServicesList(self.placement_controller,
-                                                   unplaced_service_actions,
+                                                   actions,
                                                    unplaced_only=True,
                                                    show_constraints=True)
         self.autoplace_button = Button(('button',
@@ -649,54 +643,40 @@ class PlacementView(WidgetWrap):
 
         self.unplaced_warning_widgets = Pile([Text(('info', "NOTE")),
                                               unplaced_msg])
-
-        pl = [Text("Machine Placement"),
+        pl = [Padding(Text("Machine Placement"), align='center',
+                      width=('relative', 100)),
               Pile([]),         # placeholders replaced in update()
               Pile([]),
               Pile([])]
 
-        self.pending_pile = Pile(pl)
+        self.main_pile = Pile(pl)
 
-        self.machines_list = MachinesList(self.placement_controller,
-                                          [('Clear', self.do_clear_machine),
-                                           ('Edit Services',
-                                            self.do_show_service_chooser)],
-                                          show_hardware=True)
-        self.machines_list.update()
-
-        self.machine_detail_view = Pile([Text("TODO")])
-
-        cols = Columns([self.pending_pile,
-                        self.machines_list,
-                        self.machine_detail_view])
-
-        return Filler(cols, valign='top')
+        return self.main_pile
 
     def update(self):
-        self.unplaced_services_list.update()
-        self.machines_list.update()
 
+        self.unplaced_services_list.update()
         if self.placement_controller.can_deploy():
-            self.pending_pile.contents[1] = (self.deploy_widgets,
-                                             self.pending_pile.options())
+            self.main_pile.contents[1] = (self.deploy_widgets,
+                                          self.main_pile.options())
         else:
-            self.pending_pile.contents[1] = (self.unplaced_warning_widgets,
-                                             self.pending_pile.options())
+            self.main_pile.contents[1] = (self.unplaced_warning_widgets,
+                                          self.main_pile.options())
 
         if len(self.placement_controller.unplaced_services) == 0:
-            self.pending_pile.contents[2] = (Divider(),
-                                             self.pending_pile.options())
+            self.main_pile.contents[2] = (Divider(),
+                                          self.main_pile.options())
         else:
-            self.pending_pile.contents[2] = (self.unplaced_services_pile,
-                                             self.pending_pile.options())
+            self.main_pile.contents[2] = (self.unplaced_services_pile,
+                                          self.main_pile.options())
 
         defs = self.placement_controller.gen_defaults()
         if self.placement_controller.assignments == defs:
-            self.pending_pile.contents[3] = (Divider(),
-                                             self.pending_pile.options())
+            self.main_pile.contents[3] = (Divider(),
+                                          self.main_pile.options())
         else:
-            self.pending_pile.contents[3] = (self.reset_button,
-                                             self.pending_pile.options())
+            self.main_pile.contents[3] = (self.reset_button,
+                                          self.main_pile.options())
 
     def do_reset_to_defaults(self, sender):
         self.placement_controller.set_all_assignments(
@@ -707,6 +687,57 @@ class PlacementView(WidgetWrap):
         if not ok:
             self.show_overlay(Filler(InfoDialog(msg,
                                                 self.remove_overlay)))
+
+    def do_commit_and_deploy(self, sender):
+        self.display_controller.commit_placement()
+
+
+class PlacementView(WidgetWrap):
+    """Handles display of machines and services.
+
+    displays nothing if self.controller is not set.
+    set it to a PlacementController.
+    """
+
+    def __init__(self, display_controller, placement_controller):
+        self.display_controller = display_controller
+        self.placement_controller = placement_controller
+        w = self.build_widgets()
+        super().__init__(w)
+        self.update()
+
+    def scroll_down(self):
+        pass
+
+    def scroll_up(self):
+        pass
+
+    def build_widgets(self):
+        self.control_column = ControlColumn(self.display_controller,
+                                            self.placement_controller,
+                                            self)
+
+        self.machines_list = MachinesList(self.placement_controller,
+                                          [('Clear', self.do_clear_machine),
+                                           ('Edit Services',
+                                            self.do_show_service_chooser)],
+                                          show_hardware=True)
+        self.machines_list.update()
+
+        self.machine_detail_view = Pile([Text("TODO")])
+
+        self.columns = Columns([self.control_column,
+                                self.machines_list,
+                                self.machine_detail_view])
+
+        return Filler(self.columns, valign='top')
+
+    def update(self):
+        self.control_column.update()
+        self.machines_list.update()
+
+        log.debug("at end of update(), columns contents is {}".format(
+            self._w.original_widget.contents))
 
     def do_clear_machine(self, sender, machine):
         self.placement_controller.clear_assignments(machine)
@@ -724,9 +755,6 @@ class PlacementView(WidgetWrap):
         self.show_overlay(Filler(MachineChooser(self.placement_controller,
                                                 charm_class,
                                                 self)))
-
-    def do_commit_and_deploy(self, sender):
-        self.display_controller.commit_placement()
 
     def show_overlay(self, overlay_widget):
         self.orig_w = self._w
