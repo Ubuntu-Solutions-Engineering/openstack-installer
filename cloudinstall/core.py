@@ -43,6 +43,7 @@ sys.excepthook = utils.global_exchandler
 
 
 class DisplayController:
+
     """ Controller for displaying juju and maas state."""
 
     def __init__(self, ui=None, opts=None):
@@ -222,6 +223,7 @@ class DisplayController:
 
 
 class Controller(DisplayController):
+
     """ Controller for Juju deployments and Maas machine init """
 
     def __init__(self, **kwds):

@@ -1,6 +1,5 @@
-#!/bin/sh -e
-#
-# cloud-install - Cloud installer
+#!/usr/bin/env python3
+# -*- mode: python; -*-
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -17,138 +16,169 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-. /usr/share/cloud-installer/common/display.sh
-. /usr/share/cloud-installer/common/common.sh
-. /usr/share/cloud-installer/common/maas.sh
-. /usr/share/cloud-installer/common/juju.sh
-. /usr/share/cloud-installer/common/configure.sh
-. /usr/share/cloud-installer/common/multi.sh
-. /usr/share/cloud-installer/common/single.sh
-. /usr/share/cloud-installer/common/landscape.sh
+""" CLI for creating lxc containers needed by the installer """
 
-OPT_HELP=h
-OPT_INSTALL=i
-OPT_UNINSTALL=u
-OPT_CONFIGFILE=c
-OPT_ENABLESWIFT=s
-OPT_IMG_REL=r
-OPT_IMG_ARCH=a
-OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:
-USAGE="\
-cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:]
+import argparse
+import sys
+import os
+import time
+from subprocess import call
+from cloudinstall import utils
 
-Create an Ubuntu Openstack Cloud! (requires root privileges)
 
-Options:
-  -$OPT_CONFIGFILE    <file> - POSIX shell script to be sourced by installer
-              automating install by pre-setting menu responses.
-  -$OPT_ENABLESWIFT    enable swift-storage
-  -$OPT_INSTALL    install only (don't invoke cloud-status)
-  -$OPT_UNINSTALL    uninstall the cloud
-  -$OPT_IMG_ARCH    <arch,...> comma-separated list of architectures to filter available cloud images
-              with which to populate Glance, e.g. amd64,arm64
-  -$OPT_IMG_REL    <rel,...> comma-separated list of Ubuntu releases to filter available cloud images
-              with which to populate Glance, e.g. precise,trusty
-  -$OPT_HELP    print this message"
+CONTAINER_NAME = 'uoi-bootstrap'
+CONTAINER_PATH = '/var/lib/lxc'
+CONTAINER_ABSPATH = os.path.join(CONTAINER_PATH, CONTAINER_NAME)
+USERDATA = os.path.join(utils.install_home(), '.cloud-install/userdata.yaml')
 
-usage()
-{
-	echo "$USAGE"
-}
 
-usageError()
-{
-	echo "$1" >&2
-	usage >&2
-}
+def create_container():
+    """ creates lxc container
+    """
+    out = utils.get_command_output(
+        'sudo lxc-create -t ubuntu-cloud '
+        '-n {0} -- -u {1}'.format(CONTAINER_NAME, USERDATA))
+    return out['ret']
 
-while getopts $OPTS opt; do
-	case $opt in
-	$OPT_INSTALL)
-		install=true
-		;;
-	$OPT_ENABLESWIFT)
-		enableswift="--enable-swift"
-		;;
-    $OPT_UNINSTALL)
-        /usr/share/cloud-installer/tools/cloud-uninstall $@
-        exit 0
-        ;;
-	$OPT_HELP)
-		usage
-		exit 0
-		;;
-	$OPT_CONFIGFILE)
-		configfile=$OPTARG
-		;;
-        $OPT_IMG_ARCH)
-                sync_image_arches=$OPTARG
-                ;;
-        $OPT_IMG_REL)
-                sync_image_releases=$OPTARG
-                ;;
-	\?)
-		usageError "Unknown argument: $OPTARG"
-		exit 1
-		;;
-	:)
-		usageError "Option $OPTARG requires an argument"
-		exit 1
-		;;
-	esac
-done
-shift $((OPTIND - 1))
 
-if [ $(id -u) -ne 0 ]; then
-	usageError "Installing a cloud requires root privileges. Rerun with sudo."
-	exit 1
-fi
+def start():
+    """ starts lxc container
+    """
+    out = utils.get_command_output(
+        'sudo lxc-start -n {0} -d'.format(CONTAINER_NAME))
+    return out['ret']
 
-if [ -n "$configfile" ]; then
-	. "$(absolutePath "$configfile")"
-fi
 
-createTempDir
-startLog
+def wait_for_running():
+    """ waits for the container to be in a RUNNING state
+    """
+    out = utils.get_command_output(
+        'sudo lxc-wait -n {0} -s RUNNING'.format(CONTAINER_NAME))
+    return out['ret']
 
-trap exitInstall EXIT HUP INT QUIT TERM
-trap "" PIPE
 
-# TODO add better logging
-set -x
+def prep_userdata(dst):
+    """ preps userdata file for container install """
+    dst_file = os.path.join(dst, 'userdata.yaml')
+    original_data = utils.load_template('userdata.yaml')
+    modified_data = original_data.render(extra_sshkeys=[ssh_readkey()])
+    with open(dst_file, 'w') as f:
+        f.write(modified_data)
 
-disableBlank
 
-mkdir -p /etc/cloud-installer
+def cloud_init_finished():
+    """ checks the log to see if cloud-init finished
+    """
+    log_file = os.path.join(CONTAINER_ABSPATH,
+                            'rootfs/var/log/cloud-init-output.log')
+    out = utils.get_command_output('sudo tail -n1 {0}'.format(log_file))
+    if 'finished at' in out['stdout']:
+        return True
+    return False
 
-if [ ! -e /etc/cloud-installer/installed ]; then
-	configureInstall
-	if [ $ret -ne 0 ]; then
-		# install cancelled by user
-		exit 0
-	fi
 
-	case $install_type in
-	Multi-system)
-        multiInstall
-		;;
-	"Single system")
-		singleInstall
-        # LP: 1351083, need to wait a few seconds for the api server to become
-        # responsive :\
-        sleep 10
-		;;
-	"Landscape managed")
-		install=true # install only implied
-		landscapeInstall
-		;;
-	esac
-	touch /etc/cloud-installer/installed
-else
-	echo "Cloud already installed."
-fi
-if [ -z "$install" ]; then
-	exitInstall
-    sudo -H -u "$INSTALL_USER" juju status >> /dev/null
-	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER"  cloud-status $enableswift
-fi
+def ssh_readkey():
+    """ reads ssh key
+    """
+    with open(ssh_pubkey(), 'r') as f:
+        return f.read()
+
+
+def ssh_genkey():
+    """ Generates sshkey
+    """
+    if not os.path.exists(ssh_privkey()):
+        user_sshkey_path = os.path.join(utils.install_home(), '.ssh/id_rsa')
+        cmd = "ssh-keygen -N '' -f {0}".format(user_sshkey_path)
+        out = utils.get_command_output(cmd, user_sudo=True)
+        if out['ret'] != 0:
+            print("Unable to generate key: {0}".format(out['stderr']))
+            sys.exit(out['ret'])
+        utils.get_command_output('sudo chown -R {0}:{0} {1}'.format(
+            utils.install_user(), os.path.join(utils.install_home(), '.ssh')))
+        utils.get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
+                                 user_sudo=True)
+    else:
+        print('')
+        print('*** ssh keys exist for this user, they will be used instead')
+        print('*** If the current ssh keys are not passwordless you\'ll be')
+        print('*** required to enter your ssh key password during container')
+        print('*** creation.')
+        print('')
+
+
+def ssh_pubkey():
+    """ returns path of ssh public key
+    """
+    return os.path.join(utils.install_home(), '.ssh/id_rsa.pub')
+
+
+def ssh_privkey():
+    """ returns path of private key
+    """
+    return os.path.join(utils.install_home(), '.ssh/id_rsa')
+
+
+def parse_options(*args, **kwds):
+    parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
+                                     prog='cloud-status')
+    parser.add_argument('-s', '--enable-swift', action='store_true',
+                        dest='enable_swift', default=False,
+                        help='Enable swift storage')
+    parser.add_argument('-u', '--uninstall', action='store_true',
+                        dest='uninstall', default=False)
+    parser.add_argument('-a', type=str, default=None,
+                        help='<arch, ..> comma-seperated list of '
+                        'architectures to filter available cloud '
+                        'images with which to populate Glance, '
+                        'e.g. amd64,arm64', dest='arch')
+    parser.add_argument('-r', type=str, default=None, dest='release',
+                        help='<rel, ..> comma-seperated list of Ubuntu '
+                        'releases to filter available cloud images with '
+                        'which to populate Glance, e.g. precise,trusty')
+
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    opts = parse_options(sys.argv)
+
+    if os.geteuid() != 0:
+        print("Installing a cloud requires root privileges. Rerun with sudo")
+        sys.exit(1)
+
+    if opts.uninstall:
+        ret = call(['/usr/share/cloud-installer/tools/cloud-uninstall'],
+                   shell=True)
+        sys.exit(ret)
+
+    user_install_dir = os.path.join(utils.install_home(), '.cloud-install')
+    if not os.path.exists(user_install_dir):
+        os.makedirs(user_install_dir)
+
+    if os.path.exists(CONTAINER_ABSPATH):
+        # Container exists, handle return code in installer
+        print("Container exists, please remove with `sudo cloud-install -u`")
+        print("if you wish to restart the installation.")
+        sys.exit(1)
+    print("* Please wait while we generate your isolated environment ...")
+    ssh_genkey()
+    prep_userdata(user_install_dir)
+    create_container()
+    start()
+    wait_for_running()
+    max_tries = 50
+    while not cloud_init_finished() and max_tries != 0:
+        print("* Waiting for container to finalize, please wait ...")
+        max_tries = max_tries - 1
+        time.sleep(1)
+    bootstrap_bin = 'sudo ' \
+                    '/usr/share/cloud-installer/bin/cloud-install-bootstrapped'
+    if opts.arch:
+        bootstrap_bin = '{0} -a {1}'.format(bootstrap_bin, opts.arch)
+    if opts.release:
+        bootstrap_bin = '{0} -r {1}'.format(bootstrap_bin, opts.release)
+    if opts.enable_swift:
+        bootstrap_bin = '{0} -s'.format(bootstrap_bin)
+    out = utils.container_run(CONTAINER_NAME, bootstrap_bin, ssh_privkey())
+    sys.exit(out['ret'])
