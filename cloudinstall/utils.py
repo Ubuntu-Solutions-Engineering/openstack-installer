@@ -354,23 +354,30 @@ def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
 def container_ip(name):
     """ gets container ip of named container
     """
-    out = get_command_output('cat /var/lib/misc/*.leases '
-                             '| grep --word-regexp {0}'.format(name))
-    line = out['stdout'].split()[-3]
-    return line
+    for filename in find('*.leases', '/var/lib/misc'):
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                if name in line:
+                    return line.split()[-3]
+    return None
 
 
-def container_run(name, cmd):
+def container_run(name, cmd, identity):
     """ run command in container
 
     :param str name: name of container
     :param str cmd: command to run
+    :param str identity: ssh key
     """
     ip = container_ip(name)
-    out = get_command_output("SSHPASS=ubuntu sshpass -e ssh {0} "
-                             "-l ubuntu -o \"StrictHostKeyChecking no\" "
-                             "{1}".format(ip, cmd))
-    return out
+    cmd = "sudo -H -u {3} TERM=xterm256-color ssh -t " \
+          "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
+          "-o \"UserKnownHostsFile=/dev/null\" " \
+          "-i {2} " \
+          "{0} {1}".format(ip, cmd, identity, install_user())
+    os.system(cmd)
+    return
+
 
 def load_template(name):
     """ load template file
@@ -380,3 +387,15 @@ def load_template(name):
     env = Environment(
         loader=FileSystemLoader('/usr/share/cloud-installer/templates'))
     return env.get_template(name)
+
+
+def install_user():
+    """ returns sudo user
+    """
+    return os.getenv('SUDO_USER', 'root')
+
+
+def install_home():
+    """ returns installer user home
+    """
+    return os.path.join('/home', install_user())
