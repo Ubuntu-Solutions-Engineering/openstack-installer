@@ -32,6 +32,7 @@ from time import strftime
 from importlib import import_module
 import pkgutil
 import sys
+import errno
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -55,6 +56,7 @@ def global_exchandler(type, value, tb):
 
 
 class ExceptionLoggingThread(Thread):
+
     def run(self):
         try:
             super().run()
@@ -93,12 +95,14 @@ def async(func):
     return wrapper
 
 
-def get_command_output(command, timeout=300, combine_output=True):
+def get_command_output(command, timeout=300, combine_output=True,
+                       user_sudo=False):
     """ Execute command through system shell
 
     :param command: command to run
     :param timeout: (optional) use 'timeout' to limit time. default 300
     :param combine_output: (optional) combine stderr and stdout. default True.
+    :param user_sudo: (optional) sudo into install users env. default False.
     :type command: str
     :returns: {ret: returncode, stdout: stdout, stderr: stderr)
     :rtype: dict
@@ -114,14 +118,23 @@ def get_command_output(command, timeout=300, combine_output=True):
     if timeout:
         command = "timeout %ds %s" % (timeout, command)
 
+    if user_sudo:
+        command = "sudo -H -u {0} {1}".format(install_user(), command)
+
     if combine_output:
         stderr_dest = STDOUT
     else:
         stderr_dest = PIPE
 
-    p = Popen(command, shell=True,
-              stdout=PIPE, stderr=stderr_dest,
-              bufsize=-1, env=cmd_env, close_fds=True)
+    try:
+        p = Popen(command, shell=True,
+                  stdout=PIPE, stderr=stderr_dest,
+                  bufsize=-1, env=cmd_env, close_fds=True)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            return dict(ret=127, stdout="", stderr=e)
+        else:
+            raise e
     stdout, stderr = p.communicate()
     if stderr:
         stderr = stderr.decode('utf-8')
