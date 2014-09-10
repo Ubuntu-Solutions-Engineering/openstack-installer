@@ -38,6 +38,7 @@ class Config:
         ('pending_icon',    'dark blue',      'default'),
         ('success_icon',    'light green',      'default'),
         ('button', 'light gray', 'dark gray'),
+        ('deploybutton', 'black', 'light green'),
         ('divider_line', 'light gray', 'default')
     ]
 

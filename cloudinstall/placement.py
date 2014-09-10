@@ -136,6 +136,18 @@ class PlacementController:
             if len(ms) == 0:
                 self.unplaced_services.add(cc)
 
+    def can_deploy(self):
+        uncore_services = ['swift-storage',
+                           'swift-proxy',
+                           'nova-compute']
+        core_services = set([cc.__charm_class__ for cc in load_charms()
+                             if cc.__charm_class__.name() not in
+                             uncore_services])
+        unplaced_cores = core_services.intersection(
+            self.unplaced_services)
+
+        return len(unplaced_cores) == 0
+
     def autoplace_unplaced_services(self):
         """Attempt to find machines for all unplaced services using only empty
         machines.
@@ -207,7 +219,6 @@ class PlacementController:
             for charm_class in controller_charms:
                 assignments[controller_machine.instance_id].append(charm_class)
 
-        log.debug("Assignments generated: " + pprint.pformat(assignments))
         return assignments
 
 
@@ -623,9 +634,23 @@ class PlacementView(WidgetWrap):
                                     "Reset to default placement"),
                                    on_press=self.do_reset_to_defaults)
 
+        self.deploy_button = Button(('deploybutton', "Deploy"),
+                                    on_press=self.do_commit_and_deploy)
+
+        deploy_ok_msg = Text([('success_icon', '\u2713'),
+                              " All the core OpenStack services are placed"
+                              " on a machine, and you can now deploy."])
+        self.deploy_widgets = Pile([deploy_ok_msg, self.deploy_button])
+
         self.unplaced_services_pile = Pile([self.unplaced_services_list,
                                             self.autoplace_button,
                                             Divider()])
+
+        unplaced_msg = Text("The following core services must be placed "
+                            "before deploying:")
+
+        self.unplaced_warning_widgets = Pile([Text(('info', "NOTE")),
+                                              unplaced_msg])
 
         pl = [Text("Machine Placement"),
               Pile([]),         # placeholders replaced in update()
@@ -653,14 +678,17 @@ class PlacementView(WidgetWrap):
         self.unplaced_services_list.update()
         self.machines_list.update()
 
-        if len(self.placement_controller.unplaced_services) == 0:
-            self.pending_pile.contents[1] = (self.deploy_widgets(),
+        if self.placement_controller.can_deploy():
+            self.pending_pile.contents[1] = (self.deploy_widgets,
                                              self.pending_pile.options())
+        else:
+            self.pending_pile.contents[1] = (self.unplaced_warning_widgets,
+                                             self.pending_pile.options())
+
+        if len(self.placement_controller.unplaced_services) == 0:
             self.pending_pile.contents[2] = (Divider(),
                                              self.pending_pile.options())
         else:
-            self.pending_pile.contents[1] = (self.unplaced_warning_widgets(),
-                                             self.pending_pile.options())
             self.pending_pile.contents[2] = (self.unplaced_services_pile,
                                              self.pending_pile.options())
 
@@ -671,17 +699,6 @@ class PlacementView(WidgetWrap):
         else:
             self.pending_pile.contents[3] = (self.reset_button,
                                              self.pending_pile.options())
-
-    def deploy_widgets(self):
-        return Pile([Text("You have placed all the core OpenStack services"
-                          " on a machine, and can now deploy."),
-                     Button(('info', "DEPLOY NOW"),
-                            on_press=self.do_commit_and_deploy)])
-
-    def unplaced_warning_widgets(self):
-        return Pile([Text(('info', "NOTE")),
-                     Text("The following core services must be placed "
-                          "before deploying:")])
 
     def do_reset_to_defaults(self, sender):
         self.placement_controller.set_all_assignments(
