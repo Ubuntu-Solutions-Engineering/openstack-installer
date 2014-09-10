@@ -49,6 +49,14 @@ def start():
     return out['ret']
 
 
+def wait_for_running():
+    """ waits for the container to be in a RUNNING state
+    """
+    out = utils.get_command_output(
+        'sudo lxc-wait -n {0} -s RUNNING'.format(CONTAINER_NAME))
+    return out['ret']
+
+
 def prep_userdata(dst):
     """ preps userdata file for container install """
     dst_file = os.path.join(dst, 'userdata.yaml')
@@ -158,12 +166,12 @@ if __name__ == '__main__':
     prep_userdata(user_install_dir)
     create_container()
     start()
-    time.sleep(5)
-    max_tries = 10
+    wait_for_running()
+    max_tries = 50
     while not cloud_init_finished() and max_tries != 0:
         print("* Waiting for container to finalize, please wait ...")
         max_tries = max_tries - 1
-        time.sleep(5)
+        time.sleep(1)
     bootstrap_bin = 'sudo ' \
                     '/usr/share/cloud-installer/bin/cloud-install-bootstrapped'
     if opts.arch:
