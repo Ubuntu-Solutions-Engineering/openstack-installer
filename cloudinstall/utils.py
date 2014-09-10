@@ -291,14 +291,14 @@ def console_blank():
     try:
         with open('/sys/module/kernel/parameters/consoleblank') as f:
             blank_len = f.read()
-    except (IOError, FileNotFoundError):
+    except (IOError, FileNotFoundError):  # NOQA
         blank_len = None
     else:
         # Cannot use anything that captures stdout, because it is needed
         # by the setterm command to write to the console.
         call(('setterm', '-blank', '0'))
         # Convert the interval from seconds to minutes.
-        blank_len = str(int(blank_len)//60)
+        blank_len = str(int(blank_len) // 60)
 
     yield
 
