@@ -736,9 +736,6 @@ class PlacementView(WidgetWrap):
         self.control_column.update()
         self.machines_list.update()
 
-        log.debug("at end of update(), columns contents is {}".format(
-            self._w.original_widget.contents))
-
     def do_clear_machine(self, sender, machine):
         self.placement_controller.clear_assignments(machine)
 
