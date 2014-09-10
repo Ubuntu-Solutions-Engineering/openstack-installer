@@ -527,7 +527,8 @@ class MachineChooser(WidgetWrap):
 
         self.service_widget = ServiceWidget(self.charm_class,
                                             self.controller,
-                                            show_constraints=True)
+                                            show_constraints=True,
+                                            show_assignments=True)
 
         constraints = self.charm_class.constraints
         self.machines_list = MachinesList(self.controller,
