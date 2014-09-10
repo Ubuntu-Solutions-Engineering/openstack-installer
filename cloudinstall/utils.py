@@ -18,6 +18,7 @@
 
 from subprocess import Popen, PIPE, DEVNULL, call, STDOUT
 from contextlib import contextmanager
+from jinja2 import Environment, FileSystemLoader
 import os
 import re
 import string
@@ -357,3 +358,12 @@ def container_run(name, cmd):
                              "-l ubuntu -o \"StrictHostKeyChecking no\" "
                              "{1}".format(ip, cmd))
     return out
+
+def load_template(name):
+    """ load template file
+
+    :param str name: name of template file
+    """
+    env = Environment(
+        loader=FileSystemLoader('/usr/share/cloud-installer/templates'))
+    return env.get_template(name)
