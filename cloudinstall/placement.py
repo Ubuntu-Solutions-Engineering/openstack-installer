@@ -16,8 +16,6 @@
 from collections import defaultdict
 import logging
 
-import pprint
-
 from urwid import (AttrMap, Button, Columns, Divider, Filler, GridFlow,
                    LineBox, Overlay, Padding, Pile, Text, WidgetWrap)
 
