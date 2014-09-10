@@ -18,6 +18,7 @@
 
 from subprocess import Popen, PIPE, DEVNULL, call, STDOUT
 from contextlib import contextmanager
+from jinja2 import Environment, FileSystemLoader
 import os
 import re
 import string
@@ -31,6 +32,7 @@ from time import strftime
 from importlib import import_module
 import pkgutil
 import sys
+import errno
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -54,6 +56,7 @@ def global_exchandler(type, value, tb):
 
 
 class ExceptionLoggingThread(Thread):
+
     def run(self):
         try:
             super().run()
@@ -92,12 +95,14 @@ def async(func):
     return wrapper
 
 
-def get_command_output(command, timeout=300, combine_output=True):
+def get_command_output(command, timeout=300, combine_output=True,
+                       user_sudo=False):
     """ Execute command through system shell
 
     :param command: command to run
     :param timeout: (optional) use 'timeout' to limit time. default 300
     :param combine_output: (optional) combine stderr and stdout. default True.
+    :param user_sudo: (optional) sudo into install users env. default False.
     :type command: str
     :returns: {ret: returncode, stdout: stdout, stderr: stderr)
     :rtype: dict
@@ -113,14 +118,23 @@ def get_command_output(command, timeout=300, combine_output=True):
     if timeout:
         command = "timeout %ds %s" % (timeout, command)
 
+    if user_sudo:
+        command = "sudo -H -u {0} {1}".format(install_user(), command)
+
     if combine_output:
         stderr_dest = STDOUT
     else:
         stderr_dest = PIPE
 
-    p = Popen(command, shell=True,
-              stdout=PIPE, stderr=stderr_dest,
-              bufsize=-1, env=cmd_env, close_fds=True)
+    try:
+        p = Popen(command, shell=True,
+                  stdout=PIPE, stderr=stderr_dest,
+                  bufsize=-1, env=cmd_env, close_fds=True)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            return dict(ret=127, stdout="", stderr=e)
+        else:
+            raise e
     stdout, stderr = p.communicate()
     if stderr:
         stderr = stderr.decode('utf-8')
@@ -277,14 +291,14 @@ def console_blank():
     try:
         with open('/sys/module/kernel/parameters/consoleblank') as f:
             blank_len = f.read()
-    except (IOError, FileNotFoundError):
+    except (IOError, FileNotFoundError):  # NOQA
         blank_len = None
     else:
         # Cannot use anything that captures stdout, because it is needed
         # by the setterm command to write to the console.
         call(('setterm', '-blank', '0'))
         # Convert the interval from seconds to minutes.
-        blank_len = str(int(blank_len)//60)
+        blank_len = str(int(blank_len) // 60)
 
     yield
 
@@ -340,20 +354,48 @@ def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
 def container_ip(name):
     """ gets container ip of named container
     """
-    out = get_command_output('cat /var/lib/misc/*.leases '
-                             '| grep --word-regexp {0}'.format(name))
-    line = out['stdout'].split()[-3]
-    return line
+    for filename in find('*.leases', '/var/lib/misc'):
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                if name in line:
+                    return line.split()[-3]
+    return None
 
 
-def container_run(name, cmd):
+def container_run(name, cmd, identity):
     """ run command in container
 
     :param str name: name of container
     :param str cmd: command to run
+    :param str identity: ssh key
     """
     ip = container_ip(name)
-    out = get_command_output("SSHPASS=ubuntu sshpass -e ssh {0} "
-                             "-l ubuntu -o \"StrictHostKeyChecking no\" "
-                             "{1}".format(ip, cmd))
-    return out
+    cmd = "sudo -H -u {3} TERM=xterm256-color ssh -t " \
+          "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
+          "-o \"UserKnownHostsFile=/dev/null\" " \
+          "-i {2} " \
+          "{0} {1}".format(ip, cmd, identity, install_user())
+    os.system(cmd)
+    return
+
+
+def load_template(name):
+    """ load template file
+
+    :param str name: name of template file
+    """
+    env = Environment(
+        loader=FileSystemLoader('/usr/share/cloud-installer/templates'))
+    return env.get_template(name)
+
+
+def install_user():
+    """ returns sudo user
+    """
+    return os.getenv('SUDO_USER', 'root')
+
+
+def install_home():
+    """ returns installer user home
+    """
+    return os.path.join('/home', install_user())

@@ -2,15 +2,6 @@
 
 write_files:
   - content: |
-      USE_LXC_BRIDGE="true"
-      LXC_BRIDGE="lxcbr0"
-      LXC_ADDR="10.0.4.1"
-      LXC_NETMASK="255.255.255.0"
-      LXC_NETWORK="10.0.4.0/24"
-      LXC_DHCP_RANGE="10.0.4.2,10.0.4.254"
-      LXC_DHCP_MAX="253"
-    path: /etc/default/lxc-net
-  - content: |
       #!/bin/sh
       mkdir -p /dev/net || true
       mknod /dev/kvm c 10 232
@@ -24,12 +15,29 @@ packages:
   - uvtool-libvirt
   - software-properties-common
   - cloud-installer
+{% if extra_pkgs %}
+{% for pkg in extra_pkgs %}
+  - {{ pkg }}
+{% endfor %}
+{% endif %}
 groups:
   - libvirtd: [ubuntu]
   - sudo: [ubuntu]
 apt_sources:
-  - source: "ppa:cloud-installer/experimental"
+  - source: "ppa:cloud-installer/ppa"
   - source: "ppa:juju/stable"
+{% if extra_ppa %}
+{% for ppa in extra_ppa %}
+  - {{ ppa }}
+{% endfor %}
+{% endif %}
+{% if extra_sshkeys %}
+ssh_authorized_keys:
+{% for ssh in extra_sshkeys %}
+  - {{ ssh }}
+{% endfor %}
+{% endif %}
+
 package_update: true
 password: ubuntu
 chpasswd: { expire: False }
