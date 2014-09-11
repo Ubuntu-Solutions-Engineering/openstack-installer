@@ -94,6 +94,14 @@ class PlacementController:
                     cl.append(m.__charm_class__)
         return cl
 
+    def are_assignments_equivalent(self, other):
+        for mid, cl in self.assignments.items():
+            if mid not in other:
+                return False
+            if set(cl) != set(other[mid]):
+                return False
+        return True
+
     def assign(self, machine, charm_class):
         if not charm_class.allow_multi_units:
             for m, l in self.assignments.items():
@@ -738,7 +746,8 @@ class ControlColumn(WidgetWrap):
                                           self.main_pile.options())
 
         defs = self.placement_controller.gen_defaults()
-        if self.placement_controller.assignments == defs:
+
+        if self.placement_controller.are_assignments_equivalent(defs):
             self.main_pile.contents[3] = (Divider(),
                                           self.main_pile.options())
         else:
