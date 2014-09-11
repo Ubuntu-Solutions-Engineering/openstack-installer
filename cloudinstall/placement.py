@@ -816,21 +816,25 @@ class HeaderView(WidgetWrap):
         return True
 
     def build_widgets(self):
-        self.deploy_button = AttrMap(Button("Deploy",
-                                            on_press=self.do_deploy),
-                                     'button', 'button_focus')
-
         deploy_ok_msg = Text([('success_icon', '\u2713'),
                               " All the core OpenStack services are placed"
                               " on a machine, and you can now deploy."])
-        self.deploy_grid = GridFlow([self.deploy_button], 22, 1, 0, 'right')
-        self.deploy_widgets = Pile([deploy_ok_msg, self.deploy_grid])
+
+        self.deploy_button = AttrMap(Button("Deploy",
+                                            on_press=self.do_deploy),
+                                     'deploy_button', 'deploy_button_focus')
+        self.deploy_grid = GridFlow([self.deploy_button], 10, 1, 0, 'center')
+        self.deploy_widgets = Pile([Padding(deploy_ok_msg,
+                                            align='center',
+                                            width='pack'),
+                                    self.deploy_grid])
 
         unplaced_msg = "Some core services are still unplaced."
-
-        self.unplaced_warning_widgets = Pile([Text([('error_icon',
-                                                     "\N{WARNING SIGN} "),
-                                                    unplaced_msg])])
+        self.unplaced_warning_widgets = Padding(Text([('error_icon',
+                                                       "\N{WARNING SIGN} "),
+                                                      unplaced_msg]),
+                                                align='center',
+                                                width='pack')
 
         self.main_pile = Pile([Divider(),
                                Padding(Text("Machine Placement"),

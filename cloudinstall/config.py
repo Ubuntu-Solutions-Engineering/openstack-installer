@@ -39,6 +39,8 @@ class Config:
         ('success_icon',    'light green',      'default'),
         ('button', 'dark blue', 'light gray'),
         ('button_focus', 'light gray', 'dark gray'),
+        ('deploy_button', 'dark gray', 'light green'),
+        ('deploy_button_focus', 'light gray', 'dark green'),
         ('disabled_button', 'light gray', 'white'),
         ('disabled_button_focus', 'white', 'light gray'),
         ('divider_line', 'light gray', 'default')
