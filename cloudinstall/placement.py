@@ -229,6 +229,23 @@ class PlacementController:
 
 
 class MachineWidget(WidgetWrap):
+    """A widget displaying a service and associated actions.
+
+    machine - the machine to display
+
+    controller - a PlacementController instance
+
+    actions - a list of ('label', function) pairs that wil be used to
+    create buttons for each machine.  The machine will be passed to
+    the function as userdata.
+
+    optionally, actions can be a 3-tuple (pred, 'label', function),
+    where pred determines whether to add the button. Pred will be
+    passed the charm class.
+
+    show_hardware - display hardware details about this machine
+    """
+
     def __init__(self, machine, controller, actions=None,
                  show_hardware=False):
         self.machine = machine
@@ -241,6 +258,9 @@ class MachineWidget(WidgetWrap):
         w = self.build_widgets()
         self.update()
         super().__init__(w)
+
+    def selectable(self):
+        return True
 
     def hardware_info_markup(self):
         m = self.machine
@@ -260,20 +280,13 @@ class MachineWidget(WidgetWrap):
 
         self.hardware_widget = Text(["  "] + self.hardware_info_markup())
 
-        buttons = []
-        for label, func in self.actions:
-            if label == 'Clear' and self.machine.instance_id == 'unplaced':
-                continue
-            b = AttrMap(Button(label, on_press=func, user_data=self.machine),
-                        'button', 'button_focus')
-            buttons.append(b)
-
-        button_grid = GridFlow(buttons, BUTTON_SIZE, 1, 1, 'right')
+        self.buttons = []
+        self.button_grid = GridFlow(self.buttons, 22, 2, 2, 'right')
 
         pl = [Divider(' '), self.machine_info_widget, self.assignments_widget]
         if self.show_hardware:
             pl.append(self.hardware_widget)
-        pl.append(button_grid)
+        pl.append(self.button_grid)
 
         p = Pile(pl)
 
@@ -289,6 +302,28 @@ class MachineWidget(WidgetWrap):
                                for c in al])
 
         self.assignments_widget.set_text(astr)
+        self.update_buttons()
+
+    def update_buttons(self):
+        buttons = []
+        for at in self.actions:
+            if len(at) == 2:
+                predicate = lambda x: True
+                label, func = at
+            else:
+                predicate, label, func = at
+
+            if not predicate(self.machine):
+                b = AttrMap(SelectableIcon(" (" + label + ")"),
+                            'disabled_button', 'disabled_button_focus')
+            else:
+                b = AttrMap(Button(label, on_press=func,
+                                   user_data=self.machine),
+                            'button', 'button_focus')
+            buttons.append((b, self.button_grid.options()))
+
+        self.button_grid.contents = buttons
+
 
 
 class ServiceWidget(WidgetWrap):
@@ -346,14 +381,14 @@ class ServiceWidget(WidgetWrap):
 
         self.buttons = []
 
-        self.button_columns = GridFlow(self.buttons, 22, 2, 2, 'right')
+        self.button_grid = GridFlow(self.buttons, 22, 2, 2, 'right')
 
         pl = [self.charm_info_widget]
         if self.show_assignments:
             pl.append(self.assignments_widget)
         if self.show_constraints:
             pl.append(self.constraints_widget)
-        pl.append(self.button_columns)
+        pl.append(self.button_grid)
 
         p = Pile(pl)
         return Padding(p, left=2, right=2)
@@ -387,9 +422,9 @@ class ServiceWidget(WidgetWrap):
                 b = AttrMap(Button(label, on_press=func,
                                    user_data=self.charm_class),
                             'button', 'button_focus')
-            buttons.append((b, self.button_columns.options()))
+            buttons.append((b, self.button_grid.options()))
 
-        self.button_columns.contents = buttons
+        self.button_grid.contents = buttons
 
 
 class MachinesList(WidgetWrap):
@@ -793,8 +828,13 @@ class PlacementView(WidgetWrap):
                                             self.placement_controller,
                                             self)
 
+        def show_clear_p(m):
+            pc = self.placement_controller
+            return len(pc.assignments_for_machine(m)) != 0
+
         self.machines_list = MachinesList(self.placement_controller,
-                                          [('Clear', self.do_clear_machine),
+                                          [(show_clear_p,
+                                            'Clear', self.do_clear_machine),
                                            ('Edit Services',
                                             self.do_show_service_chooser)],
                                           show_hardware=True)
