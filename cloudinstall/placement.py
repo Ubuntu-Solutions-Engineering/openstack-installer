@@ -16,8 +16,9 @@
 from collections import defaultdict
 import logging
 
-from urwid import (AttrMap, Button, Columns, Divider, Filler, GridFlow,
-                   LineBox, Overlay, Padding, Pile, Text, WidgetWrap)
+from urwid import (AttrMap, Button, Columns, Divider, Filler,
+                   GridFlow, LineBox, Overlay, Padding, Pile,
+                   SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.machine import satisfies
 from cloudinstall.ui import InfoDialog
@@ -93,12 +94,12 @@ class PlacementController:
                     cl.append(m.__charm_class__)
         return cl
 
-    def assign(self, instance_id, charm_class):
+    def assign(self, machine, charm_class):
         if not charm_class.allow_multi_units:
             for m, l in self.assignments.items():
                 if charm_class in l:
                     l.remove(charm_class)
-        self.assignments[instance_id].append(charm_class)
+        self.assignments[machine.instance_id].append(charm_class)
         self.reset_unplaced()
 
     def machines_for_charm(self, charm_class):
@@ -256,7 +257,7 @@ class MachineWidget(WidgetWrap):
             if label == 'Clear' and self.machine.instance_id == 'unplaced':
                 continue
             b = AttrMap(Button(label, on_press=func, user_data=self.machine),
-                        'button')
+                        'button', 'button_focus')
             buttons.append(b)
 
         button_grid = GridFlow(buttons, BUTTON_SIZE, 1, 1, 'right')
@@ -283,6 +284,27 @@ class MachineWidget(WidgetWrap):
 
 
 class ServiceWidget(WidgetWrap):
+    """A widget displaying a service and associated actions.
+
+    charm_class - the class describing the service to display
+
+    controller - a PlacementController instance
+
+    actions - a list of ('label', function) pairs that wil be used to
+    create buttons for each machine.  The machine will be passed to
+    the function as userdata.
+
+    optionally, actions can be a 3-tuple (pred, 'label', function),
+    where pred determines whether to add the button. Pred will be
+    passed the charm class.
+
+    show_constraints - display the charm's constraints
+
+    show_assignments - display the machine(s) currently assigned to
+    host this service
+
+    """
+
     def __init__(self, charm_class, controller, actions=None,
                  show_constraints=False,
                  show_assignments=False):
@@ -306,29 +328,24 @@ class ServiceWidget(WidgetWrap):
             self.charm_class.display_name))
         self.assignments_widget = Text("")
 
-        if self.charm_class.constraints is None:
-            c_str = "  no constraints set"
+        if len(self.charm_class.constraints) == 0:
+            c_str = [('label', "  no constraints set")]
         else:
             cpairs = [format_constraint(k, v) for k, v in
                       self.charm_class.constraints.items()]
-            c_str = "  constraints: " + ', '.join(cpairs)
+            c_str = [('label', "  constraints: "), ', '.join(cpairs)]
         self.constraints_widget = Text(c_str)
 
-        buttons = []
-        for label, func in self.actions:
-            b = AttrMap(Button(label, on_press=func,
-                               user_data=self.charm_class),
-                        'button')
-            buttons.append(b)
+        self.buttons = []
 
-        button_grid = GridFlow(buttons, BUTTON_SIZE, 1, 1, 'right')
+        self.button_columns = GridFlow(self.buttons, 22, 2, 2, 'right')
 
         pl = [self.charm_info_widget]
         if self.show_assignments:
             pl.append(self.assignments_widget)
         if self.show_constraints:
             pl.append(self.constraints_widget)
-        pl.append(button_grid)
+        pl.append(self.button_columns)
 
         p = Pile(pl)
         return Padding(p, left=2, right=2)
@@ -343,6 +360,28 @@ class ServiceWidget(WidgetWrap):
             t += ", ".join(["\N{TAPE DRIVE} {}".format(m.hostname)
                             for m in ml])
         self.assignments_widget.set_text(t)
+
+        self.update_buttons()
+
+    def update_buttons(self):
+        buttons = []
+        for at in self.actions:
+            if len(at) == 2:
+                predicate = lambda x: True
+                label, func = at
+            else:
+                predicate, label, func = at
+
+            if not predicate(self.charm_class):
+                b = AttrMap(SelectableIcon(" (" + label + ")"),
+                            'disabled_button', 'disabled_button_focus')
+            else:
+                b = AttrMap(Button(label, on_press=func,
+                                   user_data=self.charm_class),
+                            'button', 'button_focus')
+            buttons.append((b, self.button_columns.options()))
+
+        self.button_columns.contents = buttons
 
 
 class MachinesList(WidgetWrap):
@@ -372,6 +411,7 @@ class MachinesList(WidgetWrap):
             self.constraints = constraints
         self.show_hardware = show_hardware
         w = self.build_widgets()
+        self.update()
         super().__init__(w)
 
     def selectable(self):
@@ -420,9 +460,8 @@ class ServicesList(WidgetWrap):
     """A list of services (charm classes) with configurable action buttons
     for each machine.
 
-    actions - a list of ('label', function) pairs that wil be used to
-    create buttons for each machine.  The machine will be passed to
-    the function as userdata.
+    actions - a list of tuples describing buttons. Passed to
+    ServiceWidget.
 
     machine - a machine instance to query for constraint checking
 
@@ -440,6 +479,7 @@ class ServicesList(WidgetWrap):
         self.unplaced_only = unplaced_only
         self.show_constraints = show_constraints
         w = self.build_widgets()
+        self.update()
         super().__init__(w)
 
     def selectable(self):
@@ -545,7 +585,7 @@ class MachineChooser(WidgetWrap):
         return LineBox(p, title="Select Machine{}".format(plural_string))
 
     def do_select(self, sender, machine):
-        self.controller.assign(machine.instance_id, self.charm_class)
+        self.controller.assign(machine, self.charm_class)
         self.machines_list.update()
         self.service_widget.update()
 
@@ -576,11 +616,28 @@ class ServiceChooser(WidgetWrap):
         self.machine_widget = MachineWidget(self.machine,
                                             self.controller,
                                             show_hardware=True)
+
+        def show_remove_p(cc):
+            ms = self.controller.machines_for_charm(cc)
+            hostnames = [m.hostname for m in ms]
+            return self.machine.hostname in hostnames
+
+        def show_add_p(cc):
+            ms = self.controller.machines_for_charm(cc)
+            hostnames = [m.hostname for m in ms]
+            return (self.machine.hostname not in hostnames
+                    or cc.allow_multi_units)
+
+        add_label = "Add to {}".format(self.machine.hostname)
+
         self.services_list = ServicesList(self.controller,
-                                          [('Select', self.do_select)],
+                                          [(show_add_p, add_label,
+                                            self.do_add),
+                                           (show_remove_p, 'Remove',
+                                            self.do_remove)],
                                           machine=self.machine,
                                           show_constraints=True)
-        self.services_list.update()
+
         p = Pile([instructions, Divider(), self.machine_widget,
                   Divider(), self.services_list,
                   GridFlow([Button('Close',
@@ -589,9 +646,18 @@ class ServiceChooser(WidgetWrap):
 
         return LineBox(p, title="Select Services")
 
-    def do_select(self, sender, charm_class):
-        self.controller.assign(self.machine.instance_id, charm_class)
+    def update(self):
+        self.machine_widget.update()
         self.services_list.update()
+
+    def do_add(self, sender, charm_class):
+        self.controller.assign(self.machine, charm_class)
+        self.update()
+
+    def do_remove(self, sender, charm_class):
+        self.controller.remove_assignment(self.machine,
+                                          charm_class)
+        self.update()
 
     def close_pressed(self, sender):
         self.parent_widget.remove_overlay(self)
@@ -620,15 +686,15 @@ class ControlColumn(WidgetWrap):
                                                    actions,
                                                    unplaced_only=True,
                                                    show_constraints=True)
-        self.autoplace_button = Button(('button',
-                                        "Auto-place remaining services"),
-                                       on_press=self.do_autoplace)
-        self.reset_button = Button(('button',
-                                    "Reset to default placement"),
-                                   on_press=self.do_reset_to_defaults)
-
-        self.deploy_button = Button(('deploybutton', "Deploy"),
-                                    on_press=self.do_commit_and_deploy)
+        self.autoplace_button = AttrMap(Button("Auto-place remaining services",
+                                       on_press=self.do_autoplace),
+                                        'button', 'button_focus')
+        self.reset_button = AttrMap(Button("Reset to default placement",
+                                           on_press=self.do_reset_to_defaults),
+                                    'button', 'button_focus')
+        self.deploy_button = AttrMap(Button("Deploy",
+                                            on_press=self.do_deploy),
+                                     'button', 'button_focus')
 
         deploy_ok_msg = Text([('success_icon', '\u2713'),
                               " All the core OpenStack services are placed"
@@ -689,7 +755,7 @@ class ControlColumn(WidgetWrap):
             self.show_overlay(Filler(InfoDialog(msg,
                                                 self.remove_overlay)))
 
-    def do_commit_and_deploy(self, sender):
+    def do_deploy(self, sender):
         self.display_controller.commit_placement()
 
 
