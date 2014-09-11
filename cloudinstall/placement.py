@@ -562,7 +562,7 @@ class ServicesList(WidgetWrap):
 
     def add_service_widget(self, charm_class):
         if self.unplaced_only and self.controller.service_is_core(charm_class):
-            extra = ('info', "REQUIRED")
+            extra = ('info', " (REQUIRED)")
         else:
             extra = None
         sw = ServiceWidget(charm_class, self.controller, self.actions,
@@ -810,7 +810,7 @@ class HeaderView(WidgetWrap):
 
         unplaced_msg = "Some core services are still unplaced."
 
-        self.unplaced_warning_widgets = Pile([Text([('error',
+        self.unplaced_warning_widgets = Pile([Text([('error_icon',
                                                      "\N{WARNING SIGN} "),
                                                     unplaced_msg])])
 
@@ -880,7 +880,9 @@ class PlacementView(WidgetWrap):
         self.main_pile = Pile([Padding(self.header_view,
                                        align='center',
                                        width=('relative', 50)),
-                               self.columns])
+                               Padding(self.columns,
+                                       align='center',
+                                       width=('relative', 95))])
         return Filler(self.main_pile, valign='top')
 
     def update(self):
