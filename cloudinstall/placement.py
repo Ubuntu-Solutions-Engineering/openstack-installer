@@ -143,15 +143,15 @@ class PlacementController:
             if len(ms) == 0:
                 self.unplaced_services.add(cc)
 
-    def can_deploy(self):
+    def service_is_core(self, cc):
         uncore_services = ['swift-storage',
                            'swift-proxy',
                            'nova-compute']
-        core_services = set([cc.__charm_class__ for cc in load_charms()
-                             if cc.__charm_class__.name() not in
-                             uncore_services])
-        unplaced_cores = core_services.intersection(
-            self.unplaced_services)
+        return cc.name() not in uncore_services
+
+    def can_deploy(self):
+        unplaced_cores = [cc for cc in self.unplaced_services
+                          if self.service_is_core(cc)]
 
         return len(unplaced_cores) == 0
 
@@ -325,7 +325,6 @@ class MachineWidget(WidgetWrap):
         self.button_grid.contents = buttons
 
 
-
 class ServiceWidget(WidgetWrap):
     """A widget displaying a service and associated actions.
 
@@ -349,8 +348,8 @@ class ServiceWidget(WidgetWrap):
     """
 
     def __init__(self, charm_class, controller, actions=None,
-                 show_constraints=False,
-                 show_assignments=False):
+                 show_constraints=False, show_assignments=False,
+                 extra_markup=None):
         self.charm_class = charm_class
         self.controller = controller
         if actions is None:
@@ -359,6 +358,7 @@ class ServiceWidget(WidgetWrap):
             self.actions = actions
         self.show_constraints = show_constraints
         self.show_assignments = show_assignments
+        self.extra_markup = extra_markup
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -367,8 +367,11 @@ class ServiceWidget(WidgetWrap):
         return True
 
     def build_widgets(self):
-        self.charm_info_widget = Text("\N{GEAR} {}".format(
-            self.charm_class.display_name))
+        title_markup = ["\N{GEAR} {}".format(self.charm_class.display_name)]
+        if self.extra_markup:
+            title_markup.append(self.extra_markup)
+
+        self.charm_info_widget = Text(title_markup)
         self.assignments_widget = Text("")
 
         if len(self.charm_class.constraints) == 0:
@@ -381,7 +384,7 @@ class ServiceWidget(WidgetWrap):
 
         self.buttons = []
 
-        self.button_grid = GridFlow(self.buttons, 22, 2, 2, 'right')
+        self.button_grid = GridFlow(self.buttons, 22, 1, 0, 'right')
 
         pl = [self.charm_info_widget]
         if self.show_assignments:
@@ -558,8 +561,13 @@ class ServicesList(WidgetWrap):
             sw.update()
 
     def add_service_widget(self, charm_class):
+        if self.unplaced_only and self.controller.service_is_core(charm_class):
+            extra = ('info', "REQUIRED")
+        else:
+            extra = None
         sw = ServiceWidget(charm_class, self.controller, self.actions,
-                           self.show_constraints)
+                           self.show_constraints,
+                           extra_markup=extra)
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))
@@ -619,11 +627,13 @@ class MachineChooser(WidgetWrap):
                                           constraints=constraints,
                                           show_hardware=True)
         self.machines_list.update()
+        close_button = AttrMap(Button('Close',
+                                      on_press=self.close_pressed),
+                               'button', 'button_focus')
         p = Pile([instructions, Divider(), self.service_widget,
                   Divider(), self.machines_list,
-                  GridFlow([Button('Close',
-                                   on_press=self.close_pressed)],
-                           BUTTON_SIZE, 1, 1, 'right')])
+                  GridFlow([close_button],
+                           BUTTON_SIZE, 1, 0, 'right')])
 
         return LineBox(p, title="Select Machine{}".format(plural_string))
 
@@ -681,11 +691,13 @@ class ServiceChooser(WidgetWrap):
                                           machine=self.machine,
                                           show_constraints=True)
 
+        close_button = AttrMap(Button('Close',
+                                      on_press=self.close_pressed),
+                               'button', 'button_focus')
         p = Pile([instructions, Divider(), self.machine_widget,
                   Divider(), self.services_list,
-                  GridFlow([Button('Close',
-                                   on_press=self.close_pressed)],
-                           BUTTON_SIZE, 1, 1, 'right')])
+                  GridFlow([close_button],
+                           BUTTON_SIZE, 1, 0, 'right')])
 
         return LineBox(p, title="Select Services")
 
@@ -706,9 +718,8 @@ class ServiceChooser(WidgetWrap):
         self.parent_widget.remove_overlay(self)
 
 
-class ControlColumn(WidgetWrap):
-    """Handles display of the left-hand column with dynamic buttons and
-    list of unplaced services.
+class ServicesColumn(WidgetWrap):
+    """Displays dynamic list of unplaced services and associated controls
     """
     def __init__(self, display_controller, placement_controller,
                  placement_view):
@@ -729,35 +740,20 @@ class ControlColumn(WidgetWrap):
                                                    actions,
                                                    unplaced_only=True,
                                                    show_constraints=True)
+        autoplace_func = self.placement_view.do_autoplace
         self.autoplace_button = AttrMap(Button("Auto-place remaining services",
-                                       on_press=self.do_autoplace),
+                                               on_press=autoplace_func),
                                         'button', 'button_focus')
         self.reset_button = AttrMap(Button("Reset to default placement",
                                            on_press=self.do_reset_to_defaults),
                                     'button', 'button_focus')
-        self.deploy_button = AttrMap(Button("Deploy",
-                                            on_press=self.do_deploy),
-                                     'button', 'button_focus')
-
-        deploy_ok_msg = Text([('success_icon', '\u2713'),
-                              " All the core OpenStack services are placed"
-                              " on a machine, and you can now deploy."])
-        self.deploy_widgets = Pile([deploy_ok_msg, self.deploy_button])
-
         self.unplaced_services_pile = Pile([self.unplaced_services_list,
                                             self.autoplace_button,
                                             Divider()])
 
-        unplaced_msg = Text("The following core services must be placed "
-                            "before deploying:")
-
-        self.unplaced_warning_widgets = Pile([Text(('info', "NOTE")),
-                                              unplaced_msg])
-        pl = [Padding(Text("Machine Placement"), align='center',
-                      width=('relative', 100)),
-              Pile([]),         # placeholders replaced in update()
-              Pile([]),
-              Pile([])]
+        # placeholders replaced in update():
+        pl = [Pile([]),         # unplaced services
+              Pile([])]         # reset button
 
         self.main_pile = Pile(pl)
 
@@ -766,38 +762,73 @@ class ControlColumn(WidgetWrap):
     def update(self):
 
         self.unplaced_services_list.update()
-        if self.placement_controller.can_deploy():
-            self.main_pile.contents[1] = (self.deploy_widgets,
-                                          self.main_pile.options())
-        else:
-            self.main_pile.contents[1] = (self.unplaced_warning_widgets,
-                                          self.main_pile.options())
-
         if len(self.placement_controller.unplaced_services) == 0:
-            self.main_pile.contents[2] = (Divider(),
+            self.main_pile.contents[0] = (Divider(),
                                           self.main_pile.options())
         else:
-            self.main_pile.contents[2] = (self.unplaced_services_pile,
+            self.main_pile.contents[0] = (self.unplaced_services_pile,
                                           self.main_pile.options())
 
         defs = self.placement_controller.gen_defaults()
 
         if self.placement_controller.are_assignments_equivalent(defs):
-            self.main_pile.contents[3] = (Divider(),
+            self.main_pile.contents[1] = (Divider(),
                                           self.main_pile.options())
         else:
-            self.main_pile.contents[3] = (self.reset_button,
+            self.main_pile.contents[1] = (self.reset_button,
                                           self.main_pile.options())
 
     def do_reset_to_defaults(self, sender):
         self.placement_controller.set_all_assignments(
             self.placement_controller.gen_defaults())
 
-    def do_autoplace(self, sender):
-        ok, msg = self.placement_controller.autoplace_unplaced_services()
-        if not ok:
-            self.show_overlay(Filler(InfoDialog(msg,
-                                                self.remove_overlay)))
+
+class HeaderView(WidgetWrap):
+
+    def __init__(self, display_controller, placement_controller,
+                 placement_view):
+        self.display_controller = display_controller
+        self.placement_controller = placement_controller
+        self.placement_view = placement_view
+        w = self.build_widgets()
+        super().__init__(w)
+        self.update()
+
+    def selectable(self):
+        return True
+
+    def build_widgets(self):
+        self.deploy_button = AttrMap(Button("Deploy",
+                                            on_press=self.do_deploy),
+                                     'button', 'button_focus')
+
+        deploy_ok_msg = Text([('success_icon', '\u2713'),
+                              " All the core OpenStack services are placed"
+                              " on a machine, and you can now deploy."])
+        self.deploy_grid = GridFlow([self.deploy_button], 22, 1, 0, 'right')
+        self.deploy_widgets = Pile([deploy_ok_msg, self.deploy_grid])
+
+        unplaced_msg = "Some core services are still unplaced."
+
+        self.unplaced_warning_widgets = Pile([Text([('error',
+                                                     "\N{WARNING SIGN} "),
+                                                    unplaced_msg])])
+
+        self.main_pile = Pile([Divider(),
+                               Padding(Text("Machine Placement"),
+                                       align='center',
+                                       width='pack'),
+                               Pile([]),
+                               Divider()])
+        return self.main_pile
+
+    def update(self):
+        if self.placement_controller.can_deploy():
+            self.main_pile.contents[2] = (self.deploy_widgets,
+                                          self.main_pile.options())
+        else:
+            self.main_pile.contents[2] = (self.unplaced_warning_widgets,
+                                          self.main_pile.options())
 
     def do_deploy(self, sender):
         self.display_controller.commit_placement()
@@ -824,9 +855,13 @@ class PlacementView(WidgetWrap):
         pass
 
     def build_widgets(self):
-        self.control_column = ControlColumn(self.display_controller,
-                                            self.placement_controller,
-                                            self)
+        self.header_view = HeaderView(self.display_controller,
+                                      self.placement_controller,
+                                      self)
+
+        self.services_column = ServicesColumn(self.display_controller,
+                                              self.placement_controller,
+                                              self)
 
         def show_clear_p(m):
             pc = self.placement_controller
@@ -840,17 +875,24 @@ class PlacementView(WidgetWrap):
                                           show_hardware=True)
         self.machines_list.update()
 
-        self.machine_detail_view = Pile([Text("TODO")])
-
-        self.columns = Columns([self.control_column,
-                                self.machines_list,
-                                self.machine_detail_view])
-
-        return Filler(self.columns, valign='top')
+        self.columns = Columns([self.services_column,
+                                self.machines_list])
+        self.main_pile = Pile([Padding(self.header_view,
+                                       align='center',
+                                       width=('relative', 50)),
+                               self.columns])
+        return Filler(self.main_pile, valign='top')
 
     def update(self):
-        self.control_column.update()
+        self.header_view.update()
+        self.services_column.update()
         self.machines_list.update()
+
+    def do_autoplace(self, sender):
+        ok, msg = self.placement_controller.autoplace_unplaced_services()
+        if not ok:
+            self.show_overlay(Filler(InfoDialog(msg,
+                                                self.remove_overlay)))
 
     def do_clear_machine(self, sender, machine):
         self.placement_controller.clear_assignments(machine)
