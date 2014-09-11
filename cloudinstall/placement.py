@@ -20,6 +20,7 @@ from urwid import (AttrMap, Button, Columns, Divider, Filler,
                    GridFlow, LineBox, Overlay, Padding, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
+from cloudinstall.config import Config
 from cloudinstall.machine import satisfies
 from cloudinstall.ui import InfoDialog
 from cloudinstall.utils import load_charms, format_constraint
@@ -867,6 +868,7 @@ class MachinesColumn(WidgetWrap):
         self.display_controller = display_controller
         self.placement_controller = placement_controller
         self.placement_view = placement_view
+        self.config = Config()
         w = self.build_widgets()
         super().__init__(w)
         self.update()
@@ -897,12 +899,27 @@ class MachinesColumn(WidgetWrap):
         self.clear_all_button = AttrMap(Button("Clear all Machines",
                                                on_press=clear_all_func),
                                         'button', 'button_focus')
+
+        bc = self.config.juju_env['bootstrap-config']
+        maasname = "'{}' ({})".format(bc['name'], bc['maas-server'])
+
+        openlabel = "Open {} in browser".format(bc['maas-server'])
+        self.open_maas_button = AttrMap(Button(openlabel,
+                                               on_press=self.browse_maas),
+                                        'button', 'button_focus')
+
         self.bottom_buttons = []
         self.bottom_button_grid = GridFlow(self.bottom_buttons,
                                            36, 1, 0, 'center')
 
+        header = Padding(Text("You are connected to MAAS {}".format(maasname)),
+                         align='center',
+                         width='pack')
+
         # placeholders replaced in update():
-        pl = [Pile([]),         # machines_list
+        pl = [header,
+              Pile([]),         # machines_list
+              Divider(),
               self.bottom_button_grid]
 
         self.main_pile = Pile(pl)
@@ -914,22 +931,30 @@ class MachinesColumn(WidgetWrap):
 
         bottom_buttons = []
 
+        empty_maas_msg = ("There are no available machines.")
+
+        self.empty_maas_widgets = Padding(Text([('error_icon',
+                                                 "\N{WARNING SIGN} "),
+                                                empty_maas_msg]),
+                                          align='center',
+                                          width='pack')
+
         if len(self.placement_controller.machines()) == 0:
-            self.main_pile.contents[0] = (Text("NO MACHINES?!"),
+            self.main_pile.contents[1] = (self.empty_maas_widgets,
                                           self.main_pile.options())
-            icon = SelectableIcon(" (Clear all Machines) ")
-            bottom_buttons.append((AttrMap(icon,
-                                           'disabled_button',
-                                           'disabled_button_focus'),
+            bottom_buttons.append((self.open_maas_button,
                                    self.bottom_button_grid.options()))
 
         else:
-            self.main_pile.contents[0] = (self.machines_list_pile,
+            self.main_pile.contents[1] = (self.machines_list_pile,
                                           self.main_pile.options())
             bottom_buttons.append((self.clear_all_button,
                                    self.bottom_button_grid.options()))
 
         self.bottom_button_grid.contents = bottom_buttons
+
+    def browse_maas(self, sender):
+        pass  # TODO
 
 
 class PlacementView(WidgetWrap):
