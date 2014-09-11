@@ -125,6 +125,10 @@ class PlacementController:
         assignments.remove(cc)
         self.reset_unplaced()
 
+    def clear_all_assignments(self):
+        self.assignments = defaultdict(list)
+        self.reset_unplaced()
+
     def clear_assignments(self, m):
         del self.assignments[m.instance_id]
         self.reset_unplaced()
@@ -856,6 +860,78 @@ class HeaderView(WidgetWrap):
         self.display_controller.commit_placement()
 
 
+class MachinesColumn(WidgetWrap):
+    """Shows machines"""
+    def __init__(self, display_controller, placement_controller,
+                 placement_view):
+        self.display_controller = display_controller
+        self.placement_controller = placement_controller
+        self.placement_view = placement_view
+        w = self.build_widgets()
+        super().__init__(w)
+        self.update()
+
+    def selectable(self):
+        return True
+
+    def build_widgets(self):
+
+        def show_clear_p(m):
+            pc = self.placement_controller
+            return len(pc.assignments_for_machine(m)) != 0
+
+        clear_machine_func = self.placement_view.do_clear_machine
+        show_chooser_func = self.placement_view.do_show_service_chooser
+        self.machines_list = MachinesList(self.placement_controller,
+                                          [(show_clear_p,
+                                            'Clear', clear_machine_func),
+                                           ('Edit Services',
+                                            show_chooser_func)],
+                                          show_hardware=True)
+        self.machines_list.update()
+
+        self.machines_list_pile = Pile([self.machines_list,
+                                        Divider()])
+
+        clear_all_func = self.placement_view.do_clear_all
+        self.clear_all_button = AttrMap(Button("Clear all Machines",
+                                               on_press=clear_all_func),
+                                        'button', 'button_focus')
+        self.bottom_buttons = []
+        self.bottom_button_grid = GridFlow(self.bottom_buttons,
+                                           36, 1, 0, 'center')
+
+        # placeholders replaced in update():
+        pl = [Pile([]),         # machines_list
+              self.bottom_button_grid]
+
+        self.main_pile = Pile(pl)
+
+        return self.main_pile
+
+    def update(self):
+        self.machines_list.update()
+
+        bottom_buttons = []
+
+        if len(self.placement_controller.machines()) == 0:
+            self.main_pile.contents[0] = (Text("NO MACHINES?!"),
+                                          self.main_pile.options())
+            icon = SelectableIcon(" (Clear all Machines) ")
+            bottom_buttons.append((AttrMap(icon,
+                                           'disabled_button',
+                                           'disabled_button_focus'),
+                                   self.bottom_button_grid.options()))
+
+        else:
+            self.main_pile.contents[0] = (self.machines_list_pile,
+                                          self.main_pile.options())
+            bottom_buttons.append((self.clear_all_button,
+                                   self.bottom_button_grid.options()))
+
+        self.bottom_button_grid.contents = bottom_buttons
+
+
 class PlacementView(WidgetWrap):
     """Handles display of machines and services.
 
@@ -885,20 +961,12 @@ class PlacementView(WidgetWrap):
                                               self.placement_controller,
                                               self)
 
-        def show_clear_p(m):
-            pc = self.placement_controller
-            return len(pc.assignments_for_machine(m)) != 0
-
-        self.machines_list = MachinesList(self.placement_controller,
-                                          [(show_clear_p,
-                                            'Clear', self.do_clear_machine),
-                                           ('Edit Services',
-                                            self.do_show_service_chooser)],
-                                          show_hardware=True)
-        self.machines_list.update()
+        self.machines_column = MachinesColumn(self.display_controller,
+                                              self.placement_controller,
+                                              self)
 
         self.columns = Columns([self.services_column,
-                                self.machines_list])
+                                self.machines_column])
         self.main_pile = Pile([Padding(self.header_view,
                                        align='center',
                                        width=('relative', 50)),
@@ -910,13 +978,16 @@ class PlacementView(WidgetWrap):
     def update(self):
         self.header_view.update()
         self.services_column.update()
-        self.machines_list.update()
+        self.machines_column.update()
 
     def do_autoplace(self, sender):
         ok, msg = self.placement_controller.autoplace_unplaced_services()
         if not ok:
             self.show_overlay(Filler(InfoDialog(msg,
                                                 self.remove_overlay)))
+
+    def do_clear_all(self, sender):
+        self.placement_controller.clear_all_assignments()
 
     def do_clear_machine(self, sender, machine):
         self.placement_controller.clear_assignments(machine)
