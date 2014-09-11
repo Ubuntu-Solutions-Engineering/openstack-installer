@@ -748,35 +748,53 @@ class ServicesColumn(WidgetWrap):
                                            on_press=self.do_reset_to_defaults),
                                     'button', 'button_focus')
         self.unplaced_services_pile = Pile([self.unplaced_services_list,
-                                            self.autoplace_button,
                                             Divider()])
+
+        self.bottom_buttons = []
+        self.bottom_button_grid = GridFlow(self.bottom_buttons,
+                                           36, 1, 0, 'center')
 
         # placeholders replaced in update():
         pl = [Pile([]),         # unplaced services
-              Pile([])]         # reset button
+              self.bottom_button_grid]
 
         self.main_pile = Pile(pl)
 
         return self.main_pile
 
     def update(self):
-
         self.unplaced_services_list.update()
+
+        bottom_buttons = []
+
         if len(self.placement_controller.unplaced_services) == 0:
             self.main_pile.contents[0] = (Divider(),
                                           self.main_pile.options())
+            icon = SelectableIcon(" (Auto-place remaining services) ")
+            bottom_buttons.append((AttrMap(icon,
+                                           'disabled_button',
+                                           'disabled_button_focus'),
+                                   self.bottom_button_grid.options()))
+
         else:
             self.main_pile.contents[0] = (self.unplaced_services_pile,
                                           self.main_pile.options())
+            bottom_buttons.append((self.autoplace_button,
+                                   self.bottom_button_grid.options()))
 
         defs = self.placement_controller.gen_defaults()
 
         if self.placement_controller.are_assignments_equivalent(defs):
-            self.main_pile.contents[1] = (Divider(),
-                                          self.main_pile.options())
+            icon = SelectableIcon(" (Reset to default placement) ")
+            bottom_buttons.append((AttrMap(icon,
+                                           'disabled_button',
+                                           'disabled_button_focus'),
+                                   self.bottom_button_grid.options()))
         else:
-            self.main_pile.contents[1] = (self.reset_button,
-                                          self.main_pile.options())
+            bottom_buttons.append((self.reset_button,
+                                  self.bottom_button_grid.options()))
+
+        self.bottom_button_grid.contents = bottom_buttons
 
     def do_reset_to_defaults(self, sender):
         self.placement_controller.set_all_assignments(
