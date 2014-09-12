@@ -206,6 +206,16 @@ class MaasMachine(Machine):
     def __str__(self):
         return repr(self)
 
+    def filter_label(self):
+        d = dict(dns_name=self.hostname,
+                 arch=self.arch,
+                 tag=self.tag,
+                 mem=self.mem,
+                 storage=self.storage,
+                 cpus=self.cpu_cores)
+        return ("hostname:{dns_name} tag:{tag} mem:{mem} arch:{arch}"
+                "storage:{storage} cores:{cpus})>").format(**d)
+
 
 class MaasState:
     """ Represents global MaaS state """

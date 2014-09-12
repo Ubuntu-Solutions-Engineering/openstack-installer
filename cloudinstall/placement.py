@@ -16,9 +16,9 @@
 from collections import defaultdict
 import logging
 
-from urwid import (AttrMap, Button, Columns, Divider, Filler,
-                   GridFlow, LineBox, Overlay, Padding, Pile,
-                   SelectableIcon, Text, WidgetWrap)
+from urwid import (AttrMap, Button, Columns, connect_signal, Divider,
+                   Edit, Filler, GridFlow, LineBox, Overlay, Padding,
+                   Pile, SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.config import Config
 from cloudinstall.machine import satisfies
@@ -462,6 +462,7 @@ class MachinesList(WidgetWrap):
             self.constraints = constraints
         self.show_hardware = show_hardware
         self.title = title
+        self.filter_string = ""
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -477,20 +478,37 @@ class MachinesList(WidgetWrap):
             cstr = " matching constraints"
         else:
             cstr = ""
-        self.machine_pile = Pile([Text(self.title + cstr)] +
+
+        self.filter_edit_box = Edit(caption="Filter: ")
+        connect_signal(self.filter_edit_box, 'change',
+                       self.handle_filter_change)
+
+        self.machine_pile = Pile([Text(self.title + cstr),
+                                  AttrMap(self.filter_edit_box,
+                                          'button', 'button_focus')] +
                                  self.machine_widgets)
         return self.machine_pile
 
+    def handle_filter_change(self, edit_button, userdata):
+        self.filter_string = userdata
+        self.update()
+
+    def find_machine_widget(self, m):
+        return next((mw for mw in self.machine_widgets if
+                     mw.machine.instance_id == m.instance_id), None)
+
     def update(self):
-
-        def find_widget(m):
-            return next((mw for mw in self.machine_widgets if
-                         mw.machine.instance_id == m.instance_id), None)
-
         for m in self.controller.machines():
             if not satisfies(m, self.constraints)[0]:
+                self.remove_machine_widget(m)
                 continue
-            mw = find_widget(m)
+
+            if self.filter_string != "" and \
+               self.filter_string not in m.filter_label():
+                self.remove_machine_widget(m)
+                continue
+
+            mw = self.find_machine_widget(m)
             if mw is None:
                 mw = self.add_machine_widget(m)
             mw.update()
@@ -506,6 +524,22 @@ class MachinesList(WidgetWrap):
                                                            left=2, right=2),
                                                    'label'), options))
         return mw
+
+    def remove_machine_widget(self, machine):
+        mw = self.find_machine_widget(machine)
+
+        if mw is None:
+            return
+        self.machine_widgets.remove(mw)
+        mw_idx = 0
+        for w, opts in self.machine_pile.contents:
+            if w == mw:
+                break
+            mw_idx += 1
+
+        c = self.machine_pile.contents[:mw_idx] + \
+            self.machine_pile.contents[mw_idx + 2:]
+        self.machine_pile.contents = c
 
 
 class ServicesList(WidgetWrap):
