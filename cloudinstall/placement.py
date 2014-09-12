@@ -119,7 +119,8 @@ class PlacementController:
             if charm_class in assignment_list:
                 m = next((m for m in all_machines
                           if m.instance_id == m_id), None)
-                machines.append(m)
+                if m:
+                    machines.append(m)
         return machines
 
     def remove_assignment(self, m, cc):
