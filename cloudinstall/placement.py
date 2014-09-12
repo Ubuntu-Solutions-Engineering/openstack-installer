@@ -152,7 +152,8 @@ class PlacementController:
     def service_is_core(self, cc):
         uncore_services = ['swift-storage',
                            'swift-proxy',
-                           'nova-compute']
+                           'nova-compute',
+                           'juju-gui']
         return cc.name() not in uncore_services
 
     def can_deploy(self):
