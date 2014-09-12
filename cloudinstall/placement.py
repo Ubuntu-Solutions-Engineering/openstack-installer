@@ -452,7 +452,7 @@ class MachinesList(WidgetWrap):
     """
 
     def __init__(self, controller, actions, constraints=None,
-                 show_hardware=False):
+                 show_hardware=False, title="Machines"):
         self.controller = controller
         self.actions = actions
         self.machine_widgets = []
@@ -461,6 +461,7 @@ class MachinesList(WidgetWrap):
         else:
             self.constraints = constraints
         self.show_hardware = show_hardware
+        self.title = title
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -476,7 +477,7 @@ class MachinesList(WidgetWrap):
             cstr = " matching constraints"
         else:
             cstr = ""
-        self.machine_pile = Pile([Text("Machines" + cstr)] +
+        self.machine_pile = Pile([Text(self.title + cstr)] +
                                  self.machine_widgets)
         return self.machine_pile
 
@@ -884,12 +885,18 @@ class MachinesColumn(WidgetWrap):
 
         clear_machine_func = self.placement_view.do_clear_machine
         show_chooser_func = self.placement_view.do_show_service_chooser
+
+        bc = self.config.juju_env['bootstrap-config']
+        maasname = "'{}' <{}>".format(bc['name'], bc['maas-server'])
+        maastitle = "Machines in {}".format(maasname)
+
         self.machines_list = MachinesList(self.placement_controller,
                                           [(show_clear_p,
                                             'Clear', clear_machine_func),
                                            ('Edit Services',
                                             show_chooser_func)],
-                                          show_hardware=True)
+                                          show_hardware=True,
+                                          title=maastitle)
         self.machines_list.update()
 
         self.machines_list_pile = Pile([self.machines_list,
@@ -900,9 +907,6 @@ class MachinesColumn(WidgetWrap):
                                                on_press=clear_all_func),
                                         'button', 'button_focus')
 
-        bc = self.config.juju_env['bootstrap-config']
-        maasname = "'{}' ({})".format(bc['name'], bc['maas-server'])
-
         openlabel = "Open {} in browser".format(bc['maas-server'])
         self.open_maas_button = AttrMap(Button(openlabel,
                                                on_press=self.browse_maas),
@@ -912,13 +916,8 @@ class MachinesColumn(WidgetWrap):
         self.bottom_button_grid = GridFlow(self.bottom_buttons,
                                            36, 1, 0, 'center')
 
-        header = Padding(Text("You are connected to MAAS {}".format(maasname)),
-                         align='center',
-                         width='pack')
-
         # placeholders replaced in update():
-        pl = [header,
-              Pile([]),         # machines_list
+        pl = [Pile([]),         # machines_list
               Divider(),
               self.bottom_button_grid]
 
@@ -940,13 +939,13 @@ class MachinesColumn(WidgetWrap):
                                           width='pack')
 
         if len(self.placement_controller.machines()) == 0:
-            self.main_pile.contents[1] = (self.empty_maas_widgets,
+            self.main_pile.contents[0] = (self.empty_maas_widgets,
                                           self.main_pile.options())
             bottom_buttons.append((self.open_maas_button,
                                    self.bottom_button_grid.options()))
 
         else:
-            self.main_pile.contents[1] = (self.machines_list_pile,
+            self.main_pile.contents[0] = (self.machines_list_pile,
                                           self.main_pile.options())
             bottom_buttons.append((self.clear_all_button,
                                    self.bottom_button_grid.options()))
