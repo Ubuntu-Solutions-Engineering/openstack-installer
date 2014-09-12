@@ -15,6 +15,7 @@
 
 from collections import defaultdict
 import logging
+from subprocess import Popen, PIPE, TimeoutExpired
 
 from urwid import (AttrMap, Button, Columns, connect_signal, Divider,
                    Edit, Filler, GridFlow, LineBox, Overlay, Padding,
@@ -987,7 +988,23 @@ class MachinesColumn(WidgetWrap):
         self.bottom_button_grid.contents = bottom_buttons
 
     def browse_maas(self, sender):
-        pass  # TODO
+
+        bc = self.config.juju_env['bootstrap-config']
+        try:
+            p = Popen(["sensible-browser", bc['maas-server']],
+                      stdout=PIPE, stderr=PIPE)
+            outs, errs = p.communicate(timeout=5)
+
+        except TimeoutExpired:
+            # went five seconds without an error, so we assume it's
+            # OK. Don't kill it, just let it go:
+            return
+        e = errs.decode('utf-8')
+        msg = "Error opening '{}' in a browser:\n{}".format(bc['name'], e)
+
+        w = Filler(InfoDialog(msg,
+                              self.placement_view.remove_overlay))
+        self.placement_view.show_overlay(w)
 
 
 class PlacementView(WidgetWrap):
