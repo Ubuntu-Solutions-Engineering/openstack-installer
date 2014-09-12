@@ -181,4 +181,4 @@ if __name__ == '__main__':
     if opts.enable_swift:
         bootstrap_bin = '{0} -s'.format(bootstrap_bin)
     out = utils.container_run(CONTAINER_NAME, bootstrap_bin, ssh_privkey())
-    sys.exit(out['ret'])
+    sys.exit(0)
