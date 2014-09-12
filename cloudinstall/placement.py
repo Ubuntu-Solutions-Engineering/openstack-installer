@@ -487,6 +487,7 @@ class MachinesList(WidgetWrap):
                        self.handle_filter_change)
 
         self.machine_pile = Pile([Text(self.title + cstr),
+                                  Divider(),
                                   AttrMap(self.filter_edit_box,
                                           'button', 'button_focus')] +
                                  self.machine_widgets)
