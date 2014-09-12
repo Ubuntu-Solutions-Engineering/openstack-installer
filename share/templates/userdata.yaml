@@ -2,6 +2,13 @@
 
 write_files:
   - content: |
+      auto eth0
+      iface eth0 inet manual
+      auto lxcbr0
+      iface lxcbr0 inet dhcp
+          bridge_ports eth0
+    path: /etc/network/interfaces.d/bridge.cfg
+  - content: |
       #!/bin/sh
       mkdir -p /dev/net || true
       mknod /dev/kvm c 10 232
@@ -42,6 +49,11 @@ package_update: true
 password: ubuntu
 chpasswd: { expire: False }
 ssh_pwauth: True
+
+bootcmd:
+  - rm /etc/network/interfaces.d/eth0.cfg
+  - ifdown eth0
+  - ifup lxcbr0 eth0
 
 # Make sure we load our modules on first creation
 runcmd:
