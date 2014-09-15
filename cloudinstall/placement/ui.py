@@ -466,10 +466,10 @@ class MachineChooser(WidgetWrap):
 
         constraints = self.charm_class.constraints
         self.machines_list = MachinesList(self.controller,
-                                          [('Add to bare metal',
+                                          [('Add as Bare Metal',
                                             self.do_select),
-                                           ('Add in LXC', self.do_select),
-                                           ('Add in KVM', self.do_select)],
+                                           ('Add as LXC', self.do_select),
+                                           ('Add as KVM', self.do_select)],
                                           constraints=constraints,
                                           show_hardware=True)
         self.machines_list.update()
@@ -529,7 +529,7 @@ class ServiceChooser(WidgetWrap):
 
         add_labels = ["Add to {} as {}".format(self.machine.hostname,
                                                type)
-                      for type in ['Bare metal', 'LXC', 'KVM']]
+                      for type in ['Bare Metal', 'LXC', 'KVM']]
 
         add_tuples = [(show_add_p, l, self.do_add) for l in add_labels]
 
