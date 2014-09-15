@@ -589,14 +589,16 @@ class ServicesList(WidgetWrap):
                      sw.charm_class.charm_name == cc.charm_name), None)
 
     def update(self):
+
         for cc in self.controller.charm_classes():
             if self.machine and not satisfies(self.machine,
                                               cc.constraints)[0]:
                 self.remove_service_widget(cc)
                 continue
 
-            if self.unplaced_only and \
-               cc not in self.controller.unplaced_services:
+            if self.unplaced_only \
+               and cc not in self.controller.unplaced_services \
+               and not cc.allow_multi_units:
                 self.remove_service_widget(cc)
                 continue
 
@@ -799,8 +801,7 @@ class ServicesColumn(WidgetWrap):
         self.bottom_button_grid = GridFlow(self.bottom_buttons,
                                            36, 1, 0, 'center')
 
-        # placeholders replaced in update():
-        pl = [Pile([]),         # unplaced services
+        pl = [self.unplaced_services_pile,
               self.bottom_button_grid]
 
         self.main_pile = Pile(pl)
@@ -813,8 +814,6 @@ class ServicesColumn(WidgetWrap):
         bottom_buttons = []
 
         if len(self.placement_controller.unplaced_services) == 0:
-            self.main_pile.contents[0] = (Divider(),
-                                          self.main_pile.options())
             icon = SelectableIcon(" (Auto-place remaining services) ")
             bottom_buttons.append((AttrMap(icon,
                                            'disabled_button',
@@ -822,8 +821,6 @@ class ServicesColumn(WidgetWrap):
                                    self.bottom_button_grid.options()))
 
         else:
-            self.main_pile.contents[0] = (self.unplaced_services_pile,
-                                          self.main_pile.options())
             bottom_buttons.append((self.autoplace_button,
                                    self.bottom_button_grid.options()))
 
