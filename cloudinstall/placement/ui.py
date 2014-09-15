@@ -85,7 +85,7 @@ class MachineWidget(WidgetWrap):
         self.hardware_widget = Text(["  "] + self.hardware_info_markup())
 
         self.buttons = []
-        self.button_grid = GridFlow(self.buttons, 22, 2, 2, 'right')
+        self.button_grid = GridFlow(self.buttons, 22, 1, 1, 'right')
 
         pl = [Divider(' '), self.machine_info_widget]
         if self.show_hardware:
@@ -188,7 +188,7 @@ class ServiceWidget(WidgetWrap):
 
         self.buttons = []
 
-        self.button_grid = GridFlow(self.buttons, 22, 1, 0, 'right')
+        self.button_grid = GridFlow(self.buttons, 22, 1, 1, 'right')
 
         pl = [self.charm_info_widget]
         if self.show_assignments:
@@ -375,7 +375,8 @@ class ServicesList(WidgetWrap):
         return True
 
     def build_widgets(self):
-        self.service_pile = Pile([Text("Services")] +
+        self.service_pile = Pile([Text("Services"),
+                                  Divider(' ')] +
                                  self.service_widgets)
         return self.service_pile
 
