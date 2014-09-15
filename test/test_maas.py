@@ -40,7 +40,7 @@ class MaasMachineTestCase(unittest.TestCase):
                                                'bootstrap+1ready.json')))
         self.m_ready = MaasMachine(-1, oneready[1])
 
-    def test_empty_machine_unknonw_status(self):
+    def test_empty_machine_unknown_status(self):
         self.assertEqual(self.empty_machine.status, MaasMachineStatus.UNKNOWN)
 
     def test_declared_state(self):
