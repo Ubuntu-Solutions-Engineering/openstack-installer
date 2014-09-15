@@ -7,3 +7,5 @@ rm -rf /etc/cloud-installer || true
 rm -rf ~/.cloud-install || true
 lxc-stop -n uoi-bootstrap
 lxc-destroy -n uoi-bootstrap
+apt-get -y remove cloud-install\*
+apt-get -y autoremove
