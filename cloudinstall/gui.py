@@ -38,7 +38,7 @@ from cloudinstall.status import get_sync_status
 from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox)
 from cloudinstall.ui.helpscreen import HelpScreen
-from cloudinstall.placement import PlacementView
+from cloudinstall.placement.ui import PlacementView
 
 log = logging.getLogger('cloudinstall.gui')
 sys.excepthook = utils.global_exchandler

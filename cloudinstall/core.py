@@ -34,7 +34,7 @@ from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from cloudinstall.charms import CharmQueue, get_charm
 from cloudinstall.log import PrettyLog
-from cloudinstall.placement import PlacementController
+from cloudinstall.placement.controller import PlacementController
 
 from macumba import JujuClient
 from multiprocessing import cpu_count
