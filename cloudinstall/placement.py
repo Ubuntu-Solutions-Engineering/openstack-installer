@@ -282,8 +282,9 @@ class MachineWidget(WidgetWrap):
             self.machine_info_widget = Text(('info',
                                              "\N{DOTTED CIRCLE} Unplaced"))
         else:
-            self.machine_info_widget = Text("\N{TAPE DRIVE} {}".format(
-                self.machine.hostname))
+            markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
+                      ('label', " ({})".format(self.machine.status))]
+            self.machine_info_widget = Text(markup)
         self.assignments_widget = Text("")
 
         self.hardware_widget = Text(["  "] + self.hardware_info_markup())
@@ -291,10 +292,10 @@ class MachineWidget(WidgetWrap):
         self.buttons = []
         self.button_grid = GridFlow(self.buttons, 22, 2, 2, 'right')
 
-        pl = [Divider(' '), self.machine_info_widget, self.assignments_widget]
+        pl = [Divider(' '), self.machine_info_widget]
         if self.show_hardware:
             pl.append(self.hardware_widget)
-        pl.append(self.button_grid)
+        pl += [Divider(' '), self.assignments_widget, self.button_grid]
 
         p = Pile(pl)
 
@@ -302,12 +303,12 @@ class MachineWidget(WidgetWrap):
 
     def update(self):
         al = self.controller.assignments_for_machine(self.machine)
-        astr = "  "
+        astr = [('label', "  Services: ")]
         if len(al) == 0:
-            astr += "\N{EMPTY SET}"
+            astr.append("\N{EMPTY SET}")
         else:
-            astr += ", ".join(["\N{GEAR} {}".format(c.display_name)
-                               for c in al])
+            astr.append(", ".join(["\N{GEAR} {}".format(c.display_name)
+                                   for c in al]))
 
         self.assignments_widget.set_text(astr)
         self.update_buttons()
@@ -926,7 +927,7 @@ class MachinesColumn(WidgetWrap):
 
         bc = self.config.juju_env['bootstrap-config']
         maasname = "'{}' <{}>".format(bc['name'], bc['maas-server'])
-        maastitle = "Machines in {}".format(maasname)
+        maastitle = "Machines in MAAS {}".format(maasname)
 
         self.machines_list = MachinesList(self.placement_controller,
                                           [(show_clear_p,
