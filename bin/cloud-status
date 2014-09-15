@@ -65,4 +65,9 @@ if __name__ == '__main__':
     else:
         gui = PegasusGUI()
     core = Controller(ui=gui, opts=opts)
-    sys.exit(core.start())
+    try:
+        sys.exit(core.start())
+    except:
+        print("There was a problem running the status screen.")
+        print("Please check ~/.cloud-install/commands.log")
+        sys.exit(1)
