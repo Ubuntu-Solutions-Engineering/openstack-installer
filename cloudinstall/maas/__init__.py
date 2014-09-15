@@ -43,6 +43,9 @@ class MaasMachineStatus(Enum):
     ALLOCATED = 6
     RETIRED = 7
 
+    def __str__(self):
+        return self.name.lower()
+
 
 class MaasMachine(Machine):
     """ Single maas machine """
