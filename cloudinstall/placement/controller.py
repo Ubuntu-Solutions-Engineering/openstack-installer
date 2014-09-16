@@ -98,6 +98,14 @@ class PlacementController:
         del self.assignments[m.instance_id]
         self.reset_unplaced()
 
+    def remove_one_assignment(self, m, cc):
+        ad = self.assignments[m.instance_id]
+        for atype, assignment_list in ad.items():
+            if cc in assignment_list:
+                assignment_list.remove(cc)
+                break
+        self.reset_unplaced()
+
     def assignments_for_machine(self, m):
         """Returns all assignments for given machine
 

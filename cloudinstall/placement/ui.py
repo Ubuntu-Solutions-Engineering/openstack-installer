@@ -534,21 +534,41 @@ class ServiceChooser(WidgetWrap):
                                             show_hardware=True)
 
         def show_remove_p(cc):
-            ms = self.controller.machines_for_charm(cc)
-            hostnames = [m.hostname for m in ms]
-            return self.machine.hostname in hostnames
+            md = self.controller.machines_for_charm(cc)
+            for atype, ms in md.items():
+                hostnames = [m.hostname for m in ms]
+                if self.machine.hostname in hostnames:
+                    return True
+            return False
 
-        def show_add_p(cc):
-            ms = self.controller.machines_for_charm(cc)
+        def show_add_baremetal_p(cc):
+            return show_add_p(cc, AssignmentType.BareMetal)
+
+        def show_add_lxc_p(cc):
+            return show_add_p(cc, AssignmentType.LXC)
+
+        def show_add_kvm_p(cc):
+            return show_add_p(cc, AssignmentType.KVM)
+
+        def show_add_p(cc, atype):
+            md = self.controller.machines_for_charm(cc)
+            ms = md[atype]
             hostnames = [m.hostname for m in ms]
             return (self.machine.hostname not in hostnames
                     or cc.allow_multi_units)
 
-        add_labels = ["Add to {} as {}".format(self.machine.hostname,
-                                               type)
-                      for type in ['Bare Metal', 'LXC', 'KVM']]
-
-        add_tuples = [(show_add_p, l, self.do_add) for l in add_labels]
+        def make_add_label(atype):
+            return "Add to {} as {}".format(self.machine.hostname,
+                                            atype.name)
+        add_tuples = [(show_add_baremetal_p,
+                       make_add_label(AssignmentType.BareMetal),
+                       self.do_add_baremetal),
+                      (show_add_lxc_p,
+                       make_add_label(AssignmentType.LXC),
+                       self.do_add_lxc),
+                      (show_add_kvm_p,
+                       make_add_label(AssignmentType.KVM),
+                       self.do_add_kvm)]
 
         self.services_list = ServicesList(self.controller,
                                           add_tuples +
@@ -571,8 +591,17 @@ class ServiceChooser(WidgetWrap):
         self.machine_widget.update()
         self.services_list.update()
 
-    def do_add(self, sender, charm_class):
-        self.controller.assign(self.machine, charm_class)
+    def do_add_baremetal(self, sender, charm_class):
+        self.do_add(sender, charm_class, AssignmentType.BareMetal)
+
+    def do_add_lxc(self, sender, charm_class):
+        self.do_add(sender, charm_class, AssignmentType.LXC)
+
+    def do_add_kvm(self, sender, charm_class):
+        self.do_add(sender, charm_class, AssignmentType.KVM)
+
+    def do_add(self, sender, charm_class, atype):
+        self.controller.assign(self.machine, charm_class, atype)
         self.update()
 
     def do_remove(self, sender, charm_class):
