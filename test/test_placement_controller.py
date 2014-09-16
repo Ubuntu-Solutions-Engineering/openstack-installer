@@ -136,3 +136,33 @@ class PlacementControllerTestCase(unittest.TestCase):
             self.assertEqual(m2_as[AssignmentType.BareMetal], [])
             self.assertEqual(m2_as[AssignmentType.LXC], [CharmKeystone])
             self.assertEqual(m2_as[AssignmentType.KVM], [])
+
+    def test_remove_one_assignment_sametype(self):
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+
+        self.pc.remove_one_assignment(self.mock_machine, CharmNovaCompute)
+        md = self.pc.assignments[self.mock_machine.instance_id]
+        lxcs = md[AssignmentType.LXC]
+        self.assertEqual(lxcs, [CharmNovaCompute])
+
+        self.pc.remove_one_assignment(self.mock_machine, CharmNovaCompute)
+        md = self.pc.assignments[self.mock_machine.instance_id]
+        lxcs = md[AssignmentType.LXC]
+        self.assertEqual(lxcs, [])
+
+    def test_remove_one_assignment_othertype(self):
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.KVM)
+
+        self.pc.remove_one_assignment(self.mock_machine, CharmNovaCompute)
+        md = self.pc.assignments[self.mock_machine.instance_id]
+        lxcs = md[AssignmentType.LXC]
+        kvms = md[AssignmentType.KVM]
+        self.assertEqual(1, len(lxcs) + len(kvms))
+
+        self.pc.remove_one_assignment(self.mock_machine, CharmNovaCompute)
+        md = self.pc.assignments[self.mock_machine.instance_id]
+        lxcs = md[AssignmentType.LXC]
+        kvms = md[AssignmentType.KVM]
+        self.assertEqual(0, len(lxcs) + len(kvms))
