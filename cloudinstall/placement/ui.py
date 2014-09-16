@@ -559,8 +559,8 @@ class ServiceChooser(WidgetWrap):
         self.update()
 
     def do_remove(self, sender, charm_class):
-        self.controller.remove_assignment(self.machine,
-                                          charm_class)
+        self.controller.remove_one_assignment(self.machine,
+                                              charm_class)
         self.update()
 
     def close_pressed(self, sender):
@@ -869,10 +869,6 @@ class PlacementView(WidgetWrap):
 
     def do_clear_machine(self, sender, machine):
         self.placement_controller.clear_assignments(machine)
-
-    def do_clear_service(self, sender, charm_class):
-        for m in self.placement_controller.machines_for_charm(charm_class):
-            self.placement_controller.remove_assignment(m, charm_class)
 
     def do_show_service_chooser(self, sender, machine):
         self.show_overlay(Filler(ServiceChooser(self.placement_controller,

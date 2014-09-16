@@ -14,9 +14,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict
+from enum import Enum
+import logging
 
 from cloudinstall.machine import satisfies
 from cloudinstall.utils import load_charms
+
+log = logging.getLogger('cloudinstall.placement')
+
+
+class AssignmentType(Enum):
+    BareMetal = 1
+    KVM = 2
+    LXC = 3
 
 
 class PlacementController:
@@ -25,7 +35,8 @@ class PlacementController:
 
     def __init__(self, maas_state, opts):
         self.maas_state = maas_state
-        self.assignments = defaultdict(list)  # instance_id -> [charm class]
+        # id -> {atype: [charm class]}
+        self.assignments = defaultdict(lambda: defaultdict(list))
         self.opts = opts
         self.unplaced_services = set()
 
@@ -52,29 +63,30 @@ class PlacementController:
                 return False
         return True
 
-    def assign(self, machine, charm_class):
+    def assign(self, machine, charm_class, atype):
         if not charm_class.allow_multi_units:
-            for m, l in self.assignments.items():
-                if charm_class in l:
-                    l.remove(charm_class)
-        self.assignments[machine.instance_id].append(charm_class)
+            for m, d in self.assignments.items():
+                for at, l in d.items():
+                    if charm_class in l:
+                        l.remove(charm_class)
+
+        self.assignments[machine.instance_id][atype].append(charm_class)
         self.reset_unplaced()
 
     def machines_for_charm(self, charm_class):
+        """ returns assignments for a given charm
+        returns {assignment_type : [machines]}
+        """
         all_machines = self.machines()
-        machines = []
-        for m_id, assignment_list in self.assignments.items():
-            if charm_class in assignment_list:
-                m = next((m for m in all_machines
-                          if m.instance_id == m_id), None)
-                if m:
-                    machines.append(m)
-        return machines
-
-    def remove_assignment(self, m, cc):
-        assignments = self.assignments[m.instance_id]
-        assignments.remove(cc)
-        self.reset_unplaced()
+        machines_by_atype = defaultdict(list)
+        for m_id, d in self.assignments.items():
+            for atype, assignment_list in d.items():
+                if charm_class in assignment_list:
+                    m = next((m for m in all_machines
+                              if m.instance_id == m_id), None)
+                    if m:
+                        machines_by_atype[atype].append(m)
+        return machines_by_atype
 
     def clear_all_assignments(self):
         self.assignments = defaultdict(list)
@@ -85,6 +97,10 @@ class PlacementController:
         self.reset_unplaced()
 
     def assignments_for_machine(self, m):
+        """Returns all assignments for given machine
+
+        {assignment_type: [charm_class]}
+        """
         return self.assignments[m.instance_id]
 
     def set_all_assignments(self, assignments):
