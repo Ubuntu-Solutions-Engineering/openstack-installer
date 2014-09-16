@@ -20,7 +20,7 @@
 import logging
 import os
 import unittest
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
@@ -117,3 +117,22 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.clear_assignments(self.mock_machine)
         self.assertEqual(self.pc.machines_for_charm(CharmNovaCompute),
                          {AssignmentType.LXC: [self.mock_machine_2]})
+
+    def test_gen_defaults(self):
+        satisfies_importstring = 'cloudinstall.placement.controller.satisfies'
+        with patch(satisfies_importstring) as mock_satisfies:
+            mock_satisfies.return_value = (True, )
+            defs = self.pc.gen_defaults(charm_classes=[CharmNovaCompute,
+                                                       CharmKeystone],
+                                        maas_machines=[self.mock_machine,
+                                                       self.mock_machine_2])
+            m1_as = defs[self.mock_machine.instance_id]
+            m2_as = defs[self.mock_machine_2.instance_id]
+            self.assertEqual(m1_as[AssignmentType.BareMetal],
+                             [CharmNovaCompute])
+            self.assertEqual(m1_as[AssignmentType.LXC], [])
+            self.assertEqual(m1_as[AssignmentType.KVM], [])
+
+            self.assertEqual(m2_as[AssignmentType.BareMetal], [])
+            self.assertEqual(m2_as[AssignmentType.LXC], [CharmKeystone])
+            self.assertEqual(m2_as[AssignmentType.KVM], [])
