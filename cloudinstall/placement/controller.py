@@ -91,7 +91,7 @@ class PlacementController:
         return machines_by_atype
 
     def clear_all_assignments(self):
-        self.assignments = defaultdict(list)
+        self.assignments = defaultdict(lambda: defaultdict(list))
         self.reset_unplaced()
 
     def clear_assignments(self, m):

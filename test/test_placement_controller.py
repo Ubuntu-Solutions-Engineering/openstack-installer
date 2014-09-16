@@ -166,3 +166,15 @@ class PlacementControllerTestCase(unittest.TestCase):
         lxcs = md[AssignmentType.LXC]
         kvms = md[AssignmentType.KVM]
         self.assertEqual(0, len(lxcs) + len(kvms))
+
+    def test_clear_all(self):
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        self.pc.assign(self.mock_machine_2,
+                       CharmNovaCompute, AssignmentType.KVM)
+        self.pc.clear_all_assignments()
+        # check that it's empty:
+        self.assertEqual(self.pc.assignments, {})
+        # and that it's still a defaultdict(lambda: defaultdict(list))
+        mid = self.mock_machine.machine_id
+        lxcs = self.pc.assignments[mid][AssignmentType.LXC]
+        self.assertEqual(lxcs, [])
