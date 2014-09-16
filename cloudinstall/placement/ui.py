@@ -22,6 +22,7 @@ from urwid import (AttrMap, Button, Columns, connect_signal, Divider,
 
 from cloudinstall.config import Config
 from cloudinstall.machine import satisfies
+from cloudinstall.placement.controller import AssignmentType
 from cloudinstall.ui import InfoDialog
 from cloudinstall.utils import format_constraint
 
@@ -97,13 +98,16 @@ class MachineWidget(WidgetWrap):
         return Padding(p, left=2, right=2)
 
     def update(self):
-        al = self.controller.assignments_for_machine(self.machine)
+        ad = self.controller.assignments_for_machine(self.machine)
         astr = [('label', "  Services: ")]
-        if len(al) == 0:
-            astr.append("\N{EMPTY SET}")
-        else:
-            astr.append(", ".join(["\N{GEAR} {}".format(c.display_name)
-                                   for c in al]))
+
+        for atype, al in ad.items():
+            astr.append(('label', "\n    {}: ".format(atype.name)))
+            if len(al) == 0:
+                astr.append("\N{EMPTY SET}")
+            else:
+                astr.append(", ".join(["\N{GEAR} {}".format(c.display_name)
+                                       for c in al]))
 
         self.assignments_widget.set_text(astr)
         self.update_buttons()
@@ -201,15 +205,19 @@ class ServiceWidget(WidgetWrap):
         return Padding(p, left=2, right=2)
 
     def update(self):
-        ml = self.controller.machines_for_charm(self.charm_class)
+        md = self.controller.machines_for_charm(self.charm_class)
+        mstr = [""]
 
-        t = "  "
-        if len(ml) == 0:
-            t += "\N{DOTTED CIRCLE}"
-        else:
-            t += ", ".join(["\N{TAPE DRIVE} {}".format(m.hostname)
-                            for m in ml])
-        self.assignments_widget.set_text(t)
+        for atype, ml in md.items():
+            ml = md[atype]
+            mstr.append(('label', "    {}: ".format(atype.name)))
+            if len(ml) == 0:
+                mstr.append("\N{DOTTED CIRCLE}")
+            else:
+                mstr.append(", ".join(["\N{TAPE DRIVE} {}".format(m.hostname)
+                                       for m in ml]))
+            mstr.append("\n")
+        self.assignments_widget.set_text(mstr)
 
         self.update_buttons()
 
@@ -467,9 +475,9 @@ class MachineChooser(WidgetWrap):
         constraints = self.charm_class.constraints
         self.machines_list = MachinesList(self.controller,
                                           [('Add as Bare Metal',
-                                            self.do_select),
-                                           ('Add as LXC', self.do_select),
-                                           ('Add as KVM', self.do_select)],
+                                            self.do_select_baremetal),
+                                           ('Add as LXC', self.do_select_lxc),
+                                           ('Add as KVM', self.do_select_kvm)],
                                           constraints=constraints,
                                           show_hardware=True)
         self.machines_list.update()
@@ -483,8 +491,17 @@ class MachineChooser(WidgetWrap):
 
         return LineBox(p, title="Select Machine{}".format(plural_string))
 
-    def do_select(self, sender, machine):
-        self.controller.assign(machine, self.charm_class)
+    def do_select_baremetal(self, sender, machine):
+        self.do_select(sender, machine, AssignmentType.BareMetal)
+
+    def do_select_lxc(self, sender, machine):
+        self.do_select(sender, machine, AssignmentType.LXC)
+
+    def do_select_kvm(self, sender, machine):
+        self.do_select(sender, machine, AssignmentType.KVM)
+
+    def do_select(self, sender, machine, atype):
+        self.controller.assign(machine, self.charm_class, atype)
         self.machines_list.update()
         self.service_widget.update()
 
