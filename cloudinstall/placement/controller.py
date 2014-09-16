@@ -28,6 +28,8 @@ class AssignmentType(Enum):
     KVM = 2
     LXC = 3
 
+DEFAULT_SHARED_ASSIGNMENT_TYPE = AssignmentType.LXC
+
 
 class PlacementController:
     """Keeps state of current machines and their assigned services.
@@ -166,7 +168,7 @@ class PlacementController:
         if charm_classes is None:
             charm_classes = self.charm_classes()
 
-        assignments = defaultdict(list)
+        assignments = defaultdict(lambda: defaultdict(list))
 
         if maas_machines is None:
             maas_machines = self.maas_state.machines()
@@ -190,11 +192,16 @@ class PlacementController:
         for charm_class in isolated_charms:
             m = satisfying_machine(charm_class.constraints)
             if m:
-                assignments[m.instance_id].append(charm_class)
+                l = assignments[m.instance_id][AssignmentType.BareMetal]
+                l.append(charm_class)
 
         controller_machine = satisfying_machine({})
         if controller_machine:
             for charm_class in controller_charms:
-                assignments[controller_machine.instance_id].append(charm_class)
+                ad = assignments[controller_machine.instance_id]
+                l = ad[DEFAULT_SHARED_ASSIGNMENT_TYPE]
+                l.append(charm_class)
 
+        import pprint
+        log.debug(pprint.pformat(assignments))
         return assignments
