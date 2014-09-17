@@ -134,5 +134,5 @@ fi
 if [ -z "$install" ]; then
 	exitInstall
 	sudo -H -u "$INSTALL_USER" juju status >> /dev/null
-	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER"  cloud-status $enableswift
+	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER" /usr/share/cloud-installer/bin/cloud-status-bootstrapped $enableswift
 fi

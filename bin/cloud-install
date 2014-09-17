@@ -61,7 +61,7 @@ def prep_userdata(dst):
     """ preps userdata file for container install """
     dst_file = os.path.join(dst, 'userdata.yaml')
     original_data = utils.load_template('userdata.yaml')
-    modified_data = original_data.render(extra_sshkeys=[ssh_readkey()])
+    modified_data = original_data.render(extra_sshkeys=[utils.ssh_readkey()])
     with open(dst_file, 'w') as f:
         f.write(modified_data)
 
@@ -75,48 +75,6 @@ def cloud_init_finished():
     if 'finished at' in out['stdout']:
         return True
     return False
-
-
-def ssh_readkey():
-    """ reads ssh key
-    """
-    with open(ssh_pubkey(), 'r') as f:
-        return f.read()
-
-
-def ssh_genkey():
-    """ Generates sshkey
-    """
-    if not os.path.exists(ssh_privkey()):
-        user_sshkey_path = os.path.join(utils.install_home(), '.ssh/id_rsa')
-        cmd = "ssh-keygen -N '' -f {0}".format(user_sshkey_path)
-        out = utils.get_command_output(cmd, user_sudo=True)
-        if out['ret'] != 0:
-            print("Unable to generate key: {0}".format(out['stderr']))
-            sys.exit(out['ret'])
-        utils.get_command_output('sudo chown -R {0}:{0} {1}'.format(
-            utils.install_user(), os.path.join(utils.install_home(), '.ssh')))
-        utils.get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
-                                 user_sudo=True)
-    else:
-        print('')
-        print('*** ssh keys exist for this user, they will be used instead')
-        print('*** If the current ssh keys are not passwordless you\'ll be')
-        print('*** required to enter your ssh key password during container')
-        print('*** creation.')
-        print('')
-
-
-def ssh_pubkey():
-    """ returns path of ssh public key
-    """
-    return os.path.join(utils.install_home(), '.ssh/id_rsa.pub')
-
-
-def ssh_privkey():
-    """ returns path of private key
-    """
-    return os.path.join(utils.install_home(), '.ssh/id_rsa')
 
 
 def parse_options(*args, **kwds):
@@ -162,7 +120,7 @@ if __name__ == '__main__':
         print("if you wish to restart the installation.")
         sys.exit(1)
     print("* Please wait while we generate your isolated environment ...")
-    ssh_genkey()
+    utils.ssh_genkey()
     prep_userdata(user_install_dir)
     create_container()
     start()
@@ -182,5 +140,6 @@ if __name__ == '__main__':
         bootstrap_bin = '{0} -r {1}'.format(bootstrap_bin, opts.release)
     if opts.enable_swift:
         bootstrap_bin = '{0} -s'.format(bootstrap_bin)
-    out = utils.container_run(CONTAINER_NAME, bootstrap_bin, ssh_privkey())
+    out = utils.container_run(CONTAINER_NAME, bootstrap_bin,
+                              utils.ssh_privkey())
     sys.exit(0)
