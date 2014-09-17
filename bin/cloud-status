@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- mode: python; -*-
 #
-# cloud-status - Displays status of all managed nodes
-#
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,56 +16,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import argparse
-import logging
-import os
-import signal
 import sys
 
-
-from cloudinstall.gui import PegasusGUI
-from cloudinstall.console import Console
-from cloudinstall.core import Controller
 from cloudinstall import utils
-from cloudinstall import log
 
+CONTAINER_NAME = 'uoi-bootstrap'
 
-def sig_handler(signum, frame):
-    utils.reset_blanking()
-    sys.exit(1)
-
-for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
-    signal.signal(sig, sig_handler)
-
-
-def parse_options(*args, **kwds):
-    parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
-                                     prog='cloud-status')
-    parser.add_argument('--enable-swift', action='store_true',
-                        dest='enable_swift', default=False,
-                        help='Enable swift storage')
-    parser.add_argument('--no-ui', action='store_true',
-                        dest='noui', default=False,
-                        help='Perform installation without UI.')
-    return parser.parse_args()
 
 if __name__ == '__main__':
-    log.setup_logger()
-    logger = logging.getLogger('cloudinstall')
-    logger.info("cloud-status starting")
-    if not os.path.exists('/etc/cloud-installer'):
-        print("It looks like you don't have a cloud installed.")
-        print("Plese run `sudo cloud-install` and then cloud-status")
-        sys.exit(1)
-    opts = parse_options(sys.argv)
-    if opts.noui:
-        gui = Console()
-    else:
-        gui = PegasusGUI()
-    core = Controller(ui=gui, opts=opts)
-    try:
-        sys.exit(core.start())
-    except:
-        print("There was a problem running the status screen.")
-        print("Please check ~/.cloud-install/commands.log")
-        sys.exit(1)
+    bootstrap_bin = '/usr/share/cloud-installer/bin/cloud-status-bootstrapped'
+    out = utils.container_run(
+        CONTAINER_NAME, bootstrap_bin, utils.ssh_privkey())
+    sys.exit(0)

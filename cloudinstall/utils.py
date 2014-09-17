@@ -392,10 +392,55 @@ def load_template(name):
 def install_user():
     """ returns sudo user
     """
-    return os.getenv('SUDO_USER', 'root')
+    user = os.getenv('SUDO_USER', None)
+    if not user:
+        user = os.getenv('USER', 'root')
+    return user
 
 
 def install_home():
     """ returns installer user home
     """
     return os.path.join('/home', install_user())
+
+
+def ssh_readkey():
+    """ reads ssh key
+    """
+    with open(ssh_pubkey(), 'r') as f:
+        return f.read()
+
+
+def ssh_genkey():
+    """ Generates sshkey
+    """
+    if not os.path.exists(ssh_privkey()):
+        user_sshkey_path = os.path.join(install_home(), '.ssh/id_rsa')
+        cmd = "ssh-keygen -N '' -f {0}".format(user_sshkey_path)
+        out = get_command_output(cmd, user_sudo=True)
+        if out['ret'] != 0:
+            print("Unable to generate key: {0}".format(out['stderr']))
+            sys.exit(out['ret'])
+        get_command_output('sudo chown -R {0}:{0} {1}'.format(
+            install_user(), os.path.join(install_home(), '.ssh')))
+        get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
+                           user_sudo=True)
+    else:
+        print('')
+        print('*** ssh keys exist for this user, they will be used instead')
+        print('*** If the current ssh keys are not passwordless you\'ll be')
+        print('*** required to enter your ssh key password during container')
+        print('*** creation.')
+        print('')
+
+
+def ssh_pubkey():
+    """ returns path of ssh public key
+    """
+    return os.path.join(install_home(), '.ssh/id_rsa.pub')
+
+
+def ssh_privkey():
+    """ returns path of private key
+    """
+    return os.path.join(install_home(), '.ssh/id_rsa')
