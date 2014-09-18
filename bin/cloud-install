@@ -83,6 +83,9 @@ def parse_options(*args, **kwds):
     parser.add_argument('-s', '--enable-swift', action='store_true',
                         dest='enable_swift', default=False,
                         help='Enable swift storage')
+    parser.add_argument('-i', '--install-only', action='store_true',
+                        dest='install_only', default=False,
+                        help='install only (dont invoke cloud-status)')
     parser.add_argument('-u', '--uninstall', action='store_true',
                         dest='uninstall', default=False)
     parser.add_argument('-a', type=str, default=None,
@@ -140,6 +143,8 @@ if __name__ == '__main__':
         bootstrap_bin = '{0} -r {1}'.format(bootstrap_bin, opts.release)
     if opts.enable_swift:
         bootstrap_bin = '{0} -s'.format(bootstrap_bin)
+    if opts.install_only:
+        bootstrap_bin = '{0} -i'.format(bootstrap_bin)
     out = utils.container_run(CONTAINER_NAME, bootstrap_bin,
                               utils.ssh_privkey())
     sys.exit(0)
