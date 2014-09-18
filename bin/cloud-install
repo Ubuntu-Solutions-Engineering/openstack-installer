@@ -128,7 +128,7 @@ if __name__ == '__main__':
     create_container()
     start()
     wait_for_running()
-    max_tries = 50
+    max_tries = 600  # 10 Minutes
     while not cloud_init_finished() and max_tries != 0:
         sys.stdout.write("\r[{0}] * Waiting for container to finalize, "
                          "please wait ...       ".format(max_tries))
