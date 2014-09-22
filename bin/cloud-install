@@ -128,12 +128,12 @@ if __name__ == '__main__':
     create_container()
     start()
     wait_for_running()
-    max_tries = 600  # 10 Minutes
-    while not cloud_init_finished() and max_tries != 0:
+    tries = 1
+    while not cloud_init_finished():
         sys.stdout.write("\r[{0}] * Waiting for container to finalize, "
-                         "please wait ...       ".format(max_tries))
-        max_tries = max_tries - 1
+                         "please wait ...       ".format(tries))
         time.sleep(1)
+        tries = tries + 1
     sys.stdout.flush()
     bootstrap_bin = 'sudo ' \
                     '/usr/share/cloud-installer/bin/cloud-install-bootstrapped'
