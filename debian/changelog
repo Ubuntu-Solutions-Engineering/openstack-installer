@@ -1,8 +1,9 @@
-cloud-installer (0.19+git20140715-0ubuntu1) utopic; urgency=medium
+cloud-installer (0.20-0ubuntu1) utopic; urgency=medium
 
-  * Experimental branch
+  * Stable release
+  * Supports machine placement
 
- -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 15 Jul 2014 10:24:26 -0400
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 24 Sep 2014 10:05:43 -0400
 
 cloud-installer (0.17+git20140619-0ubuntu1) utopic; urgency=medium
 
