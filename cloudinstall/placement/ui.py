@@ -74,16 +74,10 @@ class MachineWidget(WidgetWrap):
                 ('label', 'storage'), ' {}'.format(m.storage)]
 
     def build_widgets(self):
-        if self.machine.instance_id == 'unplaced':
-            self.machine_info_widget = Text(('info',
-                                             "\N{DOTTED CIRCLE} Unplaced"))
-        else:
-            markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
-                      ('label', " ({})".format(self.machine.status))]
-            self.machine_info_widget = Text(markup)
-        self.assignments_widget = Text("")
 
-        self.hardware_widget = Text(["  "] + self.hardware_info_markup())
+        self.machine_info_widget = Text("")
+        self.assignments_widget = Text("")
+        self.hardware_widget = Text("")
 
         self.buttons = []
         self.button_grid = GridFlow(self.buttons, 22, 1, 1, 'right')
@@ -97,7 +91,22 @@ class MachineWidget(WidgetWrap):
 
         return Padding(p, left=2, right=2)
 
+    def update_machine(self):
+        """Refresh with potentially updated machine info from controller.
+        Assumes that machine exists - machines going away is handled
+        in machineslist.update().
+        """
+        self.machine = next((m for m in self.controller.machines()
+                             if m.instance_id == self.machine.instance_id), None)
+
     def update(self):
+        self.update_machine()
+        machine_info_markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
+                               ('label', " ({})".format(self.machine.status))]
+
+        self.machine_info_widget.set_text(machine_info_markup)
+        self.hardware_widget.set_text(["  "] + self.hardware_info_markup())
+
         ad = self.controller.assignments_for_machine(self.machine)
         astr = [('label', "  Services: ")]
 
