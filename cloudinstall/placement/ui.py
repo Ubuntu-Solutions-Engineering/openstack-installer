@@ -315,14 +315,21 @@ class MachinesList(WidgetWrap):
                      mw.machine.instance_id == m.instance_id), None)
 
     def update(self):
-        for m in self.controller.machines():
+        machines = self.controller.machines()
+        for mw in self.machine_widgets:
+            machine = next((m for m in machines if
+                            mw.machine.instance_id == m.instance_id), None)
+            if machine is None:
+                self.remove_machine(mw.machine)
+
+        for m in machines:
             if not satisfies(m, self.constraints)[0]:
-                self.remove_machine_widget(m)
+                self.remove_machine(m)
                 continue
 
             if self.filter_string != "" and \
                self.filter_string not in m.filter_label():
-                self.remove_machine_widget(m)
+                self.remove_machine(m)
                 continue
 
             mw = self.find_machine_widget(m)
@@ -342,7 +349,7 @@ class MachinesList(WidgetWrap):
                                                    'label'), options))
         return mw
 
-    def remove_machine_widget(self, machine):
+    def remove_machine(self, machine):
         mw = self.find_machine_widget(machine)
 
         if mw is None:
