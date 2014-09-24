@@ -112,8 +112,18 @@ class MachineWidget(WidgetWrap):
         astr = [('label', "  Services: ")]
 
         for atype, al in ad.items():
-            astr.append(('label', "\n    {}: ".format(atype.name)))
-            if len(al) == 0:
+            n = len(al)
+            if n == 1:
+                pl_s = ""
+            else:
+                pl_s = "s"
+            if atype == AssignmentType.BareMetal:
+                astr.append(('label', "\n    {} service{}"
+                             " on Bare Metal: ".format(n, pl_s)))
+            else:
+                astr.append(('label', "\n    {} "
+                             "{}{}: ".format(n, atype.name, pl_s)))
+            if n == 0:
                 astr.append("\N{EMPTY SET}")
             else:
                 astr.append(", ".join(["\N{GEAR} {}".format(c.display_name)
