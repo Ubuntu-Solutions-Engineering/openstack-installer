@@ -113,6 +113,13 @@ class PlacementController:
         """
         return self.assignments[m.instance_id]
 
+    def is_assigned(self, charm_class, machine):
+        assignment_dict = self.assignments[machine.instance_id]
+        for atype, charm_classes in assignment_dict.items():
+            if charm_class in charm_classes:
+                return True
+        return False
+
     def set_all_assignments(self, assignments):
         self.assignments = assignments
         self.reset_unplaced()
