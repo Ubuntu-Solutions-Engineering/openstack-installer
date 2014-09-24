@@ -97,14 +97,15 @@ class MachineWidget(WidgetWrap):
         in machineslist.update().
         """
         self.machine = next((m for m in self.controller.machines()
-                             if m.instance_id == self.machine.instance_id), None)
+                             if m.instance_id == self.machine.instance_id),
+                            None)
 
     def update(self):
         self.update_machine()
-        machine_info_markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
-                               ('label', " ({})".format(self.machine.status))]
+        info_markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
+                       ('label', " ({})".format(self.machine.status))]
 
-        self.machine_info_widget.set_text(machine_info_markup)
+        self.machine_info_widget.set_text(info_markup)
         self.hardware_widget.set_text(["  "] + self.hardware_info_markup())
 
         ad = self.controller.assignments_for_machine(self.machine)
@@ -411,10 +412,11 @@ class ServicesList(WidgetWrap):
     def update(self):
 
         for cc in self.controller.charm_classes():
-            if self.machine and not satisfies(self.machine,
-                                              cc.constraints)[0]:
-                self.remove_service_widget(cc)
-                continue
+            if self.machine:
+                if not satisfies(self.machine, cc.constraints)[0] \
+                   or not self.controller.is_assigned(cc, self.machine):
+                    self.remove_service_widget(cc)
+                    continue
 
             if self.unplaced_only \
                and cc not in self.controller.unplaced_services \
@@ -542,7 +544,7 @@ class ServiceChooser(WidgetWrap):
 
     def build_widgets(self):
 
-        instructions = Text("Select services to add to {}".format(
+        instructions = Text("Remove services from {}".format(
             self.machine.hostname))
 
         self.machine_widget = MachineWidget(self.machine,
@@ -557,41 +559,10 @@ class ServiceChooser(WidgetWrap):
                     return True
             return False
 
-        def show_add_baremetal_p(cc):
-            return show_add_p(cc, AssignmentType.BareMetal)
-
-        def show_add_lxc_p(cc):
-            return show_add_p(cc, AssignmentType.LXC)
-
-        def show_add_kvm_p(cc):
-            return show_add_p(cc, AssignmentType.KVM)
-
-        def show_add_p(cc, atype):
-            md = self.controller.machines_for_charm(cc)
-            ms = md[atype]
-            hostnames = [m.hostname for m in ms]
-            return (self.machine.hostname not in hostnames
-                    or cc.allow_multi_units)
-
-        def make_add_label(atype):
-            return "Add to {} as {}".format(self.machine.hostname,
-                                            atype.name)
-        add_tuples = [(show_add_baremetal_p,
-                       make_add_label(AssignmentType.BareMetal),
-                       self.do_add_baremetal),
-                      (show_add_lxc_p,
-                       make_add_label(AssignmentType.LXC),
-                       self.do_add_lxc),
-                      (show_add_kvm_p,
-                       make_add_label(AssignmentType.KVM),
-                       self.do_add_kvm)]
-
         self.services_list = ServicesList(self.controller,
-                                          add_tuples +
                                           [(show_remove_p, 'Remove',
                                             self.do_remove)],
-                                          machine=self.machine,
-                                          show_constraints=True)
+                                          machine=self.machine)
 
         close_button = AttrMap(Button('Close',
                                       on_press=self.close_pressed),
@@ -601,20 +572,11 @@ class ServiceChooser(WidgetWrap):
                   GridFlow([close_button],
                            BUTTON_SIZE, 1, 0, 'right')])
 
-        return LineBox(p, title="Select Services")
+        return LineBox(p, title="Remove Services")
 
     def update(self):
         self.machine_widget.update()
         self.services_list.update()
-
-    def do_add_baremetal(self, sender, charm_class):
-        self.do_add(sender, charm_class, AssignmentType.BareMetal)
-
-    def do_add_lxc(self, sender, charm_class):
-        self.do_add(sender, charm_class, AssignmentType.LXC)
-
-    def do_add_kvm(self, sender, charm_class):
-        self.do_add(sender, charm_class, AssignmentType.KVM)
 
     def do_add(self, sender, charm_class, atype):
         self.controller.assign(self.machine, charm_class, atype)
@@ -779,9 +741,11 @@ class MachinesColumn(WidgetWrap):
 
     def build_widgets(self):
 
-        def show_clear_p(m):
+        def has_services_p(m):
             pc = self.placement_controller
-            return len(pc.assignments_for_machine(m)) != 0
+            n = sum([len(al) for at, al in
+                     pc.assignments_for_machine(m).items()])
+            return n > 0
 
         clear_machine_func = self.placement_view.do_clear_machine
         show_chooser_func = self.placement_view.do_show_service_chooser
@@ -791,9 +755,11 @@ class MachinesColumn(WidgetWrap):
         maastitle = "Machines in MAAS {}".format(maasname)
 
         self.machines_list = MachinesList(self.placement_controller,
-                                          [(show_clear_p,
-                                            'Clear', clear_machine_func),
-                                           ('Edit Services',
+                                          [(has_services_p,
+                                            'Clear All Services',
+                                            clear_machine_func),
+                                           (has_services_p,
+                                            'Remove Some Services',
                                             show_chooser_func)],
                                           show_hardware=True,
                                           title=maastitle)
