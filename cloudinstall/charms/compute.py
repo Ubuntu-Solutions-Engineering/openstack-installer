@@ -15,6 +15,7 @@
 
 import logging
 from cloudinstall.charms import CharmBase, DisplayPriorities
+from cloudinstall.placement.controller import AssignmentType
 
 log = logging.getLogger('cloudinstall.charms.compute')
 
@@ -31,6 +32,8 @@ class CharmNovaCompute(CharmBase):
     constraints = {'mem': 4096,
                    'root-disk': 40960}
     allow_multi_units = True
+    allowed_assignment_types = [AssignmentType.BareMetal,
+                                AssignmentType.KVM]
 
     def set_relations(self):
         if not self.wait_for_agent(['nova-cloud-controller']):

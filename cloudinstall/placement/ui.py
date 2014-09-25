@@ -527,12 +527,20 @@ class MachineChooser(WidgetWrap):
                                             show_constraints=True,
                                             show_assignments=True)
 
+        all_actions = [(AssignmentType.BareMetal,
+                        'Add as Bare Metal',
+                        self.do_select_baremetal),
+                       (AssignmentType.LXC,
+                        'Add as LXC', self.do_select_lxc),
+                       (AssignmentType.KVM,
+                        'Add as KVM', self.do_select_kvm)]
+
+        actions = [(label, func) for atype, label, func in all_actions
+                   if atype in self.charm_class.allowed_assignment_types]
+
         constraints = self.charm_class.constraints
         self.machines_list = MachinesList(self.controller,
-                                          [('Add as Bare Metal',
-                                            self.do_select_baremetal),
-                                           ('Add as LXC', self.do_select_lxc),
-                                           ('Add as KVM', self.do_select_kvm)],
+                                          actions,
                                           constraints=constraints,
                                           show_hardware=True)
         self.machines_list.update()

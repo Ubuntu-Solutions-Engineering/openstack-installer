@@ -27,6 +27,7 @@ import requests
 from macumba import MacumbaError
 from cloudinstall import utils
 from cloudinstall.config import Config
+from cloudinstall.placement.controller import AssignmentType
 
 log = logging.getLogger('cloudinstall.charms')
 
@@ -86,6 +87,7 @@ class CharmBase:
     deploy_priority = sys.maxsize
     display_priority = DisplayPriorities.Core
     allow_multi_units = False
+    allowed_assignment_types = list(AssignmentType)
     optional = False
     disabled = False
     menuable = False
