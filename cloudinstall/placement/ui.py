@@ -58,6 +58,7 @@ class FilterBox(WidgetWrap):
                  "  Filter on hostname or hardware info like 'cores:4'")
         self.info_text.set_text(t)
 
+
 class MachineWidget(WidgetWrap):
     """A widget displaying a service and associated actions.
 
@@ -535,13 +536,12 @@ class MachineChooser(WidgetWrap):
                                           constraints=constraints,
                                           show_hardware=True)
         self.machines_list.update()
-        close_button = AttrMap(Button('Close',
+        close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
                                'button', 'button_focus')
-        p = Pile([instructions, Divider(), self.service_widget,
-                  Divider(), self.machines_list,
-                  GridFlow([close_button],
-                           BUTTON_SIZE, 1, 0, 'right')])
+        p = Pile([GridFlow([close_button], 5, 1, 0, 'right'),
+                  instructions, Divider(), self.service_widget,
+                  Divider(), self.machines_list])
 
         return LineBox(p, title="Select Machine{}".format(plural_string))
 
@@ -600,13 +600,12 @@ class ServiceChooser(WidgetWrap):
                                             self.do_remove)],
                                           machine=self.machine)
 
-        close_button = AttrMap(Button('Close',
+        close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
                                'button', 'button_focus')
-        p = Pile([instructions, Divider(), self.machine_widget,
-                  Divider(), self.services_list,
-                  GridFlow([close_button],
-                           BUTTON_SIZE, 1, 0, 'right')])
+        p = Pile([GridFlow([close_button], 5, 1, 0, 'right'),
+                  instructions, Divider(), self.machine_widget,
+                  Divider(), self.services_list])
 
         return LineBox(p, title="Remove Services")
 
