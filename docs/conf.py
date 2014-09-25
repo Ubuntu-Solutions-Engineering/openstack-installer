@@ -37,7 +37,8 @@ class Mock(object):
         else:
             return Mock()
 
-MOCK_MODULES = ['yaml', 'ws4py', 'urwid', 'maasclient', 'macumba']
+MOCK_MODULES = ['yaml', 'ws4py', 'urwid',
+                'maasclient', 'macumba', 'maasclient.auth']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
 
