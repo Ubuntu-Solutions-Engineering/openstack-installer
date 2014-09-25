@@ -33,17 +33,30 @@ BUTTON_SIZE = 20
 
 
 class FilterBox(WidgetWrap):
-    def __init__(self, edit_changed_func):
-        self.label = Text("Filter machines: ")
+    def __init__(self, edit_changed_cb):
+        self.label = Text("")
+        self.info_text = Text("")
         self.editbox = Edit()
         connect_signal(self.editbox, 'change',
-                       edit_changed_func)
+                       edit_changed_cb)
 
-        w = Columns([('pack', self.label),
-                    AttrMap(self.editbox,
-                            'filter', 'filter_focus')])
+        w = Pile([Columns([('pack', self.label),
+                           AttrMap(self.editbox,
+                                   'filter', 'filter_focus')]),
+                  self.info_text
+                  ])
         super().__init__(w)
 
+    def set_info(self, n_showing, n_total):
+        m = ["Filter ", ('label', "({} of {} shown): ".format(n_showing,
+                                                              n_total))]
+        self.label.set_text(m)
+        if self.editbox.edit_text == '':
+            t = ''
+        else:
+            t = ('label',
+                 "  Filter on hostname or hardware info like 'cores:4'")
+        self.info_text.set_text(t)
 
 class MachineWidget(WidgetWrap):
     """A widget displaying a service and associated actions.
@@ -357,6 +370,9 @@ class MachinesList(WidgetWrap):
             if mw is None:
                 mw = self.add_machine_widget(m)
             mw.update()
+
+        self.filter_edit_box.set_info(len(self.machine_widgets),
+                                      len(machines))
 
     def add_machine_widget(self, machine):
         mw = MachineWidget(machine, self.controller, self.actions,
