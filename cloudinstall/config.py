@@ -43,7 +43,9 @@ class Config:
         ('deploy_button_focus', 'light gray', 'dark green'),
         ('disabled_button', 'light gray', 'white'),
         ('disabled_button_focus', 'white', 'light gray'),
-        ('divider_line', 'light gray', 'default')
+        ('divider_line', 'light gray', 'default'),
+        ('filter', 'dark gray,underline', 'white'),
+        ('filter_focus', 'dark gray,underline', 'light gray')
     ]
 
     def __init__(self):
