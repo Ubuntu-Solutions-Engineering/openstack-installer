@@ -1,7 +1,11 @@
 # Ubuntu Openstack Installer
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/Ubuntu-Solutions-Engineering/cloud-installer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
 [![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer)
+[![Documentation Status](https://readthedocs.org/projects/ubuntu-cloud-installer/badge/?version=latest)](https://readthedocs.org/projects/ubuntu-cloud-installer/?badge=latest)
+
+## Support
+
+Come find us on IRC at **freenode.net** in channel **#ubuntu-solutions**
 
 ## Developers
 
