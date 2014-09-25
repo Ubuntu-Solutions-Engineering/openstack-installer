@@ -419,13 +419,17 @@ class ServicesList(WidgetWrap):
     """
 
     def __init__(self, controller, actions, machine=None,
-                 unplaced_only=False, show_constraints=False):
+                 unplaced_only=False, show_type='all',
+                 show_constraints=False,
+                 title="Services"):
         self.controller = controller
         self.actions = actions
         self.service_widgets = []
         self.machine = machine
         self.unplaced_only = unplaced_only
+        self.show_type = show_type
         self.show_constraints = show_constraints
+        self.title = title
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -437,7 +441,7 @@ class ServicesList(WidgetWrap):
         return True
 
     def build_widgets(self):
-        self.service_pile = Pile([Text("Services"),
+        self.service_pile = Pile([Text(self.title),
                                   Divider(' ')] +
                                  self.service_widgets)
         return self.service_pile
@@ -456,10 +460,17 @@ class ServicesList(WidgetWrap):
                     continue
 
             if self.unplaced_only \
-               and cc not in self.controller.unplaced_services \
-               and not cc.allow_multi_units:
+               and cc not in self.controller.unplaced_services:
                 self.remove_service_widget(cc)
                 continue
+
+            is_core = self.controller.service_is_core(cc)
+            if self.show_type == 'core':
+                if not is_core:
+                    continue
+            elif self.show_type == 'non-core':
+                if is_core or not cc.allow_multi_units:
+                    continue
 
             sw = self.find_service_widget(cc)
             if sw is None:
@@ -652,10 +663,18 @@ class ServicesColumn(WidgetWrap):
     def build_widgets(self):
         actions = [("Choose Machine",
                     self.placement_view.do_show_machine_chooser)]
-        self.unplaced_services_list = ServicesList(self.placement_controller,
+        self.required_services_list = ServicesList(self.placement_controller,
                                                    actions,
                                                    unplaced_only=True,
-                                                   show_constraints=True)
+                                                   show_type='core',
+                                                   show_constraints=True,
+                                                   title="Required Services")
+        self.additional_services_list = ServicesList(self.placement_controller,
+                                                     actions,
+                                                     show_type='non-core',
+                                                     show_constraints=True,
+                                                     title="Additional Services")
+
         autoplace_func = self.placement_view.do_autoplace
         self.autoplace_button = AttrMap(Button("Auto-place remaining services",
                                                on_press=autoplace_func),
@@ -663,49 +682,55 @@ class ServicesColumn(WidgetWrap):
         self.reset_button = AttrMap(Button("Reset to default placement",
                                            on_press=self.do_reset_to_defaults),
                                     'button', 'button_focus')
-        self.unplaced_services_pile = Pile([self.unplaced_services_list,
+        self.required_services_pile = Pile([self.required_services_list,
+                                            Divider()])
+        self.additional_services_pile = Pile([self.additional_services_list,
                                             Divider()])
 
-        self.bottom_buttons = []
-        self.bottom_button_grid = GridFlow(self.bottom_buttons,
-                                           36, 1, 0, 'center')
+        self.top_buttons = []
+        self.top_button_grid = GridFlow(self.top_buttons,
+                                        36, 1, 0, 'center')
 
-        pl = [self.unplaced_services_pile,
-              self.bottom_button_grid]
+        pl = [Text(('subheading', "Services"), align='center'),
+              Divider(),
+              self.top_button_grid, Divider(),
+              self.required_services_pile, Divider(),
+              self.additional_services_pile]
 
         self.main_pile = Pile(pl)
 
         return self.main_pile
 
     def update(self):
-        self.unplaced_services_list.update()
+        self.required_services_list.update()
+        self.additional_services_list.update()
 
-        bottom_buttons = []
+        top_buttons = []
 
         if len(self.placement_controller.unplaced_services) == 0:
             icon = SelectableIcon(" (Auto-place remaining services) ")
-            bottom_buttons.append((AttrMap(icon,
+            top_buttons.append((AttrMap(icon,
                                            'disabled_button',
                                            'disabled_button_focus'),
-                                   self.bottom_button_grid.options()))
+                                   self.top_button_grid.options()))
 
         else:
-            bottom_buttons.append((self.autoplace_button,
-                                   self.bottom_button_grid.options()))
+            top_buttons.append((self.autoplace_button,
+                                   self.top_button_grid.options()))
 
         defs = self.placement_controller.gen_defaults()
 
         if self.placement_controller.are_assignments_equivalent(defs):
             icon = SelectableIcon(" (Reset to default placement) ")
-            bottom_buttons.append((AttrMap(icon,
+            top_buttons.append((AttrMap(icon,
                                            'disabled_button',
                                            'disabled_button_focus'),
-                                   self.bottom_button_grid.options()))
+                                   self.top_button_grid.options()))
         else:
-            bottom_buttons.append((self.reset_button,
-                                  self.bottom_button_grid.options()))
+            top_buttons.append((self.reset_button,
+                                  self.top_button_grid.options()))
 
-        self.bottom_button_grid.contents = bottom_buttons
+        self.top_button_grid.contents = top_buttons
 
     def do_reset_to_defaults(self, sender):
         self.placement_controller.set_all_assignments(
@@ -795,7 +820,7 @@ class MachinesColumn(WidgetWrap):
 
         bc = self.config.juju_env['bootstrap-config']
         maasname = "'{}' <{}>".format(bc['name'], bc['maas-server'])
-        maastitle = "Machines in MAAS {}".format(maasname)
+        maastitle = "Connected to MAAS {}".format(maasname)
 
         self.machines_list = MachinesList(self.placement_controller,
                                           [(has_services_p,
@@ -825,7 +850,8 @@ class MachinesColumn(WidgetWrap):
                                            36, 1, 0, 'center')
 
         # placeholders replaced in update():
-        pl = [Pile([]),         # machines_list
+        pl = [Text(('subheading', "Machines"), align='center'),
+              Pile([]),         # machines_list
               Divider(),
               self.bottom_button_grid]
 
@@ -850,13 +876,13 @@ class MachinesColumn(WidgetWrap):
                                           width='pack')
 
         if len(self.placement_controller.machines()) == 0:
-            self.main_pile.contents[0] = (self.empty_maas_widgets,
+            self.main_pile.contents[1] = (self.empty_maas_widgets,
                                           self.main_pile.options())
             bottom_buttons.append((self.open_maas_button,
                                    self.bottom_button_grid.options()))
 
         else:
-            self.main_pile.contents[0] = (self.machines_list_pile,
+            self.main_pile.contents[1] = (self.machines_list_pile,
                                           self.main_pile.options())
             bottom_buttons.append((self.clear_all_button,
                                    self.bottom_button_grid.options()))
