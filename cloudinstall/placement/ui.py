@@ -32,6 +32,19 @@ log = logging.getLogger('cloudinstall.placement')
 BUTTON_SIZE = 20
 
 
+class FilterBox(WidgetWrap):
+    def __init__(self, edit_changed_func):
+        self.label = Text("Filter machines: ")
+        self.editbox = Edit()
+        connect_signal(self.editbox, 'change',
+                       edit_changed_func)
+
+        w = Columns([('pack', self.label),
+                    AttrMap(self.editbox,
+                            'filter', 'filter_focus')])
+        super().__init__(w)
+
+
 class MachineWidget(WidgetWrap):
     """A widget displaying a service and associated actions.
 
@@ -306,14 +319,11 @@ class MachinesList(WidgetWrap):
         else:
             cstr = ""
 
-        self.filter_edit_box = Edit(caption="Filter: ")
-        connect_signal(self.filter_edit_box, 'change',
-                       self.handle_filter_change)
+        self.filter_edit_box = FilterBox(self.handle_filter_change)
 
         self.machine_pile = Pile([Text(self.title + cstr),
                                   Divider(),
-                                  AttrMap(self.filter_edit_box,
-                                          'button', 'button_focus')] +
+                                  self.filter_edit_box] +
                                  self.machine_widgets)
         return self.machine_pile
 
