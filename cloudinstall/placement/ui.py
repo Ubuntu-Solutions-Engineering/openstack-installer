@@ -816,8 +816,7 @@ class MachinesColumn(WidgetWrap):
                                                on_press=clear_all_func),
                                         'button', 'button_focus')
 
-        openlabel = "Open {} in browser".format(bc['maas-server'])
-        self.open_maas_button = AttrMap(Button(openlabel,
+        self.open_maas_button = AttrMap(Button("Open Browser",
                                                on_press=self.browse_maas),
                                         'button', 'button_focus')
 
@@ -839,7 +838,10 @@ class MachinesColumn(WidgetWrap):
 
         bottom_buttons = []
 
-        empty_maas_msg = ("There are no available machines.")
+        bc = self.config.juju_env['bootstrap-config']
+        empty_maas_msg = ("There are no available machines.\n"
+                          "Open {} in browser to add machines to "
+                          "'{}':".format(bc['maas-server'], bc['name']))
 
         self.empty_maas_widgets = Padding(Text([('error_icon',
                                                  "\N{WARNING SIGN} "),
