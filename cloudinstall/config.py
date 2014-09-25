@@ -27,6 +27,7 @@ class Config:
         ('body',         'white',      'black',),
         ('header_menu',       'light gray',      'dark gray'),
         ('header_title', 'light gray,bold', 'dark magenta'),
+        ('subheading', 'dark gray,bold', 'default'),
         ('focus',        'white',      'dark gray'),
         ('dialog',       'black',      'light gray'),
         ('status_extra',   'light gray,bold',      'dark gray',),
