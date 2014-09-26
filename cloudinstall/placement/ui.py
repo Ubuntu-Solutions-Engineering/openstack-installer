@@ -256,8 +256,8 @@ class ServiceWidget(WidgetWrap):
         mstr = [""]
 
         for atype, ml in md.items():
-            ml = md[atype]
-            mstr.append(('label', "    {}: ".format(atype.name)))
+            n = len(ml)
+            mstr.append(('label', "    {} ({}): ".format(atype.name, n)))
             if len(ml) == 0:
                 mstr.append("\N{DOTTED CIRCLE}")
             else:

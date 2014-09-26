@@ -83,11 +83,12 @@ class PlacementController:
         machines_by_atype = defaultdict(list)
         for m_id, d in self.assignments.items():
             for atype, assignment_list in d.items():
-                if charm_class in assignment_list:
-                    m = next((m for m in all_machines
-                              if m.instance_id == m_id), None)
-                    if m:
-                        machines_by_atype[atype].append(m)
+                for a in assignment_list:
+                    if a == charm_class:
+                        m = next((m for m in all_machines
+                                  if m.instance_id == m_id), None)
+                        if m:
+                            machines_by_atype[atype].append(m)
         return machines_by_atype
 
     def clear_all_assignments(self):
