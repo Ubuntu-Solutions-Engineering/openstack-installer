@@ -22,6 +22,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from cloudinstall.charms.jujugui import CharmJujuGui
 from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
 
@@ -203,3 +204,18 @@ class PlacementControllerTestCase(unittest.TestCase):
 
         self.pc.reset_unplaced()
         self.assertEqual(len(self.pc.unplaced_services), 1)
+
+    def test_service_is_core(self):
+        "Test a sampling of core services and special handling for compute"
+        self.assertTrue(self.pc.service_is_core(CharmKeystone))
+        self.assertTrue(self.pc.service_is_core(CharmNovaCompute))
+        self.assertFalse(self.pc.service_is_core(CharmJujuGui))
+
+        # after being assigned at least once, novacompute is no longer
+        # considered 'core' (aka required)
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        self.assertFalse(self.pc.service_is_core(CharmNovaCompute))
+
+        # but the others don't change
+        self.assertTrue(self.pc.service_is_core(CharmKeystone))
+        self.assertFalse(self.pc.service_is_core(CharmJujuGui))
