@@ -472,6 +472,7 @@ class ServicesList(WidgetWrap):
                     continue
             elif self.show_type == 'non-core':
                 if is_core or not cc.allow_multi_units:
+                    self.remove_service_widget(cc)
                     continue
 
             sw = self.find_service_widget(cc)
