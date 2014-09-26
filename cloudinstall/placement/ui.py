@@ -306,7 +306,7 @@ class MachinesList(WidgetWrap):
     """
 
     def __init__(self, controller, actions, constraints=None,
-                 show_hardware=False, title="Machines"):
+                 show_hardware=False, title_widgets=None):
         self.controller = controller
         self.actions = actions
         self.machine_widgets = []
@@ -315,9 +315,8 @@ class MachinesList(WidgetWrap):
         else:
             self.constraints = constraints
         self.show_hardware = show_hardware
-        self.title = title
         self.filter_string = ""
-        w = self.build_widgets()
+        w = self.build_widgets(title_widgets)
         self.update()
         super().__init__(w)
 
@@ -327,15 +326,18 @@ class MachinesList(WidgetWrap):
         # Pile & Columns, but discovered via trial & error.
         return True
 
-    def build_widgets(self):
-        if len(self.constraints) > 0:
-            cstr = " matching constraints"
-        else:
-            cstr = ""
+    def build_widgets(self, title_widgets):
+        if title_widgets is None:
+            if len(self.constraints) > 0:
+                cstr = " matching constraints"
+            else:
+                cstr = ""
+
+            title_widgets = Text("Machines" + cstr, align='center')
 
         self.filter_edit_box = FilterBox(self.handle_filter_change)
 
-        self.machine_pile = Pile([Text(self.title + cstr),
+        self.machine_pile = Pile([title_widgets,
                                   Divider(),
                                   self.filter_edit_box] +
                                  self.machine_widgets)
@@ -677,12 +679,15 @@ class ServicesColumn(WidgetWrap):
                                                      "Services")
 
         autoplace_func = self.placement_view.do_autoplace
-        self.autoplace_button = AttrMap(Button("Auto-place remaining services",
+        self.autoplace_button = AttrMap(Button("Auto-place Remaining Services",
                                                on_press=autoplace_func),
                                         'button', 'button_focus')
-        self.reset_button = AttrMap(Button("Reset to default placement",
-                                           on_press=self.do_reset_to_defaults),
-                                    'button', 'button_focus')
+
+        clear_all_func = self.placement_view.do_clear_all
+        self.clear_all_button = AttrMap(Button("Clear all Placements",
+                                               on_press=clear_all_func),
+                                        'button', 'button_focus')
+
         self.required_services_pile = Pile([self.required_services_list,
                                             Divider()])
         self.additional_services_pile = Pile([self.additional_services_list,
@@ -709,7 +714,7 @@ class ServicesColumn(WidgetWrap):
         top_buttons = []
 
         if len(self.placement_controller.unplaced_services) == 0:
-            icon = SelectableIcon(" (Auto-place remaining services) ")
+            icon = SelectableIcon(" (Auto-place Remaining Services) ")
             top_buttons.append((AttrMap(icon,
                                         'disabled_button',
                                         'disabled_button_focus'),
@@ -719,17 +724,8 @@ class ServicesColumn(WidgetWrap):
             top_buttons.append((self.autoplace_button,
                                 self.top_button_grid.options()))
 
-        defs = self.placement_controller.gen_defaults()
-
-        if self.placement_controller.are_assignments_equivalent(defs):
-            icon = SelectableIcon(" (Reset to default placement) ")
-            top_buttons.append((AttrMap(icon,
-                                        'disabled_button',
-                                        'disabled_button_focus'),
-                                self.top_button_grid.options()))
-        else:
-            top_buttons.append((self.reset_button,
-                                self.top_button_grid.options()))
+        top_buttons.append((self.clear_all_button,
+                            self.top_button_grid.options()))
 
         self.top_button_grid.contents = top_buttons
 
@@ -794,7 +790,7 @@ class HeaderView(WidgetWrap):
 
 
 class MachinesColumn(WidgetWrap):
-    """Shows machines"""
+    """Shows machines or a link to MAAS to add more"""
     def __init__(self, display_controller, placement_controller,
                  placement_view):
         self.display_controller = display_controller
@@ -819,9 +815,16 @@ class MachinesColumn(WidgetWrap):
         clear_machine_func = self.placement_view.do_clear_machine
         show_chooser_func = self.placement_view.do_show_service_chooser
 
+        self.open_maas_button = AttrMap(Button("Open in Browser",
+                                               on_press=self.browse_maas),
+                                        'button', 'button_focus')
+
         bc = self.config.juju_env['bootstrap-config']
         maasname = "'{}' <{}>".format(bc['name'], bc['maas-server'])
         maastitle = "Connected to MAAS {}".format(maasname)
+        tw = Columns([Text(maastitle),
+                      Padding(self.open_maas_button, align='right',
+                              width=BUTTON_SIZE, right=2)])
 
         self.machines_list = MachinesList(self.placement_controller,
                                           [(has_services_p,
@@ -831,30 +834,18 @@ class MachinesColumn(WidgetWrap):
                                             'Remove Some Services',
                                             show_chooser_func)],
                                           show_hardware=True,
-                                          title=maastitle)
+                                          title_widgets=tw)
         self.machines_list.update()
 
         self.machines_list_pile = Pile([self.machines_list,
                                         Divider()])
 
-        clear_all_func = self.placement_view.do_clear_all
-        self.clear_all_button = AttrMap(Button("Clear all Machines",
-                                               on_press=clear_all_func),
-                                        'button', 'button_focus')
-
-        self.open_maas_button = AttrMap(Button("Open Browser",
-                                               on_press=self.browse_maas),
-                                        'button', 'button_focus')
-
-        self.bottom_buttons = []
-        self.bottom_button_grid = GridFlow(self.bottom_buttons,
-                                           36, 1, 0, 'center')
-
-        # placeholders replaced in update():
+        # placeholders replaced in update() with absolute indexes, so
+        # if you change this list, check update().
         pl = [Text(('subheading', "Machines"), align='center'),
-              Pile([]),         # machines_list
               Divider(),
-              self.bottom_button_grid]
+              Pile([]),         # machines_list
+              Divider()]
 
         self.main_pile = Pile(pl)
 
@@ -863,32 +854,25 @@ class MachinesColumn(WidgetWrap):
     def update(self):
         self.machines_list.update()
 
-        bottom_buttons = []
-
         bc = self.config.juju_env['bootstrap-config']
         empty_maas_msg = ("There are no available machines.\n"
                           "Open {} in browser to add machines to "
                           "'{}':".format(bc['maas-server'], bc['name']))
 
-        self.empty_maas_widgets = Padding(Text([('error_icon',
-                                                 "\N{WARNING SIGN} "),
-                                                empty_maas_msg]),
-                                          align='center',
-                                          width='pack')
+        self.empty_maas_widgets = Pile([Text([('error_icon',
+                                               "\N{WARNING SIGN} "),
+                                              empty_maas_msg],
+                                             align='center'),
+                                        Padding(self.open_maas_button,
+                                                align='center',
+                                                width=BUTTON_SIZE)])
 
         if len(self.placement_controller.machines()) == 0:
-            self.main_pile.contents[1] = (self.empty_maas_widgets,
+            self.main_pile.contents[2] = (self.empty_maas_widgets,
                                           self.main_pile.options())
-            bottom_buttons.append((self.open_maas_button,
-                                   self.bottom_button_grid.options()))
-
         else:
-            self.main_pile.contents[1] = (self.machines_list_pile,
+            self.main_pile.contents[2] = (self.machines_list_pile,
                                           self.main_pile.options())
-            bottom_buttons.append((self.clear_all_button,
-                                   self.bottom_button_grid.options()))
-
-        self.bottom_button_grid.contents = bottom_buttons
 
     def browse_maas(self, sender):
 
