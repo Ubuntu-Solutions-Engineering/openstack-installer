@@ -673,7 +673,8 @@ class ServicesColumn(WidgetWrap):
                                                      actions,
                                                      show_type='non-core',
                                                      show_constraints=True,
-                                                     title="Additional Services")
+                                                     title="Additional "
+                                                     "Services")
 
         autoplace_func = self.placement_view.do_autoplace
         self.autoplace_button = AttrMap(Button("Auto-place remaining services",
@@ -685,7 +686,7 @@ class ServicesColumn(WidgetWrap):
         self.required_services_pile = Pile([self.required_services_list,
                                             Divider()])
         self.additional_services_pile = Pile([self.additional_services_list,
-                                            Divider()])
+                                              Divider()])
 
         self.top_buttons = []
         self.top_button_grid = GridFlow(self.top_buttons,
@@ -710,25 +711,25 @@ class ServicesColumn(WidgetWrap):
         if len(self.placement_controller.unplaced_services) == 0:
             icon = SelectableIcon(" (Auto-place remaining services) ")
             top_buttons.append((AttrMap(icon,
-                                           'disabled_button',
-                                           'disabled_button_focus'),
-                                   self.top_button_grid.options()))
+                                        'disabled_button',
+                                        'disabled_button_focus'),
+                                self.top_button_grid.options()))
 
         else:
             top_buttons.append((self.autoplace_button,
-                                   self.top_button_grid.options()))
+                                self.top_button_grid.options()))
 
         defs = self.placement_controller.gen_defaults()
 
         if self.placement_controller.are_assignments_equivalent(defs):
             icon = SelectableIcon(" (Reset to default placement) ")
             top_buttons.append((AttrMap(icon,
-                                           'disabled_button',
-                                           'disabled_button_focus'),
-                                   self.top_button_grid.options()))
+                                        'disabled_button',
+                                        'disabled_button_focus'),
+                                self.top_button_grid.options()))
         else:
             top_buttons.append((self.reset_button,
-                                  self.top_button_grid.options()))
+                                self.top_button_grid.options()))
 
         self.top_button_grid.contents = top_buttons
 
