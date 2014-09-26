@@ -178,3 +178,28 @@ class PlacementControllerTestCase(unittest.TestCase):
         mid = self.mock_machine.machine_id
         lxcs = self.pc.assignments[mid][AssignmentType.LXC]
         self.assertEqual(lxcs, [])
+
+    def test_reset_unplaced_none(self):
+        """Assign all charms, ensure that unplaced is empty"""
+        for cc in self.pc.charm_classes():
+            self.pc.assign(self.mock_machine, cc, AssignmentType.LXC)
+
+        self.pc.reset_unplaced()
+
+        self.assertEqual(0, len(self.pc.unplaced_services))
+
+    def test_reset_unplaced_two(self):
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        self.pc.assign(self.mock_machine_2, CharmKeystone, AssignmentType.KVM)
+        self.pc.reset_unplaced()
+        self.assertEqual(len(self.pc.charm_classes()) - 2,
+                         len(self.pc.unplaced_services))
+
+    def test_reset_excepting_compute(self):
+        for cc in self.pc.charm_classes():
+            if cc.charm_name == 'nova-compute':
+                continue
+            self.pc.assign(self.mock_machine, cc, AssignmentType.LXC)
+
+        self.pc.reset_unplaced()
+        self.assertEqual(len(self.pc.unplaced_services), 1)
