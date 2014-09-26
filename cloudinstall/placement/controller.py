@@ -133,6 +133,11 @@ class PlacementController:
                 self.unplaced_services.add(cc)
 
     def service_is_core(self, cc):
+        self.reset_unplaced()
+        if cc.name() == 'nova-compute' \
+           and cc in self.unplaced_services:
+            return True
+
         uncore_services = ['swift-storage',
                            'swift-proxy',
                            'nova-compute',
