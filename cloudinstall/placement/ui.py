@@ -471,7 +471,11 @@ class ServicesList(WidgetWrap):
                 if not is_core:
                     continue
             elif self.show_type == 'non-core':
-                if is_core or not cc.allow_multi_units:
+                if is_core:
+                    self.remove_service_widget(cc)
+                    continue
+                if not cc.allow_multi_units and \
+                   not cc in self.controller.unplaced_services:
                     self.remove_service_widget(cc)
                     continue
 
