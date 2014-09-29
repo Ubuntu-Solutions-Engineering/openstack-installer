@@ -57,14 +57,6 @@ class PlacementController:
                     cl.append(m.__charm_class__)
         return cl
 
-    def are_assignments_equivalent(self, other):
-        for mid, cl in self.assignments.items():
-            if mid not in other:
-                return False
-            if set(cl) != set(other[mid]):
-                return False
-        return True
-
     def assign(self, machine, charm_class, atype):
         if not charm_class.allow_multi_units:
             for m, d in self.assignments.items():
