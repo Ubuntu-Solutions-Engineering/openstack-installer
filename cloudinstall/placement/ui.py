@@ -906,8 +906,7 @@ class MachinesColumn(WidgetWrap):
         e = errs.decode('utf-8')
         msg = "Error opening '{}' in a browser:\n{}".format(bc['name'], e)
 
-        w = Filler(InfoDialog(msg,
-                              self.placement_view.remove_overlay))
+        w = InfoDialog(msg, self.placement_view.remove_overlay)
         self.placement_view.show_overlay(w)
 
 
@@ -958,8 +957,7 @@ class PlacementView(WidgetWrap):
     def do_autoplace(self, sender):
         ok, msg = self.placement_controller.autoplace_unplaced_services()
         if not ok:
-            self.show_overlay(Filler(InfoDialog(msg,
-                                                self.remove_overlay)))
+            self.show_overlay(InfoDialog(msg, self.remove_overlay))
 
     def do_clear_all(self, sender):
         self.placement_controller.clear_all_assignments()
@@ -968,14 +966,14 @@ class PlacementView(WidgetWrap):
         self.placement_controller.clear_assignments(machine)
 
     def do_show_service_chooser(self, sender, machine):
-        self.show_overlay(Filler(ServiceChooser(self.placement_controller,
-                                                machine,
-                                                self)))
+        self.show_overlay(ServiceChooser(self.placement_controller,
+                                         machine,
+                                         self))
 
     def do_show_machine_chooser(self, sender, charm_class):
-        self.show_overlay(Filler(MachineChooser(self.placement_controller,
-                                                charm_class,
-                                                self)))
+        self.show_overlay(MachineChooser(self.placement_controller,
+                                         charm_class,
+                                         self))
 
     def show_overlay(self, overlay_widget):
         self.orig_w = self._w
@@ -985,7 +983,7 @@ class PlacementView(WidgetWrap):
                           width=('relative', 60),
                           min_width=80,
                           valign='middle',
-                          height=('relative', 80))
+                          height='pack')
 
     def remove_overlay(self, overlay_widget):
         # urwid note: we could also get orig_w as
