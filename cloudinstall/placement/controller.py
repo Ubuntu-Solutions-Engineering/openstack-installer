@@ -128,8 +128,12 @@ class PlacementController:
     def reset_unplaced(self):
         self.unplaced_services = set()
         for cc in self.charm_classes():
-            ms = self.machines_for_charm(cc)
-            if len(ms) == 0:
+            md = self.machines_for_charm(cc)
+            is_placed = False
+            for atype, ml in md.items():
+                if len(ml) > 0:
+                    is_placed = True
+            if not is_placed:
                 self.unplaced_services.add(cc)
 
     def service_is_core(self, cc):

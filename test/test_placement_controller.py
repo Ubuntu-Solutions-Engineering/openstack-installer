@@ -57,6 +57,14 @@ class PlacementControllerTestCase(unittest.TestCase):
 
         self.mock_maas_state.machines.return_value = self.mock_machines
 
+    def test_machines_for_charm_atype(self):
+        self.assertEqual(0, len(self.pc.machines_for_charm(CharmNovaCompute)))
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        md = self.pc.machines_for_charm(CharmNovaCompute)
+        self.assertEqual(1, len(md))
+        self.assertEqual(2, len(md[AssignmentType.LXC]))
+
     def _do_test_simple_assign_type(self, assignment_type):
         self.pc.assign(self.mock_machine, CharmNovaCompute, assignment_type)
         print("assignments is {}".format(self.pc.assignments))
