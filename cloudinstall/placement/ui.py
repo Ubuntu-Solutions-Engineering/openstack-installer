@@ -786,14 +786,20 @@ class DeployView(WidgetWrap):
 
     def show_deploy_button(self):
         self.main_pile.contents[0] = (AttrMap(self.deploy_grid,
-                                              'deploy_highlight'),
+                                              'deploy_highlight_start'),
                                       self.main_pile.options())
 
-        def fade_timeout(loop, userdata):
-            self.main_pile.contents[0] = (self.deploy_grid,
+        def fade_timeout(loop, step):
+            if step == 1:
+                self.display_controller.loop.set_alarm_in(5, fade_timeout, 2)
+                new_attr = 'deploy_highlight_end'
+            else:
+                new_attr = ''
+            self.main_pile.contents[0] = (AttrMap(self.deploy_grid,
+                                                  new_attr),
                                           self.main_pile.options())
 
-        self.display_controller.loop.set_alarm_in(5, fade_timeout)
+        self.display_controller.loop.set_alarm_in(4, fade_timeout, 1)
         self.display_controller.info_message(self.deploy_ok_msg)
 
     def do_deploy(self, sender):
