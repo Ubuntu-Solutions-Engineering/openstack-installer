@@ -664,6 +664,10 @@ class ServicesColumn(WidgetWrap):
         return True
 
     def build_widgets(self):
+        self.deploy_view = DeployView(self.display_controller,
+                                      self.placement_controller,
+                                      self.placement_view)
+
         actions = [("Choose Machine",
                     self.placement_view.do_show_machine_chooser)]
         self.required_services_list = ServicesList(self.placement_controller,
@@ -701,6 +705,7 @@ class ServicesColumn(WidgetWrap):
         pl = [Text(('subheading', "Services"), align='center'),
               Divider(),
               self.top_button_grid, Divider(),
+              self.deploy_view, Divider(),
               self.required_services_pile, Divider(),
               self.additional_services_pile]
 
@@ -709,6 +714,7 @@ class ServicesColumn(WidgetWrap):
         return self.main_pile
 
     def update(self):
+        self.deploy_view.update()
         self.required_services_list.update()
         self.additional_services_list.update()
 
@@ -735,13 +741,14 @@ class ServicesColumn(WidgetWrap):
             self.placement_controller.gen_defaults())
 
 
-class HeaderView(WidgetWrap):
+class DeployView(WidgetWrap):
 
     def __init__(self, display_controller, placement_controller,
                  placement_view):
         self.display_controller = display_controller
         self.placement_controller = placement_controller
         self.placement_view = placement_view
+        self.prev_status = None
         w = self.build_widgets()
         super().__init__(w)
         self.update()
@@ -750,41 +757,44 @@ class HeaderView(WidgetWrap):
         return True
 
     def build_widgets(self):
-        deploy_ok_msg = Text([('success_icon', '\u2713'),
-                              " All the core OpenStack services are placed"
-                              " on a machine, and you can now deploy."])
+        self.deploy_ok_msg = ("\u2713 All the core OpenStack services are "
+                              "placed on a machine, and you can now deploy.")
 
         self.deploy_button = AttrMap(Button("Deploy",
                                             on_press=self.do_deploy),
-                                     'deploy_button', 'deploy_button_focus')
+                                     'button', 'button_focus')
         self.deploy_grid = GridFlow([self.deploy_button], 10, 1, 0, 'center')
-        self.deploy_widgets = Pile([Padding(deploy_ok_msg,
-                                            align='center',
-                                            width='pack'),
-                                    self.deploy_grid])
 
-        unplaced_msg = "Some core services are still unplaced."
-        self.unplaced_warning_widgets = Padding(Text([('error_icon',
-                                                       "\N{WARNING SIGN} "),
-                                                      unplaced_msg]),
-                                                align='center',
-                                                width='pack')
+        self.unplaced_msg = "Some core services are still unplaced."
 
-        self.main_pile = Pile([Divider(),
-                               Padding(Text("Machine Placement"),
-                                       align='center',
-                                       width='pack'),
-                               Pile([]),
-                               Divider()])
+        self.main_pile = Pile([Divider()])
         return self.main_pile
 
     def update(self):
+        changed = self.prev_status != self.placement_controller.can_deploy()
+
         if self.placement_controller.can_deploy():
-            self.main_pile.contents[2] = (self.deploy_widgets,
-                                          self.main_pile.options())
+            if changed:
+                self.show_deploy_button()
         else:
-            self.main_pile.contents[2] = (self.unplaced_warning_widgets,
+            self.main_pile.contents[0] = (Divider(),
                                           self.main_pile.options())
+            if changed:
+                self.display_controller.error_message(self.unplaced_msg)
+
+        self.prev_status = self.placement_controller.can_deploy()
+
+    def show_deploy_button(self):
+        self.main_pile.contents[0] = (AttrMap(self.deploy_grid,
+                                              'deploy_highlight'),
+                                      self.main_pile.options())
+
+        def fade_timeout(loop, userdata):
+            self.main_pile.contents[0] = (self.deploy_grid,
+                                          self.main_pile.options())
+
+        self.display_controller.loop.set_alarm_in(5, fade_timeout)
+        self.display_controller.info_message(self.deploy_ok_msg)
 
     def do_deploy(self, sender):
         self.display_controller.commit_placement()
@@ -916,10 +926,6 @@ class PlacementView(WidgetWrap):
         pass
 
     def build_widgets(self):
-        self.header_view = HeaderView(self.display_controller,
-                                      self.placement_controller,
-                                      self)
-
         self.services_column = ServicesColumn(self.display_controller,
                                               self.placement_controller,
                                               self)
@@ -930,16 +936,16 @@ class PlacementView(WidgetWrap):
 
         self.columns = Columns([self.services_column,
                                 self.machines_column])
-        self.main_pile = Pile([Padding(self.header_view,
-                                       align='center',
-                                       width=('relative', 50)),
+        self.main_pile = Pile([Divider(),
+                               Text(('subheading', "Machine Placement"),
+                                    align='center'),
+                               Divider(),
                                Padding(self.columns,
                                        align='center',
                                        width=('relative', 95))])
         return Filler(self.main_pile, valign='top')
 
     def update(self):
-        self.header_view.update()
         self.services_column.update()
         self.machines_column.update()
 
