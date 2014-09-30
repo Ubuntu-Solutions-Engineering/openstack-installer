@@ -45,6 +45,16 @@ class PlacementController:
     def machines(self):
         return self.maas_state.machines()
 
+    def machines_used(self):
+        ms = []
+        for m in self.machines():
+            if m.instance_id in self.assignments:
+                n = sum(len(cl) for _, cl in
+                        self.assignments[m.instance_id].items())
+                if n > 0:
+                    ms.append(m)
+        return ms
+
     def charm_classes(self):
         cl = [m.__charm_class__ for m in load_charms()
               if not m.__charm_class__.optional and
@@ -56,6 +66,11 @@ class PlacementController:
                 if n == "swift-storage" or n == "swift-proxy":
                     cl.append(m.__charm_class__)
         return cl
+
+    def placed_charm_classes(self):
+        "Returns a deduplicated list of all charms that have a placement"
+        return [cc for cc in self.charm_classes()
+                if cc not in self.unplaced_services]
 
     def assign(self, machine, charm_class, atype):
         if not charm_class.allow_multi_units:
