@@ -1,3 +1,4 @@
+
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -22,7 +23,7 @@ import time
 import random
 import sys
 import requests
-from os import getenv, path
+from os import path
 
 from operator import attrgetter
 
@@ -34,9 +35,11 @@ from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from cloudinstall.charms import CharmQueue, get_charm
 from cloudinstall.log import PrettyLog
-from cloudinstall.placement.controller import PlacementController
+from cloudinstall.placement.controller import (PlacementController,
+                                               AssignmentType)
 
 from macumba import JujuClient
+from macumba import Jobs as JujuJobs
 from multiprocessing import cpu_count
 
 
@@ -64,7 +67,6 @@ class DisplayController:
         self.maas = None
         self.maas_state = None
         self.nodes = None
-        self.machine = None
         self.placement_controller = None
         self.current_state = ControllerState.INSTALL_WAIT
 
@@ -254,8 +256,6 @@ class Controller(DisplayController):
     def __init__(self, **kwds):
         self.charm_modules = utils.load_charms()
         self.deployed_charm_classes = []
-        self.single_net_configured = False
-        self.lxc_root_tarball_configured = False
         super().__init__(**kwds)
 
     @utils.async
@@ -287,69 +287,104 @@ class Controller(DisplayController):
     def commit_placement(self):
         self.current_state = ControllerState.SERVICES
         self.render_nodes(self.nodes, self.juju_state, self.maas_state)
-        self.init_machine()
+        self.begin_deployment()
 
     @utils.async
-    def init_machine(self):
-        """ Handles initial deployment of a machine """
-        log.debug("Initializing machine")
+    def begin_deployment(self):
+        log.debug("begin_deployment")
         if self.config.is_multi:
-            self.info_message("You need one node to act as "
-                              "the cloud controller. "
-                              "Please PXE boot the node "
-                              "you would like to use.")
-            nodes = []
-            while len(nodes) == 0:
-                nodes = self.maas.nodes
 
+            # now all machines are added
             self.maas.tag_fpi(self.maas.nodes)
             self.maas.nodes_accept_all()
             self.maas.tag_name(self.maas.nodes)
 
-        while not self.machine:
-            self.juju_state.invalidate_status_cache()
-            self.machine = self.get_controller_machine()
-            time.sleep(10)
+            while not self.all_maas_machines_ready():
+                time.sleep(3)
 
-        # Step 2
-        self.init_machine_setup()
+            self.add_machines_to_juju_multi()
+            while not self.all_juju_machines_allocated():
+                # TODO not sure if this is the right place to use the
+                # summary
+                summary = self.juju_status.machines_summary()
+                self.info_message("Waiting for machines to "
+                                  "start: {}".format(summary))
+                time.sleep(3)
+
+        elif self.config.is_single:
+            self.init_machine_for_single()
+
         self.deploy_using_placement()
         self.enqueue_deployed_charms()
 
-    def get_controller_machine(self):
+    def all_maas_machines_ready(self):
+        self.maas_state.invalidate_nodes_cache()
+
+        needed = set([m.instance_id for m in
+                      self.placement_controller.machines_used()])
+        ready = set([m.instance_id for m in
+                     self.maas_state.machines(MaasMachineStatus.READY)])
+
+        self.info_message("Waiting for maas machines: {} of {}"
+                          " are ready.".format(len(ready),
+                                               len(needed)))
+
+        if needed != ready:
+            return False
+        return True
+
+    def add_machines_to_juju_multi(self):
+        """Adds each of the machines used for the placement to juju, if it
+        isn't already there."""
+
+        self.juju_state.invalidate_status_cache()
+        juju_ids = [jm.instance_id.split('/')[-2]  # extracts id from urlpath
+                    for jm in self.juju_state.machines()]
+
+        machine_params = []
+        for maas_machine in self.placement_controller.machines_used():
+            if maas_machine in juju_ids:
+                # ignore machines that are already added to juju
+                continue
+            cd = dict(tags=maas_machine.system_id)
+            mp = dict(Series="", ContainerType="", ParentId="",
+                      Constraints=cd, Jobs=[JujuJobs.HostUnits])
+            machine_params.append(mp)
+
+        if len(machine_params) > 0:
+            self.juju.add_machines(machine_params)
+
+    def all_juju_machines_allocated(self):
+        self.juju_state.invalidate_status_cache()
+        n_needed = len(self.placement_controller.machines_used())
+        n_allocated = len(self.juju_state.machines_allocated())
+        return n_needed == n_allocated
+
+    def init_machine_for_single(self):
+
         allocated = list(self.juju_state.machines_allocated())
         log.debug("Allocated machines: "
                   "{machines}".format(machines=allocated))
 
-        if self.config.is_multi:
-            maas_allocated = self.maas_state.machines(MaasMachineStatus.READY)
-            if len(allocated) == 0 and len(maas_allocated) == 0:
-                err_msg = "No machines allocated to juju. " \
-                          "Please pxe boot a machine."
-                self.error_message(err_msg)
-                return None
-            elif len(allocated) == 0 and len(maas_allocated) > 0:
-                self.info_message("Adding maas machine to juju")
-                self.juju.add_machine()
-                return None
-            else:
-                return self.get_started_machine()
+        max_cpus = cpu_count()
+        if max_cpus >= 2:
+            max_cpus = max_cpus // 2
 
-        elif self.config.is_single:
-            max_cpus = cpu_count()
-            if max_cpus >= 2:
-                max_cpus = max_cpus // 2
+        if len(allocated) == 0:
+            self.info_message("Allocating a new machine.")
+            self.juju.add_machine(constraints={'mem': 3072,
+                                               'root-disk': 20480,
+                                               'cpu-cores': max_cpus})
 
-            if len(allocated) == 0:
-                self.info_message("Allocating a new machine.")
-                self.juju.add_machine(constraints={'mem': 3072,
-                                                   'root-disk': 20480,
-                                                   'cpu-cores': max_cpus})
-            return self.get_started_machine()
-        else:
-            raise Exception("Config error - not single or multi")
+        controller_machine = None
+        while not controller_machine:
+            self.juju_state.invalidate_status_cache()
+            controller_machine = self.get_started_machine_for_single()
+            time.sleep(5)
 
-    def get_started_machine(self):
+        self.configure_lxc_network(controller_machine)
+
+    def get_started_machine_for_single(self):
         started_machines = sorted([m for m in
                                    self.juju_state.machines_allocated()
                                    if m.agent_state == 'started'],
@@ -377,122 +412,92 @@ class Controller(DisplayController):
 
         return None
 
-    def configure_lxc_network(self):
+    def configure_lxc_network(self, machine):
         # upload our lxc-host-only template and setup bridge
         self.info_message('Copying network specifications to machine.')
         utils.remote_cp(
-            self.machine.machine_id,
+            machine.machine_id,
             src="/usr/share/cloud-installer/templates/lxc-host-only",
             dst="/tmp/lxc-host-only")
         self.info_message('Updating network configuration for machine.')
-        utils.remote_run(self.machine.machine_id,
+        utils.remote_run(machine.machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only")
-        utils.remote_run(self.machine.machine_id,
+        utils.remote_run(machine.machine_id,
                          cmds="sudo /tmp/lxc-host-only")
-        self.single_net_configured = True
 
-    def configure_lxc_root_tarball(self, rootfs):
-        """ Use a local copy of the cloud rootfs tarball """
-        host = self.machine.dns_name
-        cmds = "sudo mkdir -p /var/cache/lxc/cloud-trusty"
-        utils.remote_run(self.machine.machine_id, cmds=cmds)
-        utils.remote_cp(host, src=rootfs, dst="/var/cache/lxc/cloud-trusty")
-        self.lxc_root_tarball_configured = True
+    # def init_deploy_charms(self):
+    #     """Deploy charms in order, waiting for any deferred charms.
+    #     Then enqueue all charms for further processing and return.
+    #     """
 
-    def init_machine_setup(self):
-        """ Setup initial machine network and controller """
+    #     self.info_message("Verifying service deployments")
+    #     charm_classes = sorted([m.__charm_class__ for m in self.charm_modules
+    #                             if not m.__charm_class__.optional and
+    #                             not m.__charm_class__.disabled],
+    #                            key=attrgetter('deploy_priority'))
 
-        self.info_message("Configuring controller machine")
-        if self.machine is not None:
-            if self.config.is_single and not self.single_net_configured:
-                self.configure_lxc_network()
+    #     # Add any additional charms enabled from command line
+    #     if self.opts.enable_swift:
+    #         for m in self.charm_modules:
+    #             if m.__charm_class__.name() == "swift-storage" or \
+    #                     m.__charm_class__.name() == "swift-proxy":
+    #                 charm_classes.append(m.__charm_class__)
 
-            # Speed up things if we go ahead and download the rootfs image
-            # from http://cloud-images.ubuntu.com/releases/trusty/release/
-            #
-            # Use: export LXC_ROOT_TARBALL=/path/to/rootfs_tarball.tar.gz
-            rootfs = getenv('LXC_ROOT_TARBALL', False)
-            if rootfs and not self.lxc_root_tarball_configured:
-                log.debug("Copying local copy of rootfs")
-                self.configure_lxc_root_tarball(rootfs)
+    #     def undeployed_charm_classes():
+    #         return [c for c in charm_classes
+    #                 if c not in self.deployed_charm_classes]
 
-            self.info_message('Starting deployment '
-                              'on machine {}'.format(
-                                  self.machine.machine_id))
+    #     while len(undeployed_charm_classes()) > 0:
+    #         for charm_class in undeployed_charm_classes():
+    #             charm = charm_class(juju=self.juju,
+    #                                 juju_state=self.juju_state,
+    #                                 ui=self.ui)
+    #             self.info_message("Checking if {c} "
+    #                               "is deployed".format(c=charm.display_name))
 
-    def init_deploy_charms(self):
-        """Deploy charms in order, waiting for any deferred charms.
-        Then enqueue all charms for further processing and return.
-        """
+    #             service_names = [s.service_name for s in
+    #                              self.juju_state.services]
+    #             if charm.name() in service_names:
+    #                 self.info_message("{c} is already deployed"
+    #                                   ", skipping".format(c=charm))
+    #                 self.deployed_charm_classes.append(charm_class)
+    #                 continue
 
-        self.info_message("Verifying service deployments")
-        charm_classes = sorted([m.__charm_class__ for m in self.charm_modules
-                                if not m.__charm_class__.optional and
-                                not m.__charm_class__.disabled],
-                               key=attrgetter('deploy_priority'))
+    #             if charm.isolate:
+    #                 self.info_message("Deploying {c} "
+    #                                   "to a new machine".format(
+    #                                       c=charm.display_name))
+    #                 deploy_err = charm.setup()
 
-        # Add any additional charms enabled from command line
-        if self.opts.enable_swift:
-            for m in self.charm_modules:
-                if m.__charm_class__.name() == "swift-storage" or \
-                        m.__charm_class__.name() == "swift-proxy":
-                    charm_classes.append(m.__charm_class__)
+    #             else:
+    #                 # Hardcode lxc on same machine as they are
+    #                 # created on-demand.
+    #                 charm.machine_id = 'lxc:{mid}'.format(
+    #                     mid=self.machine.machine_id)
+    #                 self.info_message("Deploying {c} "
+    #                                   "to machine {m}".format(
+    #                                       c=charm.display_name,
+    #                                       m=charm.machine_id))
+    #                 deploy_err = charm.setup()
 
-        def undeployed_charm_classes():
-            return [c for c in charm_classes
-                    if c not in self.deployed_charm_classes]
+    #             name = charm.display_name
+    #             if deploy_err:
+    #                 self.info_message("{} iswaiting for another service,"
+    #                                   " re- in a few seconds.".format(name))
+    #                 break
+    #             else:
+    #                 log.debug("Issued deploy for {}".format(name))
+    #                 self.deployed_charm_classes.append(charm_class)
 
-        while len(undeployed_charm_classes()) > 0:
-            for charm_class in undeployed_charm_classes():
-                charm = charm_class(juju=self.juju,
-                                    juju_state=self.juju_state,
-                                    ui=self.ui)
-                self.info_message("Checking if {c} "
-                                  "is deployed".format(c=charm.display_name))
+    #             self.juju_state.invalidate_status_cache()
 
-                service_names = [s.service_name for s in
-                                 self.juju_state.services]
-                if charm.name() in service_names:
-                    self.info_message("{c} is already deployed"
-                                      ", skipping".format(c=charm))
-                    self.deployed_charm_classes.append(charm_class)
-                    continue
+    #         num_remaining = len(undeployed_charm_classes())
+    #         if num_remaining > 0:
+    #             log.debug("{} charms pending deploy.".format(num_remaining))
+    #             log.debug("deployed_charm_classes={}".format(
+    #                 PrettyLog(self.deployed_charm_classes)))
 
-                if charm.isolate:
-                    self.info_message("Deploying {c} "
-                                      "to a new machine".format(
-                                          c=charm.display_name))
-                    deploy_err = charm.setup()
-
-                else:
-                    # Hardcode lxc on same machine as they are
-                    # created on-demand.
-                    charm.machine_id = 'lxc:{mid}'.format(
-                        mid=self.machine.machine_id)
-                    self.info_message("Deploying {c} "
-                                      "to machine {m}".format(
-                                          c=charm.display_name,
-                                          m=charm.machine_id))
-                    deploy_err = charm.setup()
-
-                name = charm.display_name
-                if deploy_err:
-                    self.info_message("{} is waiting for another service, will"
-                                      " re-try in a few seconds.".format(name))
-                    break
-                else:
-                    log.debug("Issued deploy for {}".format(name))
-                    self.deployed_charm_classes.append(charm_class)
-
-                self.juju_state.invalidate_status_cache()
-
-            num_remaining = len(undeployed_charm_classes())
-            if num_remaining > 0:
-                log.debug("{} charms pending deploy.".format(num_remaining))
-                log.debug("deployed_charm_classes={}".format(
-                    PrettyLog(self.deployed_charm_classes)))
-
-                time.sleep(5)
+    #             time.sleep(5)
 
     def deploy_using_placement(self):
         """Deploy charms using machine placement from placement controller,
@@ -501,8 +506,8 @@ class Controller(DisplayController):
         """
 
         self.info_message("Verifying service deployments")
-
-        charm_classes = sorted(self.placement_controller.charm_classes(),
+        placed_charm_classes = self.placement_controller.placed_charm_classes()
+        charm_classes = sorted(placed_charm_classes,
                                key=attrgetter('deploy_priority'))
 
         def undeployed_charm_classes():
@@ -546,34 +551,52 @@ class Controller(DisplayController):
 
     def try_deploy(self, charm_class):
         "returns True if deploy is deferred and should be tried again."
-        # TODO for each placeholder, do a juju add-machine?  -- is
-        # that how we deal with ensuring that charms end up on the
-        # same placeholder?
 
-        # TODO: dealing with n > 1, machines_for_charm could just give us dupes
-        # TODO: how to deal with LXC?
         charm = charm_class(juju=self.juju,
                             juju_state=self.juju_state,
                             ui=self.ui)
 
-        machines = self.placement_controller.machines_for_charm(charm_class)
+        placements = self.placement_controller.machines_for_charm(charm_class)
         errs = []
-        for m in machines:
-            self.info_message("Deploying {c} "
-                              "to machine {m}".format(
-                                  c=charm_class.display_name,
-                                  m=m.hostname))
-            # import pdb
-            # pdb.set_trace()
-            deploy_err = charm.deploy(m)
-            if deploy_err:
-                errs.append(m)
+        for atype, ml in placements.items():
+            for machine in ml:
+                # get machine spec from atype and machine instance id:
+                mspec = self.get_machine_spec(machine, atype)
+                if mspec is None:
+                    errs.append(machine)
+                self.info_message("Deploying {c} "
+                                  "to machine {mspec}".format(
+                                      c=charm_class.display_name,
+                                      mspec=mspec))
+                deploy_err = charm.deploy(mspec)
+                if deploy_err:
+                    errs.append(machine)
 
         had_err = len(errs) > 0
         if had_err:
             log.warning("saw errors deploying to these machines: {}".format(
                 errs))
         return had_err
+
+    def get_machine_spec(self, machine, atype):
+        """Given a machine and assignment type, return a juju machine spec"""
+        jm = next((jm for jm in self.juju_state.machines()
+                   if jm.instance_id.split('/')[-2] == machine.instance_id),
+                  None)
+        if jm is None:
+            log.error("could not find juju machine"
+                      " matching {}".format(machine))
+            return None
+
+        if atype == AssignmentType.BareMetal:
+            return jm.machine_id
+        elif atype == AssignmentType.LXC:
+            return "lxc:{}".format(jm.machine_id)
+        elif atype == AssignmentType.KVM:
+            return "kvm:{}".format(jm.machine_id)
+        else:
+            log.error("unexpected atype: {}".format(atype))
+            return None
 
     def enqueue_deployed_charms(self):
         """Send all deployed charms to CharmQueue for relation setting and
@@ -652,7 +675,7 @@ class Controller(DisplayController):
         return
 
     def initialize(self):
-        """ authenticates against juju/maas and initializes a machine """
+        """ authenticates against juju/maas and begins deployment """
         super().initialize()
-        if not self.opts.placement:
-            self.init_machine()
+        if not self.opts.placement or self.config.is_single:
+            self.begin_deployment()
