@@ -5,7 +5,9 @@
 
 ## Support
 
-Come find us on IRC at **freenode.net** in channel **#ubuntu-solutions**
+IRC: **freenode.net** in channel **#ubuntu-solutions**
+
+Mailing list: https://lists.ubuntu.com/mailman/listinfo/ubuntu-openstack-installer
 
 ## Developers
 
