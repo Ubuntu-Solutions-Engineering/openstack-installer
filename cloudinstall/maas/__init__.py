@@ -237,6 +237,10 @@ class MaasState:
             self.start_time = time.time()
         return self._maas_client_nodes
 
+    def invalidate_nodes_cache(self):
+        """Force reload on next access"""
+        self._maas_client_nodes = None
+
     def machine(self, instance_id):
         """ Return single machine state
 
