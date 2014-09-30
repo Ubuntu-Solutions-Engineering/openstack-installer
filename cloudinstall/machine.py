@@ -72,8 +72,6 @@ def satisfies(machine, constraints):
 class Machine:
     """ Base machine class """
 
-    is_placeholder = False
-
     def __init__(self, machine_id, machine):
         self.machine_id = machine_id
         self.machine = machine

@@ -166,9 +166,6 @@ export OS_REGION_NAME=RegionOne
         return "\"{}\"".format(all_args)
 
     def add_machine_tag_constraint(self, machine):
-        if machine.is_placeholder:
-            log.debug("IGNORING machine TAG for placeholder machine")
-            return  # TODO
 
         if not 'tags' in self.constraints:
             self.constraints['tags'] = []
@@ -190,7 +187,7 @@ export OS_REGION_NAME=RegionOne
         """
         config_yaml = ""
         self.add_machine_tag_constraint(machine)
-        machine_spec = ""  # TODO still needed for lxc?
+        machine_spec = ""
 
         if self.charm_name in CHARM_CONFIG:
             config_yaml = CHARM_CONFIG_RAW
