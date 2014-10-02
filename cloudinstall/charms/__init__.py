@@ -173,7 +173,7 @@ export OS_REGION_NAME=RegionOne
         if machine.instance_id not in tags:
             self.constraints['tags'].append(machine.system_id)
 
-    def deploy(self, machine, num_units=1):
+    def deploy(self, machine_spec, num_units=1):
         """ Deploy charm and configuration options
 
         The default should be sufficient but if more functionality
@@ -186,26 +186,23 @@ export OS_REGION_NAME=RegionOne
         that service is up and running.
         """
         config_yaml = ""
-        self.add_machine_tag_constraint(machine)
-        machine_spec = ""
 
         if self.charm_name in CHARM_CONFIG:
             config_yaml = CHARM_CONFIG_RAW
 
         try:
             # TODO - ok to pass self.constraints as an empty dict?
+
+            log.debug('calling deploy({}, {}, {}, {}, {}, {})'.format(
+                self.charm_name, self.charm_name, num_units,
+                config_yaml, self.constraints, machine_spec))
+
             self.juju.deploy(self.charm_name, self.charm_name, num_units,
                              config_yaml, self.constraints, machine_spec)
         except MacumbaError:
             log.exception("Error deploying")
             return True
 
-        log.debug('Deployed {} with params: {} {} {} {}'.format(
-            self.charm_name,
-            machine_spec,
-            num_units,
-            config_yaml,
-            self.constraints))
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
         return False
 

@@ -338,20 +338,22 @@ class Controller(DisplayController):
         isn't already there."""
 
         self.juju_state.invalidate_status_cache()
-        juju_ids = [jm.instance_id.split('/')[-2]  # extracts id from urlpath
-                    for jm in self.juju_state.machines()]
+        juju_ids = [jm.instance_id for jm in self.juju_state.machines()]
 
         machine_params = []
         for maas_machine in self.placement_controller.machines_used():
             if maas_machine in juju_ids:
                 # ignore machines that are already added to juju
                 continue
-            cd = dict(tags=maas_machine.system_id)
+            cd = dict(tags=[maas_machine.system_id])
             mp = dict(Series="", ContainerType="", ParentId="",
                       Constraints=cd, Jobs=[JujuJobs.HostUnits])
             machine_params.append(mp)
 
         if len(machine_params) > 0:
+            import pprint
+            log.debug("calling add_machines with params:"
+                      " {}".format(pprint.pformat(machine_params)))
             self.juju.add_machines(machine_params)
 
     def all_juju_machines_allocated(self):
@@ -564,6 +566,7 @@ class Controller(DisplayController):
                 mspec = self.get_machine_spec(machine, atype)
                 if mspec is None:
                     errs.append(machine)
+                    continue
                 self.info_message("Deploying {c} "
                                   "to machine {mspec}".format(
                                       c=charm_class.display_name,
@@ -574,18 +577,19 @@ class Controller(DisplayController):
 
         had_err = len(errs) > 0
         if had_err:
-            log.warning("saw errors deploying to these machines: {}".format(
+            log.warning("deferred deploying to these machines: {}".format(
                 errs))
         return had_err
 
     def get_machine_spec(self, machine, atype):
         """Given a machine and assignment type, return a juju machine spec"""
         jm = next((jm for jm in self.juju_state.machines()
-                   if jm.instance_id.split('/')[-2] == machine.instance_id),
-                  None)
+                   if jm.instance_id == machine.instance_id), None)
         if jm is None:
-            log.error("could not find juju machine"
-                      " matching {}".format(machine))
+            log.error("could not find juju machine matching {}"
+                      " (instance id {})".format(machine,
+                                                 machine.instance_id))
+
             return None
 
         if atype == AssignmentType.BareMetal:
