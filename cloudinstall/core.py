@@ -304,9 +304,9 @@ class Controller(DisplayController):
 
             self.add_machines_to_juju_multi()
             while not self.all_juju_machines_allocated():
-                # TODO not sure if this is the right place to use the
-                # summary
-                summary = self.juju_status.machines_summary()
+                sd = self.juju_state.machines_summary()
+                summary = ", ".join(["{} {}".format(v, k) for k, v
+                                     in sd.items()])
                 self.info_message("Waiting for machines to "
                                   "start: {}".format(summary))
                 time.sleep(3)
@@ -322,13 +322,15 @@ class Controller(DisplayController):
 
         needed = set([m.instance_id for m in
                       self.placement_controller.machines_used()])
+
         ready = set([m.instance_id for m in
                      self.maas_state.machines(MaasMachineStatus.READY)])
 
-        self.info_message("Waiting for maas machines: {} of {}"
-                          " are ready.".format(len(ready),
-                                               len(needed)))
-
+        summary = ", ".join(["{} {}".format(v, k) for k, v in
+                             self.maas_state.machines_summary().items()])
+        self.info_message("Waiting for {} maas machines to be ready."
+                          " Machines Summary: {}".format(len(needed),
+                                                         summary))
         if needed != ready:
             return False
         return True
