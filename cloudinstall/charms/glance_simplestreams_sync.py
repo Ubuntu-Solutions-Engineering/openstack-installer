@@ -88,7 +88,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
         except:
             log.exception("problem downloading stable branch."
                           " Falling back to charm store version.")
-            return super().deploy(machine)
+            return super().deploy(mspec)
 
         kwds = dict(constraints=self.constraints_arg(),
                     repodir=CHARMS_DIR,
