@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from cloudinstall.machine import Machine
+from collections import Counter
 from enum import Enum, unique
 import logging
 import time
@@ -271,3 +272,10 @@ class MaasState:
             return [m for m in all_machines if m.status == state]
         else:
             return all_machines
+
+    def machines_summary(self):
+        """ Returns summary of known machines and their states.
+        """
+        log.debug("in summary, self.nodes is {}".format(self.nodes()))
+        return Counter([MaasMachineStatus(m['status'])
+                        for m in self.nodes()])
