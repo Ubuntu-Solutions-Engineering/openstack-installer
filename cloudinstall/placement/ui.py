@@ -877,7 +877,7 @@ class MachinesColumn(WidgetWrap):
 
         bc = self.config.juju_env['bootstrap-config']
         empty_maas_msg = ("There are no available machines.\n"
-                          "Open {} in browser to add machines to "
+                          "Open {} to add machines to "
                           "'{}':".format(bc['maas-server'], bc['name']))
 
         self.empty_maas_widgets = Pile([Text([('error_icon',
