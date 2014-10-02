@@ -144,7 +144,8 @@ class JujuState:
         """
         return [m for m in self.machines()
                 if m.agent_state in self.valid_states or
-                m.agent['Status'] in self.valid_states]
+                (m.agent is not None and
+                 m.agent['Status'] in self.valid_states)]
 
     def service(self, name):
         """ Return a single service entry
