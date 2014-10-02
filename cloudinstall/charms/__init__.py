@@ -219,6 +219,8 @@ export OS_REGION_NAME=RegionOne
             for charm in self.related:
                 if not self.is_related(charm, services.relations):
                     try:
+                        log.debug("calling add_relation({}, {})".format(
+                            self.charm_name, charm))
                         self.juju.add_relation(self.charm_name,
                                                charm)
                     except:
