@@ -584,6 +584,7 @@ class MachineChooser(WidgetWrap):
         self.controller.assign(machine, self.charm_class, atype)
         self.machines_list.update()
         self.service_widget.update()
+        self.parent_widget.remove_overlay(self)
 
     def close_pressed(self, sender):
         self.parent_widget.remove_overlay(self)
