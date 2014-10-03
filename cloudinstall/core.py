@@ -40,7 +40,6 @@ from cloudinstall.placement.controller import (PlacementController,
 
 from macumba import JujuClient
 from macumba import Jobs as JujuJobs
-from multiprocessing import cpu_count
 
 
 log = logging.getLogger('cloudinstall.core')
@@ -92,19 +91,21 @@ class DisplayController:
     def initialize(self):
         """ authenticates against juju/maas and initializes a machine """
         self.authenticate_juju()
-        if not self.config.is_multi:
-            return
+        if self.config.is_multi:
+            self.authenticate_maas()
 
-        self.authenticate_maas()
-
-        if not self.opts.placement:
-            return
-
-        self.current_state = ControllerState.PLACEMENT
         self.placement_controller = PlacementController(
             self.maas_state, self.opts)
-        self.placement_controller.set_all_assignments(
-            self.placement_controller.gen_defaults())
+
+        if self.config.is_multi:
+            def_assignments = self.placement_controller.gen_defaults()
+        else:
+            def_assignments = self.placement_controller.gen_single()
+
+        self.placement_controller.set_all_assignments(def_assignments)
+
+        if self.opts.edit_placement:
+            self.current_state = ControllerState.PLACEMENT
 
     # overlays
     def step_info(self, message):
@@ -255,6 +256,7 @@ class Controller(DisplayController):
 
     def __init__(self, **kwds):
         self.charm_modules = utils.load_charms()
+        self.juju_m_idmap = None  # for single, {instance_id: machine id}
         self.deployed_charm_classes = []
         super().__init__(**kwds)
 
@@ -303,16 +305,26 @@ class Controller(DisplayController):
                 time.sleep(3)
 
             self.add_machines_to_juju_multi()
-            while not self.all_juju_machines_allocated():
-                sd = self.juju_state.machines_summary()
-                summary = ", ".join(["{} {}".format(v, k) for k, v
-                                     in sd.items()])
-                self.info_message("Waiting for machines to "
-                                  "start: {}".format(summary))
-                time.sleep(3)
 
         elif self.config.is_single:
-            self.init_machine_for_single()
+            self.add_machines_to_juju_single()
+
+        while not self.all_juju_machines_started():
+            sd = self.juju_state.machines_summary()
+            summary = ", ".join(["{} {}".format(v, k) for k, v
+                                 in sd.items()])
+            self.info_message("Waiting for machines to "
+                              "start: {}".format(summary))
+            time.sleep(3)
+
+        if self.config.is_single:
+            # TODO: not sure best place for this,
+            self.current_state = ControllerState.SERVICES
+
+            controller_machine = self.juju_m_idmap['controller']
+            self.configure_lxc_network(controller_machine)
+            for juju_machine_id in self.juju_m_idmap.values():
+                self.run_apt_go_fast(controller_machine)
 
         self.deploy_using_placement()
         self.enqueue_deployed_charms()
@@ -344,7 +356,7 @@ class Controller(DisplayController):
 
         machine_params = []
         for maas_machine in self.placement_controller.machines_used():
-            if maas_machine in juju_ids:
+            if maas_machine.instance_id in juju_ids:
                 # ignore machines that are already added to juju
                 continue
             cd = dict(tags=[maas_machine.system_id])
@@ -356,77 +368,73 @@ class Controller(DisplayController):
             import pprint
             log.debug("calling add_machines with params:"
                       " {}".format(pprint.pformat(machine_params)))
-            self.juju.add_machines(machine_params)
+            rv = self.juju.add_machines(machine_params)
+            log.debug("add_machines returned '{}'".format(rv))
 
-    def all_juju_machines_allocated(self):
+    def all_juju_machines_started(self):
         self.juju_state.invalidate_status_cache()
         n_needed = len(self.placement_controller.machines_used())
-        n_allocated = len(self.juju_state.machines_allocated())
-        return n_needed == n_allocated
+        n_allocated = len([jm for jm in self.juju_state.machines()
+                           if jm.agent_state == 'started'])
+        return n_allocated >= n_needed
 
-    def init_machine_for_single(self):
+    def add_machines_to_juju_single(self):
+        self.juju_m_idmap = {}
+        for jm in self.juju_state.machines():
+            response = self.juju.get_annotations(jm.machine_id,
+                                                 'machine')
+            ann = response['Annotations']
+            log.debug("juju machine {} has annotations: {}".format(jm.machine_id,
+                                                                   ann))
+            if 'instance_id' in ann:
+                self.juju_m_idmap[ann['instance_id']] = jm.machine_id
 
-        allocated = list(self.juju_state.machines_allocated())
-        log.debug("Allocated machines: "
-                  "{machines}".format(machines=allocated))
+        log.debug("existing juju machines: {}".format(self.juju_m_idmap))
 
-        max_cpus = cpu_count()
-        if max_cpus >= 2:
-            max_cpus = max_cpus // 2
+        def get_created_machine_id(response):
+            d = response['Machines'][0]
+            if d['Error']:
+                log.debug("Error from add_machine: {}".format(response))
+                return None
+            else:
+                return d['Machine']
 
-        if len(allocated) == 0:
-            self.info_message("Allocating a new machine.")
-            self.juju.add_machine(constraints={'mem': 3072,
-                                               'root-disk': 20480,
-                                               'cpu-cores': max_cpus})
+        for machine in self.placement_controller.machines_used():
+            if machine.instance_id in self.juju_m_idmap:
+                machine.machine_id = self.juju_m_idmap[machine.instance_id]
+                log.debug("machine instance_id {} already exists as #{}, "
+                          "skipping".format(machine.instance_id,
+                                            machine.machine_id))
+                continue
+            log.debug("adding machine with "
+                      "constraints={}".format(machine.constraints))
+            rv = self.juju.add_machine(constraints=machine.constraints)
+            m_id = get_created_machine_id(rv)
+            machine.machine_id = m_id
+            log.debug("for machine {}, instance_id = {}".format(machine, machine.instance_id))
+            log.debug("set_annotations({}, 'machine', 'instance_id': '{}')".format(m_id, machine.instance_id))
+            rv = self.juju.set_annotations(m_id, 'machine', {'instance_id':
+                                                        machine.instance_id})
+            log.debug("got rv = '{}'".format(rv))
+            self.juju_m_idmap[machine.instance_id] = m_id
 
-        controller_machine = None
-        while not controller_machine:
-            self.juju_state.invalidate_status_cache()
-            controller_machine = self.get_started_machine_for_single()
-            time.sleep(5)
+    def run_apt_go_fast(self, machine_id):
+        utils.remote_cp(machine_id,
+                        src="/usr/share/cloud-installer/tools/apt-go-fast",
+                        dst="/tmp/apt-go-fast")
+        utils.remote_run(machine_id,
+                         cmds="sudo sh /tmp/apt-go-fast")
 
-        self.configure_lxc_network(controller_machine)
-
-    def get_started_machine_for_single(self):
-        started_machines = sorted([m for m in
-                                   self.juju_state.machines_allocated()
-                                   if m.agent_state == 'started'],
-                                  key=lambda m: int(m.machine_id))
-
-        if len(started_machines) > 0:
-            controller_id = started_machines[0].machine_id
-            utils.remote_cp(controller_id,
-                            src="/usr/share/cloud-installer/tools/apt-go-fast",
-                            dst="/tmp/apt-go-fast")
-            utils.remote_run(controller_id,
-                             cmds="sudo sh /tmp/apt-go-fast")
-            self.info_message("Using machine {} as controller host.".format(
-                controller_id))
-            return started_machines[0]
-
-        machines_summary_items = self.juju_state.machines_summary().items()
-        if len(machines_summary_items) > 0:
-            status_string = ", ".join(["{} {}".format(v, k) for k, v in
-                                       machines_summary_items])
-            self.info_message("Waiting for a machine."
-                              " Machines summary: {}".format(status_string))
-        else:
-            self.info_message("Waiting for a machine.")
-
-        return None
-
-    def configure_lxc_network(self, machine):
+    def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
         self.info_message('Copying network specifications to machine.')
-        utils.remote_cp(
-            machine.machine_id,
+        utils.remote_cp(machine_id,
             src="/usr/share/cloud-installer/templates/lxc-host-only",
             dst="/tmp/lxc-host-only")
         self.info_message('Updating network configuration for machine.')
-        utils.remote_run(machine.machine_id,
+        utils.remote_run(machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only")
-        utils.remote_run(machine.machine_id,
+        utils.remote_run(machine_id,
                          cmds="sudo /tmp/lxc-host-only")
 
     # def init_deploy_charms(self):
@@ -583,14 +591,16 @@ class Controller(DisplayController):
                 errs))
         return had_err
 
-    def get_machine_spec(self, machine, atype):
+    def get_machine_spec(self, maas_machine, atype):
         """Given a machine and assignment type, return a juju machine spec"""
-        jm = next((jm for jm in self.juju_state.machines()
-                   if jm.instance_id == machine.instance_id), None)
+        jm = next((m for m in self.juju_state.machines()
+                   if (m.instance_id == maas_machine.instance_id
+                       or
+                       m.machine_id == maas_machine.machine_id)), None)
         if jm is None:
             log.error("could not find juju machine matching {}"
-                      " (instance id {})".format(machine,
-                                                 machine.instance_id))
+                      " (instance id {})".format(maas_machine,
+                                                 maas_machine.instance_id))
 
             return None
 
@@ -683,5 +693,5 @@ class Controller(DisplayController):
     def initialize(self):
         """ authenticates against juju/maas and begins deployment """
         super().initialize()
-        if not self.opts.placement or self.config.is_single:
+        if not self.opts.edit_placement or self.config.is_single:
             self.begin_deployment()
