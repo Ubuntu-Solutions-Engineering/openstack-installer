@@ -31,6 +31,45 @@ class AssignmentType(Enum):
 DEFAULT_SHARED_ASSIGNMENT_TYPE = AssignmentType.LXC
 
 
+class PlaceholderMachine:
+    """A dummy machine that doesn't map to an existing maas machine"""
+
+    is_placeholder = True
+
+    def __init__(self, instance_id, name):
+        self.instance_id = instance_id
+        self.system_id = instance_id
+        self.display_name = name
+        self.constraints = defaultdict(lambda: '*')
+
+    @property
+    def machine(self):
+        return self.constraints
+
+    @property
+    def arch(self):
+        return self.constraints['arch']
+
+    @property
+    def cpu_cores(self):
+        return self.constraints['cpu_cores']
+
+    @property
+    def mem(self):
+        return self.constraints['mem']
+
+    @property
+    def storage(self):
+        return self.constraints['storage']
+
+    @property
+    def hostname(self):
+        return self.display_name
+
+    def __repr__(self):
+        return "<Placeholder Machine: {}>".format(self.display_name)
+
+
 class PlacementController:
     """Keeps state of current machines and their assigned services.
     """
