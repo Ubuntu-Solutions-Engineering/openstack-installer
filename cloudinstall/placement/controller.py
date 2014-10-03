@@ -13,9 +13,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from enum import Enum
 import logging
+from multiprocessing import cpu_count
 
 from cloudinstall.machine import satisfies
 from cloudinstall.utils import load_charms
@@ -32,15 +33,15 @@ DEFAULT_SHARED_ASSIGNMENT_TYPE = AssignmentType.LXC
 
 
 class PlaceholderMachine:
-    """A dummy machine that doesn't map to an existing maas machine"""
+    """A dummy machine that doesn't map to an existing maas machine, to be
+    used for single installs only."""
 
-    is_placeholder = True
-
-    def __init__(self, instance_id, name):
+    def __init__(self, instance_id, name, constraints):
         self.instance_id = instance_id
         self.system_id = instance_id
+        self.machine_id = -1
         self.display_name = name
-        self.constraints = defaultdict(lambda: '*')
+        self.constraints = constraints
 
     @property
     def machine(self):
@@ -74,15 +75,20 @@ class PlacementController:
     """Keeps state of current machines and their assigned services.
     """
 
-    def __init__(self, maas_state, opts):
+    def __init__(self, maas_state=None, opts=None):
         self.maas_state = maas_state
+        if self.maas_state is None:
+            self._machines = []
         # id -> {atype: [charm class]}
         self.assignments = defaultdict(lambda: defaultdict(list))
         self.opts = opts
         self.unplaced_services = set()
 
     def machines(self):
-        return self.maas_state.machines()
+        if self.maas_state:
+            return self.maas_state.machines()
+        else:
+            return self._machines
 
     def machines_used(self):
         ms = []
@@ -275,4 +281,44 @@ class PlacementController:
 
         import pprint
         log.debug(pprint.pformat(assignments))
+        return assignments
+
+    def gen_single(self):
+        """Generates an assignment for the single installer."""
+        assignments = defaultdict(lambda: defaultdict(list))
+
+        max_cpus = cpu_count()
+        if max_cpus >= 2:
+            max_cpus = max_cpus // 2
+
+        controller = PlaceholderMachine('controller', 'controller',
+                                        {'mem': 3072,
+                                         'root-disk': 20480,
+                                         'cpu-cores': max_cpus})
+        self._machines.append(controller)
+
+        charm_name_counter = Counter()
+
+        for charm_class in self.charm_classes():
+            if charm_class.isolate:
+                mnum = charm_name_counter[charm_class.charm_name]
+                charm_name_counter[charm_class.charm_name] += 1
+
+                instance_id = '{}-machine-{}'.format(charm_class.charm_name,
+                                                     mnum)
+                m_name = 'machine {} for {}'.format(mnum,
+                                                    charm_class.display_name)
+
+                pm = PlaceholderMachine(instance_id, m_name,
+                                        charm_class.constraints)
+                self._machines.append(pm)
+                ad = assignments[pm.instance_id]
+                # in single, "BareMetal" is in a KVM on the host
+                ad[AssignmentType.BareMetal].append(charm_class)
+            else:
+                ad = assignments[controller.instance_id]
+                ad[AssignmentType.LXC].append(charm_class)
+
+        import pprint
+        log.debug("gen_single() = '{}'".format(pprint.pformat(assignments)))
         return assignments

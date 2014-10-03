@@ -191,7 +191,7 @@ export OS_REGION_NAME=RegionOne
             config_yaml = CHARM_CONFIG_RAW
 
         try:
-            # TODO - ok to pass self.constraints as an empty dict?
+            # TODO - might not need to pass self.constraints to deploy
 
             log.debug('calling deploy({}, {}, {}, {}, {}, {})'.format(
                 self.charm_name, self.charm_name, num_units,
