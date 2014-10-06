@@ -332,16 +332,18 @@ class Controller(DisplayController):
 
         needed = set([m.instance_id for m in
                       self.placement_controller.machines_used()])
-
         ready = set([m.instance_id for m in
                      self.maas_state.machines(MaasMachineStatus.READY)])
+        allocated = set([m.instance_id for m in
+                         self.maas_state.machines(MaasMachineStatus.ALLOCATED)
+                         ])
 
         summary = ", ".join(["{} {}".format(v, k) for k, v in
                              self.maas_state.machines_summary().items()])
         self.info_message("Waiting for {} maas machines to be ready."
                           " Machines Summary: {}".format(len(needed),
                                                          summary))
-        if needed != ready:
+        if needed != ready.union(allocated):
             return False
         return True
 
