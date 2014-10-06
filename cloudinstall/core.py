@@ -384,8 +384,6 @@ class Controller(DisplayController):
             response = self.juju.get_annotations(jm.machine_id,
                                                  'machine')
             ann = response['Annotations']
-            log.debug("juju machine {} has annotations: {}".format(jm.machine_id,
-                                                                   ann))
             if 'instance_id' in ann:
                 self.juju_m_idmap[ann['instance_id']] = jm.machine_id
 
@@ -411,11 +409,9 @@ class Controller(DisplayController):
             rv = self.juju.add_machine(constraints=machine.constraints)
             m_id = get_created_machine_id(rv)
             machine.machine_id = m_id
-            log.debug("for machine {}, instance_id = {}".format(machine, machine.instance_id))
-            log.debug("set_annotations({}, 'machine', 'instance_id': '{}')".format(m_id, machine.instance_id))
-            rv = self.juju.set_annotations(m_id, 'machine', {'instance_id':
-                                                        machine.instance_id})
-            log.debug("got rv = '{}'".format(rv))
+            rv = self.juju.set_annotations(m_id, 'machine',
+                                           {'instance_id':
+                                            machine.instance_id})
             self.juju_m_idmap[machine.instance_id] = m_id
 
     def run_apt_go_fast(self, machine_id):
@@ -428,9 +424,9 @@ class Controller(DisplayController):
     def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
         self.info_message('Copying network specifications to machine.')
-        utils.remote_cp(machine_id,
-            src="/usr/share/cloud-installer/templates/lxc-host-only",
-            dst="/tmp/lxc-host-only")
+        srcpath = "/usr/share/cloud-installer/templates/lxc-host-only"
+        destpath = "/tmp/lxc-host-only"
+        utils.remote_cp(machine_id, src=srcpath, dst=destpath)
         self.info_message('Updating network configuration for machine.')
         utils.remote_run(machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only")
