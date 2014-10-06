@@ -18,6 +18,7 @@
 
 import unittest
 from unittest.mock import ANY, MagicMock, patch, PropertyMock
+from tempfile import NamedTemporaryFile
 
 from cloudinstall import core
 
@@ -31,6 +32,8 @@ class DisplayControllerTestCase(unittest.TestCase):
     def setUp(self):
         self.passwd = 'passwd'
         self.p_pass = PropertyMock(return_value=self.passwd)
+        tf = NamedTemporaryFile(mode='w+')
+        self.p_placementsfilename = PropertyMock(return_value=tf.name)
         self.mock_opts = MagicMock()
 
     def test_initialize_multi(self, mock_config, mock_maasclient,
@@ -39,6 +42,7 @@ class DisplayControllerTestCase(unittest.TestCase):
         p_yes = PropertyMock(return_value=True)
         type(mock_config()).is_multi = p_yes
         type(mock_config()).juju_api_password = self.p_pass
+        type(mock_config()).placements_filename = self.p_placementsfilename
 
         dc = core.DisplayController(opts=self.mock_opts)
 
@@ -55,6 +59,7 @@ class DisplayControllerTestCase(unittest.TestCase):
         p_no = PropertyMock(return_value=False)
         type(mock_config()).is_multi = p_no
         type(mock_config()).juju_api_password = self.p_pass
+        type(mock_config()).placements_filename = self.p_placementsfilename
 
         dc = core.DisplayController(opts=self.mock_opts)
 
