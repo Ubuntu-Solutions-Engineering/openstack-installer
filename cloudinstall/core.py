@@ -112,6 +112,7 @@ class DisplayController:
 
         pfn = self.config.placements_filename
         self.placement_controller.set_autosave_filename(pfn)
+        self.placement_controller.do_autosave()
 
         if self.opts.edit_placement:
             self.current_state = ControllerState.PLACEMENT
