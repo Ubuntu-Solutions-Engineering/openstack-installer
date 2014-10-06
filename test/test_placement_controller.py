@@ -19,6 +19,7 @@
 
 import logging
 import os
+from tempfile import TemporaryFile
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -227,3 +228,19 @@ class PlacementControllerTestCase(unittest.TestCase):
         # but the others don't change
         self.assertTrue(self.pc.service_is_core(CharmKeystone))
         self.assertFalse(self.pc.service_is_core(CharmJujuGui))
+
+    def test_persistence(self):
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        self.pc.assign(self.mock_machine_2, CharmKeystone, AssignmentType.KVM)
+
+        with TemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            self.pc.save(tempf)
+            tempf.seek(0)
+            print(tempf.read())
+            tempf.seek(0)
+            newpc = PlacementController(self.mock_maas_state, self.mock_opts)
+            newpc.load(tempf)
+        self.assertEqual(self.pc.assignments, newpc.assignments)
+        self.assertEqual(self.pc.machines_used(), newpc.machines_used())
+        self.assertEqual(self.pc.placed_charm_classes(),
+                         newpc.placed_charm_classes())

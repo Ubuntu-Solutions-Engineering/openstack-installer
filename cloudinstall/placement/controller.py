@@ -17,6 +17,7 @@ from collections import defaultdict, Counter
 from enum import Enum
 import logging
 from multiprocessing import cpu_count
+import yaml
 
 from cloudinstall.machine import satisfies
 from cloudinstall.utils import load_charms
@@ -83,6 +84,45 @@ class PlacementController:
         self.assignments = defaultdict(lambda: defaultdict(list))
         self.opts = opts
         self.unplaced_services = set()
+
+    def save(self, f):
+        """f is a file-like object to save state to, to be re-read by
+        load(). No guarantees made about the contents of the file.
+        """
+        flat_assignments = {}
+        for iid, ad in self.assignments.items():
+            flat_ad = {}
+            for atype, al in ad.items():
+                flat_al = [cc.charm_name for cc in al]
+                flat_ad[atype.name] = flat_al
+            flat_assignments[iid] = flat_ad
+        yaml.dump(flat_assignments, f)
+
+    def load(self, f):
+        """Load assignments from file object written to by save().
+        replaces current assignments.
+        """
+        def find_charm_class(name):
+            for cc in self.charm_classes():
+                if cc.charm_name == name:
+                    return cc
+            log.warning("Could not find charm class "
+                        "matching saved charm name {}".format(name))
+            return None
+
+        file_assignments = yaml.load(f)
+        new_assignments = defaultdict(lambda: defaultdict(list))
+        for iid, ad in file_assignments.items():
+            for atypestr, al in ad.items():
+                new_al = [find_charm_class(ccname)
+                          for ccname in al]
+                new_al = [x for x in new_al if x is not None]
+                at = AssignmentType.__members__[atypestr]
+                new_assignments[iid][at] = new_al
+
+        self.assignments.clear()
+        self.assignments.update(new_assignments)
+        self.reset_unplaced()
 
     def machines(self):
         if self.maas_state:
