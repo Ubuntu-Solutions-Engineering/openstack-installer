@@ -84,6 +84,16 @@ class PlacementController:
         self.assignments = defaultdict(lambda: defaultdict(list))
         self.opts = opts
         self.unplaced_services = set()
+        self.autosave_filename = None
+
+    def set_autosave_filename(self, filename):
+        self.autosave_filename = filename
+
+    def do_autosave(self):
+        if not self.autosave_filename:
+            return
+        with open(self.autosave_filename, 'w') as af:
+            self.save(af)
 
     def save(self, f):
         """f is a file-like object to save state to, to be re-read by
@@ -123,6 +133,10 @@ class PlacementController:
         self.assignments.clear()
         self.assignments.update(new_assignments)
         self.reset_unplaced()
+
+    def update_and_save(self):
+        self.reset_unplaced()
+        self.do_autosave()
 
     def machines(self):
         if self.maas_state:
@@ -165,7 +179,7 @@ class PlacementController:
                         l.remove(charm_class)
 
         self.assignments[machine.instance_id][atype].append(charm_class)
-        self.reset_unplaced()
+        self.update_and_save()
 
     def machines_for_charm(self, charm_class):
         """ returns assignments for a given charm
@@ -185,11 +199,11 @@ class PlacementController:
 
     def clear_all_assignments(self):
         self.assignments = defaultdict(lambda: defaultdict(list))
-        self.reset_unplaced()
+        self.update_and_save()
 
     def clear_assignments(self, m):
         del self.assignments[m.instance_id]
-        self.reset_unplaced()
+        self.update_and_save()
 
     def remove_one_assignment(self, m, cc):
         ad = self.assignments[m.instance_id]
@@ -197,7 +211,7 @@ class PlacementController:
             if cc in assignment_list:
                 assignment_list.remove(cc)
                 break
-        self.reset_unplaced()
+        self.update_and_save()
 
     def assignments_for_machine(self, m):
         """Returns all assignments for given machine
@@ -215,7 +229,7 @@ class PlacementController:
 
     def set_all_assignments(self, assignments):
         self.assignments = assignments
-        self.reset_unplaced()
+        self.update_and_save()
 
     def reset_unplaced(self):
         self.unplaced_services = set()
@@ -263,7 +277,7 @@ class PlacementController:
         for mid, charm_classes in unplaced_defaults.items():
             self.assignments[mid] = charm_classes
 
-        self.reset_unplaced()
+        self.update_and_save()
 
         if len(self.unplaced_services) > 0:
             msg = ("Not enough empty machines could be found for the required"

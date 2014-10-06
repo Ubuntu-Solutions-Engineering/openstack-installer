@@ -65,6 +65,10 @@ class Config:
         return os.path.expanduser('~/.cloud-install')
 
     @property
+    def placements_filename(self):
+        return os.path.join(self.cfg_path, 'placements.yaml')
+
+    @property
     def is_single(self):
         return os.path.exists(os.path.expanduser('~/.cloud-install/single'))
 

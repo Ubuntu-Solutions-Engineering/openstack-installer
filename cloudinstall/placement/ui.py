@@ -925,6 +925,7 @@ class PlacementView(WidgetWrap):
     def __init__(self, display_controller, placement_controller):
         self.display_controller = display_controller
         self.placement_controller = placement_controller
+        self.config = Config()
         w = self.build_widgets()
         super().__init__(w)
         self.update()

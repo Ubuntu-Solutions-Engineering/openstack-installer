@@ -89,7 +89,7 @@ class DisplayController:
         log.debug('Authenticated against maas api.')
 
     def initialize(self):
-        """ authenticates against juju/maas and initializes a machine """
+        """ authenticates against juju/maas and sets up placement """
         self.authenticate_juju()
         if self.config.is_multi:
             self.authenticate_maas()
@@ -97,12 +97,21 @@ class DisplayController:
         self.placement_controller = PlacementController(
             self.maas_state, self.opts)
 
-        if self.config.is_multi:
-            def_assignments = self.placement_controller.gen_defaults()
-        else:
-            def_assignments = self.placement_controller.gen_single()
+        if path.exists(self.config.placements_filename):
+            with open(self.config.placements_filename, 'r') as pf:
+                self.placement_controller.load(pf)
+            self.info_message("Loaded placements from file.")
 
-        self.placement_controller.set_all_assignments(def_assignments)
+        else:
+            if self.config.is_multi:
+                def_assignments = self.placement_controller.gen_defaults()
+            else:
+                def_assignments = self.placement_controller.gen_single()
+
+            self.placement_controller.set_all_assignments(def_assignments)
+
+        pfn = self.config.placements_filename
+        self.placement_controller.set_autosave_filename(pfn)
 
         if self.opts.edit_placement:
             self.current_state = ControllerState.PLACEMENT
