@@ -317,10 +317,8 @@ class Controller(DisplayController):
                               "start: {}".format(summary))
             time.sleep(3)
 
+        self.current_state = ControllerState.SERVICES
         if self.config.is_single:
-            # TODO: not sure best place for this,
-            self.current_state = ControllerState.SERVICES
-
             controller_machine = self.juju_m_idmap['controller']
             self.configure_lxc_network(controller_machine)
             for juju_machine_id in self.juju_m_idmap.values():
