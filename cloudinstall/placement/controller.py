@@ -1,3 +1,4 @@
+
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -102,10 +103,11 @@ class PlacementController:
         flat_assignments = {}
         for iid, ad in self.assignments.items():
             constraints = {}
-            machine = next((m for m in self.machines() if
-                            m.instance_id == iid), None)
-            if machine:
-                constraints = machine.constraints
+            if self.maas_state is None:
+                machine = next((m for m in self.machines() if
+                                m.instance_id == iid), None)
+                if machine:
+                    constraints = machine.constraints
 
             flat_ad = {}
             for atype, al in ad.items():
@@ -280,10 +282,7 @@ class PlacementController:
                       " - requires {} units but does not allow "
                       "multi units.".format(cc.charm_name, n_required))
 
-        n_units = sum([len(al) for al in self.machines_for_charm(cc).values()])
-
-        print("n_required is {} and n_units is {}"
-              "".format(n_required, n_units))
+        n_units = self.machine_count_for_charm(cc)
 
         return n_units < n_required
 
@@ -293,7 +292,13 @@ class PlacementController:
 
         return len(unplaced_cores) == 0
 
+    def machine_count_for_charm(self, cc):
+        """Returns the total number of placements of any type for a given
+        charm."""
+        return sum([len(al) for al in self.machines_for_charm(cc).values()])
+
     def autoplace_unplaced_services(self):
+
         """Attempt to find machines for all unplaced services using only empty
         machines.
 

@@ -461,13 +461,17 @@ class ServicesList(WidgetWrap):
                     self.remove_service_widget(cc)
                     continue
 
-            if self.unplaced_only \
-               and cc not in self.controller.unplaced_services:
-                self.remove_service_widget(cc)
-                continue
+            if self.unplaced_only:
+                n_units = self.controller.machine_count_for_charm(cc)
+                if n_units == cc.required_num_units() \
+                   and cc not in self.controller.unplaced_services:
+                    self.remove_service_widget(cc)
+                    continue
 
             is_core = self.controller.service_is_core(cc)
             if self.show_type == 'core':
+                log.debug("show_type is core and cc={} is core? {}"
+                          "".format(cc.charm_name, is_core))
                 if not is_core:
                     continue
             elif self.show_type == 'non-core':
