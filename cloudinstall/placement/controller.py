@@ -101,11 +101,19 @@ class PlacementController:
         """
         flat_assignments = {}
         for iid, ad in self.assignments.items():
+            constraints = {}
+            machine = next((m for m in self.machines() if
+                            m.instance_id == iid), None)
+            if machine:
+                constraints = machine.constraints
+
             flat_ad = {}
             for atype, al in ad.items():
                 flat_al = [cc.charm_name for cc in al]
                 flat_ad[atype.name] = flat_al
-            flat_assignments[iid] = flat_ad
+
+            flat_assignments[iid] = dict(constraints=constraints,
+                                         assignments=flat_ad)
         yaml.dump(flat_assignments, f)
 
     def load(self, f):
@@ -122,8 +130,13 @@ class PlacementController:
 
         file_assignments = yaml.load(f)
         new_assignments = defaultdict(lambda: defaultdict(list))
-        for iid, ad in file_assignments.items():
-            for atypestr, al in ad.items():
+        for iid, d in file_assignments.items():
+            if self.maas_state is None:
+                constraints = d['constraints']
+                pm = PlaceholderMachine(iid, iid,
+                                        constraints)
+                self._machines.append(pm)
+            for atypestr, al in d['assignments'].items():
                 new_al = [find_charm_class(ccname)
                           for ccname in al]
                 new_al = [x for x in new_al if x is not None]
