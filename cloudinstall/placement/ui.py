@@ -204,7 +204,7 @@ class ServiceWidget(WidgetWrap):
 
     def __init__(self, charm_class, controller, actions=None,
                  show_constraints=False, show_assignments=False,
-                 extra_markup=None):
+                 show_required_label=False):
         self.charm_class = charm_class
         self.controller = controller
         if actions is None:
@@ -213,7 +213,7 @@ class ServiceWidget(WidgetWrap):
             self.actions = actions
         self.show_constraints = show_constraints
         self.show_assignments = show_assignments
-        self.extra_markup = extra_markup
+        self.show_required_label = show_required_label
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -222,11 +222,10 @@ class ServiceWidget(WidgetWrap):
         return True
 
     def build_widgets(self):
-        title_markup = ["\N{GEAR} {}".format(self.charm_class.display_name)]
-        if self.extra_markup:
-            title_markup.append(self.extra_markup)
+        dn = self.charm_class.display_name
+        self.title_markup = ["\N{GEAR} {}".format(dn), ""]
 
-        self.charm_info_widget = Text(title_markup)
+        self.charm_info_widget = Text(self.title_markup)
         self.assignments_widget = Text("")
 
         if len(self.charm_class.constraints) == 0:
@@ -254,6 +253,13 @@ class ServiceWidget(WidgetWrap):
     def update(self):
         md = self.controller.machines_for_charm(self.charm_class)
         mstr = [""]
+
+        if self.controller.service_is_core(self.charm_class):
+            np = self.controller.machine_count_for_charm(self.charm_class)
+            nr = self.charm_class.required_num_units()
+            self.title_markup[1] = ('info',
+                                    " ({} of {} placed)".format(np, nr))
+            self.charm_info_widget.set_text(self.title_markup)
 
         for atype, ml in md.items():
             n = len(ml)
@@ -489,13 +495,9 @@ class ServicesList(WidgetWrap):
             sw.update()
 
     def add_service_widget(self, charm_class):
-        if self.unplaced_only and self.controller.service_is_core(charm_class):
-            extra = ('info', " (REQUIRED)")
-        else:
-            extra = None
         sw = ServiceWidget(charm_class, self.controller, self.actions,
                            self.show_constraints,
-                           extra_markup=extra)
+                           show_required_label=self.unplaced_only)
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))
