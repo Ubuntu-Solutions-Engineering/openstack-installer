@@ -22,6 +22,7 @@ import os
 from tempfile import TemporaryFile
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
+import yaml
 
 from cloudinstall.charms.jujugui import CharmJujuGui
 from cloudinstall.charms.keystone import CharmKeystone
@@ -232,11 +233,13 @@ class PlacementControllerTestCase(unittest.TestCase):
     def test_persistence(self):
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
         self.pc.assign(self.mock_machine_2, CharmKeystone, AssignmentType.KVM)
+        cons1 = PropertyMock(return_value={})
+        type(self.mock_machine).constraints = cons1
+        cons2 = PropertyMock(return_value={'cpu': 8})
+        type(self.mock_machine_2).constraints = cons2
 
         with TemporaryFile(mode='w+', encoding='utf-8') as tempf:
             self.pc.save(tempf)
-            tempf.seek(0)
-            print(tempf.read())
             tempf.seek(0)
             newpc = PlacementController(self.mock_maas_state, self.mock_opts)
             newpc.load(tempf)
@@ -244,3 +247,28 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.assertEqual(self.pc.machines_used(), newpc.machines_used())
         self.assertEqual(self.pc.placed_charm_classes(),
                          newpc.placed_charm_classes())
+
+        m2 = next((m for m in newpc.machines_used()
+                   if m.instance_id == 'fake-instance-id-2'))
+        self.assertEqual(m2.constraints, {'cpu': 8})
+
+    def test_load_machines_single(self):
+        singlepc = PlacementController(None, self.mock_opts)
+        fake_assignments = {'fake_iid': {'constraints': {},
+                                         'assignments': {'KVM':
+                                                         ['nova-compute']}},
+                            'fake_iid_2': {'constraints': {'cpu': 8},
+                                           'assignments':
+                                           {'BareMetal': ['nova-compute']}}}
+        with TemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            yaml.dump(fake_assignments, tempf)
+            tempf.seek(0)
+            singlepc.load(tempf)
+
+        self.assertEqual(set([m.instance_id for m in
+                              singlepc.machines_used()]),
+                         set(['fake_iid', 'fake_iid_2']))
+
+        m2 = next((m for m in singlepc.machines_used()
+                   if m.instance_id == 'fake_iid_2'))
+        self.assertEqual(m2.constraints, {'cpu': 8})
