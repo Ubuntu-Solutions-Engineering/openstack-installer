@@ -165,14 +165,6 @@ export OS_REGION_NAME=RegionOne
         all_args = " ".join(args)
         return "\"{}\"".format(all_args)
 
-    def add_machine_tag_constraint(self, machine):
-
-        if not 'tags' in self.constraints:
-            self.constraints['tags'] = []
-        tags = self.constraints['tags']
-        if machine.instance_id not in tags:
-            self.constraints['tags'].append(machine.system_id)
-
     def deploy(self, machine_spec, num_units=1):
         """ Deploy charm and configuration options
 
