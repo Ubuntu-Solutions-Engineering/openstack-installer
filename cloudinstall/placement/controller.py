@@ -256,16 +256,36 @@ class PlacementController:
                 self.unplaced_services.add(cc)
 
     def service_is_core(self, cc):
+        """Returns True if service needs to be placed before deploying is
+        OK.
+        """
         self.reset_unplaced()
         if cc.name() == 'nova-compute' \
            and cc in self.unplaced_services:
             return True
 
-        uncore_services = ['swift-storage',
-                           'swift-proxy',
-                           'nova-compute',
+        uncore_services = ['nova-compute',
                            'juju-gui']
-        return cc.name() not in uncore_services
+        if not self.opts.enable_swift:
+            uncore_services += ['swift-storage',
+                                'swift-proxy']
+
+        if cc.name() in uncore_services:
+            return False
+
+        n_required = cc.required_num_units()
+        # sanity check:
+        if n_required > 1 and not cc.allow_multi_units:
+            log.error("Inconsistent charm definition for {}:"
+                      " - requires {} units but does not allow "
+                      "multi units.".format(cc.charm_name, n_required))
+
+        n_units = sum([len(al) for al in self.machines_for_charm(cc).values()])
+
+        print("n_required is {} and n_units is {}"
+              "".format(n_required, n_units))
+
+        return n_units < n_required
 
     def can_deploy(self):
         unplaced_cores = [cc for cc in self.unplaced_services
@@ -334,10 +354,11 @@ class PlacementController:
                 controller_charms.append(charm_class)
 
         for charm_class in isolated_charms:
-            m = satisfying_machine(charm_class.constraints)
-            if m:
-                l = assignments[m.instance_id][AssignmentType.BareMetal]
-                l.append(charm_class)
+            for n in range(charm_class.required_num_units()):
+                m = satisfying_machine(charm_class.constraints)
+                if m:
+                    l = assignments[m.instance_id][AssignmentType.BareMetal]
+                    l.append(charm_class)
 
         controller_machine = satisfying_machine({})
         if controller_machine:
@@ -366,22 +387,26 @@ class PlacementController:
 
         charm_name_counter = Counter()
 
+        def placeholder_for_charm(charm_class):
+            mnum = charm_name_counter[charm_class.charm_name]
+            charm_name_counter[charm_class.charm_name] += 1
+
+            instance_id = '{}-machine-{}'.format(charm_class.charm_name,
+                                                 mnum)
+            m_name = 'machine {} for {}'.format(mnum,
+                                                charm_class.display_name)
+
+            return PlaceholderMachine(instance_id, m_name,
+                                      charm_class.constraints)
+
         for charm_class in self.charm_classes():
             if charm_class.isolate:
-                mnum = charm_name_counter[charm_class.charm_name]
-                charm_name_counter[charm_class.charm_name] += 1
-
-                instance_id = '{}-machine-{}'.format(charm_class.charm_name,
-                                                     mnum)
-                m_name = 'machine {} for {}'.format(mnum,
-                                                    charm_class.display_name)
-
-                pm = PlaceholderMachine(instance_id, m_name,
-                                        charm_class.constraints)
-                self._machines.append(pm)
-                ad = assignments[pm.instance_id]
-                # in single, "BareMetal" is in a KVM on the host
-                ad[AssignmentType.BareMetal].append(charm_class)
+                for n in range(charm_class.required_num_units()):
+                    pm = placeholder_for_charm(charm_class)
+                    self._machines.append(pm)
+                    ad = assignments[pm.instance_id]
+                    # in single, "BareMetal" is in a KVM on the host
+                    ad[AssignmentType.BareMetal].append(charm_class)
             else:
                 ad = assignments[controller.instance_id]
                 ad[AssignmentType.LXC].append(charm_class)

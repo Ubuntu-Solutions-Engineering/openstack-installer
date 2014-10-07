@@ -147,6 +147,12 @@ export OS_REGION_NAME=RegionOne
             return False
 
     @classmethod
+    def required_num_units(self):
+        """Override this in subclasses to force placement of multiple
+        units."""
+        return 1
+
+    @classmethod
     def name(class_):
         """ Return charm name
 

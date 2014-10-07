@@ -14,9 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from macumba import MacumbaError
 from cloudinstall.charms import (CharmBase, CHARM_CONFIG,
-                                 CHARM_CONFIG_RAW,
                                  DisplayPriorities)
 
 log = logging.getLogger('cloudinstall.charms.compute')
@@ -36,27 +34,14 @@ class CharmSwift(CharmBase):
     optional = True
     allow_multi_units = True
 
-    def deploy(self, machine):
-        """Custom deploy for swift-storage to get replicas from config"""
+    @classmethod
+    def required_num_units(self):
         if 'swift-proxy' in CHARM_CONFIG:
             num_replicas = CHARM_CONFIG.get('replicas',
                                             self.default_replicas)
         else:
             num_replicas = self.default_replicas
-
-        # TODO do deploy constraints
-
-        log.debug('Deployed {c}'.format(
-            c=self.charm_name))
-        try:
-            self.juju.deploy(charm=self.charm_name,
-                             service_name=self.charm_name,
-                             num_units=num_replicas,
-                             config_yaml=CHARM_CONFIG_RAW)
-        except MacumbaError:
-            log.exception("Error during deploy")
-            return True
-        return False
+        return num_replicas
 
     def post_proc(self):
         self.juju.set_config('glance-simplestreams-sync',
