@@ -476,8 +476,6 @@ class ServicesList(WidgetWrap):
 
             is_core = self.controller.service_is_core(cc)
             if self.show_type == 'core':
-                log.debug("show_type is core and cc={} is core? {}"
-                          "".format(cc.charm_name, is_core))
                 if not is_core:
                     continue
             elif self.show_type == 'non-core':
