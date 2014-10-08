@@ -89,7 +89,7 @@ class DisplayController:
         log.debug('Authenticated against maas api.')
 
     def initialize(self):
-        """ authenticates against juju/maas and sets up placement """
+        """Authenticates against juju/maas and sets up placement controller."""
         self.authenticate_juju()
         if self.config.is_multi:
             self.authenticate_maas()
@@ -114,8 +114,18 @@ class DisplayController:
         self.placement_controller.set_autosave_filename(pfn)
         self.placement_controller.do_autosave()
 
-        if self.opts.edit_placement:
+        if self.config.is_single:
+            self.begin_deployment()
+            return
+
+        if self.opts.edit_placement or \
+           not self.placement_controller.can_deploy():
             self.current_state = ControllerState.PLACEMENT
+        else:
+            self.begin_deployment()
+
+    def begin_deployment(self):
+        """To be overridden in subclasses."""
 
     # overlays
     def step_info(self, message):
@@ -625,5 +635,3 @@ class Controller(DisplayController):
     def initialize(self):
         """ authenticates against juju/maas and begins deployment """
         super().initialize()
-        if not self.opts.edit_placement or self.config.is_single:
-            self.begin_deployment()
