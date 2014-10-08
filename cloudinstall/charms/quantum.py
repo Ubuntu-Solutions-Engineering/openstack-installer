@@ -17,6 +17,7 @@ import os
 import logging
 from cloudinstall import utils
 from cloudinstall.charms import CharmBase
+from cloudinstall.placement.controller import AssignmentType
 
 log = logging.getLogger('cloudinstall.charms.quantum')
 
@@ -34,6 +35,8 @@ class CharmQuantum(CharmBase):
     menuable = True
     constraints = {'mem': 2048,
                    'root-disk': 20480}
+    allowed_assignment_types = [AssignmentType.BareMetal,
+                                AssignmentType.KVM]
 
     def post_proc(self):
         """ performs additional network configuration for charm """
