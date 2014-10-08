@@ -386,13 +386,26 @@ class NodeViewMode(ScrollableWidgetWrap):
 
 class Header(WidgetWrap):
     def __init__(self):
-        w = []
-        w.append(AttrWrap(padding(Text(TITLE_TEXT)), "header_title"))
-        w.append(AttrWrap(Text(
-            '(A)dd units \N{BULLET} (H)elp \N{BULLET} '
-            '(R)efresh \N{BULLET} (Q)uit', align='center'), "header_menu"))
-        w = Pile(w)
-        super().__init__(w)
+        self.title_widget = AttrWrap(padding(Text(TITLE_TEXT)),
+                                     "header_title")
+        self.pile = Pile([self.title_widget, Text("")])
+        self.set_show_add_units_hotkey(False)
+        super().__init__(self.pile)
+
+    def set_show_add_units_hotkey(self, show):
+        self.show_add_units = show
+        self.update()
+
+    def update(self):
+        if self.show_add_units:
+            add_unit_string = '(A)dd units \N{BULLET}'
+        else:
+            add_unit_string = ''
+        tw = AttrWrap(Text(add_unit_string + ' (H)elp \N{BULLET} '
+                           '(R)efresh \N{BULLET} (Q)uit',
+                           align='center'),
+                      "header_menu")
+        self.pile.contents[1] = (tw, self.pile.options())
 
 
 class StatusBar(WidgetWrap):
@@ -481,13 +494,13 @@ class PegasusGUI(WidgetWrap):
 
     def __init__(self):
         _check_encoding()  # Make sure terminal supports utf8
-        header = Header()
-        body = Banner()
-        footer = StatusBar('')
+        self.header = Header()
+        self.body = Banner()
+        self.footer = StatusBar('')
 
-        self.frame = Frame(body,
-                           header=header,
-                           footer=footer)
+        self.frame = Frame(self.body,
+                           header=self.header,
+                           footer=self.footer)
 
         self.placement_view = None
         super().__init__(self.frame)
@@ -590,6 +603,7 @@ class PegasusGUI(WidgetWrap):
     def render_nodes(self, nodes, juju_state, maas_state, **kwargs):
         self.frame.body = NodeViewMode(nodes, juju_state, maas_state)
         self.frame.set_body(self.frame.body)
+        self.header.set_show_add_units_hotkey(True)
 
     def render_node_install_wait(self, **kwargs):
         self.frame.body = NodeInstallWaitMode()

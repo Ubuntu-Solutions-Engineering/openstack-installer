@@ -259,6 +259,8 @@ class DisplayController:
         if key in ['h', 'H', '?']:
             self.ui.show_help_info()
         if key in ['a', 'A', 'f6']:
+            if self.current_state != ControllerState.SERVICES:
+                return
             charm_modules = utils.load_charms()
             charm_classes = [m.__charm_class__ for m in charm_modules
                              if m.__charm_class__.allow_multi_units and
