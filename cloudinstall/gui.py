@@ -45,7 +45,7 @@ sys.excepthook = utils.global_exchandler
 TITLE_TEXT = "Ubuntu Openstack Installer - Dashboard"
 
 # - Properties ----------------------------------------------------------------
-IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['stdout'])
+IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['output'])
 
 # Time to lock in seconds
 LOCK_TIME = 120
