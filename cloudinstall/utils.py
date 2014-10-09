@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import Popen, PIPE, DEVNULL, call, STDOUT
+from subprocess import Popen, PIPE, call, STDOUT
 from contextlib import contextmanager
 from jinja2 import Environment, FileSystemLoader
 import os
@@ -95,13 +95,11 @@ def async(func):
     return wrapper
 
 
-def get_command_output(command, timeout=300, combine_output=True,
-                       user_sudo=False):
+def get_command_output(command, timeout=300, user_sudo=False):
     """ Execute command through system shell
 
     :param command: command to run
     :param timeout: (optional) use 'timeout' to limit time. default 300
-    :param combine_output: (optional) combine stderr and stdout. default True.
     :param user_sudo: (optional) sudo into install users env. default False.
     :type command: str
     :returns: {ret: returncode, stdout: stdout, stderr: stderr)
@@ -121,26 +119,20 @@ def get_command_output(command, timeout=300, combine_output=True,
     if user_sudo:
         command = "sudo -H -u {0} {1}".format(install_user(), command)
 
-    if combine_output:
-        stderr_dest = STDOUT
-    else:
-        stderr_dest = PIPE
-
     try:
         p = Popen(command, shell=True,
-                  stdout=PIPE, stderr=stderr_dest,
+                  stdout=PIPE, stderr=STDOUT,
                   bufsize=-1, env=cmd_env, close_fds=True)
     except OSError as e:
         if e.errno == errno.ENOENT:
-            return dict(ret=127, stdout="", stderr=e)
+            return dict(ret=127, output="")
         else:
             raise e
     stdout, stderr = p.communicate()
-    if stderr:
-        stderr = stderr.decode('utf-8')
-    return dict(ret=p.returncode,
-                stdout=stdout.decode('utf-8'),
-                stderr=stderr)
+    if p.returncode == 126 or p.returncode == 127:
+        stdout = bytes()
+    return dict(status=p.returncode,
+                output=stdout.decode('utf-8'))
 
 
 def remote_cp(machine_id, src, dst):
@@ -179,7 +171,7 @@ def get_network_interface(iface):
         iface = utils.get_network_interface('eth0')
     """
     cmd = get_command_output('ifconfig %s' % (iface,))
-    line = cmd['stdout'].split('\n')[1:2][0].lstrip()
+    line = cmd['output'].split('\n')[1:2][0].lstrip()
     regex = re.compile('^inet addr:([0-9]+(?:\.[0-9]+){3})\s+'
                        'Bcast:([0-9]+(?:\.[0-9]+){3})\s+'
                        'Mask:([0-9]+(?:\.[0-9]+){3})')
@@ -198,7 +190,7 @@ def get_network_interfaces():
     :rtype: generator
     """
     cmd = get_command_output('ifconfig -s')
-    _ifconfig = cmd['sdout'].split('\n')[1:-1]
+    _ifconfig = cmd['output'].split('\n')[1:-1]
     for i in _ifconfig:
         name = i.split(' ')[0]
         if 'lo' not in name:
@@ -212,7 +204,7 @@ def get_host_mem():
     the normal means in Machine()
     """
     cmd = get_command_output('head -n1 /proc/meminfo')
-    out = cmd['stdout'].rstrip()
+    out = cmd['output'].rstrip()
     regex = re.compile('^MemTotal:\s+(\d+)\skB')
     match = re.match(regex, out)
     if match:
@@ -231,8 +223,8 @@ def get_host_storage():
     cmd = get_command_output('df -B G --total -l --output=avail'
                              ' -x devtmpfs -x tmpfs | tail -n 1'
                              ' | tr -d "G"')
-    if not cmd['ret']:
-        return cmd['stdout'].lstrip()
+    if not cmd['status']:
+        return cmd['output'].lstrip()
     else:
         return 0
 
@@ -244,8 +236,8 @@ def get_host_cpu_cores():
     Machine()
     """
     cmd = get_command_output('nproc')
-    if cmd['stdout']:
-        return cmd['stdout'].strip()
+    if cmd['output']:
+        return cmd['output'].strip()
     else:
         return 'N/A'
 
@@ -362,21 +354,89 @@ def container_ip(name):
     return None
 
 
-def container_run(name, cmd, identity):
+def container_run(name, cmd):
     """ run command in container
 
     :param str name: name of container
     :param str cmd: command to run
-    :param str identity: ssh key
     """
     ip = container_ip(name)
-    cmd = "sudo -H -u {3} TERM=xterm256-color ssh -t " \
+    cmd = "sudo -H -u {3} TERM=xterm256-color ssh -t -q " \
           "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
           "-o \"UserKnownHostsFile=/dev/null\" " \
           "-i {2} " \
-          "{0} {1}".format(ip, cmd, identity, install_user())
+          "{0} {1} >>/dev/null".format(ip, cmd, ssh_privkey(), install_user())
     os.system(cmd)
     return
+
+
+def container_cp(name, filepath, dst):
+    """ copy file to container
+
+    :param str name: name of container
+    :param str filepath: file to copy to cintainer
+    :param str dst: destination of remote path
+    """
+    ip = container_ip(name)
+    cmd = "scp -r -q " \
+          "-o \"StrictHostKeyChecking=no\" " \
+          "-o \"UserKnownHostsFile=/dev/null\" " \
+          "-i {identity} " \
+          "{filepath} " \
+          "ubuntu@{ip}:{dst} >>/dev/null".format(ip=ip, dst=dst,
+                                                 identity=ssh_privkey(),
+                                                 filepath=filepath)
+    os.system(cmd)
+    return
+
+
+def container_create(name, userdata):
+    """ creates a container from ubuntu-cloud template
+    """
+    out = get_command_output(
+        'sudo lxc-create -t ubuntu-cloud '
+        '-n {0} -- -u {1}'.format(name, userdata))
+    return out['status']
+
+
+def container_start(name):
+    """ starts lxc container
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-start -n {0} -d'.format(name))
+    return out['status']
+
+
+def container_stop(name):
+    """ stops lxc container
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-stop -n {0}'.format(name))
+    return out['status']
+
+
+def container_destroy(name):
+    """ destroys lxc container
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-destroy -n {0}'.format(name))
+    return out['status']
+
+
+def container_wait(name):
+    """ waits for the container to be in a RUNNING state
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-wait -n {0} -s RUNNING'.format(name))
+    return out['status']
 
 
 def load_template(name):
@@ -418,7 +478,7 @@ def ssh_genkey():
         user_sshkey_path = os.path.join(install_home(), '.ssh/id_rsa')
         cmd = "ssh-keygen -N '' -f {0}".format(user_sshkey_path)
         out = get_command_output(cmd, user_sudo=True)
-        if out['ret'] != 0:
+        if out['status'] != 0:
             print("Unable to generate key: {0}".format(out['stderr']))
             sys.exit(out['ret'])
         get_command_output('sudo chown -R {0}:{0} {1}'.format(
@@ -426,12 +486,11 @@ def ssh_genkey():
         get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
                            user_sudo=True)
     else:
-        print('')
-        print('*** ssh keys exist for this user, they will be used instead')
-        print('*** If the current ssh keys are not passwordless you\'ll be')
-        print('*** required to enter your ssh key password during container')
-        print('*** creation.')
-        print('')
+        log.debug(
+            '*** ssh keys exist for this user, they will be used instead'
+            '*** If the current ssh keys are not passwordless you\'ll be'
+            '*** required to enter your ssh key password during container'
+            '*** creation.')
 
 
 def ssh_pubkey():
@@ -444,3 +503,28 @@ def ssh_privkey():
     """ returns path of private key
     """
     return os.path.join(install_home(), '.ssh/id_rsa')
+
+
+def spew(path, data, owner=None):
+    """ Writes data to path
+
+    :param str path: path of file to write to
+    :param str data: contents to write
+    :param str owner: optional owner of file
+    """
+    with open(path, 'w') as f:
+        f.write(data)
+    if owner:
+        get_command_output("chown {0}:{0}".format(owner))
+
+
+def slurp(path):
+    """ Reads data from path
+
+    :param str path: path of file
+    """
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except IOError:
+        raise IOError
