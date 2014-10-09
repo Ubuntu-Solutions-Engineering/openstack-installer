@@ -268,7 +268,7 @@ def partition(pred, iterable):
 
 # TODO: replace with check_output()
 def _run(cmd):
-    return Popen(cmd.split(), stdout=PIPE, stderr=DEVNULL).communicate()[0]
+    return Popen(cmd.split(), stdout=PIPE, stderr=STDOUT).communicate()[0]
 
 
 def reset_blanking():
