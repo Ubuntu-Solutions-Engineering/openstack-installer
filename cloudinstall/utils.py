@@ -18,6 +18,7 @@
 
 from subprocess import Popen, PIPE, call, STDOUT
 from contextlib import contextmanager
+from collections import deque
 from jinja2 import Environment, FileSystemLoader
 import os
 import re
@@ -33,6 +34,7 @@ from importlib import import_module
 import pkgutil
 import sys
 import errno
+import shlex
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -366,8 +368,22 @@ def container_run(name, cmd):
           "-o \"UserKnownHostsFile=/dev/null\" " \
           "-i {2} " \
           "{0} {1} >>/dev/null".format(ip, cmd, ssh_privkey(), install_user())
-    os.system(cmd)
-    return
+    log.debug("Running in container: {0}".format(cmd))
+    os.system("{0} >>/dev/null".format(cmd))
+
+
+def container_run_status(name, cmd):
+    """ Runs cloud-status in container
+    """
+    ip = container_ip(name)
+    cmd = "sudo -H -u {2} TERM=xterm256-color ssh -t -q " \
+          "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
+          "-o \"UserKnownHostsFile=/dev/null\" " \
+          "-i {1} " \
+          "{0} {3}".format(ip, ssh_privkey(), install_user(), cmd)
+    log.debug("Running command without waiting for response.")
+    args = deque(shlex.split(cmd))
+    os.execlp(args.popleft(), *args)
 
 
 def container_cp(name, filepath, dst):

@@ -142,9 +142,12 @@ class SingleInstall:
         cloud_status_bin = ['cloud-status']
         if self.opts.enable_swift:
             cloud_status_bin.append('--enable-swift')
+        self.ui.info_message("Bootstrapping Juju ..")
         utils.container_run(self.container_name, "juju bootstrap")
         utils.container_run(self.container_name, "juju status")
-        utils.container_run(self.container_name, " ".join(cloud_status_bin))
+        self.ui.info_message("Starting cloud deployment ..")
+        utils.container_run_status(
+            self.container_name, " ".join(cloud_status_bin))
 
 
 class MultiInstall:
