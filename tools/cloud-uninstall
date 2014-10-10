@@ -3,9 +3,113 @@
 echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 echo Ubuntu Openstack Installer Uninstalling ...
 echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+if [ "$#" -eq 1 ] && [ $1 != '-u' ]; then
+  WHAT=$1
+elif [ "$#" -eq 2 ]; then
+  WHAT=$2
+elif [ -f ~/.cloud-install/multi ]; then
+  WHAT=multi-system
+elif [ -f ~/.cloud-install/single ]; then
+  WHAT=single-system
+else
+  echo "could not determine install type"
+fi
+
+apt_purge() {
+  DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
+}
+
+case $WHAT in
+  multi-system)
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    echo Multi install cleansing.
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    # Here we shut down all the maas machines before doing a juju-destroy. We
+    # do this because there might be more than one juju environment in the
+    # maas (in fact, in the case of landscape it creates another for its
+    # openstack environment), and we want to make sure to power off all the
+    # machines.
+    allocated=$(maas maas nodes list-allocated | \
+      python3 -c 'import json; import sys; print(" ".join(map(lambda x: x["system_id"], json.load(sys.stdin))))')
+    for system_id in $allocated; do
+      maas maas node stop $system_id
+    done
+
+    juju destroy-environment --yes --force maas
+    rm -r ~/.maascli.db
+
+    apt_purge '.*maas.*'
+    sudo -u postgres psql -c 'drop database maasdb;'
+
+    # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
+    # so we kill it explicitly.
+    sudo killall -u maas twistd
+
+    lxc-stop -n juju-bootstrap
+    lxc-destroy -n juju-bootstrap
+
+    # start lxcbr0 again
+    sed -e 's/^USE_LXC_BRIDGE="false"/USE_LXC_BRIDGE="true"/' -i \
+      /etc/default/lxc-net
+    service lxc-net start
+
+    # clean up the networking
+    interface=$(cat /etc/cloud-installer/interface)
+    ifconfig br0 down
+    brctl delbr br0
+    if [ -n "$interface" ]; then
+        ifdown $interface
+    fi
+
+    cp /etc/cloud-installer/interfaces.cloud.bak /etc/network/interfaces
+    cp -r /etc/cloud-installer/interfaces.cloud.d.bak/* /etc/network/interfaces.d
+    rm /etc/network/interfaces.d/cloud-install.cfg
+
+    if [ -n "$interface" ]; then
+        ifup $interface
+    fi
+    ifdown lo && ifup lo
+    ;;
+  single-system)
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    echo Single install cleansing.
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    juju destroy-environment --yes --force local
+    lxc-stop -n uoi-bootstrap
+    lxc-destroy -n uoi-bootstrap
+
+    ;;
+  *)
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    echo Please run with either single-system or multi-system as an argument.
+    echo Example:
+    echo   sudo cloud-install -u single-system
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    exit 1
+    ;;
+  esac
+
+# these may or may not be installed, so we list them all individually
+apt_purge '.*juju.*'
+apt_purge cloud-install-single
+apt_purge cloud-install-multi
+apt_purge cloud-install-landscape
+apt_purge cloud-installer
+
+# Remove any extra packages that aren't needed after purging.
+apt-get -yy autoremove
+
+# just make sure juju-mongodb died. LP#1306315
+MONGOD=$(pgrep mongod)
+RET=$?
+if [ ${RET} -eq 0 ]; then
+  if [ ${MONGOD} -gt 0 ]; then
+    kill -9 ${MONGOD}
+  fi
+fi
+
+# FIXME: Probably shouldnt blindly remove known_hosts
+rm -rf ~/.juju ~/.cloud-install ~/.ssh/known_hosts || true
 rm -rf /etc/cloud-installer || true
-rm -rf ~/.cloud-install || true
-lxc-stop -n uoi-bootstrap
-lxc-destroy -n uoi-bootstrap
-apt-get -y remove cloud-install\*
-apt-get -y autoremove
