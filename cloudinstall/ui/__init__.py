@@ -140,6 +140,7 @@ class Selector(WidgetWrap):
         self.title = title
         self.cb = cb
         self.boxes = []
+        self.items = []
 
         w = self._build_widget()
         w = AttrWrap(w, 'dialog')
@@ -147,12 +148,12 @@ class Selector(WidgetWrap):
         connect_signal(self, 'done', self.cb)
         super().__init__(w)
 
-    def submit(self):
+    def submit(self, button):
         selected = [r for r in self.boxes if r.get_state()][0]
         selected_item = selected.label
         self.emit_done_signal(selected_item)
 
-    def cancel(self):
+    def cancel(self, button):
         self.emit_done_signal()
 
     def emit_done_signal(self, *args):
@@ -167,6 +168,12 @@ class Selector(WidgetWrap):
                 height=num_of_items + 2),
             title=self.title)
 
+    def keypress(self, size, key):
+        super().keypress(size, key)
+        if key == 'tab':
+            old_widget, old_pos = self.items.get_focus()
+            self.items.set_focus((old_pos + 1) % len(self.boxes))
+
     def _insert_item_selections(self):
         bgroup = []
         for i, item in enumerate(self.opts):
@@ -175,22 +182,17 @@ class Selector(WidgetWrap):
             self.boxes.append(r)
 
         wrapped_boxes = self._wrap_radio_focus(self.boxes)
-        items = ListBox(SimpleListWalker(wrapped_boxes))
-        items.set_focus(0)
-        return (len(self.boxes), BoxAdapter(items, len(self.boxes)))
+
+        self.items = ListBox(SimpleListWalker(wrapped_boxes))
+        self.items.set_focus(0)
+        return (len(self.boxes), BoxAdapter(self.items, len(self.boxes)))
 
     def _insert_buttons(self):
-        bs = [AttrWrap(Button("Start install", self.yes),
+        bs = [AttrWrap(Button("Start install", self.submit),
                        'button', 'button focus'),
-              AttrWrap(Button("Cancel", self.no),
+              AttrWrap(Button("Cancel", self.cancel),
                        'button', 'button focus')]
         return Columns(bs)
-
-    def yes(self, button):
-        self.submit()
-
-    def no(self, button):
-        self.cancel()
 
     def _wrap_radio_focus(self, widgets, unfocused=None):
         try:
@@ -211,11 +213,20 @@ class PasswordInput(WidgetWrap):
         self.pass_input = Edit(caption='Password: ', mask='*')
         self.pass_confirm_input = Edit(
             caption='Confirm Password: ', mask='*')
+        self.items = []
+        self.boxes = []
+
         w = self._build_widget()
         w = AttrWrap(w, 'dialog')
 
         connect_signal(self, 'done', done_signal_handler)
         super().__init__(w)
+
+    def keypress(self, size, key):
+        super().keypress(size, key)
+        if key == 'tab':
+            old_widget, old_pos = self.items.get_focus()
+            self.items.set_focus((old_pos + 1) % len(self.boxes))
 
     def _buttons(self):
         buttons = [AttrWrap(Button("Ok", self.submit),
@@ -224,17 +235,23 @@ class PasswordInput(WidgetWrap):
                             'button', 'button focus')]
         return Columns(buttons)
 
-    def _build_widget(self, **kwargs):
-        lbox = ListBox([
+    def _insert_item_selections(self):
+        self.boxes = [
             AttrWrap(self.pass_input, 'input', 'input focus'),
-            AttrWrap(self.pass_confirm_input, 'input', 'input focus'),
-            Divider(),
-            self._buttons()
-        ])
-        lbox.set_focus(0)
-        w = LineBox(
-            BoxAdapter(lbox, height=4), title='Enter new Password')
-        return w
+            AttrWrap(self.pass_confirm_input, 'input', 'input focus')]
+
+        self.items = ListBox(SimpleListWalker(self.boxes))
+        self.items.set_focus(0)
+        return (len(self.boxes), BoxAdapter(self.items, len(self.boxes)))
+
+    def _build_widget(self, **kwargs):
+        num_of_items, item_sel = self._insert_item_selections()
+        buttons = self._buttons()
+
+        return LineBox(
+            BoxAdapter(ListBox([item_sel, Divider(), buttons]),
+                       height=num_of_items + 2),
+            title='Enter new Password')
 
     def submit(self, button):
         self.emit_done_signal(self.pass_input.get_edit_text(),
