@@ -16,12 +16,21 @@
 """ re-usable widgets """
 
 from __future__ import unicode_literals
-from urwid import (WidgetWrap, ListBox,
-                   SimpleListWalker)
+import logging
+from urwid import (AttrWrap, Columns, LineBox, Edit, Padding,
+                   ListBox, BoxAdapter, WidgetWrap, Pile,
+                   RadioButton, SimpleListWalker, Divider, Button,
+
+                   signals, emit_signal, connect_signal)
+
+
+log = logging.getLogger('cloudinstall.ui')
 
 
 class Scrollable:
+
     """A interface that makes widgets *scrollable*."""
+
     def scroll_up(self):
         raise NotImplementedError
 
@@ -36,10 +45,12 @@ class Scrollable:
 
 
 class ScrollableListBox(ListBox, Scrollable):
+
     """
     A ``urwid.ListBox`` subclass that implements the
     :class:`~cloudinstall.ui.Scrollable` interface.
     """
+
     def __init__(self,
                  contents,
                  offset=1):
@@ -88,10 +99,12 @@ class ScrollableListBox(ListBox, Scrollable):
 
 
 class ScrollableWidgetWrap(WidgetWrap, Scrollable):
+
     """
     A ``urwid.WidgetWrap`` for :class:`~cloudinstall.ui.Scrollable`, list-like
     widgets.
     """
+
     def __init__(self, contents=None):
         columns = [] if contents is None else contents
         WidgetWrap.__init__(self, columns)
@@ -107,3 +120,174 @@ class ScrollableWidgetWrap(WidgetWrap, Scrollable):
 
     def scroll_bottom(self):
         self._w.scroll_bottom()
+
+
+class Selector(WidgetWrap):
+
+    """
+    Simple selector box
+
+    :param str title: title of selections
+    :param list opts: items to select
+    :param cb: callback
+    :returns: item selected from dialog
+    """
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, title, opts, cb, **kwargs):
+        self.opts = opts
+        self.title = title
+        self.cb = cb
+        self.boxes = []
+
+        w = self._build_widget()
+        w = AttrWrap(w, 'dialog')
+
+        connect_signal(self, 'done', self.cb)
+        super().__init__(w)
+
+    def submit(self):
+        selected = [r for r in self.boxes if r.get_state()][0]
+        selected_item = selected.label
+        self.emit_done_signal(selected_item)
+
+    def cancel(self):
+        self.emit_done_signal()
+
+    def emit_done_signal(self, *args):
+        emit_signal(self, 'done', *args)
+
+    def _build_widget(self, **kwargs):
+        num_of_items, item_sel = self._insert_item_selections()
+        buttons = self._insert_buttons()
+        return LineBox(
+            BoxAdapter(
+                ListBox([item_sel, Divider(), buttons]),
+                height=num_of_items + 2),
+            title=self.title)
+
+    def _insert_item_selections(self):
+        bgroup = []
+        for i, item in enumerate(self.opts):
+            r = RadioButton(bgroup, item)
+            r.text_label = item
+            self.boxes.append(r)
+
+        wrapped_boxes = self._wrap_radio_focus(self.boxes)
+        items = ListBox(SimpleListWalker(wrapped_boxes))
+        items.set_focus(0)
+        return (len(self.boxes), BoxAdapter(items, len(self.boxes)))
+
+    def _insert_buttons(self):
+        bs = [AttrWrap(Button("Start install", self.yes),
+                       'button', 'button focus'),
+              AttrWrap(Button("Cancel", self.no),
+                       'button', 'button focus')]
+        return Columns(bs)
+
+    def yes(self, button):
+        self.submit()
+
+    def no(self, button):
+        self.cancel()
+
+    def _wrap_radio_focus(self, widgets, unfocused=None):
+        try:
+            return [AttrWrap(w, "input", "input focus") for w in widgets]
+        except TypeError:
+            return AttrWrap(widgets, "input", "input focus")
+
+
+class PasswordInput(WidgetWrap):
+
+    """ Password input dialog
+    """
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, title, done_signal_handler):
+        self.title = '{0} (Esc)'.format(title)
+        self.pass_input = Edit(caption='Password: ', mask='*')
+        self.pass_confirm_input = Edit(
+            caption='Confirm Password: ', mask='*')
+        w = self._build_widget()
+        w = AttrWrap(w, 'dialog')
+
+        connect_signal(self, 'done', done_signal_handler)
+        super().__init__(w)
+
+    def _buttons(self):
+        buttons = [AttrWrap(Button("Ok", self.submit),
+                            'button', 'button focus'),
+                   AttrWrap(Button("Cancel", self.cancel),
+                            'button', 'button focus')]
+        return Columns(buttons)
+
+    def _build_widget(self, **kwargs):
+        lbox = ListBox([
+            AttrWrap(self.pass_input, 'input', 'input focus'),
+            AttrWrap(self.pass_confirm_input, 'input', 'input focus'),
+            Divider(),
+            self._buttons()
+        ])
+        lbox.set_focus(0)
+        w = LineBox(
+            BoxAdapter(lbox, height=4), title='Enter new Password')
+        return w
+
+    def submit(self, button):
+        self.emit_done_signal(self.pass_input.get_edit_text(),
+                              self.pass_confirm_input.get_edit_text())
+
+    def cancel(self, button):
+        self.emit_done_signal()
+
+    def emit_done_signal(self, *args):
+        emit_signal(self, 'done', *args)
+
+
+class MaasServerInput(WidgetWrap):
+
+    """ Maas Server input dialog
+    """
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, done_signal_handler):
+        self.maas_server_input = Edit(caption='MAAS IP Address: ')
+        self.maas_apikey_input = Edit(caption='MAAS API Key: ')
+        w = self._build_widget()
+        w = AttrWrap(w, 'dialog')
+
+        connect_signal(self, 'done', done_signal_handler)
+        super().__init__(w)
+
+    def _buttons(self):
+        buttons = [AttrWrap(Button("Ok", self.submit),
+                            'button', 'button focus'),
+                   AttrWrap(Button("Cancel", self.cancel),
+                            'button', 'button focus')]
+        return Columns(buttons)
+
+    def _build_widget(self, **kwargs):
+        lbox = ListBox([
+            AttrWrap(self.maas_server_input, 'input', 'input focus'),
+            AttrWrap(self.maas_apikey_input, 'input', 'input focus'),
+            Divider(),
+            self._buttons()
+        ])
+        lbox.set_focus(0)
+        w = LineBox(
+            BoxAdapter(lbox, height=4), title='Enter MAAS Information (ESC)')
+        return w
+
+    def submit(self, button):
+        self.emit_done_signal(self.maas_server_input.get_edit_text(),
+                              self.maas_apikey_input.get_edit_text())
+
+    def cancel(self, button):
+        self.emit_done_signal()
+
+    def emit_done_signal(self, *args):
+        emit_signal(self, 'done', *args)
