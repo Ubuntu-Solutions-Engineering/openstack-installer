@@ -1,0 +1,25 @@
+default: maas
+
+environments:
+  maas:
+    type: maas
+    maas-server: 'http://{{maas_server}}/MAAS/'
+    maas-oauth: '{{maas_apikey}}'
+    admin-secret: {{openstack_password}}
+    default-series: trusty
+    authorized-keys-path: ~/.ssh/id_rsa.pub
+    apt-http-proxy: 'http://{{maas_server}}:8000/'
+    lxc-clone: true
+
+  openstack:
+    type: openstack
+    use-floating-ip: true
+    use-default-secgroup: true
+    network: ubuntu-net
+    auth-url: http://keystoneurl:5000/v2.0/
+    tenant-name: ubuntu
+    region: RegionOne
+    auth-mode: userpass
+    username: ubuntu
+    password: {{openstack_password}}
+
