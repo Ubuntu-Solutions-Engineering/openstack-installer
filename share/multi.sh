@@ -71,9 +71,18 @@ multiInstall()
 		fi
 
 		if [ -z "$CLOUD_INSTALL_DEBUG" ]; then
-			http_proxy=$MAAS_HTTP_PROXY HTTP_PROXY=$MAAS_HTTP_PROXY maas-import-pxe-files --sources-file=/usr/share/cloud-installer/templates/bootresources.yaml > /dev/null
-			$maas_report_boot_images > /dev/null
+			maas maas boot-resources import > /dev/null
 		fi
+
+		cluster_uuid=$(clusterUUID)
+
+		while true; do
+		    resources=$(maas maas boot-images read $cluster_uuid)
+		    if [ "$resources" != '[]' ]; then
+			break
+		    fi
+		    sleep 3
+		done
 
 		dialogGaugePrompt 60 "Configuring Juju"
 		address=$(ipAddress br0)

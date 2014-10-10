@@ -272,6 +272,14 @@ nodeSystemId()
 	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["system_id"])'
 }
 
+# get maas cluster UUID
+clusterUUID()
+{
+	maas maas node-groups list \
+	    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["uuid"])'
+
+}
+
 # Wait for MAAS cluster registration
 #
 # When MAAS first runs, the cluster controller must register with the region
@@ -283,8 +291,7 @@ nodeSystemId()
 waitForClusterRegistration()
 {
 	while true; do
-		uuid=$(maas maas node-groups list \
-		    | python3 -c 'import json; import sys; print(json.load(sys.stdin)[0]["uuid"])')
+                uuid=$(clusterUUID)
 		if [ $uuid != master ]; then
 			break
 		fi

@@ -158,9 +158,13 @@ jujuBootstrap()
 
 	mac=$(grep lxc.network.hwaddr /var/lib/lxc/juju-bootstrap/config \
 	    | cut -d " " -f 3)
+	virsh -c lxc:/// define $TEMPLATES/juju-bootstrap.xml
+
 	# TODO dynamic architecture selection
 	maas maas nodes new architecture=amd64/generic mac_addresses=$mac \
-	    hostname=juju-bootstrap nodegroup=$cluster_uuid power_type=virsh
+	    hostname=juju-bootstrap nodegroup=$cluster_uuid power_type=virsh \
+            power_parameters_power_address=lxc:/// \
+            power_parameters_power_id=juju-bootstrap
 	system_id=$(nodeSystemId $mac)
 	wget -O $TMP/maas.creds \
 	    "http://localhost/MAAS/metadata/latest/by-id/$system_id/?op=get_preseed"
@@ -173,6 +177,7 @@ jujuBootstrap()
 	rm -rf /var/lib/lxc/juju-bootstrap/rootfs/var/lib/cloud/seed/*
 	cp $TMP/maas.creds \
 	    /var/lib/lxc/juju-bootstrap/rootfs/etc/cloud/cloud.cfg.d/91_maas.cfg
-	lxc-start -n juju-bootstrap -d
+
+	virsh -c lxc:/// start juju-bootstrap
 	wait $!
 }

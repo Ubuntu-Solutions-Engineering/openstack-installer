@@ -43,6 +43,9 @@ case $WHAT in
     # so we kill it explicitly.
     sudo killall -u maas twistd
 
+    virsh -c lxc:/// destroy juju-bootstrap
+    virsh -c lxc:/// undefine juju-bootstrap
+    # yes this step is also required:
     lxc-stop -n juju-bootstrap
     lxc-destroy -n juju-bootstrap
 
