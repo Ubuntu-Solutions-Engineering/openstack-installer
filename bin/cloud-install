@@ -21,60 +21,13 @@
 import argparse
 import sys
 import os
-import time
+import logging
 from subprocess import call
 from cloudinstall import utils
-
-
-CONTAINER_NAME = 'uoi-bootstrap'
-CONTAINER_PATH = '/var/lib/lxc'
-CONTAINER_ABSPATH = os.path.join(CONTAINER_PATH, CONTAINER_NAME)
-USERDATA = os.path.join(utils.install_home(), '.cloud-install/userdata.yaml')
-
-
-def create_container():
-    """ creates lxc container
-    """
-    out = utils.get_command_output(
-        'sudo lxc-create -t ubuntu-cloud '
-        '-n {0} -- -u {1}'.format(CONTAINER_NAME, USERDATA))
-    return out['ret']
-
-
-def start():
-    """ starts lxc container
-    """
-    out = utils.get_command_output(
-        'sudo lxc-start -n {0} -d'.format(CONTAINER_NAME))
-    return out['ret']
-
-
-def wait_for_running():
-    """ waits for the container to be in a RUNNING state
-    """
-    out = utils.get_command_output(
-        'sudo lxc-wait -n {0} -s RUNNING'.format(CONTAINER_NAME))
-    return out['ret']
-
-
-def prep_userdata(dst):
-    """ preps userdata file for container install """
-    dst_file = os.path.join(dst, 'userdata.yaml')
-    original_data = utils.load_template('userdata.yaml')
-    modified_data = original_data.render(extra_sshkeys=[utils.ssh_readkey()])
-    with open(dst_file, 'w') as f:
-        f.write(modified_data)
-
-
-def cloud_init_finished():
-    """ checks the log to see if cloud-init finished
-    """
-    log_file = os.path.join(CONTAINER_ABSPATH,
-                            'rootfs/var/log/cloud-init-output.log')
-    out = utils.get_command_output('sudo tail -n1 {0}'.format(log_file))
-    if 'finished at' in out['stdout']:
-        return True
-    return False
+from cloudinstall.gui import (PegasusGUI, InstallHeader)
+from cloudinstall.install import InstallController
+from cloudinstall import log
+from cloudinstall.config import Config
 
 
 def parse_options(*args, **kwds):
@@ -87,7 +40,13 @@ def parse_options(*args, **kwds):
                         dest='install_only', default=False,
                         help='install only (dont invoke cloud-status)')
     parser.add_argument('-u', '--uninstall', action='store_true',
-                        dest='uninstall', default=False)
+                        dest='uninstall', default=False,
+                        help='Uninstalls the current cloud including removing'
+                        'of packages.')
+    parser.add_argument('-k', '--kill', action='store_true',
+                        dest='killcloud', default=False,
+                        help='Tear down existing cloud leaving userdata '
+                        'in place. Useful for iterative deploys.')
     parser.add_argument('-a', type=str, default=None,
                         help='<arch, ..> comma-seperated list of '
                         'architectures to filter available cloud '
@@ -97,12 +56,21 @@ def parse_options(*args, **kwds):
                         help='<rel, ..> comma-seperated list of Ubuntu '
                         'releases to filter available cloud images with '
                         'which to populate Glance, e.g. precise,trusty')
-
+    parser.add_argument('--with-maas-address', type=str,
+                        dest='with_maas_address',
+                        help='Specify an existing MAAS ip address')
+    parser.add_argument('--with-maas-apikey', type=str,
+                        dest='with_maas_apikey',
+                        help='Specify a MAAS admin user apikey')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
+    log.setup_logger()
+    logger = logging.getLogger('cloudinstall')
+    logger.info("cloud-install starting")
     opts = parse_options(sys.argv)
+    cfg = Config()
 
     if os.geteuid() != 0:
         print("Installing a cloud requires root privileges. Rerun with sudo")
@@ -111,40 +79,20 @@ if __name__ == '__main__':
     if opts.uninstall:
         ret = call(['/usr/share/cloud-installer/tools/cloud-uninstall'],
                    shell=True)
-        sys.exit(ret)
+        raise SystemExit
+
+    if opts.killcloud:
+        if cfg.is_single:
+            utils.container_stop('uoi-bootstrap')
+            utils.container_destroy('uoi-bootstrap')
+            raise SystemExit
+        else:
+            raise SystemExit('Only supports killing a single install for now.')
 
     user_install_dir = os.path.join(utils.install_home(), '.cloud-install')
     if not os.path.exists(user_install_dir):
         os.makedirs(user_install_dir)
 
-    if os.path.exists(CONTAINER_ABSPATH):
-        # Container exists, handle return code in installer
-        print("Container exists, please remove with `sudo cloud-install -u`")
-        print("if you wish to restart the installation.")
-        sys.exit(1)
-    print("* Please wait while we generate your isolated environment ...")
-    utils.ssh_genkey()
-    prep_userdata(user_install_dir)
-    create_container()
-    start()
-    wait_for_running()
-    tries = 1
-    while not cloud_init_finished():
-        sys.stdout.write("\r[{0}] * Waiting for container to finalize, "
-                         "please wait ...       ".format(tries))
-        time.sleep(1)
-        tries = tries + 1
-    sys.stdout.flush()
-    bootstrap_bin = 'sudo ' \
-                    '/usr/share/cloud-installer/bin/cloud-install-bootstrapped'
-    if opts.arch:
-        bootstrap_bin = '{0} -a {1}'.format(bootstrap_bin, opts.arch)
-    if opts.release:
-        bootstrap_bin = '{0} -r {1}'.format(bootstrap_bin, opts.release)
-    if opts.enable_swift:
-        bootstrap_bin = '{0} -s'.format(bootstrap_bin)
-    if opts.install_only:
-        bootstrap_bin = '{0} -i'.format(bootstrap_bin)
-    out = utils.container_run(CONTAINER_NAME, bootstrap_bin,
-                              utils.ssh_privkey())
-    sys.exit(0)
+    install = InstallController(
+        ui=PegasusGUI(header=InstallHeader()), opts=opts)
+    install.start()
