@@ -16,7 +16,6 @@
 
 import logging
 import urwid
-import asyncio
 import time
 import random
 import sys
@@ -71,8 +70,14 @@ class DisplayController:
         log.debug('Authenticated against juju api.')
 
     def authenticate_maas(self):
-        auth = MaasAuth()
-        auth.get_api_key('root')
+        if self.config.maas_creds:
+            api_url = self.config.maas_creds['api_url']
+            api_key = self.config.maas_creds['api_key']
+            auth = MaasAuth(api_url=api_url,
+                            api_key=api_key)
+        else:
+            auth = MaasAuth()
+            auth.get_api_key('root')
         self.maas = MaasClient(auth)
         self.maas_state = MaasState(self.maas)
         log.debug('Authenticated against maas api.')
@@ -86,6 +91,18 @@ class DisplayController:
     # overlays
     def step_info(self, message):
         self.ui.show_step_info(message)
+        self.redraw_screen()
+
+    def show_password_input(self, title, cb):
+        self.ui.show_password_input(title, cb)
+        self.redraw_screen()
+
+    def show_maas_input(self, cb):
+        self.ui.show_maas_input(cb)
+        self.redraw_screen()
+
+    def show_selector_info(self, title, install_types, cb):
+        self.ui.show_selector_info(title, install_types, cb)
         self.redraw_screen()
 
     # - Footer
@@ -130,38 +147,26 @@ class DisplayController:
 
     def redraw_screen(self):
         if hasattr(self, "loop"):
-            if not self.opts.noui:
-                try:
-                    self.loop.draw_screen()
-                except AssertionError as message:
-                    logging.critical(message)
-            else:
-                pass
+            try:
+                self.loop.draw_screen()
+            except AssertionError as message:
+                logging.critical(message)
 
     def exit(self):
-        if not self.opts.noui:
-            raise urwid.ExitMainLoop()
-        else:
-            raise self.loop.stop()
+        raise urwid.ExitMainLoop()
 
     def main_loop(self):
-        if not self.opts.noui:
-            if not hasattr(self, 'loop'):
-                self.loop = urwid.MainLoop(self.ui,
-                                           self.config.STYLES,
-                                           handle_mouse=True,
-                                           unhandled_input=self.header_hotkeys)
-                self.info_message("Welcome ..")
-                self.initialize()
-
-            self.render_node_install_wait()
-            self.update_alarm()
-            self.loop.run()
-        else:
-            log.debug("Running asyncio event loop for ConsoleUI")
-            self.loop = asyncio.get_event_loop()
+        if not hasattr(self, 'loop'):
+            self.loop = urwid.MainLoop(self.ui,
+                                       self.config.STYLES,
+                                       handle_mouse=True,
+                                       unhandled_input=self.header_hotkeys)
+            self.info_message("Welcome ..")
             self.initialize()
-            self.loop.run_forever()
+
+        self.render_node_install_wait()
+        self.update_alarm()
+        self.loop.run()
 
     def start(self):
         """ Starts controller processing """
