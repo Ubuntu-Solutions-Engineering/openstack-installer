@@ -160,11 +160,15 @@ jujuBootstrap()
 	    | cut -d " " -f 3)
 	virsh -c lxc:/// define $TEMPLATES/juju-bootstrap.xml
 
+        # ensure that maas can use virsh:
+        usermod -a -G libvirtd maas
+        service maas-cluster restart
+
 	# TODO dynamic architecture selection
 	maas maas nodes new architecture=amd64/generic mac_addresses=$mac \
 	    hostname=juju-bootstrap nodegroup=$cluster_uuid power_type=virsh \
             power_parameters_power_address=lxc:/// \
-            power_parameters_power_id=juju-bootstrap
+            power_parameters_power_id=juju-bootstrap 2>&1 "$INSTALL_HOME"/nodes-new-output.txt
 	system_id=$(nodeSystemId $mac)
 	wget -O $TMP/maas.creds \
 	    "http://localhost/MAAS/metadata/latest/by-id/$system_id/?op=get_preseed"
@@ -178,6 +182,6 @@ jujuBootstrap()
 	cp $TMP/maas.creds \
 	    /var/lib/lxc/juju-bootstrap/rootfs/etc/cloud/cloud.cfg.d/91_maas.cfg
 
-	virsh -c lxc:/// start juju-bootstrap
-	wait $!
+	#virsh -c lxc:/// start juju-bootstrap
+	#wait $!
 }
