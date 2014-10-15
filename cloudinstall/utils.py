@@ -367,9 +367,13 @@ def container_run(name, cmd):
           "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
           "-o \"UserKnownHostsFile=/dev/null\" " \
           "-i {2} " \
-          "{0} {1} >>/dev/null".format(ip, cmd, ssh_privkey(), install_user())
+          "{0} {1}".format(ip, cmd, ssh_privkey(), install_user())
     log.debug("Running in container: {0}".format(cmd))
-    os.system("{0} >>/dev/null".format(cmd))
+    ret = os.system("{0} >>/dev/null".format(cmd))
+    if ret > 0:
+        raise SystemExit("There was a problem running ({0}) in the container "
+                         "({1}:{2})".format(cmd, name, ip))
+    return
 
 
 def container_run_status(name, cmd):
@@ -402,7 +406,10 @@ def container_cp(name, filepath, dst):
           "ubuntu@{ip}:{dst} >>/dev/null".format(ip=ip, dst=dst,
                                                  identity=ssh_privkey(),
                                                  filepath=filepath)
-    os.system(cmd)
+    ret = os.system(cmd)
+    if ret > 0:
+        raise SystemExit("There was a problem copying ({0}) to the container "
+                         "({1}:{2})".format(filepath, name, ip))
     return
 
 
@@ -412,6 +419,9 @@ def container_create(name, userdata):
     out = get_command_output(
         'sudo lxc-create -t ubuntu-cloud '
         '-n {0} -- -u {1}'.format(name, userdata))
+    if out['status'] > 0:
+        raise SystemExit("Unable to create container: "
+                         "{0}".format(out['output']))
     return out['status']
 
 
@@ -422,6 +432,10 @@ def container_start(name):
     """
     out = get_command_output(
         'sudo lxc-start -n {0} -d'.format(name))
+
+    if out['status'] > 0:
+        raise SystemExit("Unable to start container: "
+                         "{0}".format(out['output']))
     return out['status']
 
 
@@ -432,6 +446,11 @@ def container_stop(name):
     """
     out = get_command_output(
         'sudo lxc-stop -n {0}'.format(name))
+
+    if out['status'] > 0:
+        raise SystemExit("Unable to stop container: "
+                         "{0}".format(out['output']))
+
     return out['status']
 
 
@@ -442,6 +461,11 @@ def container_destroy(name):
     """
     out = get_command_output(
         'sudo lxc-destroy -n {0}'.format(name))
+
+    if out['status'] > 0:
+        raise SystemExit("Unable to destroy container: "
+                         "{0}".format(out['output']))
+
     return out['status']
 
 
