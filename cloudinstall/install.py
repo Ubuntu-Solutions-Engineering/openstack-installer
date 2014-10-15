@@ -210,6 +210,23 @@ class MultiInstall:
             raise SystemExit("Containerized MAAS not implemented yet.")
 
 
+class MultiInstallNewMaas(MultiInstall):
+
+    def _save_maas_creds(self, maas_server, maas_apikey):
+        self.config.save_maas_creds(maas_server, maas_apikey)
+
+        # Saved maas creds, start the show
+        self.do_install()
+
+    def run(self):
+        # Handle MAAS VM Install here.
+        # Then prompt for maas credentials and server IP
+        # continue with the install as normal
+        self.ui.info_message("Please enter your MAAS Server IP "
+                             "and your administrators API Key")
+        self.ui.show_maas_input(self._save_maas_creds)
+
+
 class MultiInstallWithMaas(MultiInstall):
 
     def _save_maas_creds(self, maas_server, maas_apikey):
