@@ -154,7 +154,7 @@ class Selector(WidgetWrap):
         self.emit_done_signal(selected_item)
 
     def cancel(self, button):
-        self.emit_done_signal()
+        raise SystemExit("Installation Cancelled.")
 
     def emit_done_signal(self, *args):
         emit_signal(self, 'done', *args)
@@ -258,7 +258,7 @@ class PasswordInput(WidgetWrap):
                               self.pass_confirm_input.get_edit_text())
 
     def cancel(self, button):
-        self.emit_done_signal()
+        raise SystemExit("Installation cancelled.")
 
     def emit_done_signal(self, *args):
         emit_signal(self, 'done', *args)
@@ -304,7 +304,9 @@ class MaasServerInput(WidgetWrap):
                               self.maas_apikey_input.get_edit_text())
 
     def cancel(self, button):
-        self.emit_done_signal()
+        # TODO: Make this go back to previous selector widget to change
+        # install path
+        raise SystemExit("Installation cancelled.")
 
     def emit_done_signal(self, *args):
         emit_signal(self, 'done', *args)
