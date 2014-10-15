@@ -169,7 +169,8 @@ class Selector(WidgetWrap):
             title=self.title)
 
     def keypress(self, size, key):
-        super().keypress(size, key)
+        if key != 'tab':
+            super().keypress(size, key)
         if key == 'tab':
             old_widget, old_pos = self.items.get_focus()
             self.items.set_focus((old_pos + 1) % len(self.boxes))
@@ -223,7 +224,8 @@ class PasswordInput(WidgetWrap):
         super().__init__(w)
 
     def keypress(self, size, key):
-        super().keypress(size, key)
+        if key != 'tab':
+            super().keypress(size, key)
         if key == 'tab':
             old_widget, old_pos = self.items.get_focus()
             self.items.set_focus((old_pos + 1) % len(self.boxes))
