@@ -196,19 +196,6 @@ class MultiInstall:
         else:
             raise SystemExit("Problem with juju bootstrap.")
 
-    def run(self):
-        # Check if using existing maas
-        if self.opts.with_maas_address:
-            if not self.opts.with_maas_apikey:
-                raise SystemExit("Attempted to use existing MAAS server "
-                                 "but no apikey set (--with-maas-apikey).")
-            else:
-                self.config.save_maas_creds(self.opts.with_maas_address,
-                                            self.opts.with_maas_apikey)
-                self.do_install()
-        else:
-            raise SystemExit("Containerized MAAS not implemented yet.")
-
 
 class MultiInstallNewMaas(MultiInstall):
 
@@ -227,7 +214,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.ui.show_maas_input(self._save_maas_creds)
 
 
-class MultiInstallWithMaas(MultiInstall):
+class MultiInstallExistingMaas(MultiInstall):
 
     def _save_maas_creds(self, maas_server, maas_apikey):
         self.config.save_maas_creds(maas_server, maas_apikey)
@@ -299,8 +286,8 @@ class InstallController(DisplayController):
         if 'Single' in install_type:
             SingleInstall(self.opts, self).run()
         elif 'Multi with existing MAAS' == install_type:
-            MultiInstallWithMaas(self.opts, self).run()
+            MultiInstallExistingMaas(self.opts, self).run()
         elif 'Multi' == install_type:
-            MultiInstall(self.opts, self).run()
+            MultiInstallNewMaas(self.opts, self).run()
         else:
             LandscapeInstall(self.opts, self).run()
