@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import Popen, PIPE, call, STDOUT
+from subprocess import (Popen, PIPE, call, STDOUT, check_output,
+                        CalledProcessError)
 from contextlib import contextmanager
 from collections import deque
 from jinja2 import Environment, FileSystemLoader
@@ -369,11 +370,13 @@ def container_run(name, cmd):
           "-i {2} " \
           "{0} {1}".format(ip, cmd, ssh_privkey(), install_user())
     log.debug("Running in container: {0}".format(cmd))
-    ret = os.system("{0} >>/dev/null".format(cmd))
-    if ret > 0:
+    # ret = os.system("{0} >>/dev/null".format(cmd))
+    try:
+        ret = check_output(cmd, stderr=STDOUT, shell=True)
+        log.debug(ret)
+    except CalledProcessError as e:
         raise SystemExit("There was a problem running ({0}) in the container "
-                         "({1}:{2})".format(cmd, name, ip))
-    return
+                         "({1}:{2}) Error: {3}".format(cmd, name, ip, e))
 
 
 def container_run_status(name, cmd):
