@@ -1,12 +1,20 @@
 #cloud-config
 
+{% if not network_interface %}
+{% set network_interface = 'eth0' %}
+{% endif %}
+
+{% if not bridge_network_interface %}
+{% set bridge_network_interface = 'lxcbr0' %}
+{% endif %}
+
 write_files:
   - content: |
-      auto eth0
-      iface eth0 inet manual
-      auto lxcbr0
-      iface lxcbr0 inet dhcp
-          bridge_ports eth0
+      auto {{ network_interface }}
+      iface {{ network_interface }} inet manual
+      auto {{ bridge_network_interface }}
+      iface {{ bridge_network_interface }} inet dhcp
+          bridge_ports {{ network_interface }}
     path: /etc/network/interfaces.d/bridge.cfg
   - content: |
       #!/bin/sh
@@ -51,9 +59,9 @@ chpasswd: { expire: False }
 ssh_pwauth: True
 
 bootcmd:
-  - rm /etc/network/interfaces.d/eth0.cfg
-  - ifdown eth0
-  - ifup lxcbr0 eth0
+  - rm /etc/network/interfaces.d/{{ network_interface }}.cfg
+  - ifdown {{ network_interface }}
+  - ifup {{ bridge_network_interface }} {{ network_interface }}
 
 # Make sure we load our modules on first creation
 runcmd:
