@@ -135,6 +135,14 @@ class SingleInstall:
                            '/tmp/single.yaml',
                            '.juju/environments.yaml')
 
+        # charm conf
+        charm_conf = utils.load_template('charmconf.yaml')
+        charm_conf_modified = charm_conf.render(
+            openstack_password=self.config.openstack_password)
+        utils.spew(os.path.join(utils.install_home(),
+                                '.cloud-installer/charmconf.yaml'),
+                   charm_conf_modified)
+
         # Set permissions
         self.copy_installdata_and_set_perms()
 
