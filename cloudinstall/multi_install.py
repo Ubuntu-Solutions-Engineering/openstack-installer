@@ -257,7 +257,7 @@ class MultiInstallNewMaas(MultiInstall):
 
         def get_uuid(odict):
             ostr = odict['output']
-            ngs = json.load(ostr)
+            ngs = json.loads(ostr)
             return ngs[0]['uuid']
 
         def uuid_not_master(odict):
