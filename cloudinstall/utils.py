@@ -30,7 +30,7 @@ import logging
 import traceback
 from threading import Thread
 from functools import wraps
-from time import strftime
+import time
 from importlib import import_module
 import pkgutil
 import sys
@@ -138,6 +138,34 @@ def get_command_output(command, timeout=300, user_sudo=False):
                 output=stdout.decode('utf-8'))
 
 
+def poll_until_true(cmd, predicate, frequency, timeout=600,
+                    ignore_exceptions=False):
+    """run get_command_output(cmd) every frequency seconds, until
+    predicate(output) returns True. Timeout after timeout seconds.
+
+    returns True if call eventually succeeded, or False if timeout was
+    reached.
+
+    Exceptions raised during get_command_output are handled as per
+    ignore_exceptions. If True, they are just logged. If False, they
+    are re-raised.
+
+    """
+    start_time = time.time()
+    while True:
+        try:
+            output = get_command_output(cmd)
+        except Exception as e:
+            if not ignore_exceptions:
+                raise e
+            else:
+                log.debug("**Ignoring** exception: {}".format(e))
+        if predicate(output):
+            return True
+        if time.time() - start_time >= timeout:
+            return False
+
+
 def remote_cp(machine_id, src, dst):
     log.debug("Remote copying {src} to {dst} on machine {m}".format(
         src=src,
@@ -158,46 +186,6 @@ def remote_run(machine_id, cmds):
                                                  cmds=cmds))
     log.debug("Remote run result: {r}".format(r=ret))
     return ret
-
-
-def get_network_interface(iface):
-    """ Get network interface properties
-
-    :param iface: Interface to query (ex. eth0)
-    :type iface: str
-    :return: interface properties or empty if none
-    :rtype: dict
-
-    .. code::
-
-        # Get address, broadcast, and netmask of eth0
-        iface = utils.get_network_interface('eth0')
-    """
-    cmd = get_command_output('ifconfig %s' % (iface,))
-    line = cmd['output'].split('\n')[1:2][0].lstrip()
-    regex = re.compile('^inet addr:([0-9]+(?:\.[0-9]+){3})\s+'
-                       'Bcast:([0-9]+(?:\.[0-9]+){3})\s+'
-                       'Mask:([0-9]+(?:\.[0-9]+){3})')
-    match = re.match(regex, line)
-    if match:
-        return {'address': match.group(1),
-                'broadcast': match.group(2),
-                'netmask': match.group(3)}
-    return {}
-
-
-def get_network_interfaces():
-    """ Get network interfaces
-
-    :returns: available interfaces and their properties
-    :rtype: generator
-    """
-    cmd = get_command_output('ifconfig -s')
-    _ifconfig = cmd['output'].split('\n')[1:-1]
-    for i in _ifconfig:
-        name = i.split(' ')[0]
-        if 'lo' not in name:
-            yield {name: get_network_interface(name)}
 
 
 def get_host_mem():
@@ -323,13 +311,13 @@ def random_password(size=32):
     return out['output']
 
 
-def time():
+def time_string():
     """ Time helper
 
     :returns: formatted current time string
     :rtype: str
     """
-    return strftime('%Y-%m-%d %H:%M')
+    return time.strftime('%Y-%m-%d %H:%M')
 
 
 def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
