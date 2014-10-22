@@ -145,8 +145,9 @@ class MultiInstallNewMaas(MultiInstall):
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
     def run(self):
-        self.prompt_for_configuration()
+        self.prompt_for_interface()
 
+        check_output('mkdir -p /etc/cloud-installer', shell=True)
         with open('/etc/cloud-installer/interface', 'w') as iff:
             iff.write(self.target_iface)
 
@@ -163,9 +164,7 @@ class MultiInstallNewMaas(MultiInstall):
         cluster_uuid = self.wait_for_registration()
         self.create_maas_bridge(self.target_iface)
 
-        if self.should_bridge_maasnw:
-            self.configure_nat(get_network('br0'))
-            self.enable_ipv4_forwarding()
+        self.prompt_for_bridge()
 
         self.configure_maas_networking(cluster_uuid,
                                        'br0',
@@ -184,31 +183,32 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.do_install()
 
-    def prompt_for_configuration(self):
-        # TODO prompt user to ask about bridging maas nw interface
-        self.should_bridge_maasnw = True
-
-        if self.should_bridge_maasnw:
-            self.gateway = get_ip_addr('br0')
-        else:
-            self.gateway = get_default_gateway()
+    def prompt_for_interface(self):
 
         # TODO figure out which interface to use
         self.target_iface = 'eth0'
 
         self.iface_ip = get_ip_addr(self.target_iface)
-        self.network = get_network(self.target_iface)
+        self.iface_network = get_network(self.target_iface)
+
+    def prompt_for_bridge(self):
+        # TODO prompt user to ask about bridging maas nw interface
+        self.should_bridge_maasnw = True
 
         if self.should_bridge_maasnw:
+            self.configure_nat(get_network('br0'))
+            self.enable_ipv4_forwarding()
+            self.gateway = get_ip_addr('br0')
             excludes = [self.iface_ip]
         else:
+            self.gateway = get_default_gateway()
             excludes = [self.iface_ip, self.gateway]
 
         self.dhcp_range = ip_range_max(self.iface_network, excludes)
         # TODO: allow customization
 
         # TODO UI progress here?
-        if self.detect_existing_dhcp():
+        if self.detect_existing_dhcp(self.target_iface):
             pass
 
     def create_bootstrap_kvm(self):
