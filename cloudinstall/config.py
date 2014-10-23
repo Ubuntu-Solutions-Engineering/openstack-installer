@@ -57,9 +57,15 @@ class Config:
         return ['Single', 'Multi', 'Multi with existing MAAS', 'Landscape']
 
     @property
+    def share_path(self):
+        """ base share path
+        """
+        return "/usr/share/cloud-installer"
+
+    @property
     def tmpl_path(self):
         """ template path """
-        return "/usr/share/cloud-installer/templates"
+        return os.path.join(self.share_path, "templates")
 
     @property
     def cfg_path(self):
@@ -69,7 +75,7 @@ class Config:
     @property
     def bin_path(self):
         """ scripts located in non-default system path """
-        return "/usr/share/cloud-installer/bin"
+        return os.path.join(self.share_path, "bin")
 
     @property
     def is_single(self):
