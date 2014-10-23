@@ -242,9 +242,37 @@ class LandscapeInstall:
         self.config = Config()
         self.opts = opts
         self.ui = ui
+        self.lscape_configure_bin = os.path.join(
+            self.config.bin_path, 'configure-landscape')
+        self.lscape_yaml_path = os.path.join(
+            utils.install_home(),
+            '.cloud-installer/landscape-deployments.yaml')
+
+    def _do_install_existing_maas(self):
+        """ Performs the landscape deployment with existing MAAS
+        """
+        pass
+        MultiInstallExistingMaas(self.opts, self).run()
+
+    def _do_install_new_maas(self):
+        """ Prepare new maas environment for landscape
+        """
+        pass
+        MultiInstallNewMaas(self.opts, self).run()
 
     def run(self):
-        raise NotImplementedError("Landscape install not implemented.")
+        self.ui.info_message(
+            "* Please wait while we prepare the Landscape installation ...")
+
+        utils.ssh_genkey()
+
+        # Prep deployer template for landscape
+        lscape_password = utils.random_password()
+        lscape_env = utils.load_template('landscape-deployments.yaml')
+        lscape_env_modified = lscape_env.render(
+            landscape_password=lscape_password.strip())
+        utils.spew(self.lscape_yaml_path,
+                   lscape_env_modified)
 
 
 class InstallController(DisplayController):

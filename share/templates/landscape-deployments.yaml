@@ -44,7 +44,7 @@ landscape:
             constraints: mem=2048
             options:
                 service-count: "2"
-                landscape-password: "look-a-different-password"
+                landscape-password: {{ landscape_password }}
                 services: static appserver pingserver combo-loader async-frontend apiserver package-upload jobhandler package-search cron juju-sync
                 repository: include-file://repo-file
                 license-file: file:///dev/null
@@ -52,7 +52,7 @@ landscape:
             charm: cs:precise/landscape-server
             constraints: mem=2048
             options:
-                landscape-password: "look-a-different-password"
+                landscape-password: {{ landscape_password }}
                 services: msgserver
                 repository: include-file://repo-file
                 license-file: file:///dev/null

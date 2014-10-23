@@ -314,6 +314,15 @@ def randomString(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
 
+def random_password(size=32):
+    """ Generate a password
+
+    :param int size: length of password
+    """
+    out = get_command_output("pwgen -s {}".format(size))
+    return out['output']
+
+
 def time():
     """ Time helper
 
