@@ -286,8 +286,8 @@ class MultiInstallNewMaas(MultiInstall):
         utils.get_command_output('ifdown {} br0'.format(target_iface))
 
         cfgfilenames = ['/etc/network/interfaces']
-        cfgfilenames.append(glob.glob('/etc/network/interfaces.d/*.cfg'))
-        new_bridgefilename = os.path.join(self.tempdir, 'bridge.cfg')
+        cfgfilenames += glob.glob('/etc/network/interfaces.d/*.cfg')
+        new_bridgefilename = os.path.join(self.tempdir.name, 'bridge.cfg')
 
         num_bridges = 0
         for cfn in [c for c in cfgfilenames if os.path.exists(c)]:
@@ -323,7 +323,8 @@ class MultiInstallNewMaas(MultiInstall):
 
         utils.get_command_output('ifup {} br0'.format(target_iface))
 
-    def create_bridge_if_exists(target, new_bridgefilename, config_filename):
+    def create_bridge_if_exists(self, target, new_bridgefilename,
+                                config_filename):
         """look for 'target' in 'config_filename'. if found, comment it out
         and extract its configuration into 'new_bridgefilename', to
         define br0.
