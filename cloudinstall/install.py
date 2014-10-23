@@ -145,9 +145,6 @@ class SingleInstall:
                                 'charmconf.yaml'),
                    charm_conf_modified)
 
-        # Set permissions
-        self.copy_installdata_and_set_perms()
-
         # start the party
         cloud_status_bin = ['cloud-status']
         if self.opts.enable_swift:
