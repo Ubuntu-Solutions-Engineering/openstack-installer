@@ -42,16 +42,16 @@ class SingleInstall:
         self.container_abspath = os.path.join(self.container_path,
                                               self.container_name)
         self.userdata = os.path.join(
-            utils.install_home(), '.cloud-install/userdata.yaml')
+            self.config.cfg_path, 'userdata.yaml')
 
         # Sets install type
-        utils.spew(os.path.join(utils.install_home(), '.cloud-install/single'),
+        utils.spew(os.path.join(self.config.cfg_path, 'single'),
                    'auto-generated')
 
     def prep_userdata(self):
         """ preps userdata file for container install """
-        dst_file = os.path.join(utils.install_home(),
-                                '.cloud-install/userdata.yaml')
+        dst_file = os.path.join(self.config.cfg_path,
+                                'userdata.yaml')
         original_data = utils.load_template('userdata.yaml')
         modified_data = original_data.render(
             extra_sshkeys=[utils.ssh_readkey()],
@@ -85,8 +85,7 @@ class SingleInstall:
         """ copies install data and sets permissions on files/dirs
         """
         utils.get_command_output("chown {0}:{0} -R {1}".format(
-            utils.install_user(),
-            os.path.join(utils.install_home(), '.cloud-install')))
+            utils.install_user(), self.config.cfg_path))
 
         # copy over the rest of our installation data from host
         # and setup permissions
@@ -139,8 +138,8 @@ class SingleInstall:
         charm_conf = utils.load_template('charmconf.yaml')
         charm_conf_modified = charm_conf.render(
             openstack_password=self.config.openstack_password)
-        utils.spew(os.path.join(utils.install_home(),
-                                '.cloud-installer/charmconf.yaml'),
+        utils.spew(os.path.join(self.config.cfg_path,
+                                'charmconf.yaml'),
                    charm_conf_modified)
 
         # Set permissions
@@ -166,12 +165,12 @@ class MultiInstall:
         self.config = Config()
 
         # Sets install type
-        utils.spew(os.path.join(utils.install_home(), '.cloud-install/multi'),
+        utils.spew(os.path.join(self.config.cfg_path, 'multi'),
                    'auto-generated')
 
     def set_perms(self):
         # Set permissions
-        dirs = [os.path.join(utils.install_home(), '.cloud-install'),
+        dirs = [self.config.cfg_path,
                 os.path.join(utils.install_home(), '.juju')]
         for d in dirs:
             utils.get_command_output("chown {0}:{0} -R {1}".format(
@@ -245,8 +244,15 @@ class LandscapeInstall:
         self.lscape_configure_bin = os.path.join(
             self.config.bin_path, 'configure-landscape')
         self.lscape_yaml_path = os.path.join(
-            utils.install_home(),
-            '.cloud-installer/landscape-deployments.yaml')
+            self.config.cfg_path, 'landscape-deployments.yaml')
+
+    def set_perms(self):
+        # Set permissions
+        dirs = [self.config.cfg_path,
+                os.path.join(utils.install_home(), '.juju')]
+        for d in dirs:
+            utils.get_command_output("chown {0}:{0} -R {1}".format(
+                utils.install_user(), d))
 
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
@@ -273,6 +279,35 @@ class LandscapeInstall:
             landscape_password=lscape_password.strip())
         utils.spew(self.lscape_yaml_path,
                    lscape_env_modified)
+
+    def finalize_deploy(self):
+        """ Finish installation once questionarre is finished.
+        """
+
+        # Set remaining permissions
+        self.set_perms()
+
+        # Juju deployer
+        out = utils.get_command_output("juju-deployer -Wdv -c {0} "
+                                       "landscape-dense-maas".format(
+                                           self.lscape_yaml_path))
+        if out['status']:
+            raise SystemExit("Problem deploying Landscape: {}".format(
+                out['status']))
+
+        # Configure landscape
+        out = utils.get_command_output("{bin} --admin-email={admin_email} "
+                                       "--admin-name={name} "
+                                       "--system-email={sys_email} "
+                                       "--maas-host={maas_host}".format(
+                                           self.lscape_configure_bin,
+                                           admin_email="",
+                                           name="",
+                                           sys_email="",
+                                           maas_host=""))
+        if out['status']:
+            raise SystemExit("Problem with configuring Landscape: {}.".format(
+                out['output']))
 
 
 class InstallController(DisplayController):
