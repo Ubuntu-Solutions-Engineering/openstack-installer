@@ -301,8 +301,8 @@ class MultiInstallNewMaas(MultiInstall):
                         "network configuration may "
                         "be wrong".format(target_iface))
 
-        with open('/etc/network/interfaces', 'rw') as e_n_i_file:
-            contents = e_n_i_file.readall()
+        with open('/etc/network/interfaces', 'r+') as e_n_i_file:
+            contents = "".join(e_n_i_file.readlines())
             if not re.match('\s*source /etc/network/interfaces.d/\*.cfg',
                             contents):
                 e_n_i_file.write("\nsource /etc/network/interfaces.d/*.cfg")
@@ -310,7 +310,7 @@ class MultiInstallNewMaas(MultiInstall):
         cloudinst_cfgfilename = "/etc/network/interfaces.d/cloud-install.cfg"
         with open(new_bridgefilename, 'r') as new_bridge:
             with open(cloudinst_cfgfilename) as cloudinstall_cfgfile:
-                bridge_config = new_bridge.readall()
+                bridge_config = "".join(new_bridge.readlines())
                 cloudinstall_cfgfile.write("auto {}\n"
                                            "iface {} inet manual\n\n"
                                            "auto br0\n"
@@ -384,9 +384,10 @@ class MultiInstallNewMaas(MultiInstall):
         configfile.close()
 
         if changed_config:
-            with open(new_configfilename, 'w') as f:
-                f.write(BRIDGE_MODIFIED_WARNING)
-            os.rename(new_configfilename, config_filename)
+            with open(new_configfilename, 'r') as new_f:
+                with open(config_filename, 'w') as old_f:
+                    old_f.write(BRIDGE_MODIFIED_WARNING)
+                    old_f.write(''.join(new_f.readlines()))
         return changed_config
 
     def configure_nat(self, network):
