@@ -42,16 +42,16 @@ class SingleInstall:
         self.container_abspath = os.path.join(self.container_path,
                                               self.container_name)
         self.userdata = os.path.join(
-            utils.install_home(), '.cloud-install/userdata.yaml')
+            self.config.cfg_path, 'userdata.yaml')
 
         # Sets install type
-        utils.spew(os.path.join(utils.install_home(), '.cloud-install/single'),
+        utils.spew(os.path.join(self.config.cfg_path, 'single'),
                    'auto-generated')
 
     def prep_userdata(self):
         """ preps userdata file for container install """
-        dst_file = os.path.join(utils.install_home(),
-                                '.cloud-install/userdata.yaml')
+        dst_file = os.path.join(self.config.cfg_path,
+                                'userdata.yaml')
         original_data = utils.load_template('userdata.yaml')
         modified_data = original_data.render(
             extra_sshkeys=[utils.ssh_readkey()],
@@ -85,8 +85,7 @@ class SingleInstall:
         """ copies install data and sets permissions on files/dirs
         """
         utils.get_command_output("chown {0}:{0} -R {1}".format(
-            utils.install_user(),
-            os.path.join(utils.install_home(), '.cloud-install')))
+            utils.install_user(), self.config.cfg_path))
 
         # copy over the rest of our installation data from host
         # and setup permissions
@@ -142,10 +141,9 @@ class SingleInstall:
         charm_conf = utils.load_template('charmconf.yaml')
         charm_conf_modified = charm_conf.render(
             openstack_password=self.config.openstack_password)
-        utils.spew('/tmp/charmconf.yaml', charm_conf_modified)
-        utils.container_cp(self.container_name,
-                           '/tmp/charmconf.yaml',
-                           '.cloud-install/charmconf.yaml')
+        utils.spew(os.path.join(self.config.cfg_path,
+                                'charmconf.yaml'),
+                   charm_conf_modified)
 
         # start the party
         cloud_status_bin = ['cloud-status']
@@ -167,12 +165,12 @@ class MultiInstall:
         self.config = Config()
 
         # Sets install type
-        utils.spew(os.path.join(utils.install_home(), '.cloud-install/multi'),
+        utils.spew(os.path.join(self.config.cfg_path, 'multi'),
                    'auto-generated')
 
     def set_perms(self):
         # Set permissions
-        dirs = [os.path.join(utils.install_home(), '.cloud-install'),
+        dirs = [self.config.cfg_path,
                 os.path.join(utils.install_home(), '.juju')]
         for d in dirs:
             utils.get_command_output("chown {0}:{0} -R {1}".format(
