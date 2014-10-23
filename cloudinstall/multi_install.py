@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import glob
+from ipaddress import ip_network
 import json
 import logging
 import os
@@ -220,7 +221,8 @@ class MultiInstallNewMaas(MultiInstall):
             self.gateway = get_default_gateway()
             excludes = [self.iface_ip, self.gateway]
 
-        self.dhcp_range = ip_range_max(self.iface_network, excludes)
+        nw = ip_network(self.iface_network, strict=False)
+        self.dhcp_range = ip_range_max(nw, excludes)
         # TODO: allow customization
 
         # TODO UI progress here?
