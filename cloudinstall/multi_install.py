@@ -26,6 +26,7 @@ from tempfile import TemporaryDirectory
 from cloudinstall.config import Config
 from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_default_gateway, get_netmask,
+                                   get_network_interfaces,
                                    ip_range_max)
 from cloudinstall import utils
 
@@ -76,9 +77,9 @@ environments:
 
 class MultiInstall:
 
-    def __init__(self, opts, ui):
+    def __init__(self, opts, display_controller):
         self.opts = opts
-        self.ui = ui
+        self.display_controller = display_controller
         self.config = Config()
         self.tempdir = TemporaryDirectory(suffix="cloud-install")
         # Sets install type
@@ -131,9 +132,10 @@ class MultiInstallExistingMaas(MultiInstall):
         self.do_install()
 
     def run(self):
-        self.ui.info_message("Please enter your MAAS Server IP "
-                             "and your administrators API Key")
-        self.ui.show_maas_input(self._save_maas_creds)
+        self.display_controller.info_message("Please enter your MAAS "
+                                             "Server IP and your "
+                                             "administrator's API Key")
+        self.display_controller.show_maas_input(self._save_maas_creds)
 
 
 class MaasInstallError(Exception):
@@ -147,7 +149,26 @@ class MultiInstallNewMaas(MultiInstall):
     def run(self):
         self.prompt_for_interface()
 
+    def prompt_for_interface(self):
+        if_names = sorted(get_network_interfaces().keys())
+        self.display_controller.show_selector_info("Choose Interface",
+                                                   if_names,
+                                                   self.interface_choice_cb)
+
+    def interface_choice_cb(self, choice):
+        self.target_iface = choice
+        self.iface_ip = get_ip_addr(self.target_iface)
+        self.iface_network = get_network(self.target_iface)
+
+        self.continue_with_interface()
+
+    def continue_with_interface(self):
         check_output('mkdir -p /etc/cloud-installer', shell=True)
+        check_output(['cp', '/etc/network/interfaces',
+                     '/etc/cloud-installer/interfaces.cloud.bak'])
+        check_output(['cp', '-r', '/etc/network/interfaces.d',
+                      '/etc/cloud-installer/interfaces.cloud.d.bak'])
+
         with open('/etc/cloud-installer/interface', 'w') as iff:
             iff.write(self.target_iface)
 
@@ -183,21 +204,16 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.do_install()
 
-    def prompt_for_interface(self):
-
-        # TODO figure out which interface to use
-        self.target_iface = 'eth0'
-
-        self.iface_ip = get_ip_addr(self.target_iface)
-        self.iface_network = get_network(self.target_iface)
-
     def prompt_for_bridge(self):
         # TODO prompt user to ask about bridging maas nw interface
         self.should_bridge_maasnw = True
 
         if self.should_bridge_maasnw:
+            log.debug("bridging maas network")
             self.configure_nat(get_network('br0'))
+            log.debug("configured NAT")
             self.enable_ipv4_forwarding()
+            log.debug("enabled forwarding")
             self.gateway = get_ip_addr('br0')
             excludes = [self.iface_ip]
         else:
@@ -309,7 +325,7 @@ class MultiInstallNewMaas(MultiInstall):
 
         cloudinst_cfgfilename = "/etc/network/interfaces.d/cloud-install.cfg"
         with open(new_bridgefilename, 'r') as new_bridge:
-            with open(cloudinst_cfgfilename) as cloudinstall_cfgfile:
+            with open(cloudinst_cfgfilename, 'w') as cloudinstall_cfgfile:
                 bridge_config = "".join(new_bridge.readlines())
                 cloudinstall_cfgfile.write("auto {}\n"
                                            "iface {} inet manual\n\n"
@@ -321,7 +337,10 @@ class MultiInstallNewMaas(MultiInstall):
                                                        bridge_config,
                                                        target_iface))
 
-        utils.get_command_output('ifup {} br0'.format(target_iface))
+        res = utils.get_command_output('ifup {} br0'.format(target_iface))
+        if res['status'] != 0:
+            log.debug("'ifup {} br0' failed. out={}".format(target_iface, res))
+            raise MaasInstallError("Failure in bridge creation")
 
     def create_bridge_if_exists(self, target, new_bridgefilename,
                                 config_filename):
@@ -352,20 +371,18 @@ class MultiInstallNewMaas(MultiInstall):
 
             elif c[0] == 'iface':
                 if c[1] == 'br0':
-                    new_configfile.write("# {}".format(line))
                     changed_config = True
                     commentlines = True
                     copylines = False
                 elif c[1] == target:
                     # print 'iface br0' plus rest of line into new_bridgefile
-                    new_bridgefile.write("iface br0" + " ".join(c[2:]))
-                    new_configfile.write("# {}".format(line))
+                    new_bridgefile.write("iface br0 " + " ".join(c[2:]))
+                    new_bridgefile.write("\n")
                     changed_config = True
                     copylines, commentlines = True, True
+                    continue
                 else:
                     copylines, commentlines = False, False
-
-                continue
 
             elif (c[0] in ['mapping', 'auto', 'source'] or
                   c[0].startswith('allow-')):
@@ -407,7 +424,9 @@ class MultiInstallNewMaas(MultiInstall):
         cmd = ("sed -e '/^iface lo inet loopback$/a\ "
                "pre-up iptables-restore < /etc/network/iptables.rules' "
                "-i /etc/network/interfaces")
-        utils.get_command_output(cmd)
+        res = utils.get_command_output(cmd)
+        if res['status'] != 0:
+            log.debug("error editing /etc/network/interfaces: {}".format(res))
 
     def enable_ipv4_forwarding(self):
         cmd = ("sed -e 's/^#net.ipv4.ip_forward=1$/net.ipv4.ip_forward=1/' "
@@ -482,5 +501,6 @@ class MultiInstallNewMaas(MultiInstall):
         dot_juju_path = os.path.join(utils.install_home(), '.juju')
         check_output(['mkdir', '-p', dot_juju_path])
 
-        with open(os.path.join(dot_juju_path, 'environments.yaml')) as ef:
+        env_yaml_filename = os.path.join(dot_juju_path, 'environments.yaml')
+        with open(env_yaml_filename, 'w') as ef:
             ef.write(env)
