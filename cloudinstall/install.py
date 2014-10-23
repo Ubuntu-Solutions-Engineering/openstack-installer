@@ -107,15 +107,6 @@ class SingleInstall:
                            '.ssh/.')
         utils.container_run(self.container_name, "chmod 600 .ssh/id_rsa*")
 
-        # setup charm confingurations
-        charm_conf = utils.load_template('charmconf.yaml')
-        charm_conf_modified = charm_conf.render(
-            openstack_password=self.config.openstack_password)
-        utils.spew('/tmp/charmconf.yaml', charm_conf_modified)
-        utils.container_cp(self.container_name,
-                           '/tmp/charmconf.yaml',
-                           '.cloud-installer/charmconf.yaml')
-
     def run(self):
         if os.path.exists(self.container_abspath):
             # Container exists, handle return code in installer
@@ -146,6 +137,15 @@ class SingleInstall:
 
         # Set permissions
         self.copy_installdata_and_set_perms()
+
+        # setup charm confingurations
+        charm_conf = utils.load_template('charmconf.yaml')
+        charm_conf_modified = charm_conf.render(
+            openstack_password=self.config.openstack_password)
+        utils.spew('/tmp/charmconf.yaml', charm_conf_modified)
+        utils.container_cp(self.container_name,
+                           '/tmp/charmconf.yaml',
+                           '.cloud-install/charmconf.yaml')
 
         # start the party
         cloud_status_bin = ['cloud-status']
