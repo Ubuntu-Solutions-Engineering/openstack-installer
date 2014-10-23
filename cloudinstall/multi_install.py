@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import glob
-from ipaddress import ip_network
+from ipaddress import ip_address, ip_network
 import json
 import logging
 import os
@@ -121,6 +121,7 @@ class MultiInstall:
                                            user_sudo=True)
             sys.exit(out['status'])
         else:
+            log.debug("failure to bootstrap: '{}'".format(out))
             raise SystemExit("Problem with juju bootstrap.")
 
 
@@ -145,7 +146,8 @@ class MaasInstallError(Exception):
 
 class MultiInstallNewMaas(MultiInstall):
 
-    LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
+    LOCAL_MAAS_HOST = 'localhost'
+    LOCAL_MAAS_URL = 'http://{}/MAAS/api/1.0'.format(LOCAL_MAAS_HOST)
 
     def run(self):
         self.prompt_for_interface()
@@ -179,7 +181,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.create_superuser()
         self.apikey = self.get_apikey()
 
-        self.config.save_maas_creds(self.LOCAL_MAAS_URL,
+        self.config.save_maas_creds(self.LOCAL_MAAS_HOST,
                                     self.apikey)
 
         self.login_to_maas(self.apikey)
@@ -221,6 +223,7 @@ class MultiInstallNewMaas(MultiInstall):
             self.gateway = get_default_gateway()
             excludes = [self.iface_ip, self.gateway]
 
+        excludes = list(map(ip_address, excludes))
         nw = ip_network(self.iface_network, strict=False)
         self.dhcp_range = ip_range_max(nw, excludes)
         # TODO: allow customization
@@ -445,7 +448,7 @@ class MultiInstallNewMaas(MultiInstall):
         maas_query_cmd = ('maas maas node-group-interfaces'
                           ' list {}'.format(cluster_uuid))
         out = utils.get_command_output(maas_query_cmd)
-        interfaces = json.load(out['output'])
+        interfaces = json.loads(out['output'])
         nmatching = len([i for i in interfaces
                          if i['interface'] == interface])
         interface_exists = nmatching == 1
@@ -465,16 +468,16 @@ class MultiInstallNewMaas(MultiInstall):
                     ip_range_high=dhcp_range[1])
 
         if interface_exists:
-            cmd = ('maas maas node-group-interface update {uuid} {interface}'
+            cmd = ('maas maas node-group-interface update {uuid} {interface} '
                    + paramstr).format(**args)
         else:
-            cmd = ('maas maas node-group-interfaces new {uuid}'
+            cmd = ('maas maas node-group-interfaces new {uuid} '
                    + paramstr).format(**args)
 
         out = utils.get_command_output(cmd)
         if out['status'] != 0:
-            log.debug("failed to edit maas network - output"
-                      "={}".format(out))
+            log.debug("cmd failed: {}\n - output"
+                      "={}".format(cmd, out))
             raise MaasInstallError("unable to create or update network")
 
     def configure_dns(self):
