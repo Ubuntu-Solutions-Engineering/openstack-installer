@@ -101,6 +101,10 @@ class DisplayController:
         self.ui.show_maas_input(cb)
         self.redraw_screen()
 
+    def show_landscape_input(self, cb):
+        self.ui.show_landscape_input(cb)
+        self.redraw_screen()
+
     def show_selector_info(self, title, install_types, cb):
         self.ui.show_selector_info(title, install_types, cb)
         self.redraw_screen()

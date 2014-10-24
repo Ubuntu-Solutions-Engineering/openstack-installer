@@ -211,8 +211,9 @@ class LandscapeInstall:
                              "optionally an existing MAAS Server IP")
         self.ui.show_landscape_input(self._save_lds_creds)
 
-        utils.ssh_genkey()
-
+    def finalize_deploy(self):
+        """ Finish installation once questionarre is finished.
+        """
         # Prep deployer template for landscape
         lscape_password = utils.random_password()
         lscape_env = utils.load_template('landscape-deployments.yaml')
@@ -220,10 +221,6 @@ class LandscapeInstall:
             landscape_password=lscape_password.strip())
         utils.spew(self.lscape_yaml_path,
                    lscape_env_modified)
-
-    def finalize_deploy(self):
-        """ Finish installation once questionarre is finished.
-        """
 
         # Set remaining permissions
         self.set_perms()
@@ -242,16 +239,17 @@ class LandscapeInstall:
                                        "--system-email={sys_email} "
                                        "--maas-host={maas_host}".format(
                                            self.lscape_configure_bin,
-                                           admin_email="",
-                                           name="",
-                                           sys_email="",
-                                           maas_host=""))
+                                           admin_email=self.lds_admin_email,
+                                           name=self.lds_admin_name,
+                                           sys_email=self.lds_system_email,
+                                           maas_host=self.maas_server))
         if out['status']:
             raise SystemExit("Problem with configuring Landscape: {}.".format(
                 out['output']))
 
 
 class InstallController(DisplayController):
+
     """ Install controller """
 
     def __init__(self, **kwds):
