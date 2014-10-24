@@ -165,13 +165,13 @@ class MultiInstallNewMaas(MultiInstall):
         self.continue_with_interface()
 
     def continue_with_interface(self):
-        check_output('mkdir -p /etc/cloud-installer', shell=True)
+        check_output('mkdir -p /etc/openstack', shell=True)
         check_output(['cp', '/etc/network/interfaces',
-                     '/etc/cloud-installer/interfaces.cloud.bak'])
+                     '/etc/openstack/interfaces.cloud.bak'])
         check_output(['cp', '-r', '/etc/network/interfaces.d',
-                      '/etc/cloud-installer/interfaces.cloud.d.bak'])
+                      '/etc/openstack/interfaces.cloud.d.bak'])
 
-        with open('/etc/cloud-installer/interface', 'w') as iff:
+        with open('/etc/openstack/interface', 'w') as iff:
             iff.write(self.target_iface)
 
         # Currently assumes that we have installed the maas package already.
@@ -417,7 +417,7 @@ class MultiInstallNewMaas(MultiInstall):
     def create_maas_bridge(self, target_iface):
         """Creates br0 bridge using existing config for 'target_iface'.
         Bridge is defined in
-        /etc/network/interfaces.d/cloud-install.cfg.  Existing config
+        /etc/network/interfaces.d/openstack.cfg.  Existing config
         for either an existing br0 bridge or the specified target_iface
         will be commented out.
         """
@@ -445,7 +445,7 @@ class MultiInstallNewMaas(MultiInstall):
                             contents):
                 e_n_i_file.write("\nsource /etc/network/interfaces.d/*.cfg")
 
-        cloudinst_cfgfilename = "/etc/network/interfaces.d/cloud-install.cfg"
+        cloudinst_cfgfilename = "/etc/network/interfaces.d/openstack.cfg"
         with open(new_bridgefilename, 'r') as new_bridge:
             with open(cloudinst_cfgfilename, 'w') as cloudinstall_cfgfile:
                 bridge_config = "".join(new_bridge.readlines())
@@ -475,7 +475,7 @@ class MultiInstallNewMaas(MultiInstall):
         """
         new_bridgefile = open(new_bridgefilename, 'w')
         configfile = open(config_filename, 'r')
-        new_configfilename = config_filename + "-new-cloud-install"
+        new_configfilename = config_filename + "-new-openstack-install"
         new_configfile = open(new_configfilename, 'w')
         copylines = False
         commentlines = False
@@ -606,7 +606,7 @@ class MultiInstallNewMaas(MultiInstall):
             nco_file.write(DNS_CONF_TEMPLATE.format(forwarders))
         utils.get_command_output('service bind9 restart')
         utils.get_command_output("sed -e '/^iface lo inet loopback$/a\\n"
-                                 "#added by cloud-install\\n"
+                                 "#added by openstack-install\\n"
                                  "dns-nameservers 127.0.0.1' "
                                  " -i /etc/network/interfaces")
         utils.get_command_output('ifdown lo')
