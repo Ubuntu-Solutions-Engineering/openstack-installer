@@ -1,7 +1,7 @@
 
 .. code::
 
-    cloud-install [-cish]
+    openstack-install [-cish]
 
     Create an Ubuntu Openstack Cloud! (requires root privileges)
 

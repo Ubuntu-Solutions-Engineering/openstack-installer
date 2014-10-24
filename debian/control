@@ -1,4 +1,4 @@
-Source: cloud-installer
+Source: openstack
 Section: admin
 Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
@@ -29,7 +29,7 @@ X-Python3-Version: >= 3.3
 Vcs-Browser: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer
 Vcs-Git: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer.git
 
-Package: cloud-installer
+Package: openstack
 Architecture: all
 Depends: gawk,
          nmap,
@@ -62,7 +62,19 @@ Description: Ubuntu Openstack Installer
  This package provides the common libraries utilized by the installer
  profiles.
 
-Package: cloud-install-multi
+Package: cloud-installer
+Architecture: all
+Depends: openstack, ${misc:Depends}
+Description: Ubuntu Openstack Installer - meta package
+ Ubuntu OpenStack Installer provides an extremely simple way to
+ install, deploy and scale an OpenStack cloud on top of Ubuntu server
+ and Juju. Deploy onto a single physical system using virtual machines
+ for testing, or use MAAS to deploy onto a cluster of any size.
+ .
+ This package provides the common libraries utilized by the installer
+ profiles.
+
+Package: openstack-multi
 Section: admin
 Architecture: all
 Depends: juju-core, lxc, maas, maas-dhcp, maas-dns, vlan, ${misc:Depends}
@@ -74,7 +86,19 @@ Description: Ubuntu Openstack Installer (multi-system) - dependency package
  .
  This package provides the multi installer profile.
 
-Package: cloud-install-single
+Package: cloud-install-multi
+Section: admin
+Architecture: all
+Depends: openstack-install-multi, ${misc:Depends}
+Description: Ubuntu Openstack Installer (multi-system) - meta package
+ Ubuntu OpenStack Installer provides an extremely simple way to
+ install, deploy and scale an OpenStack cloud on top of Ubuntu server
+ and Juju. Deploy onto a single physical system using virtual machines
+ for testing, or use MAAS to deploy onto a cluster of any size.
+ .
+ This package provides the multi installer profile.
+
+Package: openstack-single
 Section: admin
 Architecture: all
 Depends: juju-local, uvtool, uvtool-libvirt, ${misc:Depends}
@@ -86,11 +110,35 @@ Description: Ubuntu Openstack Installer (single-system) - dependency package
  .
  This package provides the single installer profile.
 
-Package: cloud-install-landscape
+Package: cloud-install-single
+Section: admin
+Architecture: all
+Depends: openstack-install-single, ${misc:Depends}
+Description: Ubuntu Openstack Installer (single-system) - meta package
+ Ubuntu OpenStack Installer provides an extremely simple way to
+ install, deploy and scale an OpenStack cloud on top of Ubuntu server
+ and Juju. Deploy onto a single physical system using virtual machines
+ for testing, or use MAAS to deploy onto a cluster of any size.
+ .
+ This package provides the single installer profile.
+
+Package: openstack-landscape
 Section: admin
 Architecture: all
 Depends: cloud-install-multi, juju-deployer, ${misc:Depends}
 Description: Ubuntu Openstack Installer (landscape) - dependency package
+ Ubuntu OpenStack Installer provides an extremely simple way to
+ install, deploy and scale an OpenStack cloud on top of Ubuntu server
+ and Juju. Deploy onto a single physical system using virtual machines
+ for testing, or use MAAS to deploy onto a cluster of any size.
+ .
+ This package provides the landscape installer profile.
+
+Package: cloud-install-landscape
+Section: admin
+Architecture: all
+Depends: openstack-install-multi, ${misc:Depends}
+Description: Ubuntu Openstack Installer (landscape) - meta package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
  and Juju. Deploy onto a single physical system using virtual machines
