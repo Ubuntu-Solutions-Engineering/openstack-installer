@@ -92,7 +92,7 @@ class SingleInstall:
 
         utils.container_run(self.container_name, 'mkdir -p ~/.cloud-install')
         utils.container_run(
-            self.container_name, 'sudo mkdir -p /etc/cloud-installer')
+            self.container_name, 'sudo mkdir -p /etc/openstack')
 
         utils.container_cp(self.container_name,
                            os.path.join(

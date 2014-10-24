@@ -20,8 +20,10 @@ import atexit
 import logging
 import os
 import subprocess
+from cloudinstall.config import Config
 
-SYNC_STATUS_LISTENER_PATH = "/usr/share/cloud-installer/bin/status-listener"
+cfg = Config()
+SYNC_STATUS_LISTENER_PATH = os.path.join(cfg.bin_path, "status-listener")
 STATUS_FILE_NAME = os.path.expanduser("~/.cloud-install/sync-status")
 
 status_subprocess = None

@@ -27,8 +27,8 @@ installer:
 
 .. code::
 
-   $ git clone https://github.com/Ubuntu-Solutions-Engineering/cloud-installer.git ~/cloud-installer
-   $ cd cloud-installer
+   $ git clone https://github.com/Ubuntu-Solutions-Engineering/openstack-installer.git ~/openstack-installer
+   $ cd openstack
 
 Use the target 'install-dependencies' to install a custom binary package for the build dependencies:
 
@@ -46,13 +46,13 @@ From here you can build the entire package set by running:
    $ make deb
 
 Once finished your packages will be stored in the top level directory
-where your cloud-installer project is kept.
+where your openstack project is kept.
 
 .. code::
 
    $ ls ../*.deb
 
-Running the cloud installer
+Running the Openstack installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Running the installer for test currently requires installing the packages.
@@ -64,7 +64,7 @@ After building the packages using either 'make deb' or 'make sbuild', you can in
    # or 
    $ sudo make run type=multi
 
-You can also set the MAAS_HTTP_PROXY env var for the cloud-install command like this:
+You can also set the MAAS_HTTP_PROXY env var for the openstack-install command like this:
 
 .. code::
 
