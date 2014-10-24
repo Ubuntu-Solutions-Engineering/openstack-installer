@@ -47,13 +47,8 @@ case $WHAT in
     # so we kill it explicitly.
     sudo killall -u maas twistd
 
-    lxc-stop -n juju-bootstrap
-    lxc-destroy -n juju-bootstrap
-
-    # start lxcbr0 again
-    sed -e 's/^USE_LXC_BRIDGE="false"/USE_LXC_BRIDGE="true"/' -i \
-      /etc/default/lxc-net
-    service lxc-net start
+    virsh destroy juju-bootstrap
+    virsh undefine juju-bootstrap
 
     # clean up the networking
     interface=$(cat /etc/openstack/interface)
