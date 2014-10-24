@@ -331,7 +331,8 @@ class Controller(DisplayController):
         if len(started_machines) > 0:
             controller_id = started_machines[0].machine_id
             utils.remote_cp(controller_id,
-                            src="/usr/share/cloud-installer/tools/apt-go-fast",
+                            src=path.join(
+                                self.config.share_path, "tools/apt-go-fast"),
                             dst="/tmp/apt-go-fast")
             utils.remote_run(controller_id,
                              cmds="sudo sh /tmp/apt-go-fast")
@@ -355,7 +356,7 @@ class Controller(DisplayController):
         self.info_message('Copying network specifications to machine.')
         utils.remote_cp(
             self.machine.machine_id,
-            src="/usr/share/cloud-installer/templates/lxc-host-only",
+            src=path.join(self.config.share_path, "templates/lxc-host-only"),
             dst="/tmp/lxc-host-only")
         self.info_message('Updating network configuration for machine.')
         utils.remote_run(self.machine.machine_id,

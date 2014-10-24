@@ -21,7 +21,7 @@ import logging
 import os
 import subprocess
 
-SYNC_STATUS_LISTENER_PATH = "/usr/share/cloud-installer/bin/status-listener"
+SYNC_STATUS_LISTENER_PATH = "/usr/share/openstack/bin/status-listener"
 STATUS_FILE_NAME = os.path.expanduser("~/.cloud-install/sync-status")
 
 status_subprocess = None

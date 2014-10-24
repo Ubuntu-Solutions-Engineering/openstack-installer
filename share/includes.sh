@@ -14,11 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Common includes for installer
-. /usr/share/cloud-installer/common/display.sh
-. /usr/share/cloud-installer/common/common.sh
-. /usr/share/cloud-installer/common/maas.sh
-. /usr/share/cloud-installer/common/juju.sh
-. /usr/share/cloud-installer/common/configure.sh
-. /usr/share/cloud-installer/common/multi.sh
-. /usr/share/cloud-installer/common/single.sh
-. /usr/share/cloud-installer/common/landscape.sh
+. /usr/share/openstack/common/display.sh
+. /usr/share/openstack/common/common.sh
+. /usr/share/openstack/common/maas.sh
+. /usr/share/openstack/common/juju.sh
+. /usr/share/openstack/common/configure.sh
+. /usr/share/openstack/common/multi.sh
+. /usr/share/openstack/common/single.sh
+. /usr/share/openstack/common/landscape.sh

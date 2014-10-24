@@ -53,7 +53,7 @@ if __name__ == '__main__':
     log.setup_logger()
     logger = logging.getLogger('cloudinstall')
     logger.info("cloud-status starting")
-    if not os.path.exists('/etc/cloud-installer'):
+    if not os.path.exists('/etc/openstack'):
         print("It looks like you don't have a cloud installed.")
         print("Plese run `sudo cloud-install` and then cloud-status")
         sys.exit(1)

@@ -56,16 +56,16 @@ case $WHAT in
     service lxc-net start
 
     # clean up the networking
-    interface=$(cat /etc/cloud-installer/interface)
+    interface=$(cat /etc/openstack/interface)
     ifconfig br0 down
     brctl delbr br0
     if [ -n "$interface" ]; then
         ifdown $interface
     fi
 
-    cp /etc/cloud-installer/interfaces.cloud.bak /etc/network/interfaces
-    cp -r /etc/cloud-installer/interfaces.cloud.d.bak/* /etc/network/interfaces.d
-    rm /etc/network/interfaces.d/cloud-install.cfg
+    cp /etc/openstack/interfaces.cloud.bak /etc/network/interfaces
+    cp -r /etc/openstack/interfaces.cloud.d.bak/* /etc/network/interfaces.d
+    rm /etc/network/interfaces.d/openstack.cfg
 
     if [ -n "$interface" ]; then
         ifup $interface
@@ -85,7 +85,7 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Please run with either single-system or multi-system as an argument.
     echo Example:
-    echo   sudo cloud-install -u single-system
+    echo   sudo openstack-install -u single-system
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     exit 1
     ;;
@@ -96,7 +96,11 @@ apt_purge '.*juju.*'
 apt_purge cloud-install-single
 apt_purge cloud-install-multi
 apt_purge cloud-install-landscape
-apt_purge cloud-installer
+apt_purge openstack
+apt_purge openstack-single
+apt_purge openstack-multi
+apt_purge openstack-landscape
+
 
 # Remove any extra packages that aren't needed after purging.
 apt-get -yy autoremove
@@ -112,4 +116,4 @@ fi
 
 # FIXME: Probably shouldnt blindly remove known_hosts
 rm -rf ~/.juju ~/.cloud-install ~/.ssh/known_hosts || true
-rm -rf /etc/cloud-installer || true
+rm -rf /etc/openstack || true

@@ -6,7 +6,7 @@ Pre-requisites
 
 Multi-Installer has been tested on Ubuntu Server, which is the recommended OS for the cloud installer.
 
-Add the `cloud-installer` ppa to your system.
+Add the Openstack installer ppa to your system.
 
 .. code::
 
@@ -23,11 +23,11 @@ Add the `cloud-installer` ppa to your system.
 Installation
 ^^^^^^^^^^^^
 
-Install the cloud-installer via `apt-get`
+Install Openstack installer via `apt-get`
 
 .. code::
 
-   $ sudo apt-get install cloud-installer
+   $ sudo apt-get install openstack
 
 Start the installation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -36,7 +36,7 @@ To start the installation run the following command
 
 .. code::
 
-   $ sudo cloud-install
+   $ sudo openstack-install
 
 .. note::
 
@@ -71,4 +71,4 @@ To uninstall and cleanup your system run the following
 
 .. code::
 
-    $ sudo cloud-install -u
+    $ sudo openstack -u

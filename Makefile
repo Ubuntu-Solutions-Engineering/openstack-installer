@@ -1,7 +1,7 @@
 #
 # Makefile for cloud-install
 #
-NAME        = cloud-installer
+NAME        = openstack
 TOPDIR      := $(shell basename `pwd`)
 GIT_REV     := $(shell git log --oneline -n1| cut -d" " -f1)
 VERSION     := $(shell ./tools/version)
@@ -18,7 +18,7 @@ install-dependencies:
 
 .PHONY: uninstall-dependencies
 uninstall-dependencies:
-	sudo apt-get remove cloud-installer-build-deps
+	sudo apt-get remove openstack-build-deps
 
 # sudo make uninstall type=single-system
 # (or just sudo make uninstall)
@@ -30,8 +30,8 @@ clean:
 	@debian/rules clean
 	@rm -rf debian/cloud-install
 	@rm -rf docs/_build/*
-	@rm -rf ../cloud-*.deb ../cloud-*.tar.gz ../cloud-*.dsc ../cloud-*.changes \
-		../cloud-*.build
+	@rm -rf ../openstack_*.deb ../cloud-*.deb ../openstack_*.tar.gz ../openstack_*.dsc ../openstack_*.changes \
+		../openstack_*.build ../openstack-*.deb
 
 deb-src: clean update_version tarball
 	@debuild -S -us -uc
@@ -80,30 +80,30 @@ status:
 
 # Indirection to allow 'make run' to build deb automatically, but
 # 'make sbuild; make run' will not invoke 'deb'.
-../cloud-installer*.deb: deb
+../openstack*.deb: deb
 	echo "rule to make .deb automatically"
 
 .PHONY: install
-install: ../cloud-installer*.deb
-	-dpkg -i ../cloud-installer*deb
-	-dpkg -i ../cloud-install-${type}*deb
+install: ../openstack*.deb
+	-dpkg -i ../openstack*deb
+	-dpkg -i ../openstack-${type}*deb
 	apt-get -yy install -f
 
 
 # sudo make run type=multi proxy=http://localhost:3128/
 .PHONY: run
 run: install
-	MAAS_HTTP_PROXY=${proxy} cloud-install
+	MAAS_HTTP_PROXY=${proxy} openstack-install
 
 # sudo make landscape
 .PHONY: landscape
-landscape: ../cloud-installer*.deb
-	-dpkg -i ../cloud-installer*deb
-	-dpkg -i ../cloud-install-multi*deb
-	-dpkg -i ../cloud-install-landscape*deb
+landscape: ../openstack*.deb
+	-dpkg -i ../openstack*deb
+	-dpkg -i ../openstack-multi*deb
+	-dpkg -i ../openstack-landscape*deb
 	apt-get -yy install -f
 	@echo please follow the instructions in
-	@echo "/usr/share/cloud-installer/templates/landscape-deployments.yaml"
+	@echo "/usr/share/openstack/templates/landscape-deployments.yaml"
 	@echo and then run `sudo cloud-install` as usual
 
 
