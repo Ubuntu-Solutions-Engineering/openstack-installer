@@ -161,9 +161,94 @@ class LandscapeInstall:
         self.config = Config()
         self.opts = opts
         self.ui = ui
+        self.lds_admin_name = None
+        self.lds_admin_email = None
+        self.lds_system_email = None
+        self.maas_server = None
+        self.maas_server_key = None
+        self.lscape_configure_bin = os.path.join(
+            self.config.bin_path, 'configure-landscape')
+        self.lscape_yaml_path = os.path.join(
+            self.config.cfg_path, 'landscape-deployments.yaml')
+
+    def set_perms(self):
+        # Set permissions
+        dirs = [self.config.cfg_path,
+                os.path.join(utils.install_home(), '.juju')]
+        for d in dirs:
+            utils.get_command_output("chown {0}:{0} -R {1}".format(
+                utils.install_user(), d))
+
+    def _do_install_existing_maas(self):
+        """ Performs the landscape deployment with existing MAAS
+        """
+        pass
+        MultiInstallExistingMaas(self.opts, self).run()
+
+    def _do_install_new_maas(self):
+        """ Prepare new maas environment for landscape
+        """
+        pass
+        MultiInstallNewMaas(self.opts, self).run()
+
+    def _save_lds_creds(self, admin_name, admin_email, system_email,
+                        maas_server=None, maas_server_key=None):
+        self.lds_admin_name = admin_name
+        self.lds_admin_email = admin_email
+        self.lds_system_email = system_email
+        self.maas_server = maas_server
+        self.maas_server_key = maas_server_key
+
+        if not self.maas_server:
+            self._do_install_new_maas()
+        else:
+            self.opts.with_maas_address = self.maas_server
+            self.opts.with_maas_apikey = self.maas_server_key
+            self._do_install_existing_maas()
 
     def run(self):
-        raise NotImplementedError("Landscape install not implemented.")
+        self.ui.info_message("Please enter your Landscape information and "
+                             "optionally an existing MAAS Server IP")
+        self.ui.show_landscape_input(self._save_lds_creds)
+
+        utils.ssh_genkey()
+
+        # Prep deployer template for landscape
+        lscape_password = utils.random_password()
+        lscape_env = utils.load_template('landscape-deployments.yaml')
+        lscape_env_modified = lscape_env.render(
+            landscape_password=lscape_password.strip())
+        utils.spew(self.lscape_yaml_path,
+                   lscape_env_modified)
+
+    def finalize_deploy(self):
+        """ Finish installation once questionarre is finished.
+        """
+
+        # Set remaining permissions
+        self.set_perms()
+
+        # Juju deployer
+        out = utils.get_command_output("juju-deployer -Wdv -c {0} "
+                                       "landscape-dense-maas".format(
+                                           self.lscape_yaml_path))
+        if out['status']:
+            raise SystemExit("Problem deploying Landscape: {}".format(
+                out['status']))
+
+        # Configure landscape
+        out = utils.get_command_output("{bin} --admin-email={admin_email} "
+                                       "--admin-name={name} "
+                                       "--system-email={sys_email} "
+                                       "--maas-host={maas_host}".format(
+                                           self.lscape_configure_bin,
+                                           admin_email="",
+                                           name="",
+                                           sys_email="",
+                                           maas_host=""))
+        if out['status']:
+            raise SystemExit("Problem with configuring Landscape: {}.".format(
+                out['output']))
 
 
 class InstallController(DisplayController):

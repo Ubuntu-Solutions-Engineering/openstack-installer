@@ -312,3 +312,61 @@ class MaasServerInput(WidgetWrap):
 
     def emit_done_signal(self, *args):
         emit_signal(self, 'done', *args)
+
+
+class LandscapeInput(WidgetWrap):
+
+    """ Landscape input dialog
+    """
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, done_signal_handler):
+        self.lds_admin_email = Edit(caption='Admin Email: ')
+        self.lds_admin_name = Edit(caption='Admin Name: ')
+        self.lds_system_email = Edit(caption='System Email: ')
+        self.maas_server = Edit(caption='MAAS Server IP (optional): ')
+        self.maas_server_key = Edit(caption='MAAS API Key (optional): ')
+        w = self._build_widget()
+        w = AttrWrap(w, 'dialog')
+
+        connect_signal(self, 'done', done_signal_handler)
+        super().__init__(w)
+
+    def _buttons(self):
+        buttons = [AttrWrap(Button("Ok", self.submit),
+                            'button', 'button focus'),
+                   AttrWrap(Button("Cancel", self.cancel),
+                            'button', 'button focus')]
+        return Columns(buttons)
+
+    def _build_widget(self, **kwargs):
+        lbox = ListBox([
+            AttrWrap(self.lds_admin_email, 'input', 'input focus'),
+            AttrWrap(self.lds_admin_name, 'input', 'input focus'),
+            AttrWrap(self.lds_system_email, 'input', 'input focus'),
+            AttrWrap(self.maas_server, 'input', 'input focus'),
+            AttrWrap(self.maas_server_key, 'input', 'input focus'),
+            Divider(),
+            self._buttons()
+        ])
+        lbox.set_focus(0)
+        w = LineBox(
+            BoxAdapter(lbox, height=4),
+            title='Enter Landscape Information (ESC)')
+        return w
+
+    def submit(self, button):
+        self.emit_done_signal(self.lds_admin_email.get_edit_text(),
+                              self.lds_admin_name.get_edit_text(),
+                              self.lds_system_email.get_edit_text(),
+                              self.maas_server.get_edit_text(),
+                              self.maas_server_key.get_edit_text())
+
+    def cancel(self, button):
+        # TODO: Make this go back to previous selector widget to change
+        # install path
+        raise SystemExit("Installation cancelled.")
+
+    def emit_done_signal(self, *args):
+        emit_signal(self, 'done', *args)
