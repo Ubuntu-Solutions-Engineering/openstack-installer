@@ -17,18 +17,16 @@
 import logging
 import urwid
 import os
-import sys
+
 import time
 from cloudinstall.config import Config
 from cloudinstall.core import DisplayController
+from cloudinstall.multi_install import (MultiInstallNewMaas,
+                                        MultiInstallExistingMaas)
 from cloudinstall import utils
 
 
 log = logging.getLogger('cloudinstall.install')
-
-
-class InstallException(Exception):
-    pass
 
 
 class SingleInstall:
@@ -157,84 +155,6 @@ class SingleInstall:
             self.container_name, " ".join(cloud_status_bin))
 
 
-class MultiInstall:
-
-    def __init__(self, opts, ui):
-        self.opts = opts
-        self.ui = ui
-        self.config = Config()
-
-        # Sets install type
-        utils.spew(os.path.join(self.config.cfg_path, 'multi'),
-                   'auto-generated')
-
-    def set_perms(self):
-        # Set permissions
-        dirs = [self.config.cfg_path,
-                os.path.join(utils.install_home(), '.juju')]
-        for d in dirs:
-            utils.get_command_output("chown {0}:{0} -R {1}".format(
-                utils.install_user(), d))
-
-    def do_install(self):
-        maas_creds = self.config.maas_creds
-        maas_env = utils.load_template('juju-env/maas.yaml')
-        maas_env_modified = maas_env.render(
-            maas_server=maas_creds['api_url'],
-            maas_apikey=maas_creds['api_key'],
-            openstack_password=self.config.openstack_password)
-        utils.spew(self.config.juju_environments_path,
-                   maas_env_modified)
-        utils.ssh_genkey()
-
-        # Set remaining permissions
-        self.set_perms()
-
-        # Starts the party
-        out = utils.get_command_output("juju bootstrap",
-                                       user_sudo=True)
-        if not out['status']:
-            cmd = ['cloud-status']
-            if self.opts.enable_swift:
-                cmd.append('--enable-swift')
-            out = utils.get_command_output(" ".join(cmd),
-                                           user_sudo=True)
-            sys.exit(out['status'])
-        else:
-            raise SystemExit("Problem with juju bootstrap.")
-
-
-class MultiInstallNewMaas(MultiInstall):
-
-    def _save_maas_creds(self, maas_server, maas_apikey):
-        self.config.save_maas_creds(maas_server, maas_apikey)
-
-        # Saved maas creds, start the show
-        self.do_install()
-
-    def run(self):
-        # Handle MAAS VM Install here.
-        # Then prompt for maas credentials and server IP
-        # continue with the install as normal
-        self.ui.info_message("Please enter your MAAS Server IP "
-                             "and your administrators API Key")
-        self.ui.show_maas_input(self._save_maas_creds)
-
-
-class MultiInstallExistingMaas(MultiInstall):
-
-    def _save_maas_creds(self, maas_server, maas_apikey):
-        self.config.save_maas_creds(maas_server, maas_apikey)
-
-        # Saved maas creds, start the show
-        self.do_install()
-
-    def run(self):
-        self.ui.info_message("Please enter your MAAS Server IP "
-                             "and your administrators API Key")
-        self.ui.show_maas_input(self._save_maas_creds)
-
-
 class LandscapeInstall:
 
     def __init__(self, opts, ui):
@@ -247,7 +167,6 @@ class LandscapeInstall:
 
 
 class InstallController(DisplayController):
-
     """ Install controller """
 
     def __init__(self, **kwds):
