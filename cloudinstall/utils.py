@@ -497,7 +497,7 @@ def load_template(name):
     :param str name: name of template file
     """
     env = Environment(
-        loader=FileSystemLoader('/usr/share/cloud-installer/templates'))
+        loader=FileSystemLoader('/usr/share/openstack/templates'))
     return env.get_template(name)
 
 

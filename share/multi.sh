@@ -22,9 +22,9 @@
 #
 multiInstall()
 {
-	cp /etc/network/interfaces /etc/cloud-installer/interfaces.cloud.bak
-	cp -r /etc/network/interfaces.d /etc/cloud-installer/interfaces.cloud.d.bak
-	echo $interface > /etc/cloud-installer/interface
+	cp /etc/network/interfaces /etc/openstack/interfaces.cloud.bak
+	cp -r /etc/network/interfaces.d /etc/openstack/interfaces.cloud.d.bak
+	echo $interface > /etc/openstack/interface
 
 	dialogGaugeStart Installing "Please wait" 8 70 0
 	{
