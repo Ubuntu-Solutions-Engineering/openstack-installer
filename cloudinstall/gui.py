@@ -39,7 +39,8 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox,
                              Selector,
                              PasswordInput,
-                             MaasServerInput)
+                             MaasServerInput,
+                             LandscapeInput)
 from cloudinstall.ui.helpscreen import HelpScreen
 
 log = logging.getLogger('cloudinstall.gui')
@@ -609,6 +610,13 @@ class PegasusGUI(WidgetWrap):
         self.show_widget_on_top(widget, width=50, height=10)
 
     def hide_show_maas_input(self):
+        self.hide_widget_on_top()
+
+    def show_landscape_input(self, cb):
+        widget = LandscapeInput(cb)
+        self.show_widget_on_top(widget, width=50, height=10)
+
+    def hide_show_landscape_input(self):
         self.hide_widget_on_top()
 
     def show_add_charm_info(self, charms, cb):

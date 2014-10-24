@@ -46,7 +46,7 @@ landscape:
                 service-count: "2"
                 landscape-password: {{ landscape_password }}
                 services: static appserver pingserver combo-loader async-frontend apiserver package-upload jobhandler package-search cron juju-sync
-                repository: include-file://repo-file
+                repository: https://launchpad.net/~landscape/+archive/ubuntu/14.10
                 license-file: file:///dev/null
         landscape-msg:
             charm: cs:precise/landscape-server
@@ -54,7 +54,7 @@ landscape:
             options:
                 landscape-password: {{ landscape_password }}
                 services: msgserver
-                repository: include-file://repo-file
+                repository: https://launchpad.net/~landscape/+archive/ubuntu/14.10
                 license-file: file:///dev/null
     relations:
         - [landscape, rabbitmq-server]

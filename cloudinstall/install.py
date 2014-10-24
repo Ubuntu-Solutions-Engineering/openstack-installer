@@ -241,6 +241,11 @@ class LandscapeInstall:
         self.config = Config()
         self.opts = opts
         self.ui = ui
+        self.lds_admin_name = None
+        self.lds_admin_email = None
+        self.lds_system_email = None
+        self.maas_server = None
+        self.maas_server_key = None
         self.lscape_configure_bin = os.path.join(
             self.config.bin_path, 'configure-landscape')
         self.lscape_yaml_path = os.path.join(
@@ -266,9 +271,25 @@ class LandscapeInstall:
         pass
         MultiInstallNewMaas(self.opts, self).run()
 
+    def _save_lds_creds(self, admin_name, admin_email, system_email,
+                        maas_server=None, maas_server_key=None):
+        self.lds_admin_name = admin_name
+        self.lds_admin_email = admin_email
+        self.lds_system_email = system_email
+        self.maas_server = maas_server
+        self.maas_server_key = maas_server_key
+
+        if not self.maas_server:
+            self._do_install_new_maas()
+        else:
+            self.opts.with_maas_address = self.maas_server
+            self.opts.with_maas_apikey = self.maas_server_key
+            self._do_install_existing_maas()
+
     def run(self):
-        self.ui.info_message(
-            "* Please wait while we prepare the Landscape installation ...")
+        self.ui.info_message("Please enter your Landscape information and "
+                             "optionally an existing MAAS Server IP")
+        self.ui.show_landscape_input(self._save_lds_creds)
 
         utils.ssh_genkey()
 
