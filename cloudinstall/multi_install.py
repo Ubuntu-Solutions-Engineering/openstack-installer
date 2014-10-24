@@ -199,17 +199,47 @@ class MultiInstallNewMaas(MultiInstall):
 
         if "MAAS_HTTP_PROXY" in os.environ:
             pv = os.environ['MAAS_HTTP_PROXY']
-            utils.get_command_output('maas maas maas set-config '
-                                     'name=http_proxy '
-                                     'value={}'.format(pv))
+            out = utils.get_command_output('maas maas maas set-config '
+                                           'name=http_proxy '
+                                           'value={}'.format(pv))
+            if out['status'] != 0:
+                log.debug("Error setting maas proxy config: {}".format(out))
+                raise MaasInstallError("Error setting proxy config")
+
+        self.display_controller.info_message("Importing MAAS boot images")
+        out = utils.get_command_output('maas maas boot-resources import')
+        if out['status'] != 0:
+            log.debug("Error starting boot images import: {}".format(out))
+            raise MaasInstallError("Error setting proxy config")
+
+        def pred(out):
+            return out['output'] != '[]'
+
+        ok = utils.poll_until_true('maas maas boot-images read '
+                                   ' {}'.format(cluster_uuid),
+                                   pred, 15, timeout=7200)
+        if not ok:
+            log.debug("poll timed out for getting boot images")
+            raise MaasInstallError("Downloading boot images timed out")
+
+        self.display_controller.info_message("Done importing boot images.")
+
         self.write_juju_env()
         self.create_bootstrap_kvm()
+
+        cmd = 'chown {u}:{u} {h}/.maascli.db'.format(u=utils.install_user(),
+                                                     h=utils.install_home())
+        out = utils.get_command_output(cmd)
+        if out['status'] != 0:
+            log.debug("Error changing ownership of maascli.db: {}".format(out))
+            raise MaasInstallError("Error in MAAS setup")
 
         self.do_install()
 
     def prompt_for_bridge(self):
         # TODO prompt user to ask about bridging maas nw interface
         self.should_bridge_maasnw = True
+        self.display_controller.info_message("Configuring MAAS Network")
 
         if self.should_bridge_maasnw:
             log.debug("bridging maas network")
@@ -228,12 +258,99 @@ class MultiInstallNewMaas(MultiInstall):
         self.dhcp_range = ip_range_max(nw, excludes)
         # TODO: allow customization
 
+        self.display_controller.info_message("Detecting Existing DHCP server")
         # TODO UI progress here?
         if self.detect_existing_dhcp(self.target_iface):
             pass
 
     def create_bootstrap_kvm(self):
-        pass                    # TODO
+        out = utils.get_command_output('usermod -a -G libvirtd maas')
+        if out['status'] != 0:
+            log.debug("error adding maas user to libvirtd: {}".format(out))
+            raise MaasInstallError("error in creating bootstrap kvm")
+
+        out = utils.get_command_output('service maas-clusterd restart')
+        if out['status'] != 0:
+            log.debug("error restarting maas-clusterd: {}".format(out))
+            raise MaasInstallError("error in creating bootstrap kvm")
+
+        cmd = ("virt-install --name juju-bootstrap --ram=2048 --vcpus=1 "
+               "--hvm --virt-type=kvm --pxe --boot network,hd "
+               "--os-variant=ubuntutrusty --graphics vnc --noautoconsole "
+               "--os-type=linux --accelerate "
+               "--disk=/var/lib/libvirt/images/juju-bootstrap.qcow2,"
+               # no space here...
+               "bus=virtio,format=qcow2,cache=none,sparse=true,size=20 "
+               "--network=bridge=br0,model=virtio")
+
+        out = utils.get_command_output(cmd)
+        if out['status'] != 0:
+            log.debug("error creating kvm: {}".format(out))
+            raise MaasInstallError("error in creating bootstrap kvm")
+
+        out = utils.get_command_output("virsh dumpxml juju-bootstrap "
+                                       " | grep 'mac address' | cut -d\\' -f2")
+        if out['status'] != 0:
+            log.debug("error creating kvm: {}".format(out))
+            raise MaasInstallError("error in creating bootstrap kvm")
+
+        kvm_mac = out['output'].strip()
+
+        cmd = ("maas maas nodes new architecture=amd64/generic "
+               "mac_addresses={} "
+               "hostname=juju-bootstrap nodegroup=$cluster_uuid "
+               "power_type=virsh "
+               "power_parameters_power_address=qemu:///system "
+               "power_parameters_power_id=juju-bootstrap".format(kvm_mac))
+
+        out = utils.get_command_output(cmd)
+        if out['status'] != 0:
+            log.debug("error creating bootstrap node: {}"
+                      "command was:\n{}".format(out, cmd))
+            raise MaasInstallError("error in creating bootstrap kvm")
+
+        out = utils.get_command_output('maas maas nodes list '
+                                       'mac_address={}'.format(kvm_mac))
+        if out['status'] != 0:
+            log.debug("error getting system id of kvm: {}".format(out))
+            raise MaasInstallError("error in creating bootstrap kvm")
+
+        system_id = json.loads(out['output'])[0]['system_id']
+
+        # out = utils.get_command_output('juju --show-log sync-tools',
+        #                                user_sudo=True)
+        # if out['status'] != 0:
+        #     log.debug("error in sync-tools: {}".format(out))
+        #     raise MaasInstallError("error in creating bootstrap kvm")
+
+        def get_node_status(output):
+            return json.loads(output)[0]['status']
+
+        # wait until status is 4
+        ok = utils.poll_until_true('maas maas nodes list '
+                                   'id={}'.format(system_id),
+                                   lambda o: get_node_status(o['output']) == 4,
+                                   5)
+        if not ok:
+            log.debug("waiting for status == 4 timed out.")
+            raise MaasInstallError("error in bootstrap node creation")
+
+        # currently do_install calls bootstrap, this is saved for reference:
+        # self.display_controller.info_message("Bootstrapping Juju")
+        # out = utils.get_command_output('juju bootstrap --upload-tools',
+        #                                user_sudo=True)
+        # if out['status'] != 0:
+        #     log.debug("error in juju bootstrap: {}".format(out))
+        #     raise MaasInstallError("error in juju bootstrap")
+
+        # # wait until status is 6 ('ready')
+        # p = lambda o: get_node_status(o['output']) == 6
+        # ok = utils.poll_until_true('maas maas nodes list '
+        #                            'id={}'.format(system_id),
+        #                            p, 5)
+        # if not ok:
+        #     log.debug("waiting for status == 6 timed out.")
+        #     raise MaasInstallError("error in bootstrap node creation")
 
     def detect_existing_dhcp(self, interface):
         """return True if an existing DHCP server is running on interface."""
