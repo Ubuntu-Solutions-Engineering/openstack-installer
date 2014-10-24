@@ -352,7 +352,8 @@ class LandscapeInput(WidgetWrap):
         ])
         lbox.set_focus(0)
         w = LineBox(
-            BoxAdapter(lbox, height=4), title='Enter Landscape Information (ESC)')
+            BoxAdapter(lbox, height=4),
+            title='Enter Landscape Information (ESC)')
         return w
 
     def submit(self, button):
