@@ -146,8 +146,7 @@ class MaasInstallError(Exception):
 
 class MultiInstallNewMaas(MultiInstall):
 
-    LOCAL_MAAS_HOST = 'localhost'
-    LOCAL_MAAS_URL = 'http://{}/MAAS/api/1.0'.format(LOCAL_MAAS_HOST)
+    LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
     def run(self):
         self.prompt_for_interface()
@@ -181,9 +180,6 @@ class MultiInstallNewMaas(MultiInstall):
         self.create_superuser()
         self.apikey = self.get_apikey()
 
-        self.config.save_maas_creds(self.LOCAL_MAAS_HOST,
-                                    self.apikey)
-
         self.login_to_maas(self.apikey)
         cluster_uuid = self.wait_for_registration()
         self.create_maas_bridge(self.target_iface)
@@ -196,6 +192,9 @@ class MultiInstallNewMaas(MultiInstall):
                                        self.dhcp_range)
 
         self.configure_dns()
+
+        self.config.save_maas_creds(self.gateway,
+                                    self.apikey)
 
         if "MAAS_HTTP_PROXY" in os.environ:
             pv = os.environ['MAAS_HTTP_PROXY']
@@ -385,6 +384,7 @@ class MultiInstallNewMaas(MultiInstall):
     def login_to_maas(self, apikey):
         cmd = ("maas login maas {} {}".format(self.LOCAL_MAAS_URL,
                                               apikey))
+
         out = utils.get_command_output(cmd)
         if out['status'] != 0:
             log.debug("failed to login to maas: {}".format(out))
