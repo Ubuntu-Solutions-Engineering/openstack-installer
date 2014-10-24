@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-. /usr/share/cloud-installer/common/includes.sh
+. /usr/share/openstack/common/includes.sh
 
 OPT_HELP=h
 OPT_INSTALL=i
@@ -106,9 +106,9 @@ set -x
 
 disableBlank
 
-mkdir -p /etc/cloud-installer
+mkdir -p /etc/openstack
 
-if [ ! -e /etc/cloud-installer/installed ]; then
+if [ ! -e /etc/openstack/installed ]; then
 	configureInstall
 	if [ $ret -ne 0 ]; then
 		# install cancelled by user
@@ -127,12 +127,12 @@ if [ ! -e /etc/cloud-installer/installed ]; then
 		landscapeInstall
 		;;
 	esac
-	touch /etc/cloud-installer/installed
+	touch /etc/openstack/installed
 else
 	echo "Cloud already installed."
 fi
 if [ -z "$install" ]; then
 	exitInstall
 	sudo -H -u "$INSTALL_USER" juju status >> /dev/null
-	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER" /usr/share/cloud-installer/bin/cloud-status-bootstrapped $enableswift
+	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER" /usr/share/openstack/bin/openstack-status-bootstrapped $enableswift
 fi

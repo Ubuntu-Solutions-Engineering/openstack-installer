@@ -60,7 +60,7 @@ class Config:
     def share_path(self):
         """ base share path
         """
-        return "/usr/share/cloud-installer"
+        return "/usr/share/openstack"
 
     @property
     def tmpl_path(self):

@@ -4,7 +4,7 @@ Single Installer Guide
 Pre-requisites
 ^^^^^^^^^^^^^^
 
-Add the `cloud-installer` ppa to your system.
+Add the Openstack installer ppa to your system.
 
 .. code::
 
@@ -29,11 +29,11 @@ The installer would work best with at least:
 Installation
 ^^^^^^^^^^^^
 
-Install the cloud-installer via `apt-get`
+Install the Openstack installer via `apt-get`
 
 .. code::
 
-   $ sudo apt-get install cloud-installer
+   $ sudo apt-get install openstack
 
 Start the installation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -42,7 +42,7 @@ To start the installation run the following command
 
 .. code::
 
-   $ sudo cloud-install
+   $ sudo openstack-install
 
 .. note::
 
@@ -120,4 +120,4 @@ To uninstall and cleanup your system run the following
 
 .. code::
 
-    $ sudo cloud-install -u
+    $ sudo openstack -u

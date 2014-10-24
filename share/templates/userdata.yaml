@@ -29,7 +29,7 @@ packages:
   - uvtool
   - uvtool-libvirt
   - software-properties-common
-  - cloud-installer
+  - openstack
 {% if extra_pkgs %}
 {% for pkg in extra_pkgs %}
   - {{ pkg }}
