@@ -352,7 +352,7 @@ class LandscapeInput(WidgetWrap):
         ])
         lbox.set_focus(0)
         w = LineBox(
-            BoxAdapter(lbox, height=4),
+            BoxAdapter(lbox, height=7),
             title='Enter Landscape Information (ESC)')
         return w
 
