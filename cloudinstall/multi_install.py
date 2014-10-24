@@ -114,7 +114,7 @@ class MultiInstall:
         out = utils.get_command_output("juju bootstrap",
                                        user_sudo=True)
         if not out['status']:
-            cmd = ['cloud-status']
+            cmd = ['openstack-status']
             if self.opts.enable_swift:
                 cmd.append('--enable-swift')
             out = utils.get_command_output(" ".join(cmd),
