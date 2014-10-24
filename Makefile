@@ -39,8 +39,9 @@ deb-src: clean update_version tarball
 deb: clean update_version tarball
 	@debuild -us -uc -i
 
-sbuild: clean update_version tarball
-	@sbuild -d trusty-amd64 -j4
+# TODO: Disable for now, will be removed in a later release.
+# sbuild: clean update_version tarball
+#	@sbuild -d trusty-amd64 -j4
 
 current_version:
 	@echo $(VERSION)
