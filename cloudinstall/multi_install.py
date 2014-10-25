@@ -141,6 +141,7 @@ class MultiInstallExistingMaas(MultiInstall):
 
 
 class MaasInstallError(Exception):
+
     "An error involving installing a new MAAS"
 
 
@@ -167,7 +168,7 @@ class MultiInstallNewMaas(MultiInstall):
     def continue_with_interface(self):
         check_output('mkdir -p /etc/openstack', shell=True)
         check_output(['cp', '/etc/network/interfaces',
-                     '/etc/openstack/interfaces.cloud.bak'])
+                      '/etc/openstack/interfaces.cloud.bak'])
         check_output(['cp', '-r', '/etc/network/interfaces.d',
                       '/etc/openstack/interfaces.cloud.d.bak'])
 
@@ -263,6 +264,8 @@ class MultiInstallNewMaas(MultiInstall):
             pass
 
     def create_bootstrap_kvm(self):
+        self.display_controller.info_message(
+            "Initializing environment for Juju ...")
         out = utils.get_command_output('usermod -a -G libvirtd maas')
         if out['status'] != 0:
             log.debug("error adding maas user to libvirtd: {}".format(out))
@@ -342,7 +345,7 @@ class MultiInstallNewMaas(MultiInstall):
         #     log.debug("error in juju bootstrap: {}".format(out))
         #     raise MaasInstallError("error in juju bootstrap")
 
-        # # wait until status is 6 ('ready')
+        # wait until status is 6 ('ready')
         # p = lambda o: get_node_status(o['output']) == 6
         # ok = utils.poll_until_true('maas maas nodes list '
         #                            'id={}'.format(system_id),
