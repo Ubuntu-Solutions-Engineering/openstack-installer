@@ -63,6 +63,7 @@ if __name__ == '__main__':
     try:
         sys.exit(core.start())
     except:
+        logger.exception("core.start() raised exception")
         print("There was a problem running the status screen.")
         print("Please check ~/.cloud-install/commands.log")
         sys.exit(1)
