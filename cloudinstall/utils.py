@@ -152,7 +152,11 @@ def poll_until_true(cmd, predicate, frequency, timeout=600,
 
     """
     start_time = time.time()
+    frequency_stub = time.time()
     while True:
+        # continue if frequency not met
+        if time.time() - frequency_stub <= frequency:
+            continue
         try:
             output = get_command_output(cmd)
         except Exception as e:
