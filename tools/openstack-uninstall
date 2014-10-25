@@ -41,6 +41,7 @@ case $WHAT in
     rm -r ~/.maascli.db
 
     apt_purge '.*maas.*'
+    apt_purge 'bind9'
     sudo -u postgres psql -c 'drop database maasdb;'
 
     # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
