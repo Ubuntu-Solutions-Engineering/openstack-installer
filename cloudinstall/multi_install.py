@@ -19,9 +19,9 @@ from ipaddress import ip_address, ip_network
 import json
 import logging
 import os
+import pwd
 import re
 from subprocess import check_output
-import sys
 from tempfile import TemporaryDirectory
 
 from cloudinstall.config import Config
@@ -111,18 +111,28 @@ class MultiInstall:
         self.set_perms()
 
         # Starts the party
-        out = utils.get_command_output("juju bootstrap",
+        out = utils.get_command_output("juju --debug bootstrap",
                                        user_sudo=True)
-        if not out['status']:
-            cmd = ['openstack-status']
-            if self.opts.enable_swift:
-                cmd.append('--enable-swift')
-            out = utils.get_command_output(" ".join(cmd),
-                                           user_sudo=True)
-            sys.exit(out['status'])
-        else:
+        if out['status'] != 0:
             log.debug("failure to bootstrap: '{}'".format(out))
             raise SystemExit("Problem with juju bootstrap.")
+
+        self.drop_privileges()
+
+        args = ['openstack-status']
+        if self.opts.enable_swift:
+            args.append('--enable-swift')
+        os.execvp('openstack-status', args)
+
+    def drop_privileges(self):
+        if os.geteuid() != 0:
+            return
+
+        user_name = os.getenv("SUDO_USER")
+        pwnam = pwd.getpwnam(user_name)
+        os.initgroups(user_name, pwnam.pw_gid)
+        os.setresgid(pwnam.pw_gid)
+        os.setresuid(pwnam.pw_uid)
 
 
 class MultiInstallExistingMaas(MultiInstall):
