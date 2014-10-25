@@ -105,7 +105,7 @@ def get_command_output(command, timeout=300, user_sudo=False):
     :param timeout: (optional) use 'timeout' to limit time. default 300
     :param user_sudo: (optional) sudo into install users env. default False.
     :type command: str
-    :returns: {ret: returncode, stdout: stdout, stderr: stderr)
+    :returns: {status: returncode, output: stdout+stdeer}
     :rtype: dict
 
     .. code::
