@@ -12,7 +12,7 @@ Add the Openstack installer ppa to your system.
 
    $ sudo apt-add-repository ppa:juju/stable
    $ sudo apt-add-repository ppa:maas-maintainers/experimental
-   $ sudo apt-add-repository ppa:cloud-installer/ppa
+   $ sudo apt-add-repository ppa:cloud-installer/experimental
    $ sudo apt-get update
 
 .. note::
@@ -21,8 +21,9 @@ Add the Openstack installer ppa to your system.
    archives has been announced.
 
    Also note that currently we use the **experimental** ppa for MAAS
-   until they do a GA release of version 1.7. The ppa location will
-   be updated to reflect that ppa once MAAS reaches that release.
+   and our installer. The installers release should coincide with
+   the next version of MAAS. Once that occurs the ppa location will
+   be updated to reflect the stable ppa locations.
 
 Installation
 ^^^^^^^^^^^^
