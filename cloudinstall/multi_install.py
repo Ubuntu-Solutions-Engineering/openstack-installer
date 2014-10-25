@@ -117,6 +117,14 @@ class MultiInstall:
             log.debug("failure to bootstrap: '{}'".format(out))
             raise SystemExit("Problem with juju bootstrap.")
 
+        # workaround to avoid connection failure at beginning of
+        # openstack-status
+        out = utils.get_command_output("juju status",
+                                       user_sudo=True)
+        if out['status'] != 0:
+            log.debug("failure to get initial juju status: '{}'".format(out))
+            raise SystemExit("Problem with juju status poke.")
+
         self.drop_privileges()
 
         args = ['openstack-status']
