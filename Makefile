@@ -1,5 +1,5 @@
 #
-# Makefile for cloud-install
+# Makefile for openstack-install
 #
 NAME        = openstack
 TOPDIR      := $(shell basename `pwd`)
@@ -24,7 +24,7 @@ uninstall-dependencies:
 # (or just sudo make uninstall)
 .PHONY: uninstall
 uninstall: uninstall-dependencies
-	sudo tools/cloud-uninstall ${type}
+	sudo tools/openstack-uninstall ${type}
 
 clean:
 	@debian/rules clean
@@ -76,7 +76,7 @@ gooview:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) tools/gooview.py
 
 status:
-	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/cloud-status
+	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/openstack-status
 
 # Indirection to allow 'make run' to build deb automatically, but
 # 'make sbuild; make run' will not invoke 'deb'.
@@ -104,7 +104,7 @@ landscape: ../openstack*.deb
 	apt-get -yy install -f
 	@echo please follow the instructions in
 	@echo "/usr/share/openstack/templates/landscape-deployments.yaml"
-	@echo and then run `sudo cloud-install` as usual
+	@echo and then run `sudo openstack-install` as usual
 
 
 all: deb
