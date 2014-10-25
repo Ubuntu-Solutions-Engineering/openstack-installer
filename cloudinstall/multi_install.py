@@ -608,8 +608,8 @@ class MultiInstallNewMaas(MultiInstall):
                                       if l.startswith('nameserver')])
             nco_file.write(DNS_CONF_TEMPLATE.format(forwarders))
         utils.get_command_output('service bind9 restart')
-        utils.get_command_output("sed -e '/^iface lo inet loopback$/a\\n"
-                                 "#added by openstack-install\\n"
+        utils.get_command_output("sed -e '/^iface lo inet loopback$/a"
+                                 "\\n#added by openstack-install\\n"
                                  "dns-nameservers 127.0.0.1' "
                                  " -i /etc/network/interfaces")
         utils.get_command_output('ifdown lo')
