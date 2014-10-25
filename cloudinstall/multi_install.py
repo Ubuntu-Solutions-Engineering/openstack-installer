@@ -131,8 +131,8 @@ class MultiInstall:
         user_name = os.getenv("SUDO_USER")
         pwnam = pwd.getpwnam(user_name)
         os.initgroups(user_name, pwnam.pw_gid)
-        os.setresgid(pwnam.pw_gid)
-        os.setresuid(pwnam.pw_uid)
+        os.setregid(pwnam.pw_gid, pwnam.pw_gid)
+        os.setreuid(pwnam.pw_uid, pwnam.pw_uid)
 
 
 class MultiInstallExistingMaas(MultiInstall):
