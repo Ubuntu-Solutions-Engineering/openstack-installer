@@ -20,6 +20,7 @@ import time
 import random
 import sys
 import requests
+from contextlib import contextmanager
 from os import getenv, path
 
 from operator import attrgetter
@@ -39,6 +40,31 @@ from multiprocessing import cpu_count
 
 log = logging.getLogger('cloudinstall.core')
 sys.excepthook = utils.global_exchandler
+
+
+@contextmanager
+def dialog_context(view):
+    view.ui.hide_widget_on_top()
+    yield
+    view.redraw_screen()
+
+
+@contextmanager
+def status_context(view, level='debug', msg=None):
+    if msg and level == 'error':
+        log.error(msg)
+    elif msg and level == 'debug':
+        log.debug(msg)
+    elif msg:
+        log.info(msg)
+    yield
+    view.redraw_screen()
+
+
+@contextmanager
+def view_context(view):
+    yield
+    view.redraw_screen()
 
 
 class DisplayController:
@@ -90,56 +116,54 @@ class DisplayController:
 
     # overlays
     def step_info(self, message):
-        self.ui.show_step_info(message)
-        self.redraw_screen()
+        with dialog_context(self):
+            self.ui.show_step_info(message)
 
     def show_password_input(self, title, cb):
-        self.ui.show_password_input(title, cb)
-        self.redraw_screen()
+        with dialog_context(self):
+            self.ui.show_password_input(title, cb)
 
     def show_maas_input(self, cb):
-        self.ui.show_maas_input(cb)
-        self.redraw_screen()
+        with dialog_context(self):
+            self.ui.show_maas_input(cb)
 
     def show_landscape_input(self, cb):
-        self.ui.show_landscape_input(cb)
-        self.redraw_screen()
+        with dialog_context(self):
+            self.ui.show_landscape_input(cb)
 
     def show_selector_info(self, title, install_types, cb):
-        self.ui.show_selector_info(title, install_types, cb)
-        self.redraw_screen()
+        with dialog_context(self):
+            self.ui.show_selector_info(title, install_types, cb)
 
     # - Footer
     def clear_status(self):
         self.ui.clear_status()
-        self.redraw_screen()
 
     def info_message(self, message):
-        log.info(message)
-        self.ui.status_info_message(message)
-        self.redraw_screen()
+        with status_context(self, message):
+            self.ui.status_info_message(message)
 
     def error_message(self, message):
-        log.debug(message)
-        self.ui.status_error_message(message)
-        self.redraw_screen()
+        with status_context(self, 'error', message):
+            self.ui.status_error_message(message)
 
     def set_dashboard_url(self, ip):
-        self.ui.status_dashboard_url(ip)
-        self.redraw_screen()
+        with status_context(self):
+            self.ui.status_dashboard_url(ip)
 
     def set_jujugui_url(self, ip):
-        self.ui.status_jujugui_url(ip)
-        self.redraw_screen()
+        with status_context(self):
+            self.ui.status_jujugui_url(ip)
 
     # - Render
     def render_nodes(self, nodes, juju_state, maas_state):
-        self.ui.render_nodes(nodes, juju_state, maas_state)
-        self.redraw_screen()
+        with view_context(self):
+            self.ui.render_nodes(nodes, juju_state, maas_state)
 
     def render_node_install_wait(self, loop=None, user_data=None):
-        self.ui.render_node_install_wait()
-        self.redraw_screen()
+        with view_context(self):
+            self.ui.render_node_install_wait()
+
         self.node_install_wait_alarm = self.loop.set_alarm_in(
             self.config.node_install_wait_interval,
             self.render_node_install_wait)
