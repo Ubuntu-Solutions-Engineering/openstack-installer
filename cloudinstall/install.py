@@ -209,11 +209,11 @@ class LandscapeInstall:
 
     def _save_lds_creds(self, admin_name, admin_email, system_email,
                         maas_server=None, maas_server_key=None):
-        self.lds_admin_name = admin_name
-        self.lds_admin_email = admin_email
-        self.lds_system_email = system_email
-        self.maas_server = maas_server
-        self.maas_server_key = maas_server_key
+        self.lds_admin_name = admin_name.value
+        self.lds_admin_email = admin_email.value
+        self.lds_system_email = system_email.value
+        self.maas_server = maas_server.value
+        self.maas_server_key = maas_server_key.value
 
         if not self.maas_server:
             self._do_install_new_maas()
@@ -274,8 +274,9 @@ class InstallController(DisplayController):
     def _save_password(self, password=None, confirm_pass=None):
         """ Checks passwords match and proceeds
         """
-        if password and password == confirm_pass:
-            self.config.save_password(password)
+        if password.value and \
+           password.value == confirm_pass.value:
+            self.config.save_password(password.value)
             self.ui.hide_show_password_input()
             self.select_install_type()
         else:
