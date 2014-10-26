@@ -1,7 +1,13 @@
 Ubuntu Openstack Installer
-==================================================
+==========================
 
-`Github project page <https://github.com/ubuntu-solutions-engineering/cloud-installer>`_
+`Github project page <https://github.com/ubuntu-solutions-engineering/openstck>`_
+
+Getting Help
+^^^^^^^^^^^^
+
+We are on IRC, server: irc.freenode.net, channel: #ubuntu-solutions
+
 
 Guides
 ^^^^^^

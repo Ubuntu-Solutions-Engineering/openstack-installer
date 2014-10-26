@@ -37,7 +37,8 @@ class Mock(object):
         else:
             return Mock()
 
-MOCK_MODULES = ['yaml', 'ws4py', 'urwid', 'maasclient', 'macumba']
+MOCK_MODULES = ['yaml', 'ws4py', 'urwid',
+                'maasclient', 'macumba', 'maasclient.auth']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
 
@@ -243,11 +244,17 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
+    ('openstack-install', 'openstack-install',
+     u'Ubuntu Openstack Installer Documentation',
+     [u'Canonical Solutions Engineering'], 1),
+    ('openstack-status', 'openstack-status', u'Ubuntu Openstack Status Documentation',
+     [u'Canonical Solutions Engineering'], 1),
     ('cloud-install', 'cloud-install',
      u'Ubuntu Openstack Installer Documentation',
      [u'Canonical Solutions Engineering'], 1),
     ('cloud-status', 'cloud-status', u'Ubuntu Openstack Status Documentation',
      [u'Canonical Solutions Engineering'], 1)
+
 ]
 
 # If true, show URL addresses after external links.

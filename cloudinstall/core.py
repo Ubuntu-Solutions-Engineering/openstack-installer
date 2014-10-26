@@ -17,12 +17,13 @@
 
 import logging
 import urwid
-import asyncio
 from enum import Enum, unique
 import time
 import random
 import sys
 import requests
+
+from contextlib import contextmanager
 from os import path
 
 from operator import attrgetter
@@ -54,7 +55,33 @@ class ControllerState(Enum):
     SERVICES = 2
 
 
+@contextmanager
+def dialog_context(view):
+    view.ui.hide_widget_on_top()
+    yield
+    view.redraw_screen()
+
+
+@contextmanager
+def status_context(view, level='debug', msg=None):
+    if msg and level == 'error':
+        log.error(msg)
+    elif msg and level == 'debug':
+        log.debug(msg)
+    elif msg:
+        log.info(msg)
+    yield
+    view.redraw_screen()
+
+
+@contextmanager
+def view_context(view):
+    yield
+    view.redraw_screen()
+
+
 class DisplayController:
+
     """ Controller for displaying juju and maas state."""
 
     def __init__(self, ui=None, opts=None):
@@ -82,8 +109,15 @@ class DisplayController:
         log.debug('Authenticated against juju api.')
 
     def authenticate_maas(self):
-        auth = MaasAuth()
-        auth.get_api_key('root')
+        if self.config.maas_creds:
+            api_host = self.config.maas_creds['api_host']
+            api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
+            api_key = self.config.maas_creds['api_key']
+            auth = MaasAuth(api_url=api_url,
+                            api_key=api_key)
+        else:
+            auth = MaasAuth()
+            auth.get_api_key('root')
         self.maas = MaasClient(auth)
         self.maas_state = MaasState(self.maas)
         log.debug('Authenticated against maas api.')
@@ -129,40 +163,59 @@ class DisplayController:
 
     # overlays
     def step_info(self, message):
-        self.ui.show_step_info(message)
-        self.redraw_screen()
+        with dialog_context(self):
+            self.ui.show_step_info(message)
+
+    def show_password_input(self, title, cb):
+        with dialog_context(self):
+            self.ui.show_password_input(title, cb)
+
+    def show_maas_input(self, cb):
+        with dialog_context(self):
+            self.ui.show_maas_input(cb)
+
+    def show_landscape_input(self, cb):
+        with dialog_context(self):
+            self.ui.show_landscape_input(cb)
+
+    def show_selector_info(self, title, install_types, cb):
+        with dialog_context(self):
+            self.ui.show_selector_info(title, install_types, cb)
 
     # - Footer
     def clear_status(self):
         self.ui.clear_status()
-        self.redraw_screen()
 
     def info_message(self, message):
-        log.info(message)
-        self.ui.status_info_message(message)
-        self.redraw_screen()
+        with status_context(self, message):
+            self.ui.status_info_message(message)
 
     def error_message(self, message):
-        log.debug(message)
-        self.ui.status_error_message(message)
-        self.redraw_screen()
+        with status_context(self, 'error', message):
+            self.ui.status_error_message(message)
 
     def set_dashboard_url(self, ip):
-        self.ui.status_dashboard_url(ip)
-        self.redraw_screen()
+        with status_context(self):
+            self.ui.status_dashboard_url(ip)
 
     def set_jujugui_url(self, ip):
-        self.ui.status_jujugui_url(ip)
-        self.redraw_screen()
+        with status_context(self):
+            self.ui.status_jujugui_url(ip)
 
     # - Render
     def render_nodes(self, nodes, juju_state, maas_state):
-        self.ui.render_nodes(nodes, juju_state, maas_state)
-        self.redraw_screen()
+        with view_context(self):
+            self.ui.render_nodes(nodes, juju_state, maas_state)
 
     def render_node_install_wait(self, loop=None, user_data=None):
-        self.ui.render_node_install_wait()
-        self.redraw_screen()
+        with view_context(self):
+            self.ui.render_node_install_wait()
+
+        # TODO MERGE: we don't use this alarm anymore right?
+        # self.node_install_wait_alarm = self.loop.set_alarm_in(
+        #     self.config.node_install_wait_interval,
+        #     self.render_node_install_wait)
+
 
     def render_placement_view(self):
         self.ui.render_placement_view(self,
@@ -171,37 +224,26 @@ class DisplayController:
 
     def redraw_screen(self):
         if hasattr(self, "loop"):
-            if not self.opts.noui:
-                try:
-                    self.loop.draw_screen()
-                except AssertionError as message:
-                    logging.critical(message)
-            else:
-                pass
+            try:
+                self.loop.draw_screen()
+            except AssertionError as message:
+                logging.critical(message)
 
     def exit(self):
-        if not self.opts.noui:
-            raise urwid.ExitMainLoop()
-        else:
-            raise self.loop.stop()
+        raise urwid.ExitMainLoop()
 
     def main_loop(self):
-        if not self.opts.noui:
-            if not hasattr(self, 'loop'):
-                self.loop = urwid.MainLoop(self.ui,
-                                           self.config.STYLES,
-                                           handle_mouse=True,
-                                           unhandled_input=self.header_hotkeys)
-                self.info_message("Welcome ..")
-                self.initialize()
-
-            self.update_alarm()
-            self.loop.run()
-        else:
-            log.debug("Running asyncio event loop for ConsoleUI")
-            self.loop = asyncio.get_event_loop()
+        if not hasattr(self, 'loop'):
+            self.loop = urwid.MainLoop(self.ui,
+                                       self.config.STYLES,
+                                       handle_mouse=True,
+                                       unhandled_input=self.header_hotkeys)
+            self.info_message("Welcome ..")
             self.initialize()
-            self.loop.run_forever()
+
+        self.render_node_install_wait()
+        self.update_alarm()
+        self.loop.run()
 
     def start(self):
         """ Starts controller processing """
@@ -274,6 +316,7 @@ class DisplayController:
 
 
 class Controller(DisplayController):
+
     """ Controller for Juju deployments and Maas machine init """
 
     def __init__(self, **kwds):
@@ -471,6 +514,10 @@ class Controller(DisplayController):
                     if c not in self.deployed_charm_classes]
 
         while len(undeployed_charm_classes()) > 0:
+            pending_names = [c.display_name for c in
+                             undeployed_charm_classes()]
+            self.ui.set_pending_deploys(pending_names)
+
             for charm_class in undeployed_charm_classes():
                 self.info_message("Checking if {c} is deployed".format(
                     c=charm_class.display_name))
@@ -496,6 +543,9 @@ class Controller(DisplayController):
                     self.deployed_charm_classes.append(charm_class)
 
                 self.juju_state.invalidate_status_cache()
+                pending_names = [c.display_name for c in
+                                 undeployed_charm_classes()]
+                self.ui.set_pending_deploys(pending_names)
 
             num_remaining = len(undeployed_charm_classes())
             if num_remaining > 0:

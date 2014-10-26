@@ -17,6 +17,8 @@
 
 import os
 import yaml
+import json
+from cloudinstall import utils
 
 
 class ConfigException(Exception):
@@ -25,22 +27,17 @@ class ConfigException(Exception):
 
 class Config:
     STYLES = [
-        ('body',         'white',      'black',),
-        ('header_menu',       'light gray',      'dark gray'),
+        ('body', 'white', 'black'),
+        ('header_menu', 'light gray', 'dark gray'),
         ('header_title', 'light gray,bold', 'dark magenta'),
         ('subheading', 'dark gray,bold', 'default'),
-        ('focus',        'white',      'dark gray'),
-        ('dialog',       'black',      'light gray'),
-        ('status_extra',   'light gray,bold',      'dark gray',),
-        ('error',        'white',      'dark red'),
-        ('info', 'light green', 'default'),
-        ('label', 'dark gray', 'default'),
-        ('error_icon',    'light red,bold',      'default'),
-        ('pending_icon_on',    'light blue,bold',      'default'),
-        ('pending_icon',    'dark blue',      'default'),
-        ('success_icon',    'light green',      'default'),
-        ('button', 'dark blue', 'light gray'),
-        ('button_focus', 'light gray', 'dark gray'),
+        # TODO MERGE: item marked 'from head' are changed in master vs
+        # head and need to be reviewed. the uncommented versions of
+        # these three are as they were in master, below
+
+        # from head: ('dialog',       'black',      'light gray'),
+        # from head: ('button', 'dark blue', 'light gray'),
+        # from head: ('button_focus', 'light gray', 'dark gray'),
         ('deploy_highlight_start', 'dark gray', 'light green'),
         ('deploy_highlight_end', 'dark gray', 'dark green'),
         ('disabled_button', 'light gray', 'white'),
@@ -48,6 +45,21 @@ class Config:
         ('divider_line', 'light gray', 'default'),
         ('filter', 'dark gray,underline', 'white'),
         ('filter_focus', 'dark gray,underline', 'light gray')
+        ('focus', 'white', 'dark gray'),
+        ('radio focus', 'white,bold', 'dark magenta'),
+        ('input', 'white', 'dark gray'),
+        ('input focus', 'dark magenta,bold', 'dark gray'),
+        ('dialog', 'white', 'dark gray'),
+        ('status_extra', 'light gray,bold', 'dark gray'),
+        ('error', 'white', 'dark red'),
+        ('info', 'light green', 'default'),
+        ('label', 'dark gray', 'default'),
+        ('error_icon', 'light red,bold', 'default'),
+        ('pending_icon_on', 'light blue,bold', 'default'),
+        ('pending_icon', 'dark blue', 'default'),
+        ('success_icon', 'light green', 'default'),
+        ('button', 'white', 'dark gray'),
+        ('button focus', 'dark magenta,bold', 'dark gray')
     ]
 
     def __init__(self):
@@ -55,14 +67,31 @@ class Config:
         self.node_install_wait_interval = 0.2
 
     @property
+    def install_types(self):
+        """ Installer types
+        """
+        return ['Single', 'Multi', 'Multi with existing MAAS', 'Landscape']
+
+    @property
+    def share_path(self):
+        """ base share path
+        """
+        return "/usr/share/openstack"
+
+    @property
     def tmpl_path(self):
         """ template path """
-        return "/usr/share/cloud-installer/templates"
+        return os.path.join(self.share_path, "templates")
 
     @property
     def cfg_path(self):
         """ top level configuration path """
-        return os.path.expanduser('~/.cloud-install')
+        return os.path.join(utils.install_home(), '.cloud-install')
+
+    @property
+    def bin_path(self):
+        """ scripts located in non-default system path """
+        return os.path.join(self.share_path, "bin")
 
     @property
     def placements_filename(self):
@@ -70,11 +99,15 @@ class Config:
 
     @property
     def is_single(self):
-        return os.path.exists(os.path.expanduser('~/.cloud-install/single'))
+        return os.path.exists(os.path.join(self.cfg_path, 'single'))
 
     @property
     def is_multi(self):
-        return os.path.exists(os.path.expanduser('~/.cloud-install/multi'))
+        return os.path.exists(os.path.join(self.cfg_path, 'multi'))
+
+    @property
+    def juju_path(self):
+        return os.path.join(utils.install_home(), '.juju')
 
     @property
     def juju_env(self):
@@ -90,7 +123,8 @@ class Config:
             env_file = 'maas.jenv'
 
         if env_file:
-            env_path = os.path.join(os.path.expanduser('~/.juju/environments'),
+            env_path = os.path.join(utils.install_home(),
+                                    '.juju/environments',
                                     env_file)
         else:
             raise ConfigException('Unable to determine installer type.')
@@ -102,9 +136,15 @@ class Config:
         raise ConfigException('Unable to load environments file. Is '
                               'juju bootstrapped?')
 
+    @property
+    def juju_environments_path(self):
+        """ returns absolute path of juju environments.yaml """
+        return os.path.join(self.juju_path, 'environments.yaml')
+
     def update_environments_yaml(self, key, val, provider='local'):
         """ updates environments.yaml base file """
-        _env_yaml = os.path.expanduser("~/.juju/environments.yaml")
+        _env_yaml = os.path.join(utils.install_home(),
+                                 ".juju/environments.yaml")
         if os.path.exists(_env_yaml):
             with open(_env_yaml) as f:
                 _env_yaml_raw = f.read()
@@ -126,8 +166,34 @@ class Config:
     def openstack_password(self):
         PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
         try:
-            with open(PASSWORD_FILE) as f:
-                _password = f.read().strip()
+            _password = utils.slurp(PASSWORD_FILE)
         except IOError:
             _password = 'password'
         return _password
+
+    def save_password(self, password):
+        PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
+        utils.spew(PASSWORD_FILE, password)
+
+    def save_maas_creds(self, api_host, api_key):
+        """ Saves maas credentials for re-use
+
+        :param str api_host: ip of maas server
+        :param str api_key: api key of maas admin user
+        """
+        if api_host.startswith("http://"):
+            raise ConfigException("save_maas_creds expects an ip, not a url")
+        MAAS_CREDS_FILE = os.path.join(self.cfg_path, 'maascreds')
+        utils.spew(MAAS_CREDS_FILE, json.dumps(dict(api_host=api_host,
+                                                    api_key=api_key)))
+
+    @property
+    def maas_creds(self):
+        """ reads maascreds file
+        """
+        MAAS_CREDS_FILE = os.path.join(self.cfg_path, 'maascreds')
+        try:
+            _maascreds = json.loads(utils.slurp(MAAS_CREDS_FILE))
+        except IOError:
+            _maascreds = dict()
+        return _maascreds

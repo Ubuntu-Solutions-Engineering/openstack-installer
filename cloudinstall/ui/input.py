@@ -1,6 +1,3 @@
-#
-# __init__.py - init
-#
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,6 +13,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Ubuntu Openstack Installer """
+""" re-usable input widgets """
 
-__version__ = "0.21"
+from urwid import (Edit, WidgetWrap)
+
+import logging
+
+log = logging.getLogger('cloudinstall.ui.input')
+
+
+class EditInput(WidgetWrap):
+
+    """ Edit input class
+
+    Initializes an Edit object and attaches its result to
+    the `value` accessor.
+    """
+
+    def __init__(self, caption, **kwargs):
+        self._edit = Edit(caption=caption, **kwargs)
+        super().__init__(self._edit)
+
+    @property
+    def value(self):
+        """ Returns text of input
+        """
+        return self._edit.get_edit_text()

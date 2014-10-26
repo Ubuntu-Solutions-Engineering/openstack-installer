@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+echo Ubuntu Openstack Installer Uninstalling ...
+echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 if [ "$#" -eq 1 ] && [ $1 != '-u' ]; then
   WHAT=$1
 elif [ "$#" -eq 2 ]; then
@@ -37,31 +41,31 @@ case $WHAT in
     rm -r ~/.maascli.db
 
     apt_purge '.*maas.*'
+    apt_purge 'bind9'
     sudo -u postgres psql -c 'drop database maasdb;'
 
     # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
     # so we kill it explicitly.
     sudo killall -u maas twistd
 
-    lxc-stop -n juju-bootstrap
-    lxc-destroy -n juju-bootstrap
-
-    # start lxcbr0 again
-    sed -e 's/^USE_LXC_BRIDGE="false"/USE_LXC_BRIDGE="true"/' -i \
-      /etc/default/lxc-net
-    service lxc-net start
+    virsh destroy juju-bootstrap
+    virsh undefine juju-bootstrap
 
     # clean up the networking
-    interface=$(cat /etc/cloud-installer/interface)
+    interface=$(cat /etc/openstack/interface)
     ifconfig br0 down
     brctl delbr br0
     if [ -n "$interface" ]; then
         ifdown $interface
     fi
 
-    cp /etc/cloud-installer/interfaces.cloud.bak /etc/network/interfaces
-    cp -r /etc/cloud-installer/interfaces.cloud.d.bak/* /etc/network/interfaces.d
-    rm /etc/network/interfaces.d/cloud-install.cfg
+    cp /etc/openstack/interfaces.cloud.bak /etc/network/interfaces
+    cp -r /etc/openstack/interfaces.cloud.d.bak/* /etc/network/interfaces.d
+    rm /etc/network/interfaces.d/openstack.cfg
+
+    # iptables rule
+    cp /etc/network/iptables.rules /etc/network/iptables.rules.bak
+    rm /etc/network/iptables.rules
 
     if [ -n "$interface" ]; then
         ifup $interface
@@ -72,13 +76,15 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Single install cleansing.
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    juju destroy-environment --yes --force local
+    lxc-stop -n uoi-bootstrap
+    lxc-destroy -n uoi-bootstrap
+
     ;;
   *)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Please run with either single-system or multi-system as an argument.
     echo Example:
-    echo   sudo cloud-install -u single-system
+    echo   sudo openstack-install -u single-system
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     exit 1
     ;;
@@ -89,7 +95,11 @@ apt_purge '.*juju.*'
 apt_purge cloud-install-single
 apt_purge cloud-install-multi
 apt_purge cloud-install-landscape
-apt_purge cloud-installer
+apt_purge openstack
+apt_purge openstack-single
+apt_purge openstack-multi
+apt_purge openstack-landscape
+
 
 # Remove any extra packages that aren't needed after purging.
 apt-get -yy autoremove
@@ -105,4 +115,4 @@ fi
 
 # FIXME: Probably shouldnt blindly remove known_hosts
 rm -rf ~/.juju ~/.cloud-install ~/.ssh/known_hosts || true
-rm -rf /etc/cloud-installer || true
+rm -rf /etc/openstack || true

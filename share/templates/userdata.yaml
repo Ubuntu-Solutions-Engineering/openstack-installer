@@ -1,0 +1,69 @@
+#cloud-config
+
+{% if not network_interface %}
+{% set network_interface = 'eth0' %}
+{% endif %}
+
+{% if not bridge_network_interface %}
+{% set bridge_network_interface = 'lxcbr0' %}
+{% endif %}
+
+write_files:
+  - content: |
+      auto {{ network_interface }}
+      iface {{ network_interface }} inet manual
+      auto {{ bridge_network_interface }}
+      iface {{ bridge_network_interface }} inet dhcp
+          bridge_ports {{ network_interface }}
+    path: /etc/network/interfaces.d/bridge.cfg
+  - content: |
+      #!/bin/sh
+      mkdir -p /dev/net || true
+      mknod /dev/kvm c 10 232
+      mknod /dev/net/tun c 10 200
+      exit 0
+    path: /etc/rc.local
+    permissions: '0755'
+packages:
+  - libvirt-bin
+  - uvtool
+  - uvtool-libvirt
+  - software-properties-common
+  - openstack
+{% if extra_pkgs %}
+{% for pkg in extra_pkgs %}
+  - {{ pkg }}
+{% endfor %}
+{% endif %}
+groups:
+  - libvirtd: [ubuntu]
+  - sudo: [ubuntu]
+apt_sources:
+  - source: "ppa:cloud-installer/experimental"
+  - source: "ppa:juju/stable"
+{% if extra_ppa %}
+{% for ppa in extra_ppa %}
+  - {{ ppa }}
+{% endfor %}
+{% endif %}
+{% if extra_sshkeys %}
+ssh_authorized_keys:
+{% for ssh in extra_sshkeys %}
+  - {{ ssh }}
+{% endfor %}
+{% endif %}
+
+package_update: true
+password: ubuntu
+chpasswd: { expire: False }
+ssh_pwauth: True
+
+bootcmd:
+  - rm /etc/network/interfaces.d/{{ network_interface }}.cfg
+  - ifdown {{ network_interface }}
+  - ifup {{ bridge_network_interface }} {{ network_interface }}
+
+# Make sure we load our modules on first creation
+runcmd:
+  - [ sh, /etc/rc.local ]
+  - echo "export PATH=$PATH:/usr/sbin" >> /home/ubuntu/.bashrc

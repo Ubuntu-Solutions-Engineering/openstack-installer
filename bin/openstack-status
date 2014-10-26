@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- mode: python; -*-
 #
-# cloud-status - Displays status of all managed nodes
-#
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,12 +22,16 @@ import os
 import signal
 import sys
 
+# Handle imports where the path is not automatically updated during install.
+# This really only happens when a binary is not in the usual /usr/bin location
+lib_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, lib_dir)
 
 from cloudinstall.gui import PegasusGUI
-from cloudinstall.console import Console
 from cloudinstall.core import Controller
 from cloudinstall import utils
 from cloudinstall import log
+from cloudinstall.config import Config
 
 
 def sig_handler(signum, frame):
@@ -46,26 +48,33 @@ def parse_options(*args, **kwds):
     parser.add_argument('--enable-swift', action='store_true',
                         dest='enable_swift', default=False,
                         help='Enable swift storage')
-    parser.add_argument('--no-ui', action='store_true',
-                        dest='noui', default=False,
-                        help='Perform installation without UI.')
     parser.add_argument('--placement', action='store_true',
                         dest='edit_placement', default=False,
                         help='Start on machine placement view, do not deploy')
     return parser.parse_args()
 
 if __name__ == '__main__':
+    config = Config()
     log.setup_logger()
     logger = logging.getLogger('cloudinstall')
-    logger.info("cloud-status starting")
-    if not os.path.exists('/etc/cloud-installer'):
+    logger.info("openstack-status starting")
+    if not os.path.exists('/etc/openstack') and \
+       not config.is_single:
         print("It looks like you don't have a cloud installed.")
         print("Plese run `sudo cloud-install` and then cloud-status")
         sys.exit(1)
     opts = parse_options(sys.argv)
-    if opts.noui:
-        gui = Console()
-    else:
-        gui = PegasusGUI()
+    # Run openstack-status within container on single installs
+    if config.is_single:
+        logger.info("Running status within container")
+        utils.container_run_status('uoi-bootstrap', 'openstack-status')
+    gui = PegasusGUI()
     core = Controller(ui=gui, opts=opts)
-    sys.exit(core.start())
+    try:
+        sys.exit(core.start())
+    except Exception as e:
+        logger.exception("core.start() raised exception")
+        print("There was a problem running the status screen.")
+        print("Please check ~/.cloud-install/commands.log")
+        print("Error: {}".format(e))
+        sys.exit(1)

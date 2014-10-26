@@ -36,7 +36,11 @@ from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
 from cloudinstall import utils
 from cloudinstall.status import get_sync_status
 from cloudinstall.ui import (ScrollableWidgetWrap,
-                             ScrollableListBox)
+                             ScrollableListBox,
+                             Selector,
+                             PasswordInput,
+                             MaasServerInput,
+                             LandscapeInput)
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.placement.ui import PlacementView
 
@@ -46,7 +50,7 @@ sys.excepthook = utils.global_exchandler
 TITLE_TEXT = "Ubuntu Openstack Installer - Dashboard"
 
 # - Properties ----------------------------------------------------------------
-IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['stdout'])
+IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['output'])
 
 # Time to lock in seconds
 LOCK_TIME = 120
@@ -55,6 +59,7 @@ padding = functools.partial(Padding, left=2, right=2)
 
 
 class AddCharmDialog(WidgetWrap):
+
     """ Adding charm dialog
 
     :param list charms: list of charms that can be added
@@ -104,7 +109,7 @@ class AddCharmDialog(WidgetWrap):
         return LineBox(
             BoxAdapter(
                 ListBox([charm_sel, Divider(), buttons]),
-                height=num_of_items+2),
+                height=num_of_items + 2),
             title="Add unit")
 
     def _insert_charm_selections(self):
@@ -139,12 +144,13 @@ class AddCharmDialog(WidgetWrap):
 
     def _wrap_focus(self, widgets, unfocused=None):
         try:
-            return [AttrWrap(w, "focus") for w in widgets]
+            return [AttrWrap(w, "focus", 'radio focus') for w in widgets]
         except TypeError:
-            return AttrWrap(widgets, "focus")
+            return AttrWrap(widgets, "focus", 'radio focus')
 
 
 class Banner(ScrollableWidgetWrap):
+
     def __init__(self):
         self.text = []
 
@@ -172,6 +178,7 @@ class Banner(ScrollableWidgetWrap):
 
 
 class NodeInstallWaitMode(ScrollableWidgetWrap):
+
     def __init__(self):
         super().__init__(self._build_node_waiting())
 
@@ -209,7 +216,7 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
         loading_boxes.append(('weight', 1, Text('')))
         for i in load_box:
             loading_boxes.append(('pack',
-                                 load_box[random.randrange(len(load_box))]))
+                                  load_box[random.randrange(len(load_box))]))
         loading_boxes.append(('weight', 1, Text('')))
         loading_boxes = Columns(loading_boxes)
 
@@ -217,6 +224,7 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
 
 
 class NodeViewMode(ScrollableWidgetWrap):
+
     def __init__(self, nodes, juju_state, maas_state, **kwargs):
         nodes = [] if nodes is None else nodes
         self.juju_state = juju_state
@@ -385,6 +393,7 @@ class NodeViewMode(ScrollableWidgetWrap):
 
 
 class Header(WidgetWrap):
+
     def __init__(self):
         self.title_widget = AttrWrap(padding(Text(TITLE_TEXT)),
                                      "header_title")
@@ -408,7 +417,21 @@ class Header(WidgetWrap):
         self.pile.contents[1] = (tw, self.pile.options())
 
 
+class InstallHeader(WidgetWrap):
+
+    def __init__(self):
+        w = []
+        w.append(AttrWrap(padding(
+            Text("Ubuntu Openstack Installer - Software Installation")),
+            "header_title"))
+        w.append(AttrWrap(Text(
+            '(R)efresh \N{BULLET} (Q)uit', align='center'), "header_menu"))
+        w = Pile(w)
+        super().__init__(w)
+
+
 class StatusBar(WidgetWrap):
+
     """Displays text."""
 
     INFO = "[INFO]"
@@ -416,12 +439,14 @@ class StatusBar(WidgetWrap):
     ARROW = " \u21e8 "
 
     def __init__(self, text=''):
+        self._pending_deploys = Text('')
         self._status_line = Text(text)
         self._horizon_url = Text('')
         self._jujugui_url = Text('')
         self._openstack_rel = Text('Icehouse (2014.1.1)')
         self._status_extra = self._build_status_extra()
-        status = Pile([self._status_line, self._status_extra])
+        status = Pile([self._pending_deploys,
+                       self._status_line, self._status_extra])
         super().__init__(status)
 
     def _build_status_extra(self):
@@ -460,12 +485,20 @@ class StatusBar(WidgetWrap):
         self.message([('info', self.INFO),
                       ('default', self.ARROW + text)])
 
+    def set_pending_deploys(self, pending_deploys):
+        if len(pending_deploys) > 0:
+            msg = "Pending deploys: " + ", ".join(pending_deploys)
+            self._pending_deploys.set_text(msg)
+        else:
+            self._pending_deploys.set_text('')
+
     def clear(self):
         """Clear the text."""
         self._w.set_text('')
 
 
 class StepInfo(WidgetWrap):
+
     def __init__(self, msg=None):
         if not msg:
             msg = "Processing."
@@ -491,12 +524,11 @@ def _check_encoding():
 
 
 class PegasusGUI(WidgetWrap):
-
-    def __init__(self):
+    def __init__(self, header=None, body=None, footer=None):
         _check_encoding()  # Make sure terminal supports utf8
-        self.header = Header()
-        self.body = Banner()
-        self.footer = StatusBar('')
+        header = header if header else Header()
+        body = body if body else Banner()
+        footer = footer if footer else StatusBar('')
 
         self.frame = Frame(self.body,
                            header=self.header,
@@ -573,12 +605,43 @@ class PegasusGUI(WidgetWrap):
     def hide_step_info(self):
         self.hide_widget_on_top()
 
+    def show_selector_info(self, title, opts, cb):
+        widget = Selector(title, opts, cb)
+        self.show_widget_on_top(widget, width=50, height=10)
+
+    def hide_selector_info(self):
+        self.hide_widget_on_top()
+
+    def show_password_input(self, title, cb):
+        widget = PasswordInput(title, cb)
+        self.show_widget_on_top(widget, width=50, height=10)
+
+    def hide_show_password_input(self):
+        self.hide_widget_on_top()
+
+    def show_maas_input(self, cb):
+        widget = MaasServerInput(cb)
+        self.show_widget_on_top(widget, width=50, height=10)
+
+    def hide_show_maas_input(self):
+        self.hide_widget_on_top()
+
+    def show_landscape_input(self, cb):
+        widget = LandscapeInput(cb)
+        self.show_widget_on_top(widget, width=50, height=10)
+
+    def hide_show_landscape_input(self):
+        self.hide_widget_on_top()
+
     def show_add_charm_info(self, charms, cb):
         widget = AddCharmDialog(charms, cb)
         self.show_widget_on_top(widget, width=50, height=10)
 
     def hide_add_charm_info(self):
         self.hide_widget_on_top()
+
+    def set_pending_deploys(self, pending_charms):
+        self.frame.footer.set_pending_deploys(pending_charms)
 
     def status_message(self, text):
         self.frame.footer.message(text)

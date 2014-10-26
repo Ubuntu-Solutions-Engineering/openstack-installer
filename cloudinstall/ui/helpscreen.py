@@ -22,6 +22,7 @@ from cloudinstall.ui import ScrollableListBox, ScrollableWidgetWrap
 
 
 class HelpScreen(ScrollableWidgetWrap):
+
     def __init__(self):
         self.text = []
         self.HELP_TEXT = [
@@ -39,15 +40,12 @@ The header shows a few common command keys for quick reference.
 - Main Table
 
 The main table has a row for each Juju service in the current
-environment. It is updated every ten seconds. The first column shows
-the name of the service, and the remaining columns show an entry for
-each unit in the following form:
+environment. It is updated every ten seconds. Each row will contain
+a status icon indicator, agent state, ip address, machine type, and
+hardware specifications.
 
-servicename/unitnumber (status)
-address: unit IP address
-
-There may also be a "machine info" field with information in the event
-of provisioning errors.
+There may also be an additional status field with information in the event
+of provisioning errors or additional status notifications.
 
 - Footer
 

@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import Popen, PIPE, DEVNULL, call, STDOUT
+from subprocess import (Popen, PIPE, call, STDOUT, check_output,
+                        CalledProcessError)
 from contextlib import contextmanager
+from collections import deque
+from jinja2 import Environment, FileSystemLoader
 import os
 import re
 import string
@@ -27,10 +30,13 @@ import logging
 import traceback
 from threading import Thread
 from functools import wraps
-from time import strftime
+import time
 from importlib import import_module
 import pkgutil
 import sys
+import errno
+import shlex
+import shutil
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -45,11 +51,16 @@ def global_exchandler(type, value, tb):
 
 
 class ExceptionLoggingThread(Thread):
+
     def run(self):
         try:
             super().run()
         except Exception:
             global_exchandler(*sys.exc_info())
+
+
+class UtilsException(Exception):
+    pass
 
 
 def load_charms():
@@ -71,6 +82,30 @@ def load_charm_byname(name):
     return import_module('cloudinstall.charms.{}'.format(name))
 
 
+def chown(path, user, group, recursive=False):
+    """
+    Change user/group ownership of file
+
+    :param path: path of file or directory
+    :param str user: new owner username
+    :param str group: new owner group name
+    :param bool recursive: set files/dirs recursively
+
+    """
+    try:
+        if not recursive or os.path.isfile(path):
+            shutil.chown(path, user, group)
+        else:
+            for root, dirs, files in os.walk(path):
+                shutil.chown(root, user, group)
+                for item in dirs:
+                    shutil.chown(os.path.join(root, item), user, group)
+                for item in files:
+                    shutil.chown(os.path.join(root, item), user, group)
+    except OSError as e:
+        raise UtilsException(e)
+
+
 def async(func):
     """
     Decorator for executing a function in a separate thread.
@@ -83,14 +118,14 @@ def async(func):
     return wrapper
 
 
-def get_command_output(command, timeout=300, combine_output=True):
+def get_command_output(command, timeout=300, user_sudo=False):
     """ Execute command through system shell
 
     :param command: command to run
     :param timeout: (optional) use 'timeout' to limit time. default 300
-    :param combine_output: (optional) combine stderr and stdout. default True.
+    :param user_sudo: (optional) sudo into install users env. default False.
     :type command: str
-    :returns: {ret: returncode, stdout: stdout, stderr: stderr)
+    :returns: {status: returncode, output: stdout+stdeer}
     :rtype: dict
 
     .. code::
@@ -104,20 +139,55 @@ def get_command_output(command, timeout=300, combine_output=True):
     if timeout:
         command = "timeout %ds %s" % (timeout, command)
 
-    if combine_output:
-        stderr_dest = STDOUT
-    else:
-        stderr_dest = PIPE
+    if user_sudo:
+        command = "sudo -H -u {0} {1}".format(install_user(), command)
 
-    p = Popen(command, shell=True,
-              stdout=PIPE, stderr=stderr_dest,
-              bufsize=-1, env=cmd_env, close_fds=True)
+    try:
+        p = Popen(command, shell=True,
+                  stdout=PIPE, stderr=STDOUT,
+                  bufsize=-1, env=cmd_env, close_fds=True)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            return dict(ret=127, output="")
+        else:
+            raise e
     stdout, stderr = p.communicate()
-    if stderr:
-        stderr = stderr.decode('utf-8')
-    return dict(ret=p.returncode,
-                stdout=stdout.decode('utf-8'),
-                stderr=stderr)
+    if p.returncode == 126 or p.returncode == 127:
+        stdout = bytes()
+    return dict(status=p.returncode,
+                output=stdout.decode('utf-8'))
+
+
+def poll_until_true(cmd, predicate, frequency, timeout=600,
+                    ignore_exceptions=False):
+    """run get_command_output(cmd) every frequency seconds, until
+    predicate(output) returns True. Timeout after timeout seconds.
+
+    returns True if call eventually succeeded, or False if timeout was
+    reached.
+
+    Exceptions raised during get_command_output are handled as per
+    ignore_exceptions. If True, they are just logged. If False, they
+    are re-raised.
+
+    """
+    start_time = time.time()
+    frequency_stub = time.time()
+    while True:
+        # continue if frequency not met
+        if time.time() - frequency_stub <= frequency:
+            continue
+        try:
+            output = get_command_output(cmd)
+        except Exception as e:
+            if not ignore_exceptions:
+                raise e
+            else:
+                log.debug("**Ignoring** exception: {}".format(e))
+        if predicate(output):
+            return True
+        if time.time() - start_time >= timeout:
+            return False
 
 
 def remote_cp(machine_id, src, dst):
@@ -142,46 +212,6 @@ def remote_run(machine_id, cmds):
     return ret
 
 
-def get_network_interface(iface):
-    """ Get network interface properties
-
-    :param iface: Interface to query (ex. eth0)
-    :type iface: str
-    :return: interface properties or empty if none
-    :rtype: dict
-
-    .. code::
-
-        # Get address, broadcast, and netmask of eth0
-        iface = utils.get_network_interface('eth0')
-    """
-    cmd = get_command_output('ifconfig %s' % (iface,))
-    line = cmd['stdout'].split('\n')[1:2][0].lstrip()
-    regex = re.compile('^inet addr:([0-9]+(?:\.[0-9]+){3})\s+'
-                       'Bcast:([0-9]+(?:\.[0-9]+){3})\s+'
-                       'Mask:([0-9]+(?:\.[0-9]+){3})')
-    match = re.match(regex, line)
-    if match:
-        return {'address': match.group(1),
-                'broadcast': match.group(2),
-                'netmask': match.group(3)}
-    return {}
-
-
-def get_network_interfaces():
-    """ Get network interfaces
-
-    :returns: available interfaces and their properties
-    :rtype: generator
-    """
-    cmd = get_command_output('ifconfig -s')
-    _ifconfig = cmd['sdout'].split('\n')[1:-1]
-    for i in _ifconfig:
-        name = i.split(' ')[0]
-        if 'lo' not in name:
-            yield {name: get_network_interface(name)}
-
-
 def get_host_mem():
     """ Get host memory
 
@@ -189,7 +219,7 @@ def get_host_mem():
     the normal means in Machine()
     """
     cmd = get_command_output('head -n1 /proc/meminfo')
-    out = cmd['stdout'].rstrip()
+    out = cmd['output'].rstrip()
     regex = re.compile('^MemTotal:\s+(\d+)\skB')
     match = re.match(regex, out)
     if match:
@@ -208,8 +238,8 @@ def get_host_storage():
     cmd = get_command_output('df -B G --total -l --output=avail'
                              ' -x devtmpfs -x tmpfs | tail -n 1'
                              ' | tr -d "G"')
-    if not cmd['ret']:
-        return cmd['stdout'].lstrip()
+    if not cmd['status']:
+        return cmd['output'].lstrip()
     else:
         return 0
 
@@ -221,8 +251,8 @@ def get_host_cpu_cores():
     Machine()
     """
     cmd = get_command_output('nproc')
-    if cmd['stdout']:
-        return cmd['stdout'].strip()
+    if cmd['output']:
+        return cmd['output'].strip()
     else:
         return 'N/A'
 
@@ -253,7 +283,7 @@ def partition(pred, iterable):
 
 # TODO: replace with check_output()
 def _run(cmd):
-    return Popen(cmd.split(), stdout=PIPE, stderr=DEVNULL).communicate()[0]
+    return Popen(cmd.split(), stdout=PIPE, stderr=STDOUT).communicate()[0]
 
 
 def reset_blanking():
@@ -268,14 +298,14 @@ def console_blank():
     try:
         with open('/sys/module/kernel/parameters/consoleblank') as f:
             blank_len = f.read()
-    except (IOError, FileNotFoundError):
+    except (IOError, FileNotFoundError):  # NOQA
         blank_len = None
     else:
         # Cannot use anything that captures stdout, because it is needed
         # by the setterm command to write to the console.
         call(('setterm', '-blank', '0'))
         # Convert the interval from seconds to minutes.
-        blank_len = str(int(blank_len)//60)
+        blank_len = str(int(blank_len) // 60)
 
     yield
 
@@ -296,13 +326,22 @@ def randomString(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
 
-def time():
+def random_password(size=32):
+    """ Generate a password
+
+    :param int size: length of password
+    """
+    out = get_command_output("pwgen -s {}".format(size))
+    return out['output'].strip()
+
+
+def time_string():
     """ Time helper
 
     :returns: formatted current time string
     :rtype: str
     """
-    return strftime('%Y-%m-%d %H:%M')
+    return time.strftime('%Y-%m-%d %H:%M')
 
 
 def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
@@ -331,10 +370,12 @@ def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
 def container_ip(name):
     """ gets container ip of named container
     """
-    out = get_command_output('cat /var/lib/misc/*.leases '
-                             '| grep --word-regexp {0}'.format(name))
-    line = out['stdout'].split()[-3]
-    return line
+    for filename in find('*.leases', '/var/lib/misc'):
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                if name in line:
+                    return line.split()[-3]
+    return None
 
 
 def container_run(name, cmd):
@@ -344,10 +385,217 @@ def container_run(name, cmd):
     :param str cmd: command to run
     """
     ip = container_ip(name)
-    out = get_command_output("SSHPASS=ubuntu sshpass -e ssh {0} "
-                             "-l ubuntu -o \"StrictHostKeyChecking no\" "
-                             "{1}".format(ip, cmd))
-    return out
+    cmd = "sudo -H -u {3} TERM=xterm256-color ssh -t -q " \
+          "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
+          "-o \"UserKnownHostsFile=/dev/null\" " \
+          "-i {2} " \
+          "{0} {1}".format(ip, cmd, ssh_privkey(), install_user())
+    log.debug("Running in container: {0}".format(cmd))
+    # ret = os.system("{0} >>/dev/null".format(cmd))
+    try:
+        ret = check_output(cmd, stderr=STDOUT, shell=True)
+        log.debug(ret)
+    except CalledProcessError as e:
+        raise SystemExit("There was a problem running ({0}) in the container "
+                         "({1}:{2}) Error: {3}".format(cmd, name, ip, e))
+
+
+def container_run_status(name, cmd):
+    """ Runs cloud-status in container
+    """
+    ip = container_ip(name)
+    cmd = "sudo -H -u {2} TERM=xterm256-color ssh -t -q " \
+          "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
+          "-o \"UserKnownHostsFile=/dev/null\" " \
+          "-i {1} " \
+          "{0} {3}".format(ip, ssh_privkey(), install_user(), cmd)
+    log.debug("Running command without waiting for response.")
+    args = deque(shlex.split(cmd))
+    os.execlp(args.popleft(), *args)
+
+
+def container_cp(name, filepath, dst):
+    """ copy file to container
+
+    :param str name: name of container
+    :param str filepath: file to copy to cintainer
+    :param str dst: destination of remote path
+    """
+    ip = container_ip(name)
+    cmd = "scp -r -q " \
+          "-o \"StrictHostKeyChecking=no\" " \
+          "-o \"UserKnownHostsFile=/dev/null\" " \
+          "-i {identity} " \
+          "{filepath} " \
+          "ubuntu@{ip}:{dst} ".format(ip=ip, dst=dst,
+                                      identity=ssh_privkey(),
+                                      filepath=filepath)
+    ret = get_command_output(cmd)
+    if ret['status'] > 0:
+        raise SystemExit("There was a problem copying ({0}) to the container "
+                         "({1}:{2}): ".format(
+                             filepath, name, ip, ret['output']))
+    return
+
+
+def container_create(name, userdata):
+    """ creates a container from ubuntu-cloud template
+    """
+    out = get_command_output(
+        'sudo lxc-create -t ubuntu-cloud '
+        '-n {0} -- -u {1}'.format(name, userdata))
+    if out['status'] > 0:
+        raise SystemExit("Unable to create container: "
+                         "{0}".format(out['output']))
+    return out['status']
+
+
+def container_start(name):
+    """ starts lxc container
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-start -n {0} -d'.format(name))
+
+    if out['status'] > 0:
+        raise SystemExit("Unable to start container: "
+                         "{0}".format(out['output']))
+    return out['status']
+
+
+def container_stop(name):
+    """ stops lxc container
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-stop -n {0}'.format(name))
+
+    if out['status'] > 0:
+        raise SystemExit("Unable to stop container: "
+                         "{0}".format(out['output']))
+
+    return out['status']
+
+
+def container_destroy(name):
+    """ destroys lxc container
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-destroy -n {0}'.format(name))
+
+    if out['status'] > 0:
+        raise SystemExit("Unable to destroy container: "
+                         "{0}".format(out['output']))
+
+    return out['status']
+
+
+def container_wait(name):
+    """ waits for the container to be in a RUNNING state
+
+    :param str name: name of container
+    """
+    out = get_command_output(
+        'sudo lxc-wait -n {0} -s RUNNING'.format(name))
+    return out['status']
+
+
+def load_template(name):
+    """ load template file
+
+    :param str name: name of template file
+    """
+    env = Environment(
+        loader=FileSystemLoader('/usr/share/openstack/templates'))
+    return env.get_template(name)
+
+
+def install_user():
+    """ returns sudo user
+    """
+    user = os.getenv('SUDO_USER', None)
+    if not user:
+        user = os.getenv('USER', 'root')
+    return user
+
+
+def install_home():
+    """ returns installer user home
+    """
+    return os.path.join('/home', install_user())
+
+
+def ssh_readkey():
+    """ reads ssh key
+    """
+    with open(ssh_pubkey(), 'r') as f:
+        return f.read()
+
+
+def ssh_genkey():
+    """ Generates sshkey
+    """
+    if not os.path.exists(ssh_privkey()):
+        user_sshkey_path = os.path.join(install_home(), '.ssh/id_rsa')
+        cmd = "ssh-keygen -N '' -f {0}".format(user_sshkey_path)
+        out = get_command_output(cmd, user_sudo=True)
+        if out['status'] != 0:
+            print("Unable to generate key: {0}".format(out['stderr']))
+            sys.exit(out['ret'])
+        get_command_output('sudo chown -R {0}:{0} {1}'.format(
+            install_user(), os.path.join(install_home(), '.ssh')))
+        get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
+                           user_sudo=True)
+    else:
+        log.debug(
+            '*** ssh keys exist for this user, they will be used instead'
+            '*** If the current ssh keys are not passwordless you\'ll be'
+            '*** required to enter your ssh key password during container'
+            '*** creation.')
+
+
+def ssh_pubkey():
+    """ returns path of ssh public key
+    """
+    return os.path.join(install_home(), '.ssh/id_rsa.pub')
+
+
+def ssh_privkey():
+    """ returns path of private key
+    """
+    return os.path.join(install_home(), '.ssh/id_rsa')
+
+
+def spew(path, data, owner=None):
+    """ Writes data to path
+
+    :param str path: path of file to write to
+    :param str data: contents to write
+    :param str owner: optional owner of file
+    """
+    with open(path, 'w') as f:
+        f.write(data)
+    if owner:
+        try:
+            chown(path, owner, owner)
+        except:
+            raise UtilsException("Unable to set ownership of {}".format(path))
+
+
+def slurp(path):
+    """ Reads data from path
+
+    :param str path: path of file
+    """
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except IOError:
+        raise IOError
 
 
 def human_to_mb(s):
@@ -383,3 +631,4 @@ def format_constraint(k, v):
     if vs.isdecimal():
         vs = mb_to_human(v)
     return "{}={}".format(k, vs)
+

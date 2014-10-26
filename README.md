@@ -1,6 +1,12 @@
 # Ubuntu Openstack Installer
+[![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer)
+[![Documentation Status](https://readthedocs.org/projects/ubuntu-cloud-installer/badge/?version=latest)](https://readthedocs.org/projects/ubuntu-cloud-installer/?badge=latest)
 
-[![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/cloud-installer)
+## Support
+
+IRC: **freenode.net** in channel **#ubuntu-solutions**
+
+Mailing list: https://lists.ubuntu.com/mailman/listinfo/ubuntu-openstack-installer
 
 ## Developers
 

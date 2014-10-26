@@ -6,12 +6,13 @@ Pre-requisites
 
 Multi-Installer has been tested on Ubuntu Server, which is the recommended OS for the cloud installer.
 
-Add the `cloud-installer` ppa to your system.
+Add the Openstack installer ppa to your system.
 
 .. code::
 
    $ sudo apt-add-repository ppa:juju/stable
-   $ sudo apt-add-repository ppa:cloud-installer/ppa
+   $ sudo apt-add-repository ppa:maas-maintainers/experimental
+   $ sudo apt-add-repository ppa:cloud-installer/experimental
    $ sudo apt-get update
 
 .. note::
@@ -19,14 +20,19 @@ Add the `cloud-installer` ppa to your system.
    Adding the ppa is only necessary until an official release to the
    archives has been announced.
 
+   Also note that currently we use the **experimental** ppa for MAAS
+   and our installer. The installers release should coincide with
+   the next version of MAAS. Once that occurs the ppa location will
+   be updated to reflect the stable ppa locations.
+
 Installation
 ^^^^^^^^^^^^
 
-Install the cloud-installer via `apt-get`
+Install Openstack installer via `apt-get`
 
 .. code::
 
-   $ sudo apt-get install cloud-installer
+   $ sudo apt-get install openstack
 
 Start the installation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -35,7 +41,7 @@ To start the installation run the following command
 
 .. code::
 
-   $ sudo cloud-install
+   $ sudo openstack-install
 
 .. note::
 
@@ -70,4 +76,4 @@ To uninstall and cleanup your system run the following
 
 .. code::
 
-    $ sudo cloud-install -u
+    $ sudo openstack -u
