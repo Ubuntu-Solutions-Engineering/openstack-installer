@@ -76,7 +76,6 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     echo Single install cleansing.
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    juju destroy-environment --yes --force local
     lxc-stop -n uoi-bootstrap
     lxc-destroy -n uoi-bootstrap
 
