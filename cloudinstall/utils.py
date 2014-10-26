@@ -36,6 +36,7 @@ import pkgutil
 import sys
 import errno
 import shlex
+import shutil
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -67,6 +68,10 @@ class ExceptionLoggingThread(Thread):
             global_exchandler(*sys.exc_info())
 
 
+class UtilsException(Exception):
+    pass
+
+
 def load_charms():
     """ Load known charm modules
     """
@@ -84,6 +89,29 @@ def load_charm_byname(name):
     :param str name: name of charm
     """
     return import_module('cloudinstall.charms.{}'.format(name))
+
+
+def chown(path, user, group, recursive=False):
+    """
+    Change user/group ownership of file
+
+    :param path: path of file or directory
+    :param str user: new owner username
+    :param str group: new owner group name
+    :param bool recursive: set files/dirs recursively
+
+    """
+    try:
+        if not recursive or os.path.isfile(path):
+            shutil.chown(path, user, group)
+        else:
+            for root, dirs, files in os.walk(path):
+                for item in dirs:
+                    shutil.chown(os.path.join(root, item), user, group)
+                for item in files:
+                    shutil.chown(os.path.join(root, item), user, group)
+    except OSError as e:
+        raise UtilsException(e)
 
 
 def async(func):
