@@ -27,7 +27,7 @@ class EditInput(WidgetWrap):
     """ Edit input class
 
     Initializes an Edit object and attaches its result to
-    result accessor.
+    the `value` accessor.
     """
 
     def __init__(self, caption, **kwargs):
