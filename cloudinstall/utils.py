@@ -436,13 +436,14 @@ def container_cp(name, filepath, dst):
           "-o \"UserKnownHostsFile=/dev/null\" " \
           "-i {identity} " \
           "{filepath} " \
-          "ubuntu@{ip}:{dst} >>/dev/null".format(ip=ip, dst=dst,
-                                                 identity=ssh_privkey(),
-                                                 filepath=filepath)
-    ret = os.system(cmd)
-    if ret > 0:
+          "ubuntu@{ip}:{dst} ".format(ip=ip, dst=dst,
+                                      identity=ssh_privkey(),
+                                      filepath=filepath)
+    ret = get_command_output(cmd)
+    if ret['status'] > 0:
         raise SystemExit("There was a problem copying ({0}) to the container "
-                         "({1}:{2})".format(filepath, name, ip))
+                         "({1}:{2}): ".format(
+                             filepath, name, ip, ret['output']))
     return
 
 
