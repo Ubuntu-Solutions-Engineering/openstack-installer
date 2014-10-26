@@ -123,6 +123,8 @@ class MultiInstall:
         args = ['openstack-status']
         if self.opts.enable_swift:
             args.append('--enable-swift')
+        if self.opts.edit_placement:
+            args.append('--placement')
         os.execvp('openstack-status', args)
 
     def drop_privileges(self):
