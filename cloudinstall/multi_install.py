@@ -92,7 +92,7 @@ class MultiInstall:
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
         maas_env_modified = maas_env.render(
-            maas_server=maas_creds['api_url'],
+            maas_server=maas_creds['api_host'],
             maas_apikey=maas_creds['api_key'],
             openstack_password=self.config.openstack_password)
         utils.spew(self.config.juju_environments_path,
@@ -633,12 +633,11 @@ class MultiInstallNewMaas(MultiInstall):
 
     def write_juju_env(self):
         # FIXME Duplicated in do_install() we should pick one or the other
-        br0_address = get_ip_addr('br0')
         admin_secret = utils.random_password()
 
         env = utils.load_template('juju-env/maas.yaml')
         env_modified = env.render(
-            maas_server=br0_address,
+            maas_server=self.config.maas_creds['api_host'],
             maas_apikey=self.apikey,
             openstack_password=admin_secret)
         check_output(['mkdir', '-p', self.config.juju_path])
