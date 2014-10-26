@@ -155,14 +155,16 @@ class Config:
         PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
         utils.spew(PASSWORD_FILE, password)
 
-    def save_maas_creds(self, api_url, api_key):
+    def save_maas_creds(self, api_host, api_key):
         """ Saves maas credentials for re-use
 
-        :param str api_url: maas address
+        :param str api_host: ip of maas server
         :param str api_key: api key of maas admin user
         """
+        if api_host.startswith("http://"):
+            raise ConfigException("save_maas_creds expects an ip, not a url")
         MAAS_CREDS_FILE = os.path.join(self.cfg_path, 'maascreds')
-        utils.spew(MAAS_CREDS_FILE, json.dumps(dict(api_url=api_url,
+        utils.spew(MAAS_CREDS_FILE, json.dumps(dict(api_host=api_host,
                                                     api_key=api_key)))
 
     @property

@@ -71,7 +71,8 @@ class DisplayController:
 
     def authenticate_maas(self):
         if self.config.maas_creds:
-            api_url = self.config.maas_creds['api_url']
+            api_host = self.config.maas_creds['api_host']
+            api_url = 'http://{}/MAAS/'.format(api_host)
             api_key = self.config.maas_creds['api_key']
             auth = MaasAuth(api_url=api_url,
                             api_key=api_key)
