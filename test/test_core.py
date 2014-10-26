@@ -51,7 +51,6 @@ class DisplayControllerTestCase(unittest.TestCase):
         mock_jujuclient.assert_called_once_with(url=ANY,
                                                 password=self.passwd)
         mock_maasclient.assert_called_with(mock_maasauth())
-        mock_maasauth().get_api_key.assert_called_with('root')
 
     def test_initialize_single(self, mock_config, mock_maasclient,
                                mock_maasauth, mock_jujuclient):

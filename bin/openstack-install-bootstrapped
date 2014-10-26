@@ -17,25 +17,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-. /usr/share/cloud-installer/common/display.sh
-. /usr/share/cloud-installer/common/common.sh
-. /usr/share/cloud-installer/common/maas.sh
-. /usr/share/cloud-installer/common/juju.sh
-. /usr/share/cloud-installer/common/configure.sh
-. /usr/share/cloud-installer/common/multi.sh
-. /usr/share/cloud-installer/common/single.sh
-. /usr/share/cloud-installer/common/landscape.sh
+. /usr/share/openstack/common/includes.sh
 
 OPT_HELP=h
 OPT_INSTALL=i
-OPT_UNINSTALL=u
 OPT_CONFIGFILE=c
 OPT_ENABLESWIFT=s
 OPT_IMG_REL=r
 OPT_IMG_ARCH=a
-OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:
+OPTS=:${OPT_CONFIGFILE}:${OPT_INSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:
 USAGE="\
-cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_UNINSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:]
+cloud-install [-${OPT_CONFIGFILE}${OPT_INSTALL}${OPT_ENABLESWIFT}${OPT_HELP}${OPT_IMG_ARCH}:${OPT_IMG_REL}:]
 
 Create an Ubuntu Openstack Cloud! (requires root privileges)
 
@@ -44,7 +36,6 @@ Options:
               automating install by pre-setting menu responses.
   -$OPT_ENABLESWIFT    enable swift-storage
   -$OPT_INSTALL    install only (don't invoke cloud-status)
-  -$OPT_UNINSTALL    uninstall the cloud
   -$OPT_IMG_ARCH    <arch,...> comma-separated list of architectures to filter available cloud images
               with which to populate Glance, e.g. amd64,arm64
   -$OPT_IMG_REL    <rel,...> comma-separated list of Ubuntu releases to filter available cloud images
@@ -70,10 +61,6 @@ while getopts $OPTS opt; do
 	$OPT_ENABLESWIFT)
 		enableswift="--enable-swift"
 		;;
-    $OPT_UNINSTALL)
-        /usr/share/cloud-installer/tools/cloud-uninstall $@
-        exit 0
-        ;;
 	$OPT_HELP)
 		usage
 		exit 0
@@ -119,9 +106,9 @@ set -x
 
 disableBlank
 
-mkdir -p /etc/cloud-installer
+mkdir -p /etc/openstack
 
-if [ ! -e /etc/cloud-installer/installed ]; then
+if [ ! -e /etc/openstack/installed ]; then
 	configureInstall
 	if [ $ret -ne 0 ]; then
 		# install cancelled by user
@@ -130,25 +117,22 @@ if [ ! -e /etc/cloud-installer/installed ]; then
 
 	case $install_type in
 	Multi-system)
-        multiInstall
+		multiInstall
 		;;
 	"Single system")
 		singleInstall
-        # LP: 1351083, need to wait a few seconds for the api server to become
-        # responsive :\
-        sleep 10
 		;;
 	"Landscape managed")
 		install=true # install only implied
 		landscapeInstall
 		;;
 	esac
-	touch /etc/cloud-installer/installed
+	touch /etc/openstack/installed
 else
 	echo "Cloud already installed."
 fi
 if [ -z "$install" ]; then
 	exitInstall
-    sudo -H -u "$INSTALL_USER" juju status >> /dev/null
-	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER"  cloud-status $enableswift
+	sudo -H -u "$INSTALL_USER" juju status >> /dev/null
+	cd "$INSTALL_HOME"; exec sudo -H -u "$INSTALL_USER" /usr/share/openstack/bin/openstack-status-bootstrapped $enableswift
 fi

@@ -19,6 +19,8 @@
 
 from ipaddress import ip_address, ip_network
 import sys
+from sys import argv
+
 
 def ip_range(network):
     """Return tuple of low, high IP address for given network"""
@@ -30,6 +32,7 @@ def ip_range(network):
         return network[0], network[-1]
     else:
         return network[1], network[-2]
+
 
 def ip_range_max(network, exclude):
     """Return tuple of low, high IP address for largest IP address range within
@@ -67,15 +70,13 @@ def ip_range_max(network, exclude):
     return ip_address(current[0]), ip_address(current[-1])
 
 if __name__ == "__main__":
-    import sys
-    from sys import argv
-
     args = len(argv)
     if args == 1:
         sys.stderr.write("Missing arguments")
         sys.exit(1)
 
     network = ip_network(argv[1], strict=False)
-    ip_low, ip_high = ip_range_max(network, [ip_address(arg) for arg in argv[2:]]) \
-                          if args >= 3 else ip_range(network)
+    ip_low, ip_high = ip_range_max(
+        network, [ip_address(arg) for arg in argv[2:]]) \
+        if args >= 3 else ip_range(network)
     print(str(ip_low) + "-" + str(ip_high))

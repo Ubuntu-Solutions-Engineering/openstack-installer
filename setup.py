@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-cloud-installer
-===============
+openstack
+=========
 
 Ubuntu OpenStack Installer provides an extremely simple way to
 install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -55,18 +55,18 @@ if sys.argv[-1] == 'clean':
     os.system('rm -rf cloud_installer.egg-info build dist')
     sys.exit()
 
-setup(name='cloud-installer',
+setup(name='openstack',
       version=cloudinstall.__version__,
       description="Openstack private cloud with Ubuntu Openstack installer",
       long_description=__doc__,
       author='Canonical Solutions Engineering',
       author_email='ubuntu-dev@lists.ubuntu.com',
-      url='https://github.com/Ubuntu-Solutions-Engineering/cloud-installer',
+      url='https://github.com/Ubuntu-Solutions-Engineering/openstack',
       license="AGPLv3+",
-      scripts=['bin/cloud-install', 'bin/cloud-status'],
+      scripts=['bin/openstack-install', 'bin/openstack-status'],
       packages=find_packages(exclude=["test"]),
       data_files=[
-          ('share/man/man1', ['man/en/cloud-status.1',
-                              'man/en/cloud-install.1'])
-          ],
-     )
+          ('share/man/man1', ['man/en/openstack-status.1',
+                              'man/en/openstack-install.1'])
+      ],
+      )

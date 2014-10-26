@@ -2,11 +2,11 @@
 
 export PYBUILD_NAME=cloudinstall
 export PYBUILD_DISABLE_python2=1
-export PYBUILD_INSTALL_DIR=usr/share/cloud-installer/
-export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/cloud-installer/ \
+export PYBUILD_INSTALL_DIR=usr/share/openstack/
+export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/openstack/ \
 	--install-data=usr/ \
-	--install-scripts=usr/share/cloud-installer/bin/ \
-	--root=$(CURDIR)/debian/cloud-installer/ \
+	--install-scripts=usr/share/openstack/bin/ \
+	--root=$(CURDIR)/debian/openstack/ \
 	--no-compile -O0
 
 %:

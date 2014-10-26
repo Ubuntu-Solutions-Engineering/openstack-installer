@@ -1,6 +1,3 @@
-#
-# __init__.py - init
-#
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,6 +13,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Ubuntu Openstack Installer """
-
-__version__ = "0.21"
+# Common includes for installer
+. /usr/share/openstack/common/display.sh
+. /usr/share/openstack/common/common.sh
+. /usr/share/openstack/common/maas.sh
+. /usr/share/openstack/common/juju.sh
+. /usr/share/openstack/common/configure.sh
+. /usr/share/openstack/common/multi.sh
+. /usr/share/openstack/common/single.sh
+. /usr/share/openstack/common/landscape.sh

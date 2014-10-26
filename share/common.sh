@@ -19,7 +19,7 @@
 BACKTITLE=" Ubuntu Openstack Installer"
 LOG=/var/log/cloud-install.log
 
-export PYTHONPATH=/usr/share/cloud-installer:$PYTHONPATH
+export PYTHONPATH=/usr/share/openstack:$PYTHONPATH
 export PYTHONDONTWRITEBYTECODE=true
 
 # Absolute path
@@ -297,9 +297,9 @@ INSTALL_USER=${SUDO_USER:-root}
 INSTALL_HOME=$(getent passwd $INSTALL_USER | cut -d: -f6)
 
 # HELPER TOOLS
-configure_landscape=/usr/share/cloud-installer/bin/configure-landscape
-ip_range=/usr/share/cloud-installer/bin/ip_range.py
-maas_report_boot_images=/usr/share/cloud-installer/bin/maas-report-boot-images
-parse_image_config=/usr/share/cloud-installer/bin/parse-image-config.py
+configure_landscape=/usr/share/openstack/bin/configure-landscape
+ip_range=/usr/share/openstack/bin/ip_range.py
+maas_report_boot_images=/usr/share/openstack/bin/maas-report-boot-images
+parse_image_config=/usr/share/openstack/bin/parse-image-config.py
 
-TEMPLATES=/usr/share/cloud-installer/templates
+TEMPLATES=/usr/share/openstack/templates

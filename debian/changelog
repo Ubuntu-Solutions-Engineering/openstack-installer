@@ -1,8 +1,10 @@
-cloud-installer (0.19+git20140715-0ubuntu1) utopic; urgency=medium
+openstack (0.21-0ubuntu1) utopic; urgency=medium
 
-  * Experimental branch
+  * Start of next development release
+  * Incorporate package name change and set old name as meta
+    package dependency.
 
- -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 15 Jul 2014 10:24:26 -0400
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 24 Sep 2014 10:09:38 -0400
 
 cloud-installer (0.17+git20140619-0ubuntu1) utopic; urgency=medium
 

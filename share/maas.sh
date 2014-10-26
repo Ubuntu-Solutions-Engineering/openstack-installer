@@ -27,6 +27,7 @@ configBindOptions()
 	cat <<"EOF"
 options {
 	directory "/var/cache/bind";
+	dnssec-validation auto;
 
 	forwarders {
 EOF
@@ -36,6 +37,7 @@ EOF
 	cat <<"EOF"
 	};
 
+	include "/etc/bind/maas/named.conf.options.inside.maas";
 	auth-nxdomain no;
 	listen-on-v6 { any; };
 };
@@ -212,8 +214,7 @@ createMaasBridge()
 createMaasSuperUser()
 {
 	password=$(cat "$INSTALL_HOME/.cloud-install/openstack.passwd")
-	printf "%s\n%s\n" "$password" "$password" \
-	    | setsid sh -c "maas-region-admin createsuperuser --username root --email root@example.com 1>&2"
+	maas-region-admin createadmin --username root --password "$password" --email root@example.com
 }
 
 # MAAS address
@@ -310,4 +311,64 @@ waitForNodeStatus()
 	while [ $(nodeStatus $1) -ne $2 ]; do
 		sleep 5
 	done
+}
+
+# LXC userdata for maas container
+#
+# maasCreateFromTemplate $id_rsa $ipAddress $ipBroadcast $ipNetmask $gateway
+#
+# Example:
+# id_rsa=$(cat $INSTALL_HOME/.ssh/id_rsa.pub)
+# maasCreateFromTemplate $id_rsa $ipAddress $ipBroadcast $ipNetmask $gateway > \
+# 	$INSTALL_HOME/.cloud-install/maas-container.yml
+# lxc-create -t ubuntu-cloud \
+#	-n maas -- -u $INSTALL_HOME/.cloud-install/maas-container.yml
+# lxc-start -n maas -d
+#
+maasCreateFromTemplate()
+{
+	cat <<-EOF
+#cloud-config
+groups:
+  - ubuntu
+users:
+  - default
+  - name: ubuntu
+      primary-group: ubuntu
+      groups: users
+      sudo: ALL=NOPASSWD:ALL
+      passwd: ubuntu
+apt_sources:
+  - source: "ppa:cloud-installer/ppa"
+  - source: "ppa:maas-maintainers/stable"
+ssh_authorized_keys:
+  - $1
+write_files:
+  - content: |
+    auto lo
+    iface lo inet loopback
+
+    auto eth0
+    iface eth0 inet manual
+
+    auto br0
+    iface br0 inet static
+      address $2
+      broadcast $3
+      netmask $4
+      gateway $5
+      bridge_ports eth0
+      bridge_stp off
+      bridge_waitport 0
+      bridge_fd 0
+    path: /etc/network/interfaces
+runcmd:
+  - [ sed, -e, "s/^#net.ipv4.ip_forward=1$/net.ipv4.ip_forward=1/", -i, /etc/sysctl.conf ]
+  - [ sysctl, -p ]
+packages:
+  - maas
+  - maas-dhcp
+  - maas-dns
+  - vlan
+EOF
 }
