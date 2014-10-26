@@ -60,21 +60,6 @@ options {{
 }};
 """
 
-MAAS_JUJU_ENV_TEMPLATE = """
-default: maas
-
-environments:
-  maas:
-    type: maas
-    maas-server: 'http://{address}/MAAS/'
-    maas-oauth: '{credentials}'
-    admin-secret: {secret}
-    default-series: trusty
-    authorized-keys-path: ~/.ssh/id_rsa.pub
-    apt-http-proxy: 'http://{address}:8000/'
-    lxc-clone: true
-"""
-
 
 class MultiInstall:
 
@@ -97,6 +82,7 @@ class MultiInstall:
                 utils.install_user(), d))
 
     def do_install(self):
+        # FIXME This is duplicated by write_juju_env
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
         maas_env_modified = maas_env.render(
@@ -190,8 +176,7 @@ class MultiInstallNewMaas(MultiInstall):
         check_output(['cp', '-r', '/etc/network/interfaces.d',
                       '/etc/openstack/interfaces.cloud.d.bak'])
 
-        with open('/etc/openstack/interface', 'w') as iff:
-            iff.write(self.target_iface)
+        utils.spew('/etc/openstack/interface', self.target_iface)
 
         # Currently assumes that we have installed the maas package already.
         # TODO: will need to install it here at some point
@@ -278,7 +263,11 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Detecting Existing DHCP server")
         # TODO UI progress here?
+        # TODO Handle existing dhcp with another dialog or user interaction
+        # to accept the consequences.
         if self.detect_existing_dhcp(self.target_iface):
+            log.debug("An existing DHCP server was found on this interface, "
+                      "the network may be incorrectly configured.")
             pass
 
     def create_bootstrap_kvm(self):
@@ -294,6 +283,8 @@ class MultiInstallNewMaas(MultiInstall):
             log.debug("error restarting maas-clusterd: {}".format(out))
             raise MaasInstallError("error in creating bootstrap kvm")
 
+        # TODO investigate if this breaks with someone attempting nested
+        # kvm installations. REF http://git.io/8z4xBw
         cmd = ("virt-install --name juju-bootstrap --ram=2048 --vcpus=1 "
                "--hvm --virt-type=kvm --pxe --boot network,hd "
                "--os-variant=ubuntutrusty --graphics vnc --noautoconsole "
@@ -555,14 +546,14 @@ class MultiInstallNewMaas(MultiInstall):
                '-s {} ! -d {} -j MASQUERADE'.format(network, network))
         utils.get_command_output(cmd)
 
-        with open('/etc/network/iptables.rules', 'w') as iprf:
-            iprf.write("*nat\n"
-                       ":PREROUTING ACCEPT [0:0]\n"
-                       ":INPUT ACCEPT [0:0]\n"
-                       ":OUTPUT ACCEPT [0:0]\n"
-                       ":POSTROUTING ACCEPT [0:0]\n"
-                       "-A POSTROUTING -s {} ! -d {} -j MASQUERADE\n"
-                       "COMMIT\n".format(network, network))
+        utils.spew('/etc/network/iptables.rules',
+                   "*nat\n"
+                   ":PREROUTING ACCEPT [0:0]\n"
+                   ":INPUT ACCEPT [0:0]\n"
+                   ":OUTPUT ACCEPT [0:0]\n"
+                   ":POSTROUTING ACCEPT [0:0]\n"
+                   "-A POSTROUTING -s {} ! -d {} -j MASQUERADE\n"
+                   "COMMIT\n".format(network, network))
         utils.get_command_output('chmod 0600 /etc/network/iptables.rules')
         cmd = ("sed -e '/^iface lo inet loopback$/a\ "
                "pre-up iptables-restore < /etc/network/iptables.rules' "
@@ -634,16 +625,14 @@ class MultiInstallNewMaas(MultiInstall):
         utils.get_command_output('ifup lo')
 
     def write_juju_env(self):
-
+        # FIXME Duplicated in do_install() we should pick one or the other
         br0_address = get_ip_addr('br0')
-        admin_secret = check_output(['pwgen', '-s', '32']).decode().strip()
+        admin_secret = utils.random_password()
 
-        env = MAAS_JUJU_ENV_TEMPLATE.format(address=br0_address,
-                                            credentials=self.apikey,
-                                            secret=admin_secret)
-        dot_juju_path = os.path.join(utils.install_home(), '.juju')
-        check_output(['mkdir', '-p', dot_juju_path])
-
-        env_yaml_filename = os.path.join(dot_juju_path, 'environments.yaml')
-        with open(env_yaml_filename, 'w') as ef:
-            ef.write(env)
+        env = utils.load_template('juju-env/maas.yaml')
+        env_modified = env.render(
+            maas_server=br0_address,
+            maas_apikey=self.apikey,
+            openstack_password=admin_secret)
+        check_output(['mkdir', '-p', self.config.juju_path])
+        utils.spew(self.config.juju_environments_path, env_modified)
