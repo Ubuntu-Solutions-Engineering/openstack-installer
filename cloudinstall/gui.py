@@ -526,9 +526,9 @@ def _check_encoding():
 class PegasusGUI(WidgetWrap):
     def __init__(self, header=None, body=None, footer=None):
         _check_encoding()  # Make sure terminal supports utf8
-        header = header if header else Header()
-        body = body if body else Banner()
-        footer = footer if footer else StatusBar('')
+        self.header = header if header else Header()
+        self.body = body if body else Banner()
+        self.footer = footer if footer else StatusBar('')
 
         self.frame = Frame(self.body,
                            header=self.header,
