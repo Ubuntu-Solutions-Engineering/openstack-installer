@@ -139,7 +139,8 @@ class MultiInstall:
 class MultiInstallExistingMaas(MultiInstall):
 
     def _save_maas_creds(self, maas_server, maas_apikey):
-        self.config.save_maas_creds(maas_server, maas_apikey)
+        self.config.save_maas_creds(maas_server.value,
+                                    maas_apikey.value)
 
         # Saved maas creds, start the show
         self.do_install()

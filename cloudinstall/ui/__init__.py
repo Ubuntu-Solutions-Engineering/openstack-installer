@@ -17,12 +17,12 @@
 
 from __future__ import unicode_literals
 import logging
-from urwid import (AttrWrap, Columns, LineBox, Edit,
+from urwid import (AttrWrap, Columns, LineBox,
                    ListBox, BoxAdapter, WidgetWrap,
                    RadioButton, SimpleListWalker, Divider, Button,
 
                    signals, emit_signal, connect_signal)
-
+from cloudinstall.ui.dialog import Dialog
 
 log = logging.getLogger('cloudinstall.ui')
 
@@ -202,171 +202,41 @@ class Selector(WidgetWrap):
             return AttrWrap(widgets, "input", "input focus")
 
 
-class PasswordInput(WidgetWrap):
+class PasswordInput(Dialog):
 
     """ Password input dialog
     """
-    __metaclass__ = signals.MetaSignals
-    signals = ['done']
 
-    def __init__(self, title, done_signal_handler):
-        self.title = '{0} (Esc)'.format(title)
-        self.pass_input = Edit(caption='Password: ', mask='*')
-        self.pass_confirm_input = Edit(
-            caption='Confirm Password: ', mask='*')
-        self.items = []
-        self.boxes = []
-
-        w = self._build_widget()
-        w = AttrWrap(w, 'dialog')
-
-        connect_signal(self, 'done', done_signal_handler)
-        super().__init__(w)
-
-    def keypress(self, size, key):
-        if key != 'tab':
-            super().keypress(size, key)
-        if key == 'tab':
-            old_widget, old_pos = self.items.get_focus()
-            self.items.set_focus((old_pos + 1) % len(self.boxes))
-
-    def _buttons(self):
-        buttons = [AttrWrap(Button("Ok", self.submit),
-                            'button', 'button focus'),
-                   AttrWrap(Button("Cancel", self.cancel),
-                            'button', 'button focus')]
-        return Columns(buttons)
-
-    def _insert_item_selections(self):
-        self.boxes = [
-            AttrWrap(self.pass_input, 'input', 'input focus'),
-            AttrWrap(self.pass_confirm_input, 'input', 'input focus')]
-
-        self.items = ListBox(SimpleListWalker(self.boxes))
-        self.items.set_focus(0)
-        return (len(self.boxes), BoxAdapter(self.items, len(self.boxes)))
-
-    def _build_widget(self, **kwargs):
-        num_of_items, item_sel = self._insert_item_selections()
-        buttons = self._buttons()
-
-        return LineBox(
-            BoxAdapter(ListBox([item_sel, Divider(), buttons]),
-                       height=num_of_items + 2),
-            title='Enter new Password')
-
-    def submit(self, button):
-        self.emit_done_signal(self.pass_input.get_edit_text(),
-                              self.pass_confirm_input.get_edit_text())
-
-    def cancel(self, button):
-        raise SystemExit("Installation cancelled.")
-
-    def emit_done_signal(self, *args):
-        emit_signal(self, 'done', *args)
+    def __init__(self, title, cb):
+        super().__init__(title, cb)
+        self.add_input('Password: ', mask='*')
+        self.add_input('Confirm Password: ',
+                       mask='*')
+        self.show()
 
 
-class MaasServerInput(WidgetWrap):
+class MaasServerInput(Dialog):
 
     """ Maas Server input dialog
     """
-    __metaclass__ = signals.MetaSignals
-    signals = ['done']
 
-    def __init__(self, done_signal_handler):
-        self.maas_server_input = Edit(caption='MAAS IP Address: ')
-        self.maas_apikey_input = Edit(caption='MAAS API Key: ')
-        w = self._build_widget()
-        w = AttrWrap(w, 'dialog')
-
-        connect_signal(self, 'done', done_signal_handler)
-        super().__init__(w)
-
-    def _buttons(self):
-        buttons = [AttrWrap(Button("Ok", self.submit),
-                            'button', 'button focus'),
-                   AttrWrap(Button("Cancel", self.cancel),
-                            'button', 'button focus')]
-        return Columns(buttons)
-
-    def _build_widget(self, **kwargs):
-        lbox = ListBox([
-            AttrWrap(self.maas_server_input, 'input', 'input focus'),
-            AttrWrap(self.maas_apikey_input, 'input', 'input focus'),
-            Divider(),
-            self._buttons()
-        ])
-        lbox.set_focus(0)
-        w = LineBox(
-            BoxAdapter(lbox, height=4), title='Enter MAAS Information (ESC)')
-        return w
-
-    def submit(self, button):
-        self.emit_done_signal(self.maas_server_input.get_edit_text(),
-                              self.maas_apikey_input.get_edit_text())
-
-    def cancel(self, button):
-        # TODO: Make this go back to previous selector widget to change
-        # install path
-        raise SystemExit("Installation cancelled.")
-
-    def emit_done_signal(self, *args):
-        emit_signal(self, 'done', *args)
+    def __init__(self, title, cb):
+        super().__init__(title, cb)
+        self.add_input('MAAS IP Address: ')
+        self.add_input('MAAS API Key: ')
+        self.show()
 
 
-class LandscapeInput(WidgetWrap):
+class LandscapeInput(Dialog):
 
     """ Landscape input dialog
     """
-    __metaclass__ = signals.MetaSignals
-    signals = ['done']
 
-    def __init__(self, done_signal_handler):
-        self.lds_admin_email = Edit(caption='Admin Email: ')
-        self.lds_admin_name = Edit(caption='Admin Name: ')
-        self.lds_system_email = Edit(caption='System Email: ')
-        self.maas_server = Edit(caption='MAAS Server IP (optional): ')
-        self.maas_server_key = Edit(caption='MAAS API Key (optional): ')
-        w = self._build_widget()
-        w = AttrWrap(w, 'dialog')
-
-        connect_signal(self, 'done', done_signal_handler)
-        super().__init__(w)
-
-    def _buttons(self):
-        buttons = [AttrWrap(Button("Ok", self.submit),
-                            'button', 'button focus'),
-                   AttrWrap(Button("Cancel", self.cancel),
-                            'button', 'button focus')]
-        return Columns(buttons)
-
-    def _build_widget(self, **kwargs):
-        lbox = ListBox([
-            AttrWrap(self.lds_admin_email, 'input', 'input focus'),
-            AttrWrap(self.lds_admin_name, 'input', 'input focus'),
-            AttrWrap(self.lds_system_email, 'input', 'input focus'),
-            AttrWrap(self.maas_server, 'input', 'input focus'),
-            AttrWrap(self.maas_server_key, 'input', 'input focus'),
-            Divider(),
-            self._buttons()
-        ])
-        lbox.set_focus(0)
-        w = LineBox(
-            BoxAdapter(lbox, height=7),
-            title='Enter Landscape Information (ESC)')
-        return w
-
-    def submit(self, button):
-        self.emit_done_signal(self.lds_admin_email.get_edit_text(),
-                              self.lds_admin_name.get_edit_text(),
-                              self.lds_system_email.get_edit_text(),
-                              self.maas_server.get_edit_text(),
-                              self.maas_server_key.get_edit_text())
-
-    def cancel(self, button):
-        # TODO: Make this go back to previous selector widget to change
-        # install path
-        raise SystemExit("Installation cancelled.")
-
-    def emit_done_signal(self, *args):
-        emit_signal(self, 'done', *args)
+    def __init__(self, title, cb):
+        super().__init__(title, cb)
+        self.add_input('lds_admin_email', 'Admin Email: ')
+        self.add_input('lds_admin_name', 'Admin Name: ')
+        self.add_input('lds_system_email', 'System Email: ')
+        self.add_input('maas_server', 'MAAS Server IP (optional): ')
+        self.add_input('maas_server_key', 'MAAS API Key (optional): ')
+        self.show()
