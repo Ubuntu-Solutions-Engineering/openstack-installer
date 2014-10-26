@@ -86,6 +86,10 @@ class Config:
         return os.path.exists(os.path.join(self.cfg_path, 'multi'))
 
     @property
+    def juju_path(self):
+        return os.path.join(utils.install_home(), '.juju')
+
+    @property
     def juju_env(self):
         """ parses current juju environment """
         if self._juju_env:
@@ -115,7 +119,7 @@ class Config:
     @property
     def juju_environments_path(self):
         """ returns absolute path of juju environments.yaml """
-        return os.path.join(utils.install_home(), '.juju/environments.yaml')
+        return os.path.join(self.juju_path, 'environments.yaml')
 
     def update_environments_yaml(self, key, val, provider='local'):
         """ updates environments.yaml base file """
