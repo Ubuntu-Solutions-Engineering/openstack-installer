@@ -95,6 +95,7 @@ class MultiInstall:
             maas_server=maas_creds['api_host'],
             maas_apikey=maas_creds['api_key'],
             openstack_password=self.config.openstack_password)
+        check_output(['mkdir', '-p', self.config.juju_path])
         utils.spew(self.config.juju_environments_path,
                    maas_env_modified)
         utils.ssh_genkey()
