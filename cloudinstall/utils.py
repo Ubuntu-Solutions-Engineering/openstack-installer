@@ -312,7 +312,7 @@ def random_password(size=32):
     :param int size: length of password
     """
     out = get_command_output("pwgen -s {}".format(size))
-    return out['output']
+    return out['output'].decode().strip()
 
 
 def time_string():
