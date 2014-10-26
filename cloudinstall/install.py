@@ -29,6 +29,10 @@ from cloudinstall import utils
 log = logging.getLogger('cloudinstall.install')
 
 
+class SingleInstallException(Exception):
+    pass
+
+
 class SingleInstall:
 
     def __init__(self, opts, ui):
@@ -82,8 +86,14 @@ class SingleInstall:
     def copy_installdata_and_set_perms(self):
         """ copies install data and sets permissions on files/dirs
         """
-        utils.get_command_output("chown {0}:{0} -R {1}".format(
-            utils.install_user(), self.config.cfg_path))
+        try:
+            utils.chown(self.config.cfg_path,
+                        utils.install_user(),
+                        utils.install_user(),
+                        recursive=True)
+        except:
+            raise SingleInstallException(
+                "Unable to set ownership for {}".format(self.config.cfg_path))
 
         # copy over the rest of our installation data from host
         # and setup permissions
@@ -176,8 +186,14 @@ class LandscapeInstall:
         dirs = [self.config.cfg_path,
                 os.path.join(utils.install_home(), '.juju')]
         for d in dirs:
-            utils.get_command_output("chown {0}:{0} -R {1}".format(
-                utils.install_user(), d))
+            try:
+                utils.chown(d,
+                            utils.install_user(),
+                            utils.install_user(),
+                            recursive=True)
+            except:
+                raise SingleInstallException(
+                    "Unable to set ownership for {}".format(d))
 
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
