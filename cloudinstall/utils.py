@@ -587,7 +587,10 @@ def spew(path, data, owner=None):
     with open(path, 'w') as f:
         f.write(data)
     if owner:
-        get_command_output("chown {0}:{0}".format(owner))
+        try:
+            chown(path, owner, owner)
+        except:
+            raise UtilsException("Unable to set ownership of {}".format(path))
 
 
 def slurp(path):
