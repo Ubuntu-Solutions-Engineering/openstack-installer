@@ -78,8 +78,14 @@ class MultiInstall:
         dirs = [self.config.cfg_path,
                 os.path.join(utils.install_home(), '.juju')]
         for d in dirs:
-            utils.get_command_output("chown {0}:{0} -R {1}".format(
-                utils.install_user(), d))
+            try:
+                utils.chown(d,
+                            utils.install_user(),
+                            utils.install_user(),
+                            recursive=True)
+            except:
+                raise MaasInstallError(
+                    "Unable to set ownership for {}".format(d))
 
     def do_install(self):
         # FIXME This is duplicated by write_juju_env
@@ -230,12 +236,13 @@ class MultiInstallNewMaas(MultiInstall):
         self.write_juju_env()
         self.create_bootstrap_kvm()
 
-        cmd = 'chown {u}:{u} {h}/.maascli.db'.format(u=utils.install_user(),
-                                                     h=utils.install_home())
-        out = utils.get_command_output(cmd)
-        if out['status'] != 0:
-            log.debug("Error changing ownership of maascli.db: {}".format(out))
-            raise MaasInstallError("Error in MAAS setup")
+        try:
+            utils.chown(os.path.join(utils.install_home(), '.maascli.db'),
+                        utils.install_user(),
+                        utils.install_user())
+        except:
+            raise MaasInstallError("Unable to set permissions on {}".format(
+                os.path.join(utils.install_home(), '.maascli.db')))
 
         self.do_install()
 
