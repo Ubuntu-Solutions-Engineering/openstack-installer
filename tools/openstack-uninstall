@@ -63,6 +63,10 @@ case $WHAT in
     cp -r /etc/openstack/interfaces.cloud.d.bak/* /etc/network/interfaces.d
     rm /etc/network/interfaces.d/openstack.cfg
 
+    # iptables rule
+    cp /etc/network/iptables.rules /etc/network/iptables.rules.bak
+    rm /etc/network/iptables.rules
+
     if [ -n "$interface" ]; then
         ifup $interface
     fi
