@@ -17,7 +17,7 @@
 
 from __future__ import unicode_literals
 import logging
-from urwid import (AttrWrap, Columns, LineBox, Edit,
+from urwid import (AttrWrap, Columns, LineBox,
                    ListBox, BoxAdapter, WidgetWrap,
                    RadioButton, SimpleListWalker, Divider, Button,
 

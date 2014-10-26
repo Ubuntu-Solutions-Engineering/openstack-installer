@@ -14,11 +14,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from urwid import (AttrWrap, Columns, LineBox, Edit,
+from urwid import (AttrWrap, Columns, LineBox,
                    ListBox, BoxAdapter, WidgetWrap,
                    RadioButton, SimpleListWalker, Divider, Button,
 
                    signals, emit_signal, connect_signal)
+
 from cloudinstall.ui.input import EditInput
 
 import logging
