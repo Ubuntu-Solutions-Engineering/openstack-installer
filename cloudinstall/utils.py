@@ -106,6 +106,7 @@ def chown(path, user, group, recursive=False):
             shutil.chown(path, user, group)
         else:
             for root, dirs, files in os.walk(path):
+                shutil.chown(root, user, group)
                 for item in dirs:
                     shutil.chown(os.path.join(root, item), user, group)
                 for item in files:
