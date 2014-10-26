@@ -68,7 +68,6 @@ def parse_options(*args, **kwds):
 if __name__ == '__main__':
     log.setup_logger()
     logger = logging.getLogger('cloudinstall')
-    logger.info("cloud-install starting")
     opts = parse_options(sys.argv)
     cfg = Config()
 
@@ -77,12 +76,14 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if opts.uninstall:
+        log.info("Restoring system to last known state.")
         ret = call(['/usr/share/openstack/tools/openstack-uninstall'],
                    shell=True)
         raise SystemExit
 
     if opts.killcloud:
         if cfg.is_single:
+            log.info("Removing existing single installation.")
             utils.container_stop('uoi-bootstrap')
             utils.container_destroy('uoi-bootstrap')
             raise SystemExit
@@ -95,4 +96,6 @@ if __name__ == '__main__':
 
     install = InstallController(
         ui=PegasusGUI(header=InstallHeader()), opts=opts)
+    logger.info("cloud-install starting")
+
     install.start()
