@@ -32,7 +32,7 @@ from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
 from cloudinstall import utils
 
 
-log = logging.getLogger('cloudinstall.install')
+log = logging.getLogger('cloudinstall.multi_install')
 
 BRIDGE_MODIFIED_WARNING = """
 ## WARNING: This file has been modified by cloud-install
