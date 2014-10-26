@@ -216,7 +216,6 @@ class DisplayController:
         #     self.config.node_install_wait_interval,
         #     self.render_node_install_wait)
 
-
     def render_placement_view(self):
         self.ui.render_placement_view(self,
                                       self.placement_controller)

@@ -631,4 +631,3 @@ def format_constraint(k, v):
     if vs.isdecimal():
         vs = mb_to_human(v)
     return "{}={}".format(k, vs)
-
