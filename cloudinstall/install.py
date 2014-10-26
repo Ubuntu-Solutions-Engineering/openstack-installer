@@ -154,7 +154,7 @@ class SingleInstall:
                    charm_conf_modified)
 
         # start the party
-        cloud_status_bin = ['cloud-status']
+        cloud_status_bin = ['openstack-status']
         if self.opts.enable_swift:
             cloud_status_bin.append('--enable-swift')
         self.ui.info_message("Bootstrapping Juju ..")
