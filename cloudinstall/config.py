@@ -44,7 +44,7 @@ class Config:
         ('disabled_button_focus', 'white', 'light gray'),
         ('divider_line', 'light gray', 'default'),
         ('filter', 'dark gray,underline', 'white'),
-        ('filter_focus', 'dark gray,underline', 'light gray')
+        ('filter_focus', 'dark gray,underline', 'light gray'),
         ('focus', 'white', 'dark gray'),
         ('radio focus', 'white,bold', 'dark magenta'),
         ('input', 'white', 'dark gray'),
