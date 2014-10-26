@@ -273,7 +273,7 @@ class MultiInstallNewMaas(MultiInstall):
         # TODO Handle existing dhcp with another dialog or user interaction
         # to accept the consequences.
         if self.detect_existing_dhcp(self.target_iface):
-            log.debug("An existing DHCP server was found on this interface, "
+            log.error("An existing DHCP server was found on this interface, "
                       "the network may be incorrectly configured.")
             pass
 
