@@ -12,6 +12,8 @@ elif [ -f ~/.cloud-install/multi ]; then
   WHAT=multi-system
 elif [ -f ~/.cloud-install/single ]; then
   WHAT=single-system
+elif [ -f ~/.cloud-install/landscape ]; then
+  WHAT=landscape-system
 else
   echo "could not determine install type"
 fi
@@ -79,6 +81,19 @@ case $WHAT in
     lxc-stop -n uoi-bootstrap
     lxc-destroy -n uoi-bootstrap
 
+    ;;
+  landscape-system)
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    echo Landscape installed system.
+    echo
+    echo Removing a Landscape environment is could potentionally be
+    echo destructive. Therefore, it is recommended to uninstall
+    echo the Landscape bits manually.
+    echo
+    echo Example:
+    echo $ sudo apt-get remove openstack openstack-landscape
+    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    exit 1
     ;;
   *)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
