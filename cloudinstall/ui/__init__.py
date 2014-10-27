@@ -138,7 +138,7 @@ class InfoDialog(WidgetWrap):
         self.close_func(self)
 
 
-class Selector(WidgetWrap):
+class Selector(Dialog):
 
     """
     Simple selector box
@@ -148,74 +148,17 @@ class Selector(WidgetWrap):
     :param cb: callback
     :returns: item selected from dialog
     """
-    __metaclass__ = signals.MetaSignals
-    signals = ['done']
 
-    def __init__(self, title, opts, cb, **kwargs):
-        self.opts = opts
-        self.title = title
-        self.cb = cb
-        self.boxes = []
-        self.items = []
-
-        w = self._build_widget()
-        w = AttrWrap(w, 'dialog')
-
-        connect_signal(self, 'done', self.cb)
-        super().__init__(w)
+    def __init__(self, title, opts, cb):
+        super().__init__(title, cb)
+        for item in opts:
+            self.add_radio(item)
+        self.show()
 
     def submit(self, button):
-        selected = [r for r in self.boxes if r.get_state()][0]
+        selected = [r for r in self.total_items if r.get_state()][0]
         selected_item = selected.label
         self.emit_done_signal(selected_item)
-
-    def cancel(self, button):
-        raise SystemExit("Installation Cancelled.")
-
-    def emit_done_signal(self, *args):
-        emit_signal(self, 'done', *args)
-
-    def _build_widget(self, **kwargs):
-        num_of_items, item_sel = self._insert_item_selections()
-        buttons = self._insert_buttons()
-        return LineBox(
-            BoxAdapter(
-                ListBox([item_sel, Divider(), buttons]),
-                height=num_of_items + 2),
-            title=self.title)
-
-    def keypress(self, size, key):
-        if key != 'tab':
-            super().keypress(size, key)
-        if key == 'tab':
-            old_widget, old_pos = self.items.get_focus()
-            self.items.set_focus((old_pos + 1) % len(self.boxes))
-
-    def _insert_item_selections(self):
-        bgroup = []
-        for i, item in enumerate(self.opts):
-            r = RadioButton(bgroup, item)
-            r.text_label = item
-            self.boxes.append(r)
-
-        wrapped_boxes = self._wrap_radio_focus(self.boxes)
-
-        self.items = ListBox(SimpleListWalker(wrapped_boxes))
-        self.items.set_focus(0)
-        return (len(self.boxes), BoxAdapter(self.items, len(self.boxes)))
-
-    def _insert_buttons(self):
-        bs = [AttrWrap(Button("Start install", self.submit),
-                       'button', 'button focus'),
-              AttrWrap(Button("Cancel", self.cancel),
-                       'button', 'button focus')]
-        return Columns(bs)
-
-    def _wrap_radio_focus(self, widgets, unfocused=None):
-        try:
-            return [AttrWrap(w, "input", "input focus") for w in widgets]
-        except TypeError:
-            return AttrWrap(widgets, "input", "input focus")
 
 
 class PasswordInput(Dialog):

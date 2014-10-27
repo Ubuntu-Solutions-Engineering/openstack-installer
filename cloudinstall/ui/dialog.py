@@ -41,6 +41,7 @@ class Dialog(WidgetWrap):
         self.input_items = []
         self.radio_items = []
         self.input_lbox = []
+        self.total_items = []
 
     def show(self):
         w = self._build_widget()
@@ -88,12 +89,12 @@ class Dialog(WidgetWrap):
             box.set_focus(0)
             return (len(items), BoxAdapter(box, len(items)))
 
-        total_items = self.input_items + self.radio_items
-        total_items = [AttrWrap(i, 'input', 'input focus') for i in
-                       total_items]
-        self.input_lbox = ListBox(SimpleListWalker(total_items))
+        self.total_items = self.input_items + self.radio_items
+        self.total_items = [AttrWrap(i, 'input', 'input focus') for i in
+                            self.total_items]
+        self.input_lbox = ListBox(SimpleListWalker(self.total_items))
 
-        num_of_items, items = box_adapter(total_items,
+        num_of_items, items = box_adapter(self.total_items,
                                           self.input_lbox)
 
         log.debug("Num items: {}, items: {}".format(num_of_items,
@@ -104,7 +105,7 @@ class Dialog(WidgetWrap):
             title=self.title)
 
     def submit(self, button):
-        self.emit_done_signal(*self.input_items)
+        self.emit_done_signal(*self.total_items)
 
     def cancel(self, button):
         raise SystemExit("Installation cancelled.")
