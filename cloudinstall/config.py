@@ -106,6 +106,10 @@ class Config:
         return os.path.exists(os.path.join(self.cfg_path, 'multi'))
 
     @property
+    def is_landscape(self):
+        return os.path.exists(os.path.join(self.cfg_path, 'landscape'))
+
+    @property
     def juju_path(self):
         return os.path.join(utils.install_home(), '.juju')
 
