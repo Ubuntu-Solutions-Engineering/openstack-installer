@@ -62,7 +62,7 @@ class CharmNovaCloudController(CharmBase):
                                cmds="/tmp/nova-controller-setup.sh "
                                     "{p}".format(
                                         p=self.config.openstack_password))
-        if err['ret'] == 1:
+        if err['status'] != 0:
             # something happened during nova setup, re-run
             return True
         return False

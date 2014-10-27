@@ -118,6 +118,21 @@ def async(func):
     return wrapper
 
 
+def apt_install(pkgs):
+    """ runs apt-get install against space separated list of `pkgs`
+    """
+    cmd = ("DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -qyf "
+           "-o Dpkg::Options::=--force-confdef "
+           "-o Dpkg::Options::=--force-confold "
+           "install {0}".format(pkgs))
+    try:
+        ret = check_output(cmd, stderr=STDOUT, shell=True)
+        log.debug(ret)
+    except CalledProcessError as e:
+        raise SystemExit("There was a problem installing packages "
+                         "({0}) Error: {1}".format(cmd, e))
+
+
 def get_command_output(command, timeout=300, user_sudo=False):
     """ Execute command through system shell
 
@@ -385,11 +400,11 @@ def container_run(name, cmd):
     :param str cmd: command to run
     """
     ip = container_ip(name)
-    cmd = "sudo -H -u {3} TERM=xterm256-color ssh -t -q " \
-          "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
-          "-o \"UserKnownHostsFile=/dev/null\" " \
-          "-i {2} " \
-          "{0} {1}".format(ip, cmd, ssh_privkey(), install_user())
+    cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
+           "-l ubuntu -o \"StrictHostKeyChecking=no\" "
+           "-o \"UserKnownHostsFile=/dev/null\" "
+           "-i {2} "
+           "{0} {1}".format(ip, cmd, ssh_privkey(), install_user()))
     log.debug("Running in container: {0}".format(cmd))
     # ret = os.system("{0} >>/dev/null".format(cmd))
     try:
@@ -404,11 +419,11 @@ def container_run_status(name, cmd):
     """ Runs cloud-status in container
     """
     ip = container_ip(name)
-    cmd = "sudo -H -u {2} TERM=xterm256-color ssh -t -q " \
-          "-l ubuntu -o \"StrictHostKeyChecking=no\" " \
-          "-o \"UserKnownHostsFile=/dev/null\" " \
-          "-i {1} " \
-          "{0} {3}".format(ip, ssh_privkey(), install_user(), cmd)
+    cmd = ("sudo -H -u {2} TERM=xterm256-color ssh -t -q "
+           "-l ubuntu -o \"StrictHostKeyChecking=no\" "
+           "-o \"UserKnownHostsFile=/dev/null\" "
+           "-i {1} "
+           "{0} {3}".format(ip, ssh_privkey(), install_user(), cmd))
     log.debug("Running command without waiting for response.")
     args = deque(shlex.split(cmd))
     os.execlp(args.popleft(), *args)
@@ -422,14 +437,14 @@ def container_cp(name, filepath, dst):
     :param str dst: destination of remote path
     """
     ip = container_ip(name)
-    cmd = "scp -r -q " \
-          "-o \"StrictHostKeyChecking=no\" " \
-          "-o \"UserKnownHostsFile=/dev/null\" " \
-          "-i {identity} " \
-          "{filepath} " \
-          "ubuntu@{ip}:{dst} ".format(ip=ip, dst=dst,
-                                      identity=ssh_privkey(),
-                                      filepath=filepath)
+    cmd = ("scp -r -q "
+           "-o \"StrictHostKeyChecking=no\" "
+           "-o \"UserKnownHostsFile=/dev/null\" "
+           "-i {identity} "
+           "{filepath} "
+           "ubuntu@{ip}:{dst} ".format(ip=ip, dst=dst,
+                                       identity=ssh_privkey(),
+                                       filepath=filepath))
     ret = get_command_output(cmd)
     if ret['status'] > 0:
         raise SystemExit("There was a problem copying ({0}) to the container "
@@ -545,7 +560,7 @@ def ssh_genkey():
         out = get_command_output(cmd, user_sudo=True)
         if out['status'] != 0:
             print("Unable to generate key: {0}".format(out['stderr']))
-            sys.exit(out['ret'])
+            sys.exit(out['status'])
         get_command_output('sudo chown -R {0}:{0} {1}'.format(
             install_user(), os.path.join(install_home(), '.ssh')))
         get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
