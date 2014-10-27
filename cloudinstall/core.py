@@ -217,11 +217,6 @@ class DisplayController:
         with view_context(self):
             self.ui.render_node_install_wait(message=message)
 
-        # TODO MERGE: we don't use this alarm anymore right?
-        # self.node_install_wait_alarm = self.loop.set_alarm_in(
-        #     self.config.node_install_wait_interval,
-        #     self.render_node_install_wait)
-
     def render_placement_view(self):
         self.ui.render_placement_view(self,
                                       self.placement_controller)
@@ -246,15 +241,15 @@ class DisplayController:
             self.info_message("Welcome ..")
             self.initialize()
 
-        self.render_node_install_wait()
-        self.update_alarm()
+        self.render()
         self.loop.run()
 
     def start(self):
         """ Starts controller processing """
         self.main_loop()
 
-    def update_alarm(self, *args, **kwargs):
+    def render(self, *args, **kwargs):
+        """Render UI according to current state and reset timer"""
         interval = 1
 
         if self.current_state == ControllerState.PLACEMENT:
@@ -267,7 +262,7 @@ class DisplayController:
         else:
             self.update_node_states()
 
-        self.loop.set_alarm_in(interval, self.update_alarm)
+        self.loop.set_alarm_in(interval, self.render)
 
     def update_node_states(self):
         """ Updating node states
@@ -317,7 +312,7 @@ class DisplayController:
             self.exit()
         if key in ['r', 'R', 'f5']:
             self.info_message("View was refreshed.")
-            self.render_nodes(self.nodes, self.juju_state, self.maas_state)
+            self.render()
 
 
 class Controller(DisplayController):
