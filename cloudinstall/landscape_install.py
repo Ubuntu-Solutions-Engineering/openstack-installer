@@ -64,14 +64,17 @@ class LandscapeInstall:
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
         """
-        MultiInstallExistingMaas(self.opts, self.display_controller).run()
-        self.finalize_deploy()
+        ret = MultiInstallExistingMaas(
+            self.opts, self.display_controller).run()
+        if ret:
+            self.finalize_deploy()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
-        MultiInstallNewMaas(self.opts, self.display_controller).run()
-        self.finalize_deploy()
+        ret = MultiInstallNewMaas(self.opts, self.display_controller).run()
+        if ret:
+            self.finalize_deploy()
 
     def _save_lds_creds(self, admin_name, admin_email, system_email,
                         maas_server=None, maas_server_key=None):
@@ -80,12 +83,17 @@ class LandscapeInstall:
         self.lds_system_email = system_email.value
         self.maas_server = maas_server.value
         self.maas_server_key = maas_server_key.value
+        log.debug("MAAS host: {} key: {}".format(self.maas_server,
+                                                 self.maas_server_key))
 
         self.display_controller.ui.hide_widget_on_top()
         self.display_controller.info_message("Running ..")
         if not self.maas_server:
+            log.debug("No maas credentials entered, doing a new MAAS install")
             self._do_install_new_maas()
         else:
+            log.debug("Existing MAAS defined, doing a LDS "
+                      "installation with existing MAAS.")
             self.config.save_maas_creds(self.maas_server,
                                         self.maas_server_key)
             self._do_install_existing_maas()

@@ -80,7 +80,6 @@ def status_context(view, level='debug', msg=None):
 
 @contextmanager
 def view_context(view):
-    view.ui.hide_widget_on_top()
     yield
     view.redraw_screen()
 

@@ -90,7 +90,7 @@ class MultiInstall:
 
     def do_install(self):
         self.display_controller.render_node_install_wait(
-            message="Enabling juju and bootstrapping environment.")
+            message="Intializing Juju")
 
         # FIXME This is duplicated by write_juju_env
         maas_creds = self.config.maas_creds
@@ -133,7 +133,8 @@ class MultiInstall:
                 args.append('--placement')
             os.execvp('openstack-status', args)
         else:
-            return
+            log.debug("Finished MAAS step, now deploying Landscape.")
+            return True
 
     def drop_privileges(self):
         if os.geteuid() != 0:
@@ -195,8 +196,9 @@ class MultiInstallNewMaas(MultiInstall):
         self.continue_with_interface()
 
     def continue_with_interface(self):
+        self.display_controller.ui.hide_widget_on_top()
         self.display_controller.render_node_install_wait(
-            message="Setting up with MAAS environment.")
+            message="Intializing MAAS")
 
         check_output('mkdir -p /etc/openstack', shell=True)
         check_output(['cp', '/etc/network/interfaces',
