@@ -344,11 +344,11 @@ class NodeViewMode(ScrollableWidgetWrap):
         else:
             m = base_machine
 
-        container_id = unit.machine_id.split('/')[-1]
-        base_id = base_machine.machine_id
+        base_id, container_type, container_id = unit.machine_id.split('/')
+        ctypestr = dict(kvm="VM", lxc="Container")[container_type]
 
-        rl = ["Container {} (Machine {}".format(container_id,
-                                                base_id)]
+        rl = ["{} {} (Machine {}".format(ctypestr, container_id,
+                                         base_id)]
         if m:
             rl += [":  "] + self._hardware_info_for_machine(m) + [")"]
         else:

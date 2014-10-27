@@ -128,11 +128,9 @@ class JujuState:
     def base_machine(self, machine_id):
         """ returns machine if given a numeric machine id,
         or machine hosting the container if given a container id
-
-        NOTE: KVMs are treated as base machines.
         """
         base_id = machine_id
-        if 'lxc' in machine_id:
+        if 'lxc' in machine_id or 'kvm' in machine_id:
             base_id = machine_id.split('/')[0]
         return self.machine(base_id)
 
