@@ -69,9 +69,10 @@ class MultiInstall:
         self.config = Config()
         self.tempdir = TemporaryDirectory(suffix="cloud-install")
         # Sets install type
-        utils.spew(os.path.join(self.config.cfg_path,
-                                'multi'),
-                   'auto-generated')
+        if not self.config.is_landscape:
+            utils.spew(os.path.join(self.config.cfg_path,
+                                    'multi'),
+                       'auto-generated')
 
     def set_perms(self):
         # Set permissions
@@ -123,12 +124,16 @@ class MultiInstall:
 
         self.drop_privileges()
 
-        args = ['openstack-status']
-        if self.opts.enable_swift:
-            args.append('--enable-swift')
-        if self.opts.edit_placement:
-            args.append('--placement')
-        os.execvp('openstack-status', args)
+        # Return control back to landscape_install if need be
+        if not self.config.is_landscape:
+            args = ['openstack-status']
+            if self.opts.enable_swift:
+                args.append('--enable-swift')
+            if self.opts.edit_placement:
+                args.append('--placement')
+            os.execvp('openstack-status', args)
+        else:
+            return
 
     def drop_privileges(self):
         if os.geteuid() != 0:
@@ -151,11 +156,17 @@ class MultiInstallExistingMaas(MultiInstall):
         self.do_install()
 
     def run(self):
-        self.display_controller.info_message("Please enter your MAAS "
-                                             "Server IP and your "
-                                             "administrator's API Key")
-        self.display_controller.show_maas_input("MAAS Install",
-                                                self._save_maas_creds)
+        # This is a result of running a landscape install and entering
+        # maas information there. Otherwise its a new maas installation
+        # and we continue on our merry way.
+        if not self.config.is_landscape:
+            self.display_controller.info_message("Please enter your MAAS "
+                                                 "Server IP and your "
+                                                 "administrator's API Key")
+            self.display_controller.show_maas_input("MAAS Install",
+                                                    self._save_maas_creds)
+        else:
+            self.do_install()
 
 
 class MaasInstallError(Exception):

@@ -42,6 +42,11 @@ class LandscapeInstall:
         self.lscape_yaml_path = os.path.join(
             self.config.cfg_path, 'landscape-deployments.yaml')
 
+        # Sets install type
+        utils.spew(os.path.join(self.config.cfg_path,
+                                'landscape'),
+                   'auto-generated')
+
     def set_perms(self):
         # Set permissions
         dirs = [self.config.cfg_path,
@@ -60,11 +65,13 @@ class LandscapeInstall:
         """ Performs the landscape deployment with existing MAAS
         """
         MultiInstallExistingMaas(self.opts, self.display_controller).run()
+        self.finalize_deploy()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
         MultiInstallNewMaas(self.opts, self.display_controller).run()
+        self.finalize_deploy()
 
     def _save_lds_creds(self, admin_name, admin_email, system_email,
                         maas_server=None, maas_server_key=None):
@@ -79,8 +86,8 @@ class LandscapeInstall:
         if not self.maas_server:
             self._do_install_new_maas()
         else:
-            self.opts.with_maas_address = self.maas_server
-            self.opts.with_maas_apikey = self.maas_server_key
+            self.config.save_maas_creds(self.maas_server,
+                                        self.maas_server_key)
             self._do_install_existing_maas()
 
     def run(self):
@@ -93,6 +100,8 @@ class LandscapeInstall:
     def finalize_deploy(self):
         """ Finish installation once questionarre is finished.
         """
+        utils.apt_install('openstack-landscape')
+
         # Prep deployer template for landscape
         lscape_password = utils.random_password()
         lscape_env = utils.load_template('landscape-deployments.yaml')
