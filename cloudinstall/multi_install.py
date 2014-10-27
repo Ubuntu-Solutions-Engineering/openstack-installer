@@ -188,8 +188,9 @@ class MultiInstallNewMaas(MultiInstall):
 
         utils.spew('/etc/openstack/interface', self.target_iface)
 
-        # Currently assumes that we have installed the maas package already.
-        # TODO: will need to install it here at some point
+        self.display_controller.info_message(
+            "Installing required packages ...")
+        utils.apt_install('openstack-multi')
 
         self.create_superuser()
         self.apikey = self.get_apikey()
