@@ -515,10 +515,13 @@ class Controller(DisplayController):
             return [c for c in charm_classes
                     if c not in self.deployed_charm_classes]
 
-        while len(undeployed_charm_classes()) > 0:
+        def update_pending_display():
             pending_names = [c.display_name for c in
                              undeployed_charm_classes()]
             self.ui.set_pending_deploys(pending_names)
+
+        while len(undeployed_charm_classes()) > 0:
+            update_pending_display()
 
             for charm_class in undeployed_charm_classes():
                 self.info_message("Checking if {c} is deployed".format(
@@ -545,9 +548,7 @@ class Controller(DisplayController):
                     self.deployed_charm_classes.append(charm_class)
 
                 self.juju_state.invalidate_status_cache()
-                pending_names = [c.display_name for c in
-                                 undeployed_charm_classes()]
-                self.ui.set_pending_deploys(pending_names)
+                update_pending_display()
 
             num_remaining = len(undeployed_charm_classes())
             if num_remaining > 0:
@@ -556,6 +557,7 @@ class Controller(DisplayController):
                     PrettyLog(self.deployed_charm_classes)))
 
                 time.sleep(5)
+            update_pending_display()
 
     def try_deploy(self, charm_class):
         "returns True if deploy is deferred and should be tried again."
