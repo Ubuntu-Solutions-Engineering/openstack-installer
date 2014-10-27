@@ -49,6 +49,7 @@ sys.excepthook = utils.global_exchandler
 
 @unique
 class ControllerState(Enum):
+
     """Names for current screen state"""
     INSTALL_WAIT = 0
     PLACEMENT = 1
@@ -79,6 +80,7 @@ def status_context(view, level='debug', msg=None):
 
 @contextmanager
 def view_context(view):
+    view.ui.hide_widget_on_top()
     yield
     view.redraw_screen()
 
@@ -165,6 +167,7 @@ class DisplayController:
         """To be overridden in subclasses."""
 
     # overlays
+
     def step_info(self, message):
         with dialog_context(self):
             self.ui.show_step_info(message)
@@ -173,13 +176,13 @@ class DisplayController:
         with dialog_context(self):
             self.ui.show_password_input(title, cb)
 
-    def show_maas_input(self, cb):
+    def show_maas_input(self, title, cb):
         with dialog_context(self):
-            self.ui.show_maas_input(cb)
+            self.ui.show_maas_input(title, cb)
 
-    def show_landscape_input(self, cb):
+    def show_landscape_input(self, title, cb):
         with dialog_context(self):
-            self.ui.show_landscape_input(cb)
+            self.ui.show_landscape_input(title, cb)
 
     def show_selector_info(self, title, install_types, cb):
         with dialog_context(self):
@@ -210,9 +213,10 @@ class DisplayController:
         with view_context(self):
             self.ui.render_nodes(nodes, juju_state, maas_state)
 
-    def render_node_install_wait(self, loop=None, user_data=None):
+    def render_node_install_wait(self, message=None,
+                                 loop=None, user_data=None):
         with view_context(self):
-            self.ui.render_node_install_wait()
+            self.ui.render_node_install_wait(message=message)
 
         # TODO MERGE: we don't use this alarm anymore right?
         # self.node_install_wait_alarm = self.loop.set_alarm_in(

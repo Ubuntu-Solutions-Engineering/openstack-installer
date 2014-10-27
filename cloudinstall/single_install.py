@@ -112,6 +112,8 @@ class SingleInstall:
         utils.container_run(self.container_name, "chmod 600 .ssh/id_rsa*")
 
     def run(self):
+        self.display_controller.render_node_install_wait(
+            message="Initializing single installation environment")
         if os.path.exists(self.container_abspath):
             # Container exists, handle return code in installer
             raise SystemExit("Container exists, please uninstall or kill "

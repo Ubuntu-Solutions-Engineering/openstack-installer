@@ -179,13 +179,14 @@ class Banner(ScrollableWidgetWrap):
 
 class NodeInstallWaitMode(ScrollableWidgetWrap):
 
-    def __init__(self):
+    def __init__(self,
+                 message="Installer is initializing nodes. Please wait."):
+        self.message = message
         super().__init__(self._build_node_waiting())
 
     def _build_node_waiting(self):
         """ creates a loading screen if nodes do not exist yet """
-        text = Text("\n\n\nInstaller is initializing nodes. "
-                    "Please wait.\n\n\n",
+        text = Text("\n\n\n{}\n\n\n".format(self.message),
                     align="center")
         load_box = [AttrWrap(Text("\u2582",
                                   align="center"), "pending_icon_on"),
@@ -524,6 +525,7 @@ def _check_encoding():
 
 
 class PegasusGUI(WidgetWrap):
+
     def __init__(self, header=None, body=None, footer=None):
         _check_encoding()  # Make sure terminal supports utf8
         self.header = header if header else Header()
@@ -619,15 +621,15 @@ class PegasusGUI(WidgetWrap):
     def hide_show_password_input(self):
         self.hide_widget_on_top()
 
-    def show_maas_input(self, cb):
-        widget = MaasServerInput(cb)
+    def show_maas_input(self, title, cb):
+        widget = MaasServerInput(title, cb)
         self.show_widget_on_top(widget, width=50, height=10)
 
     def hide_show_maas_input(self):
         self.hide_widget_on_top()
 
-    def show_landscape_input(self, cb):
-        widget = LandscapeInput(cb)
+    def show_landscape_input(self, title, cb):
+        widget = LandscapeInput(title, cb)
         self.show_widget_on_top(widget, width=50, height=10)
 
     def hide_show_landscape_input(self):
@@ -669,7 +671,7 @@ class PegasusGUI(WidgetWrap):
         self.header.set_show_add_units_hotkey(True)
 
     def render_node_install_wait(self, **kwargs):
-        self.frame.body = NodeInstallWaitMode()
+        self.frame.body = NodeInstallWaitMode(**kwargs)
         self.frame.set_body(self.frame.body)
 
     def render_placement_view(self, display_controller,
