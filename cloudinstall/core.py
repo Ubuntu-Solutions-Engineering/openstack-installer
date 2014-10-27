@@ -68,8 +68,11 @@ def status_context(view, level='debug', msg=None):
         log.error(msg)
     elif msg and level == 'debug':
         log.debug(msg)
-    elif msg:
+    elif msg and level == 'info':
         log.info(msg)
+    elif msg:
+        log.warning("Unexpected log level in "
+                    "status_context: '{}'".format(level))
     yield
     view.redraw_screen()
 
@@ -187,7 +190,7 @@ class DisplayController:
         self.ui.clear_status()
 
     def info_message(self, message):
-        with status_context(self, message):
+        with status_context(self, 'info', message):
             self.ui.status_info_message(message)
 
     def error_message(self, message):
