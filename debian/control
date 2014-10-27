@@ -96,7 +96,7 @@ Description: Ubuntu Openstack Installer (multi-system) - dependency package
 Package: cloud-install-multi
 Section: admin
 Architecture: all
-Depends: openstack-install-multi, ${misc:Depends}
+Depends: openstack-multi, ${misc:Depends}
 Description: Ubuntu Openstack Installer (multi-system) - meta package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -120,7 +120,7 @@ Description: Ubuntu Openstack Installer (single-system) - dependency package
 Package: cloud-install-single
 Section: admin
 Architecture: all
-Depends: openstack-install-single, ${misc:Depends}
+Depends: openstack-single, ${misc:Depends}
 Description: Ubuntu Openstack Installer (single-system) - meta package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -132,7 +132,7 @@ Description: Ubuntu Openstack Installer (single-system) - meta package
 Package: openstack-landscape
 Section: admin
 Architecture: all
-Depends: cloud-install-multi, juju-deployer, ${misc:Depends}
+Depends: juju-deployer, openstack-multi, ${misc:Depends}
 Description: Ubuntu Openstack Installer (landscape) - dependency package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -144,7 +144,7 @@ Description: Ubuntu Openstack Installer (landscape) - dependency package
 Package: cloud-install-landscape
 Section: admin
 Architecture: all
-Depends: openstack-install-multi, ${misc:Depends}
+Depends: openstack-landscape, ${misc:Depends}
 Description: Ubuntu Openstack Installer (landscape) - meta package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
