@@ -33,6 +33,7 @@ BUTTON_SIZE = 20
 
 
 class FilterBox(WidgetWrap):
+
     def __init__(self, edit_changed_cb):
         self.label = Text("")
         self.info_text = Text("")
@@ -60,6 +61,7 @@ class FilterBox(WidgetWrap):
 
 
 class MachineWidget(WidgetWrap):
+
     """A widget displaying a service and associated actions.
 
     machine - the machine to display
@@ -181,6 +183,7 @@ class MachineWidget(WidgetWrap):
 
 
 class ServiceWidget(WidgetWrap):
+
     """A widget displaying a service and associated actions.
 
     charm_class - the class describing the service to display
@@ -296,6 +299,7 @@ class ServiceWidget(WidgetWrap):
 
 
 class MachinesList(WidgetWrap):
+
     """A list of machines with configurable action buttons for each
     machine.
 
@@ -413,6 +417,7 @@ class MachinesList(WidgetWrap):
 
 
 class ServicesList(WidgetWrap):
+
     """A list of services (charm classes) with configurable action buttons
     for each machine.
 
@@ -483,7 +488,7 @@ class ServicesList(WidgetWrap):
                     self.remove_service_widget(cc)
                     continue
                 if not cc.allow_multi_units and \
-                   not cc in self.controller.unplaced_services:
+                        cc not in self.controller.unplaced_services:
                     self.remove_service_widget(cc)
                     continue
 
@@ -522,6 +527,7 @@ class ServicesList(WidgetWrap):
 
 
 class MachineChooser(WidgetWrap):
+
     """Presents list of machines to assign a service to.
     Supports multiple selection if the service does.
     """
@@ -595,6 +601,7 @@ class MachineChooser(WidgetWrap):
 
 
 class ServiceChooser(WidgetWrap):
+
     """Presents list of services to put on a machine.
 
     Supports multiple selection, implying separate containers using
@@ -658,8 +665,10 @@ class ServiceChooser(WidgetWrap):
 
 
 class ServicesColumn(WidgetWrap):
+
     """Displays dynamic list of unplaced services and associated controls
     """
+
     def __init__(self, display_controller, placement_controller,
                  placement_view):
         self.display_controller = display_controller
@@ -816,7 +825,9 @@ class DeployView(WidgetWrap):
 
 
 class MachinesColumn(WidgetWrap):
+
     """Shows machines or a link to MAAS to add more"""
+
     def __init__(self, display_controller, placement_controller,
                  placement_view):
         self.display_controller = display_controller
@@ -920,6 +931,7 @@ class MachinesColumn(WidgetWrap):
 
 
 class PlacementView(WidgetWrap):
+
     """Handles display of machines and services.
 
     displays nothing if self.controller is not set.
