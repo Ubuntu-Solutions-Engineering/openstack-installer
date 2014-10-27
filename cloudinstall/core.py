@@ -212,8 +212,7 @@ class DisplayController:
         with view_context(self):
             self.ui.render_nodes(nodes, juju_state, maas_state)
 
-    def render_node_install_wait(self, message=None,
-                                 loop=None, user_data=None):
+    def render_node_install_wait(self, message="Waiting..."):
         with view_context(self):
             self.ui.render_node_install_wait(message=message)
 
