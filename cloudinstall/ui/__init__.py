@@ -123,6 +123,7 @@ class ScrollableWidgetWrap(WidgetWrap, Scrollable):
 
 
 class InfoDialog(WidgetWrap):
+
     """A widget that displays a message and a close button."""
 
     def __init__(self, message, close_func):
@@ -249,9 +250,9 @@ class LandscapeInput(Dialog):
 
     def __init__(self, title, cb):
         super().__init__(title, cb)
-        self.add_input('lds_admin_email', 'Admin Email: ')
-        self.add_input('lds_admin_name', 'Admin Name: ')
-        self.add_input('lds_system_email', 'System Email: ')
-        self.add_input('maas_server', 'MAAS Server IP (optional): ')
-        self.add_input('maas_server_key', 'MAAS API Key (optional): ')
+        self.add_input('Admin Email: ')
+        self.add_input('Admin Name: ')
+        self.add_input('System Email: ')
+        self.add_input('MAAS Server IP (optional): ')
+        self.add_input('MAAS API Key (optional): ')
         self.show()

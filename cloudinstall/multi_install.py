@@ -88,6 +88,9 @@ class MultiInstall:
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
+        self.display_controller.render_node_install_wait(
+            message="Enabling juju and bootstrapping environment.")
+
         # FIXME This is duplicated by write_juju_env
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
@@ -151,7 +154,8 @@ class MultiInstallExistingMaas(MultiInstall):
         self.display_controller.info_message("Please enter your MAAS "
                                              "Server IP and your "
                                              "administrator's API Key")
-        self.display_controller.show_maas_input(self._save_maas_creds)
+        self.display_controller.show_maas_input("MAAS Install",
+                                                self._save_maas_creds)
 
 
 class MaasInstallError(Exception):
@@ -180,6 +184,9 @@ class MultiInstallNewMaas(MultiInstall):
         self.continue_with_interface()
 
     def continue_with_interface(self):
+        self.display_controller.render_node_install_wait(
+            message="Setting up with MAAS environment.")
+
         check_output('mkdir -p /etc/openstack', shell=True)
         check_output(['cp', '/etc/network/interfaces',
                       '/etc/openstack/interfaces.cloud.bak'])

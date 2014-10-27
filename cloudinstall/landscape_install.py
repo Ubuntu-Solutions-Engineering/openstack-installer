@@ -59,13 +59,11 @@ class LandscapeInstall:
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
         """
-        pass
         MultiInstallExistingMaas(self.opts, self.display_controller).run()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
-        pass
         MultiInstallNewMaas(self.opts, self.display_controller).run()
 
     def _save_lds_creds(self, admin_name, admin_email, system_email,
@@ -76,6 +74,8 @@ class LandscapeInstall:
         self.maas_server = maas_server.value
         self.maas_server_key = maas_server_key.value
 
+        self.display_controller.ui.hide_widget_on_top()
+        self.display_controller.info_message("Running ..")
         if not self.maas_server:
             self._do_install_new_maas()
         else:
@@ -87,7 +87,8 @@ class LandscapeInstall:
         self.display_controller.info_message(
             "Please enter your Landscape information and "
             "optionally an existing MAAS Server IP")
-        self.display_controller.show_landscape_input(self._save_lds_creds)
+        self.display_controller.show_landscape_input("Landscape Setup",
+                                                     self._save_lds_creds)
 
     def finalize_deploy(self):
         """ Finish installation once questionarre is finished.

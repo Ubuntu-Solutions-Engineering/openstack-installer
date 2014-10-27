@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from subprocess import (Popen, PIPE, call, STDOUT, check_output,
-                        CalledProcessError)
+                        check_call, DEVNULL, CalledProcessError)
 from contextlib import contextmanager
 from collections import deque
 from jinja2 import Environment, FileSystemLoader
@@ -126,11 +126,11 @@ def apt_install(pkgs):
            "-o Dpkg::Options::=--force-confold "
            "install {0}".format(pkgs))
     try:
-        ret = check_output(cmd, stderr=STDOUT, shell=True)
+        ret = check_call(cmd, stdout=DEVNULL, stderr=DEVNULL, shell=True)
         log.debug(ret)
     except CalledProcessError as e:
         raise SystemExit("There was a problem installing packages "
-                         "({0}) Error: {1}".format(cmd, e))
+                         "({0})".format(e.returncode))
 
 
 def get_command_output(command, timeout=300, user_sudo=False):
@@ -620,7 +620,7 @@ def human_to_mb(s):
     if len(s) == 0:
         raise Exception("unexpected empty string")
 
-    md = dict(M=1, G=1024, T=1024*1024, P=1024*1024*1024)
+    md = dict(M=1, G=1024, T=1024 * 1024, P=1024 * 1024 * 1024)
     suffix = s[-1]
     if suffix.isalpha():
         return float(s[:-1]) * md[suffix]
@@ -635,7 +635,7 @@ def mb_to_human(num):
         return '0 B'
 
     i = 0
-    while num >= 1024 and i < len(suffixes)-1:
+    while num >= 1024 and i < len(suffixes) - 1:
         num /= 1024
         i += 1
     return "{:.2f} {}".format(num, suffixes[i])
