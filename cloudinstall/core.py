@@ -240,14 +240,14 @@ class DisplayController:
             self.info_message("Welcome ..")
             self.initialize()
 
-        self.render()
+        self.update()
         self.loop.run()
 
     def start(self):
         """ Starts controller processing """
         self.main_loop()
 
-    def render(self, *args, **kwargs):
+    def update(self, *args, **kwargs):
         """Render UI according to current state and reset timer"""
         interval = 1
 
@@ -261,7 +261,7 @@ class DisplayController:
         else:
             self.update_node_states()
 
-        self.loop.set_alarm_in(interval, self.render)
+        self.loop.set_alarm_in(interval, self.update)
 
     def update_node_states(self):
         """ Updating node states
@@ -311,7 +311,7 @@ class DisplayController:
             self.exit()
         if key in ['r', 'R', 'f5']:
             self.info_message("View was refreshed.")
-            self.render()
+            self.update()
 
 
 class Controller(DisplayController):
