@@ -569,7 +569,7 @@ def ssh_genkey():
         out = get_command_output(cmd, user_sudo=True)
         if out['status'] != 0:
             print("Unable to generate key: {0}".format(out['stderr']))
-            sys.exit(out['ret'])
+            sys.exit(out['status'])
         get_command_output('sudo chown -R {0}:{0} {1}'.format(
             install_user(), os.path.join(install_home(), '.ssh')))
         get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
