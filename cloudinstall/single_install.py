@@ -113,7 +113,7 @@ class SingleInstall:
 
     def run(self):
         self.display_controller.render_node_install_wait(
-            message="Initializing single installation environment")
+            message="Initializing single install")
         if os.path.exists(self.container_abspath):
             # Container exists, handle return code in installer
             raise SystemExit("Container exists, please uninstall or kill "
