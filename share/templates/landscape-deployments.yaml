@@ -47,7 +47,6 @@ landscape:
                 landscape-password: {{ landscape_password }}
                 services: static appserver pingserver combo-loader async-frontend apiserver package-upload jobhandler package-search cron juju-sync
                 repository: http://ppa.launchpad.net/landscape/14.10/ubuntu
-                license-file: file:///dev/null
         landscape-msg:
             branch: lp:~landscape/landscape-charm/stable
             charm: landscape
@@ -56,7 +55,6 @@ landscape:
                 landscape-password: {{ landscape_password }}
                 services: msgserver
                 repository: http://ppa.launchpad.net/landscape/14.10/ubuntu
-                license-file: file:///dev/null
     relations:
         - [landscape, rabbitmq-server]
         - [landscape, haproxy]
