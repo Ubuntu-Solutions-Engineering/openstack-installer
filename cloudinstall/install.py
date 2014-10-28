@@ -45,7 +45,7 @@ class InstallController(DisplayController):
         else:
             self.error_message('Passwords did not match, try again ..')
             return self.show_password_input(
-                'Openstack Password', self._save_password)
+                'Create a new Openstack Password', self._save_password)
 
     def select_install_type(self):
         """ Dialog for selecting installation type
@@ -67,7 +67,7 @@ class InstallController(DisplayController):
         self.render_node_install_wait(message="Starting install")
 
         self.ui.show_password_input(
-            'Openstack Password', self._save_password)
+            'Create a new Openstack Password', self._save_password)
         self.update_alarm()
         self.loop.run()
 
@@ -81,10 +81,14 @@ class InstallController(DisplayController):
         """
         self.ui.hide_selector_info()
         if 'Single' in install_type:
+            self.set_openstack_rel("Icehouse (2014.1.1)")
             SingleInstall(self.opts, self).run()
         elif 'Multi with existing MAAS' == install_type:
+            self.set_openstack_rel("Icehouse (2014.1.1)")
             MultiInstallExistingMaas(self.opts, self).run()
         elif 'Multi' == install_type:
+            self.set_openstack_rel("Icehouse (2014.1.1)")
             MultiInstallNewMaas(self.opts, self).run()
         else:
+            self.set_openstack_rel("")
             LandscapeInstall(self.opts, self).run()

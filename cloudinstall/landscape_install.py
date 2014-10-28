@@ -84,6 +84,7 @@ class LandscapeInstall:
     def run(self):
         self.display_controller.info_message(
             "Please enter your Landscape information and "
-            "optionally an existing MAAS Server IP")
+            "optionally an existing MAAS Server IP. If MAAS "
+            "is not defined a new one will be created for you.")
         self.display_controller.show_landscape_input("Landscape Setup",
                                                      self._save_lds_creds)
