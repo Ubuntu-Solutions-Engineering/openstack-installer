@@ -745,6 +745,11 @@ class LandscapeInstallFinal:
         self.display_controller.render_node_install_wait(
             message="Initializing Landscape")
 
+        # FIXME: not sure if deployer is failing to access the juju
+        # environment but i get random connection refused when
+        # running juju-deployer
+        time.sleep(10)
+
         # Set remaining permissions
         self.set_perms()
 
