@@ -28,9 +28,12 @@ from urllib.parse import quote, urlparse, urlunparse
 import hmac
 from hashlib import sha256
 from base64 import b64encode
+from cloudinstall.config import Config
 
 MAGIC_OK_STRING = 'New user - Landscape'
 LATEST_VERSION = "2011-08-01"
+
+cfg = Config()
 
 
 def parse(url):
@@ -149,8 +152,7 @@ def register_new_user(host, **kwargs):
     """ Register a new user. Takes kwargs admin_email admin_name, and
     system_email. """
     kwargs['root_url'] = 'https://%s/' % host
-    with open(expanduser('~/.cloud-install/openstack.passwd')) as f:
-        kwargs['admin_password'] = f.read().strip()
+    kwargs['admin_password'] = cfg.openstack_password
 
     res = run_query('anonymous', 'anonymous', 'BootstrapLDS', kwargs,
                     'https://%s/api/' % host)
@@ -159,12 +161,9 @@ def register_new_user(host, **kwargs):
 
 
 def register_maas(host, key, secret, maas_host):
-    with open(expanduser("~/.cloud-install/maas-creds")) as f:
-        creds = f.read().strip()
-
     data = {
-      'endpoint': 'http://%s/MAAS' % maas_host,
-      'credentials': creds,
+        'endpoint': 'http://%s/MAAS' % maas_host,
+        'credentials': cfg.maas_creds['api_key'],
     }
 
     run_query(key, secret, 'RegisterMAASRegionController', data,
