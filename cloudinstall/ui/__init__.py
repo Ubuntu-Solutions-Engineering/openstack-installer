@@ -18,10 +18,8 @@
 from __future__ import unicode_literals
 
 import logging
-from urwid import (AttrWrap, BoxAdapter, Button, Columns, Divider,
-                   LineBox, ListBox, Pile, RadioButton,
-                   SimpleListWalker, Text, WidgetWrap, connect_signal,
-                   emit_signal, signals)
+from urwid import (Button, LineBox, ListBox, Pile,
+                   SimpleListWalker, Text, WidgetWrap)
 from cloudinstall.ui.dialog import Dialog
 
 log = logging.getLogger('cloudinstall.ui')

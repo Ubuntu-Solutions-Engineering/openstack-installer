@@ -21,7 +21,6 @@ import logging
 import os
 import pwd
 import re
-import time
 
 from subprocess import check_output
 from tempfile import TemporaryDirectory
