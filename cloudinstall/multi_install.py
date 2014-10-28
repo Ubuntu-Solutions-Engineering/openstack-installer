@@ -756,20 +756,12 @@ class LandscapeInstallFinal:
         utils.spew(self.lscape_yaml_path,
                    lscape_env_modified)
 
-        # Wait for a minimum 6 machines for landscape deployment
-        self.authenticate_maas()
-        while not self.wait_for_maas_machine_ready():
-            self.display_controller.info_message(
-                "Waiting for minimal amount of required machines (6), "
-                "please PXE boot those machines if you haven't already ..")
-            time.sleep(3)
-
         # Juju deployer
         self.display_controller.info_message(
             "Deploying Landscape ..")
 
-        out = utils.get_command_output("juju-deployer -Wdv -c {0} "
-                                       "landscape".format(
+        out = utils.get_command_output("juju-deployer -WdvL -w 180 -c {0} "
+                                       "landscape-dense-maas".format(
                                            self.lscape_yaml_path),
                                        timeout=None)
         if out['status']:

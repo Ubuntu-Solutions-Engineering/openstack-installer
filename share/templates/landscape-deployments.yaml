@@ -10,15 +10,15 @@
 _common:
     services:
         rabbitmq-server:
-            charm: cs:precise/rabbitmq-server-27
+            charm: cs:trusty/rabbitmq-server-7
         postgresql:
-            charm: cs:precise/postgresql-71
+            charm: cs:trusty/postgresql-3
             constraints: mem=2048
             options:
                 extra-packages: python-apt postgresql-contrib postgresql-.*-debversion
                 max_connections: 500
         haproxy:
-            charm: cs:precise/haproxy-31
+            charm: cs:trusty/haproxy-1
             options:
                 enable_monitoring: True
                 monitoring_allowed_cidr: "0.0.0.0/0"
@@ -27,7 +27,7 @@ _common:
                 # Don't deploy default haproxy service on port 80
                 services: ""
         apache2:
-            charm: cs:precise/apache2-21
+            charm: cs:trusty/apache2-4
             expose: True
             options:
                 enable_modules: proxy proxy_http proxy_balancer rewrite expires headers ssl
@@ -37,24 +37,25 @@ _common:
 
 landscape:
     inherits: _common
-    series: precise
+    series: trusty
     services:
         landscape:
-            charm: cs:precise/landscape-server
+            branch: lp:~landscape/landscape-charm/stable
             constraints: mem=2048
             options:
                 service-count: "2"
                 landscape-password: {{ landscape_password }}
                 services: static appserver pingserver combo-loader async-frontend apiserver package-upload jobhandler package-search cron juju-sync
-                repository: https://launchpad.net/~landscape/+archive/ubuntu/14.10
+                repository: http://ppa.launchpad.net/landscape/14.10/ubuntu
                 license-file: file:///dev/null
         landscape-msg:
-            charm: cs:precise/landscape-server
+            branch: lp:~landscape/landscape-charm/stable
+            charm: landscape
             constraints: mem=2048
             options:
                 landscape-password: {{ landscape_password }}
                 services: msgserver
-                repository: https://launchpad.net/~landscape/+archive/ubuntu/14.10
+                repository: http://ppa.launchpad.net/landscape/14.10/ubuntu
                 license-file: file:///dev/null
     relations:
         - [landscape, rabbitmq-server]
@@ -65,6 +66,12 @@ landscape:
         - [landscape-msg, rabbitmq-server]
         - [landscape-msg, haproxy]
         - ["landscape-msg:db-admin", "postgresql:db-admin"]
+
+landscape-dense:
+    inherits: landscape-dense-maas
+    services:
+        apache2:
+            to: 0
 
 landscape-dense-maas:
     inherits: landscape
