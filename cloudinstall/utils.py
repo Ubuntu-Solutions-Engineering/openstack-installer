@@ -129,8 +129,8 @@ def apt_install(pkgs):
         ret = check_call(cmd, stdout=DEVNULL, stderr=DEVNULL, shell=True)
         log.debug(ret)
     except CalledProcessError as e:
-        raise SystemExit("There was a problem installing packages "
-                         "({0})".format(e.returncode))
+        log.error("Problem with package install: {0}".format(e))
+        pass
 
 
 def get_command_output(command, timeout=300, user_sudo=False):

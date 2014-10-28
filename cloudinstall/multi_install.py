@@ -214,6 +214,7 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message(
             "Installing required packages ...")
+
         utils.apt_install('openstack-multi')
 
         self.create_superuser()
@@ -765,8 +766,7 @@ class LandscapeInstallFinal:
                                        "landscape-dense-maas".format(
                                            self.lscape_yaml_path))
         if out['status']:
-            raise SystemExit("Problem deploying Landscape: {}".format(
-                out['status']))
+            log.error("Problem deploying Landscape: {}".format(out['status']))
 
         # Configure landscape
         out = utils.get_command_output("{bin} --admin-email={admin_email} "
