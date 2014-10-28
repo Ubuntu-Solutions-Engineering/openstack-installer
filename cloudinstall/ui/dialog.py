@@ -55,7 +55,7 @@ class Dialog(WidgetWrap):
             super().keypress(size, key)
         if key == 'tab':
             old_widget, old_pos = self.input_lbox.get_focus()
-            self.input_lbox.set_focus((old_pos + 1) % len(self.input_items))
+            self.input_lbox.set_focus((old_pos + 1) % len(self.total_items))
 
     def add_buttons(self):
         """ Adds default OK/Cancel buttons for dialog
