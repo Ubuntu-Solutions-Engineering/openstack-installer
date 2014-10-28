@@ -113,6 +113,7 @@ class MultiInstall:
         # Starts the party
         self.display_controller.info_message("Bootstrapping juju ..")
         out = utils.get_command_output("juju bootstrap",
+                                       timeout=None,
                                        user_sudo=True)
         if out['status'] != 0:
             log.debug("Problem during bootstrap: '{}'".format(out))
@@ -124,6 +125,7 @@ class MultiInstall:
         # workaround to avoid connection failure at beginning of
         # openstack-status
         out = utils.get_command_output("juju status",
+                                       timeout=None,
                                        user_sudo=True)
         if out['status'] != 0:
             log.debug("failure to get initial juju status: '{}'".format(out))
