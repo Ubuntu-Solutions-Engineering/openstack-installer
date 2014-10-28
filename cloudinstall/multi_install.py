@@ -21,6 +21,7 @@ import logging
 import os
 import pwd
 import re
+import time
 
 from subprocess import check_output
 from tempfile import TemporaryDirectory
@@ -720,7 +721,7 @@ class LandscapeInstallFinal:
         """
         ready = [m.instance_id for m in
                  self.maas_state.machines(MaasMachineStatus.READY)]
-        if len(ready) > 0:
+        if len(ready) >= 6:
             return True
         return False
 
@@ -755,16 +756,13 @@ class LandscapeInstallFinal:
         utils.spew(self.lscape_yaml_path,
                    lscape_env_modified)
 
-        # Wait for a maas machine to be in a ready state works for both
-        # new maas installations and existing ones
-        # FIXME: I'm not so sure this is needed anymore now that I've seen
-        # how the landscape installation is handled
-        # self.authenticate_maas()
-        # while not self.wait_for_maas_machine_ready():
-        #     self.display_controller.info_message(
-        #         "Waiting for an available MAAS machine, please PXE boot a "
-        #         "machine if you haven't already ..")
-        #    time.sleep(3)
+        # Wait for a minimum 6 machines for landscape deployment
+        self.authenticate_maas()
+        while not self.wait_for_maas_machine_ready():
+            self.display_controller.info_message(
+                "Waiting for minimal amount of required machines (6), "
+                "please PXE boot those machines if you haven't already ..")
+            time.sleep(3)
 
         # Juju deployer
         self.display_controller.info_message(
