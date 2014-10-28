@@ -201,3 +201,32 @@ class Config:
         except IOError:
             _maascreds = dict()
         return _maascreds
+
+    def save_landscape_creds(self, admin_name, admin_email,
+                             system_email, maas_server, maas_apikey):
+        """ Saves landscape credentials for re-use
+
+        :param str admin_name: admin name
+        :param str admin_email: admin email
+        :param str system_email: system_email
+        :param str maas_server: ip of maas server
+        :param str maas_apikey: api key of maas admin user
+        """
+        LANDSCAPE_CREDS_FILE = os.path.join(self.cfg_path, 'landscapecreds')
+        utils.spew(LANDSCAPE_CREDS_FILE,
+                   json.dumps(dict(admin_name=admin_name,
+                                   admin_email=admin_email,
+                                   system_email=system_email,
+                                   maas_server=maas_server,
+                                   maas_apikey=maas_apikey)))
+
+    @property
+    def landscape_creds(self):
+        """ reads landscape creds file
+        """
+        LANDSCAPE_CREDS_FILE = os.path.join(self.cfg_path, 'landscapecreds')
+        try:
+            _creds = json.loads(utils.slurp(LANDSCAPE_CREDS_FILE))
+        except IOError:
+            _creds = dict()
+        return _creds

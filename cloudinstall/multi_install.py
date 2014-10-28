@@ -759,12 +759,14 @@ class LandscapeInstallFinal:
 
         # Wait for a maas machine to be in a ready state works for both
         # new maas installations and existing ones
-        self.authenticate_maas()
-        while not self.wait_for_maas_machine_ready():
-            self.display_controller.info_message(
-                "Waiting for an available MAAS machine, please PXE boot a "
-                "machine if you haven't already ..")
-            time.sleep(3)
+        # FIXME: I'm not so sure this is needed anymore now that I've seen
+        # how the landscape installation is handled
+        # self.authenticate_maas()
+        # while not self.wait_for_maas_machine_ready():
+        #     self.display_controller.info_message(
+        #         "Waiting for an available MAAS machine, please PXE boot a "
+        #         "machine if you haven't already ..")
+        #    time.sleep(3)
 
         # Juju deployer
         self.display_controller.info_message(
@@ -772,20 +774,24 @@ class LandscapeInstallFinal:
 
         out = utils.get_command_output("juju-deployer -Wdv -c {0} "
                                        "landscape-dense-maas".format(
-                                           self.lscape_yaml_path))
+                                           self.lscape_yaml_path),
+                                       timeout=None)
         if out['status']:
             log.error("Problem deploying Landscape: {}".format(out))
 
         # Configure landscape
-        out = utils.get_command_output("{bin} --admin-email={admin_email} "
-                                       "--admin-name={name} "
-                                       "--system-email={sys_email} "
-                                       "--maas-host={maas_host}".format(
-                                           self.lscape_configure_bin,
-                                           admin_email=self.lds_admin_email,
-                                           name=self.lds_admin_name,
-                                           sys_email=self.lds_system_email,
-                                           maas_host=self.maas_server))
+        out = utils.get_command_output(
+            "{bin} --admin-email={admin_email} "
+            "--admin-name={name} "
+            "--system-email={sys_email} "
+            "--maas-host={maas_host}".format(
+                self.lscape_configure_bin,
+                admin_email=self.config.landscape_creds['admin_email'],
+                name=self.config.landscape_creds['admin_name'],
+                sys_email=self.config.landscape_creds['system_email'],
+                maas_host=self.config.landscape_creds['maas_server']),
+            timeout=None)
+
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
 

@@ -60,6 +60,12 @@ class LandscapeInstall:
         self.lds_system_email = system_email.value
         self.maas_server = maas_server.value
         self.maas_server_key = maas_server_key.value
+        self.config.save_landscape_creds(
+            self.lds_admin_name,
+            self.lds_admin_email,
+            self.lds_system_email,
+            self.maas_server,
+            self.maas_server_key)
         log.debug("MAAS host: {} key: {}".format(self.maas_server,
                                                  self.maas_server_key))
 
