@@ -133,7 +133,7 @@ def apt_install(pkgs):
         pass
 
 
-def get_command_output(command, timeout=300, user_sudo=False):
+def get_command_output(command, timeout=None, user_sudo=False):
     """ Execute command through system shell
 
     :param command: command to run

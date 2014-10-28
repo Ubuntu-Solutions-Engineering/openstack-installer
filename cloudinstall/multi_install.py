@@ -743,7 +743,6 @@ class LandscapeInstallFinal:
         """
         self.display_controller.render_node_install_wait(
             message="Initializing Landscape")
-        utils.apt_install('juju-deployer')
 
         # Set remaining permissions
         self.set_perms()
@@ -772,7 +771,7 @@ class LandscapeInstallFinal:
             "Deploying Landscape ..")
 
         out = utils.get_command_output("juju-deployer -Wdv -c {0} "
-                                       "landscape-dense-maas".format(
+                                       "landscape".format(
                                            self.lscape_yaml_path),
                                        timeout=None)
         if out['status']:
@@ -788,19 +787,23 @@ class LandscapeInstallFinal:
                 admin_email=self.config.landscape_creds['admin_email'],
                 name=self.config.landscape_creds['admin_name'],
                 sys_email=self.config.landscape_creds['system_email'],
-                maas_host=self.config.landscape_creds['maas_server']),
+                maas_host=self.config.maas_creds['api_host']),
             timeout=None)
 
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
 
         self.display_controller.info_message("Done!")
-        msg = ("You can now accept enlisted nodes in MaaS by visiting"
-               "http://{0}/MAAS/. The username is root and the "
-               "password is the one you provided during the install process."
-               "Please go to http://{1}/account/standalone/openstack"
-               "to continue with the installation of your OpenStack"
-               "cloud.".format(self.config.landscape_creds['maas_server'],
-                               out['output']))
+        msg = []
+        msg.append("You can now accept enlisted nodes in MaaS by visiting ")
+        msg.append("http://{0}/MAAS/. The username is root and the ".format(
+            self.config.maas_creds['api_host']))
+        msg.append("password is the one you provided during the install "
+                   "process. ")
+        msg.append("Please go to "
+                   "http://{0}/account/standalone/openstack ".format(
+                       out['output']))
+        msg.append("to continue with the installation of your OpenStack ")
+        msg.append("cloud.")
 
-        self.display_controller.step_info(msg)
+        self.display_controller.step_info(msg, height=len(msg) + 5)
