@@ -167,9 +167,12 @@ class MultiInstall(InstallBase):
 
 class MultiInstallExistingMaas(MultiInstall):
 
-    def _save_maas_creds(self, maas_server, maas_apikey):
-        self.config.save_maas_creds(maas_server.value,
-                                    maas_apikey.value)
+    def _save_maas_creds(self, creds):
+        maas_server = creds['maas_server'].value
+        maas_apikey = creds['maas_apikey'].value
+
+        self.config.save_maas_creds(maas_server,
+                                    maas_apikey)
 
         # Saved maas creds, start the show
         self.do_install()
@@ -789,23 +792,29 @@ class LandscapeInstallFinal:
         out = utils.get_command_output("juju-deployer -WdvL -w 180 -c {0} "
                                        "landscape-dense-maas".format(
                                            self.lscape_yaml_path),
-                                       timeout=None)
+                                       timeout=None,
+                                       user_sudo=True)
         if out['status']:
             log.error("Problem deploying Landscape: {}".format(out))
 
         # Configure landscape
-        out = utils.get_command_output(
-            "{bin} --admin-email {admin_email} "
-            "--admin-name {name} "
-            "--system-email {sys_email} "
-            "--maas-host {maas_host}".format(
-                bin=self.lscape_configure_bin,
-                admin_email=self.config.landscape_creds['admin_email'],
-                name=self.config.landscape_creds['admin_name'],
-                sys_email=self.config.landscape_creds['system_email'],
-                maas_host=self.config.maas_creds['api_host']),
-            timeout=None)
-        log.debug("Running landscape configure: {}".format(out))
+        # Running landscape configure:
+        # /usr/share/openstack/bin/configure-landscape --admin-email adam
+        # --admin-name foo@bar.com --system-email foo@bar.com --maas-host
+        # 172.16.0.1
+
+        cmd = ("{bin} --admin-email {admin_email} "
+               "--admin-name {name} "
+               "--system-email {sys_email} "
+               "--maas-host {maas_host}".format(
+                   bin=self.lscape_configure_bin,
+                   admin_email=self.config.landscape_creds['admin_email'],
+                   name=self.config.landscape_creds['admin_name'],
+                   sys_email=self.config.landscape_creds['system_email'],
+                   maas_host=self.config.maas_creds['api_host']))
+        log.debug("Running landscape configure: {}".format(cmd))
+
+        out = utils.get_command_output(cmd, timeout=None, user_sudo=True)
 
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
