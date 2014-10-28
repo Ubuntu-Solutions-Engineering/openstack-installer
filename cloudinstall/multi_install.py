@@ -115,8 +115,11 @@ class MultiInstall:
         out = utils.get_command_output("juju bootstrap",
                                        user_sudo=True)
         if out['status'] != 0:
-            log.debug("failure to bootstrap: '{}'".format(out))
-            raise SystemExit("Problem with juju bootstrap.")
+            log.debug("Problem during bootstrap: '{}'".format(out))
+            # FIXME: This is raising an exception even though juju is in the
+            # middle of doing an apt-get upgrade on the bootstrapped
+            # node
+            # raise SystemExit("Problem with juju bootstrap.")
 
         # workaround to avoid connection failure at beginning of
         # openstack-status
@@ -124,7 +127,9 @@ class MultiInstall:
                                        user_sudo=True)
         if out['status'] != 0:
             log.debug("failure to get initial juju status: '{}'".format(out))
-            raise SystemExit("Problem with juju status poke.")
+            # FIXME: dont raise exception here until we can fully verify there
+            # is a problem with juju status's return codes
+            # raise SystemExit("Problem with juju status poke.")
 
         self.drop_privileges()
 
