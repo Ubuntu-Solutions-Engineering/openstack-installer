@@ -766,7 +766,7 @@ class LandscapeInstallFinal:
                                        "landscape-dense-maas".format(
                                            self.lscape_yaml_path))
         if out['status']:
-            log.error("Problem deploying Landscape: {}".format(out['status']))
+            log.error("Problem deploying Landscape: {}".format(out))
 
         # Configure landscape
         out = utils.get_command_output("{bin} --admin-email={admin_email} "
@@ -779,8 +779,7 @@ class LandscapeInstallFinal:
                                            sys_email=self.lds_system_email,
                                            maas_host=self.maas_server))
         if out['status']:
-            raise SystemExit("Problem with configuring Landscape: {}.".format(
-                out['output']))
+            log.error("Problem with configuring Landscape: {}.".format(out))
 
         self.display_controller.info_message("Done!")
         msg = ("You can now accept enlisted nodes in MaaS by visiting"
