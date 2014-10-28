@@ -207,6 +207,10 @@ class DisplayController:
         with status_context(self):
             self.ui.status_jujugui_url(ip)
 
+    def set_openstack_rel(self, text):
+        with status_context(self):
+            self.ui.status_openstack_rel(text)
+
     # - Render
     def render_nodes(self, nodes, juju_state, maas_state):
         with view_context(self):

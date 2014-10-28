@@ -444,7 +444,7 @@ class StatusBar(WidgetWrap):
         self._status_line = Text(text)
         self._horizon_url = Text('')
         self._jujugui_url = Text('')
-        self._openstack_rel = Text('Icehouse (2014.1.1)')
+        self._openstack_rel = Text('')
         self._status_extra = self._build_status_extra()
         status = Pile([self._pending_deploys,
                        self._status_line, self._status_extra])
@@ -455,6 +455,11 @@ class StatusBar(WidgetWrap):
         status.append(Pile([self._horizon_url, self._jujugui_url]))
         status.append(('pack', self._openstack_rel))
         return AttrWrap(Columns(status), 'status_extra')
+
+    def set_openstack_rel(self, text="Icehouse (2014.1.1)"):
+        """ Updates openstack release text
+        """
+        return self._openstack_rel.set_text(text)
 
     def set_dashboard_url(self, ip=None):
         """ sets horizon dashboard url """
@@ -660,6 +665,9 @@ class PegasusGUI(WidgetWrap):
 
     def status_jujugui_url(self, ip):
         self.frame.footer.set_jujugui_url(ip)
+
+    def status_openstack_rel(self, text):
+        self.frame.footer.set_openstack_rel(text)
 
     def clear_status(self):
         self.frame.footer = None

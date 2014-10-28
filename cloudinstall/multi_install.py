@@ -744,7 +744,7 @@ class LandscapeInstallFinal:
         """
         self.display_controller.render_node_install_wait(
             message="Initializing Landscape")
-        utils.apt_install('openstack-landscape')
+        utils.apt_install('juju-deployer')
 
         # Set remaining permissions
         self.set_perms()
@@ -801,6 +801,7 @@ class LandscapeInstallFinal:
                "password is the one you provided during the install process."
                "Please go to http://{1}/account/standalone/openstack"
                "to continue with the installation of your OpenStack"
-               "cloud.".format(self.maas_server, out['output']))
+               "cloud.".format(self.config.landscape_creds['maas_server'],
+                               out['output']))
 
         self.display_controller.step_info(msg)
