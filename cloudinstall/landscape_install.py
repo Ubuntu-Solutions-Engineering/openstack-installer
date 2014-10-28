@@ -32,11 +32,6 @@ class LandscapeInstall:
         self.config = Config()
         self.opts = opts
         self.display_controller = display_controller
-        self.lds_admin_name = None
-        self.lds_admin_email = None
-        self.lds_system_email = None
-        self.maas_server = None
-        self.maas_server_key = None
         # Sets install type
         utils.spew(os.path.join(self.config.cfg_path,
                                 'landscape'),
@@ -65,7 +60,7 @@ class LandscapeInstall:
 
         self.display_controller.ui.hide_widget_on_top()
         self.display_controller.info_message("Running ..")
-        if not self.maas_server:
+        if not maas_server:
             log.debug("No maas credentials entered, doing a new MAAS install")
             self._do_install_new_maas()
         else:

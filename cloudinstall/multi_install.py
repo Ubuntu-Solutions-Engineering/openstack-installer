@@ -826,10 +826,10 @@ class LandscapeInstallFinal:
             self.config.maas_creds['api_host']))
         msg.append("password is the one you provided during the install "
                    "process. ")
-        msg.append("Please go to "
-                   "http://{0}/account/standalone/openstack ".format(
-                       out['output']))
+        msg.append("Please go to: ")
+        msg.append("http://{0}/account/standalone/openstack ".format(
+            out['output']))
         msg.append("to continue with the installation of your OpenStack ")
         msg.append("cloud.")
 
-        self.display_controller.step_info(msg, height=len(msg) + 5)
+        self.display_controller.step_info(msg, width=60, height=len(msg) + 5)
