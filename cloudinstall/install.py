@@ -23,7 +23,6 @@ from cloudinstall.landscape_install import LandscapeInstall
 from cloudinstall.multi_install import (MultiInstallNewMaas,
                                         MultiInstallExistingMaas)
 
-
 log = logging.getLogger('cloudinstall.install')
 
 
@@ -64,17 +63,10 @@ class InstallController(DisplayController):
 
         self.info_message("Get started by entering an Openstack password "
                           "to use in your cloud ..")
-        self.render_node_install_wait(message="Starting install")
 
         self.ui.show_password_input(
             'Create a new Openstack Password', self._save_password)
-        self.update_alarm()
         self.loop.run()
-
-    def update_alarm(self, *args, **kwargs):
-        interval = 1
-        self.render_node_install_wait()
-        self.loop.set_alarm_in(interval, self.update_alarm)
 
     def do_install(self, install_type):
         """ Callback for install type selector

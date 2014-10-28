@@ -186,8 +186,10 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
 
     def _build_node_waiting(self):
         """ creates a loading screen if nodes do not exist yet """
-        text = Text("\n\n\n{}\n\n\n".format(self.message),
-                    align="center")
+        text = [Text("\n\n\n"),
+                Text(self.message, align="center"),
+                Text("\n\n\n")]
+
         load_box = [AttrWrap(Text("\u2582",
                                   align="center"), "pending_icon_on"),
                     AttrWrap(Text("\u2581",
@@ -221,7 +223,7 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
         loading_boxes.append(('weight', 1, Text('')))
         loading_boxes = Columns(loading_boxes)
 
-        return ScrollableListBox([text, loading_boxes])
+        return ScrollableListBox(text + [loading_boxes])
 
 
 class NodeViewMode(ScrollableWidgetWrap):
