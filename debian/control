@@ -32,6 +32,7 @@ Vcs-Git: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer.git
 Package: openstack
 Architecture: all
 Depends: gawk,
+         juju-deployer,
          nmap,
          pwgen,
          python-kombu,

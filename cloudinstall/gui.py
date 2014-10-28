@@ -505,10 +505,13 @@ class StatusBar(WidgetWrap):
 
 class StepInfo(WidgetWrap):
 
-    def __init__(self, msg=None):
+    def __init__(self, msg=None, height=2):
         if not msg:
             msg = "Processing."
-        super().__init__(AttrWrap(LineBox(Text(msg)), 'dialog'))
+        listbox = ListBox([Text(msg)])
+        box_adapter = BoxAdapter(listbox, height=height + 1)
+        linebox = LineBox(box_adapter, title="Info")
+        super().__init__(AttrWrap(linebox, 'dialog'))
 
 
 def _check_encoding():
@@ -603,10 +606,11 @@ class PegasusGUI(WidgetWrap):
     def hide_help_info(self):
         self.hide_widget_on_top()
 
-    def show_step_info(self, msg=None):
+    def show_step_info(self, msg=None, height=2):
         self.hide_step_info()
-        widget = StepInfo(msg)
-        self.show_widget_on_top(widget, width=50, height=3, align="center",
+        widget = StepInfo(msg, height)
+        self.show_widget_on_top(widget, width=50, height=height,
+                                align="center",
                                 valign="middle", min_height=10)
 
     def hide_step_info(self):

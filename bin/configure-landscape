@@ -16,9 +16,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import check_output
-from os.path import expanduser
+import os
+import sys
 
+# Handle imports where the path is not automatically updated during install.
+# This really only happens when a binary is not in the usual /usr/bin location
+lib_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, lib_dir)
+
+from subprocess import check_output
 import argparse
 import requests
 from requests.exceptions import ConnectionError

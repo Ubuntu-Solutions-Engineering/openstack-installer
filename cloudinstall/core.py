@@ -167,9 +167,9 @@ class DisplayController:
 
     # overlays
 
-    def step_info(self, message):
+    def step_info(self, message, height):
         with dialog_context(self):
-            self.ui.show_step_info(message)
+            self.ui.show_step_info(message, height)
 
     def show_password_input(self, title, cb):
         with dialog_context(self):

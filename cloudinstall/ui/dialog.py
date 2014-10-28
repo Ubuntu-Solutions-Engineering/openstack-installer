@@ -36,7 +36,7 @@ class Dialog(WidgetWrap):
     signals = ['done']
 
     def __init__(self, title, cb):
-        self.title = '{0} (Esc)'.format(title)
+        self.title = title
         self.cb = cb
         self.input_items = []
         self.radio_items = []
