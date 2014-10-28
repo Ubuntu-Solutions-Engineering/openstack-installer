@@ -45,17 +45,13 @@ class LandscapeInstall:
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
         """
-        ret = MultiInstallExistingMaas(
+        MultiInstallExistingMaas(
             self.opts, self.display_controller).run()
-        if ret:
-            self.finalize_deploy()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
-        ret = MultiInstallNewMaas(self.opts, self.display_controller).run()
-        if ret:
-            self.finalize_deploy()
+        MultiInstallNewMaas(self.opts, self.display_controller).run()
 
     def _save_lds_creds(self, admin_name, admin_email, system_email,
                         maas_server=None, maas_server_key=None):

@@ -111,7 +111,8 @@ class MultiInstall:
         self.set_perms()
 
         # Starts the party
-        out = utils.get_command_output("juju --debug bootstrap",
+        self.display_controller.info_message("Bootstrapping juju ..")
+        out = utils.get_command_output("juju bootstrap",
                                        user_sudo=True)
         if out['status'] != 0:
             log.debug("failure to bootstrap: '{}'".format(out))
