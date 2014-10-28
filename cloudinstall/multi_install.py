@@ -769,16 +769,17 @@ class LandscapeInstallFinal:
 
         # Configure landscape
         out = utils.get_command_output(
-            "{bin} --admin-email={admin_email} "
-            "--admin-name={name} "
-            "--system-email={sys_email} "
-            "--maas-host={maas_host}".format(
+            "{bin} --admin-email {admin_email} "
+            "--admin-name {name} "
+            "--system-email {sys_email} "
+            "--maas-host {maas_host}".format(
                 bin=self.lscape_configure_bin,
                 admin_email=self.config.landscape_creds['admin_email'],
                 name=self.config.landscape_creds['admin_name'],
                 sys_email=self.config.landscape_creds['system_email'],
                 maas_host=self.config.maas_creds['api_host']),
             timeout=None)
+        log.debug("Running landscape configure: {}".format(out))
 
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
