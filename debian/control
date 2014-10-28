@@ -132,7 +132,7 @@ Description: Ubuntu Openstack Installer (single-system) - meta package
 Package: openstack-landscape
 Section: admin
 Architecture: all
-Depends: juju-deployer, openstack-multi, ${misc:Depends}
+Depends: juju-deployer, ${misc:Depends}
 Description: Ubuntu Openstack Installer (landscape) - dependency package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server

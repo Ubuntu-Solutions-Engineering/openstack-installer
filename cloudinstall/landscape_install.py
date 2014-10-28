@@ -37,29 +37,10 @@ class LandscapeInstall:
         self.lds_system_email = None
         self.maas_server = None
         self.maas_server_key = None
-        self.lscape_configure_bin = os.path.join(
-            self.config.bin_path, 'configure-landscape')
-        self.lscape_yaml_path = os.path.join(
-            self.config.cfg_path, 'landscape-deployments.yaml')
-
         # Sets install type
         utils.spew(os.path.join(self.config.cfg_path,
                                 'landscape'),
                    'auto-generated')
-
-    def set_perms(self):
-        # Set permissions
-        dirs = [self.config.cfg_path,
-                os.path.join(utils.install_home(), '.juju')]
-        for d in dirs:
-            try:
-                utils.chown(d,
-                            utils.install_user(),
-                            utils.install_user(),
-                            recursive=True)
-            except:
-                raise SystemExit(
-                    "Unable to set ownership for {}".format(d))
 
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
@@ -104,41 +85,3 @@ class LandscapeInstall:
             "optionally an existing MAAS Server IP")
         self.display_controller.show_landscape_input("Landscape Setup",
                                                      self._save_lds_creds)
-
-    def finalize_deploy(self):
-        """ Finish installation once questionarre is finished.
-        """
-        utils.apt_install('openstack-landscape')
-
-        # Prep deployer template for landscape
-        lscape_password = utils.random_password()
-        lscape_env = utils.load_template('landscape-deployments.yaml')
-        lscape_env_modified = lscape_env.render(
-            landscape_password=lscape_password.strip())
-        utils.spew(self.lscape_yaml_path,
-                   lscape_env_modified)
-
-        # Set remaining permissions
-        self.set_perms()
-
-        # Juju deployer
-        out = utils.get_command_output("juju-deployer -Wdv -c {0} "
-                                       "landscape-dense-maas".format(
-                                           self.lscape_yaml_path))
-        if out['status']:
-            raise SystemExit("Problem deploying Landscape: {}".format(
-                out['status']))
-
-        # Configure landscape
-        out = utils.get_command_output("{bin} --admin-email={admin_email} "
-                                       "--admin-name={name} "
-                                       "--system-email={sys_email} "
-                                       "--maas-host={maas_host}".format(
-                                           self.lscape_configure_bin,
-                                           admin_email=self.lds_admin_email,
-                                           name=self.lds_admin_name,
-                                           sys_email=self.lds_system_email,
-                                           maas_host=self.maas_server))
-        if out['status']:
-            raise SystemExit("Problem with configuring Landscape: {}.".format(
-                out['output']))

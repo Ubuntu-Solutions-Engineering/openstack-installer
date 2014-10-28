@@ -21,6 +21,8 @@ import logging
 import os
 import pwd
 import re
+import time
+
 from subprocess import check_output
 from tempfile import TemporaryDirectory
 
@@ -29,6 +31,10 @@ from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_default_gateway, get_netmask,
                                    get_network_interfaces,
                                    ip_range_max)
+from cloudinstall.maas import MaasState, MaasMachineStatus
+from maasclient.auth import MaasAuth
+from maasclient import MaasClient
+
 from cloudinstall import utils
 
 
@@ -89,9 +95,6 @@ class MultiInstall:
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
-        self.display_controller.render_node_install_wait(
-            message="Intializing Juju")
-
         # FIXME This is duplicated by write_juju_env
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
@@ -134,7 +137,8 @@ class MultiInstall:
             os.execvp('openstack-status', args)
         else:
             log.debug("Finished MAAS step, now deploying Landscape.")
-            return True
+            return LandscapeInstallFinal(self.opts,
+                                         self.display_controller).run()
 
     def drop_privileges(self):
         if os.geteuid() != 0:
@@ -198,7 +202,7 @@ class MultiInstallNewMaas(MultiInstall):
     def continue_with_interface(self):
         self.display_controller.ui.hide_widget_on_top()
         self.display_controller.render_node_install_wait(
-            message="Intializing MAAS")
+            message="Initializing MAAS")
 
         check_output('mkdir -p /etc/openstack', shell=True)
         check_output(['cp', '/etc/network/interfaces',
@@ -303,6 +307,8 @@ class MultiInstallNewMaas(MultiInstall):
             pass
 
     def create_bootstrap_kvm(self):
+        self.display_controller.render_node_install_wait(
+            message="Initializing Juju")
         self.display_controller.info_message(
             "Initializing environment for Juju ...")
         out = utils.get_command_output('usermod -a -G libvirtd maas')
@@ -667,3 +673,121 @@ class MultiInstallNewMaas(MultiInstall):
             openstack_password=admin_secret)
         check_output(['mkdir', '-p', self.config.juju_path])
         utils.spew(self.config.juju_environments_path, env_modified)
+
+
+# TODO clean up the landscape installer classes
+class LandscapeInstallFinal:
+
+    """ Final phase of landscape install
+    """
+
+    def __init__(self, opts, display_controller):
+        self.config = Config()
+        self.opts = opts
+        self.display_controller = display_controller
+        self.maas = None
+        self.maas_state = None
+        self.lscape_configure_bin = os.path.join(
+            self.config.bin_path, 'configure-landscape')
+        self.lscape_yaml_path = os.path.join(
+            self.config.cfg_path, 'landscape-deployments.yaml')
+
+    def set_perms(self):
+        # Set permissions
+        dirs = [self.config.cfg_path,
+                os.path.join(utils.install_home(), '.juju')]
+        for d in dirs:
+            try:
+                utils.chown(d,
+                            utils.install_user(),
+                            utils.install_user(),
+                            recursive=True)
+            except:
+                raise SystemExit(
+                    "Unable to set ownership for {}".format(d))
+
+    def wait_for_maas_machine_ready(self):
+        """ Wait for an available maas node in ready state
+        for our landscape deployment
+        """
+        ready = [m.instance_id for m in
+                 self.maas_state.machines(MaasMachineStatus.READY)]
+        if len(ready) > 0:
+            return True
+        return False
+
+    def authenticate_maas(self):
+        if self.config.maas_creds:
+            api_host = self.config.maas_creds['api_host']
+            api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
+            api_key = self.config.maas_creds['api_key']
+            auth = MaasAuth(api_url=api_url,
+                            api_key=api_key)
+        else:
+            auth = MaasAuth()
+            auth.get_api_key('root')
+        self.maas = MaasClient(auth)
+        self.maas_state = MaasState(self.maas)
+        log.debug('Authenticated against maas api.')
+
+    def run(self):
+        """ Finish installation once questionarre is finished.
+        """
+        self.display_controller.render_node_install_wait(
+            message="Initializing Landscape")
+        utils.apt_install('openstack-landscape')
+
+        # Set remaining permissions
+        self.set_perms()
+
+        # Prep deployer template for landscape
+        lscape_password = utils.random_password()
+        lscape_env = utils.load_template('landscape-deployments.yaml')
+        lscape_env_modified = lscape_env.render(
+            landscape_password=lscape_password.strip())
+        utils.spew(self.lscape_yaml_path,
+                   lscape_env_modified)
+
+        # Wait for a maas machine to be in a ready state works for both
+        # new maas installations and existing ones
+        self.authenticate_maas()
+        while not self.wait_for_maas_machine_ready():
+            self.display_controller.info_message(
+                "Waiting for an available MAAS machine, please PXE boot a "
+                "machine if you haven't already ..")
+            time.sleep(3)
+
+        # Juju deployer
+        self.display_controller.info_message(
+            "Deploying Landscape ..")
+
+        out = utils.get_command_output("juju-deployer -Wdv -c {0} "
+                                       "landscape-dense-maas".format(
+                                           self.lscape_yaml_path))
+        if out['status']:
+            raise SystemExit("Problem deploying Landscape: {}".format(
+                out['status']))
+
+        # Configure landscape
+        out = utils.get_command_output("{bin} --admin-email={admin_email} "
+                                       "--admin-name={name} "
+                                       "--system-email={sys_email} "
+                                       "--maas-host={maas_host}".format(
+                                           self.lscape_configure_bin,
+                                           admin_email=self.lds_admin_email,
+                                           name=self.lds_admin_name,
+                                           sys_email=self.lds_system_email,
+                                           maas_host=self.maas_server))
+        if out['status']:
+            raise SystemExit("Problem with configuring Landscape: {}.".format(
+                out['output']))
+
+        self.display_controller.info_message("Done!")
+        msg = ("You can now accept enlisted nodes in MaaS by visiting"
+               "http://{0}/MAAS/. The username is root and the "
+               "password is the one you provided during the install process."
+               "Please go to http://{1}/account/standalone/openstack"
+               "to continue with the installation of your OpenStack"
+               "cloud.".format(self.maas_server, out['output']))
+
+        self.display_controller.step_info(msg)
