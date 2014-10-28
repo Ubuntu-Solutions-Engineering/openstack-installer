@@ -19,7 +19,7 @@ from urwid import (AttrWrap, Columns, LineBox,
                    RadioButton, SimpleListWalker, Divider, Button,
 
                    signals, emit_signal, connect_signal)
-
+from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
 
 import logging
@@ -38,10 +38,8 @@ class Dialog(WidgetWrap):
     def __init__(self, title, cb):
         self.title = title
         self.cb = cb
-        self.input_items = []
-        self.radio_items = []
+        self.input_items = OrderedDict()
         self.input_lbox = []
-        self.total_items = []
 
     def show(self):
         w = self._build_widget()
@@ -55,7 +53,8 @@ class Dialog(WidgetWrap):
             super().keypress(size, key)
         if key == 'tab':
             old_widget, old_pos = self.input_lbox.get_focus()
-            self.input_lbox.set_focus((old_pos + 1) % len(self.total_items))
+            self.input_lbox.set_focus((old_pos + 1) % len(
+                list(self.input_items.keys())))
 
     def add_buttons(self):
         """ Adds default OK/Cancel buttons for dialog
@@ -66,7 +65,7 @@ class Dialog(WidgetWrap):
                             'button', 'button focus')]
         return Columns(buttons)
 
-    def add_input(self, caption, **kwargs):
+    def add_input(self, key, caption, **kwargs):
         """ Adds input boxes while setting their label attributes for
         easy retrieval of data
 
@@ -74,14 +73,14 @@ class Dialog(WidgetWrap):
         :param dict **kwargs: additional Edit attributes
         """
         edit = EditInput(caption=caption, **kwargs)
-        self.input_items.append(edit)
+        self.input_items[key] = edit
 
     def add_radio(self, item, group=[]):
         """ Adds radio selections
         """
         r = RadioButton(group, item)
         r.text_label = item
-        self.radio_items.append(r)
+        self.input_items[item] = r
 
     def _build_widget(self, **kwargs):
 
@@ -89,12 +88,13 @@ class Dialog(WidgetWrap):
             box.set_focus(0)
             return (len(items), BoxAdapter(box, len(items)))
 
-        self.total_items = self.input_items + self.radio_items
-        self.total_items = [AttrWrap(i, 'input', 'input focus') for i in
-                            self.total_items]
-        self.input_lbox = ListBox(SimpleListWalker(self.total_items))
+        total_items = []
+        for _item in self.input_items.keys():
+            total_items.append(AttrWrap(
+                self.input_items[_item], 'input', 'input focus'))
+        self.input_lbox = ListBox(SimpleListWalker(total_items))
 
-        num_of_items, items = box_adapter(self.total_items,
+        num_of_items, items = box_adapter(total_items,
                                           self.input_lbox)
 
         log.debug("Num items: {}, items: {}".format(num_of_items,
@@ -105,7 +105,8 @@ class Dialog(WidgetWrap):
             title=self.title)
 
     def submit(self, button):
-        self.emit_done_signal(*self.total_items)
+        log.debug("Callback on : {}".format(self.input_items))
+        self.emit_done_signal(self.input_items)
 
     def cancel(self, button):
         raise SystemExit("Installation cancelled.")

@@ -33,12 +33,15 @@ class InstallController(DisplayController):
     def __init__(self, **kwds):
         super().__init__(**kwds)
 
-    def _save_password(self, password=None, confirm_pass=None):
+    def _save_password(self, creds):
         """ Checks passwords match and proceeds
         """
-        if password.value and \
-           password.value == confirm_pass.value:
-            self.config.save_password(password.value)
+        password = creds['password'].value
+        if 'confirm_password' in creds:
+            confirm_password = creds['confirm_password'].value
+        if password and \
+           password == confirm_password:
+            self.config.save_password(password)
             self.ui.hide_show_password_input()
             self.select_install_type()
         else:

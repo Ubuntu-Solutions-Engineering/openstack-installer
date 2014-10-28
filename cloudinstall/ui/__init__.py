@@ -154,8 +154,10 @@ class Selector(Dialog):
         self.show()
 
     def submit(self, button):
-        selected = [r for r in self.total_items if r.get_state()][0]
-        selected_item = selected.label
+        log.debug("Callback on : {}".format(self.input_items))
+        for item in self.input_items.keys():
+            if self.input_items[item].get_state():
+                selected_item = self.input_items[item].label
         self.emit_done_signal(selected_item)
 
 
@@ -166,8 +168,8 @@ class PasswordInput(Dialog):
 
     def __init__(self, title, cb):
         super().__init__(title, cb)
-        self.add_input('Password: ', mask='*')
-        self.add_input('Confirm Password: ',
+        self.add_input('password', 'Password: ', mask='*')
+        self.add_input('confirm_password', 'Confirm Password: ',
                        mask='*')
         self.show()
 
@@ -179,8 +181,8 @@ class MaasServerInput(Dialog):
 
     def __init__(self, title, cb):
         super().__init__(title, cb)
-        self.add_input('MAAS IP Address: ')
-        self.add_input('MAAS API Key: ')
+        self.add_input('maas_server', 'MAAS IP Address: ')
+        self.add_input('maas_apikey', 'MAAS API Key: ')
         self.show()
 
 
@@ -191,9 +193,9 @@ class LandscapeInput(Dialog):
 
     def __init__(self, title, cb):
         super().__init__(title, cb)
-        self.add_input('Admin Email: ')
-        self.add_input('Admin Name: ')
-        self.add_input('System Email: ')
-        self.add_input('MAAS Server IP (optional): ')
-        self.add_input('MAAS API Key (optional): ')
+        self.add_input('admin_email', 'Admin Email: ')
+        self.add_input('admin_name', 'Admin Name: ')
+        self.add_input('system_email', 'System Email: ')
+        self.add_input('maas_server', 'MAAS Server IP (optional): ')
+        self.add_input('maas_apikey', 'MAAS API Key (optional): ')
         self.show()
