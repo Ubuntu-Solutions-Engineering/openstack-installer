@@ -27,10 +27,12 @@ from subprocess import check_output
 from tempfile import TemporaryDirectory
 
 from cloudinstall.config import Config
+from cloudinstall.installbase import InstallBase
 from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_default_gateway, get_netmask,
                                    get_network_interfaces,
                                    ip_range_max)
+
 from cloudinstall.maas import MaasState, MaasMachineStatus
 from maasclient.auth import MaasAuth
 from maasclient import MaasClient
@@ -67,11 +69,11 @@ options {{
 """
 
 
-class MultiInstall:
+class MultiInstall(InstallBase):
 
     def __init__(self, opts, display_controller):
         self.opts = opts
-        self.display_controller = display_controller
+        super().__init__(display_controller)
         self.config = Config()
         self.tempdir = TemporaryDirectory(suffix="cloud-install")
         # Sets install type
@@ -95,6 +97,8 @@ class MultiInstall:
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
+        self.start_task("Starting Juju server")
+
         # FIXME This is duplicated by write_juju_env
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
@@ -122,6 +126,8 @@ class MultiInstall:
             # node
             # raise SystemExit("Problem with juju bootstrap.")
 
+        self.start_task("Cleaning up")
+
         # workaround to avoid connection failure at beginning of
         # openstack-status
         out = utils.get_command_output("juju status",
@@ -134,7 +140,7 @@ class MultiInstall:
             # raise SystemExit("Problem with juju status poke.")
 
         self.drop_privileges()
-
+        self.stop_current_task()
         # Return control back to landscape_install if need be
         if not self.config.is_landscape:
             args = ['openstack-status']
@@ -173,6 +179,9 @@ class MultiInstallExistingMaas(MultiInstall):
         # maas information there. Otherwise its a new maas installation
         # and we continue on our merry way.
         if not self.config.is_landscape:
+            self.register_tasks(["Starting Juju server",
+                                 "Cleaning up"])
+
             self.display_controller.info_message("Please enter your MAAS "
                                                  "Server IP and your "
                                                  "administrator's API Key")
@@ -192,6 +201,17 @@ class MultiInstallNewMaas(MultiInstall):
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
     def run(self):
+        self.register_tasks(["Installing MAAS",
+                             "Configuring MAAS",
+                             "Waiting for MAAS cluster registration",
+                             "Searching for existing DHCP servers",
+                             "Configuring MAAS networks",
+                             "Importing MAAS boot images",
+                             "Configuring Juju for MAAS",
+                             "Creating KVM for Juju state server",
+                             "Starting Juju server",
+                             "Cleaning up"])
+
         self.prompt_for_interface()
 
     def prompt_for_interface(self):
@@ -207,10 +227,10 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.continue_with_interface()
 
+    @utils.async
     def continue_with_interface(self):
         self.display_controller.ui.hide_widget_on_top()
-        self.display_controller.render_node_install_wait(
-            message="Initializing MAAS")
+        self.start_task("Installing MAAS")
 
         check_output('mkdir -p /etc/openstack', shell=True)
         check_output(['cp', '/etc/network/interfaces',
@@ -220,20 +240,20 @@ class MultiInstallNewMaas(MultiInstall):
 
         utils.spew('/etc/openstack/interface', self.target_iface)
 
-        self.display_controller.info_message(
-            "Installing required packages ...")
-
         utils.apt_install('openstack-multi')
 
+        self.start_task("Configuring MAAS")
         self.create_superuser()
         self.apikey = self.get_apikey()
 
         self.login_to_maas(self.apikey)
+        self.start_task("Waiting for MAAS cluster registration")
         cluster_uuid = self.wait_for_registration()
         self.create_maas_bridge(self.target_iface)
 
         self.prompt_for_bridge()
 
+        self.start_task("Configuring MAAS networks")
         self.configure_maas_networking(cluster_uuid,
                                        'br0',
                                        self.gateway,
@@ -254,6 +274,7 @@ class MultiInstallNewMaas(MultiInstall):
                 raise MaasInstallError("Error setting proxy config")
 
         self.display_controller.info_message("Importing MAAS boot images")
+        self.start_task("Importing MAAS boot images")
         out = utils.get_command_output('maas maas boot-resources import')
         if out['status'] != 0:
             log.debug("Error starting boot images import: {}".format(out))
@@ -271,7 +292,9 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Done importing boot images.")
 
+        self.start_task("Configuring Juju")
         self.write_juju_env()
+        self.start_task("Creating KVM for Juju state server")
         self.create_bootstrap_kvm()
 
         try:
@@ -307,7 +330,7 @@ class MultiInstallNewMaas(MultiInstall):
         # TODO: allow customization
 
         self.display_controller.info_message("Detecting Existing DHCP server")
-        # TODO UI progress here?
+        self.start_task("Searching for existing DHCP servers")
         # TODO Handle existing dhcp with another dialog or user interaction
         # to accept the consequences.
         if self.detect_existing_dhcp(self.target_iface):
@@ -316,8 +339,6 @@ class MultiInstallNewMaas(MultiInstall):
             pass
 
     def create_bootstrap_kvm(self):
-        self.display_controller.render_node_install_wait(
-            message="Initializing Juju")
         self.display_controller.info_message(
             "Initializing environment for Juju ...")
         out = utils.get_command_output('usermod -a -G libvirtd maas')

@@ -19,6 +19,7 @@ import os
 
 import time
 from cloudinstall.config import Config
+from cloudinstall.installbase import InstallBase
 from cloudinstall import utils
 
 
@@ -29,7 +30,7 @@ class SingleInstallException(Exception):
     pass
 
 
-class SingleInstall:
+class SingleInstall(InstallBase):
 
     def __init__(self, opts, display_controller):
         self.opts = opts
