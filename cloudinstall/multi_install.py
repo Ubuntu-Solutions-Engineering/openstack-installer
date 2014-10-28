@@ -785,7 +785,7 @@ class LandscapeInstallFinal:
             "--admin-name={name} "
             "--system-email={sys_email} "
             "--maas-host={maas_host}".format(
-                self.lscape_configure_bin,
+                bin=self.lscape_configure_bin,
                 admin_email=self.config.landscape_creds['admin_email'],
                 name=self.config.landscape_creds['admin_name'],
                 sys_email=self.config.landscape_creds['system_email'],
