@@ -66,9 +66,6 @@ class SingleInstall(InstallBase):
         utils.container_wait(self.container_name)
         tries = 1
         while not self.cloud_init_finished():
-            self.display_controller.info_message(
-                "[{0}] * Waiting for container to finalize, "
-                "please wait ...       ".format(tries))
             time.sleep(1)
             tries = tries + 1
 
@@ -119,6 +116,8 @@ class SingleInstall(InstallBase):
             "Creating container",
             "Starting Juju server",
             "Cleanup"])
+
+        self.start_task("Initializing Environment")
         self.do_install()
 
     @utils.async
@@ -127,8 +126,6 @@ class SingleInstall(InstallBase):
             # Container exists, handle return code in installer
             raise SystemExit("Container exists, please uninstall or kill "
                              "existing cloud before proceeding.")
-
-        self.start_task("Initializing Environment")
 
         utils.ssh_genkey()
 

@@ -116,7 +116,6 @@ class MultiInstall(InstallBase):
         # Starts the party
         self.display_controller.info_message("Bootstrapping juju ..")
 
-        self.start_task("Starting Juju server")
         out = utils.get_command_output("juju bootstrap",
                                        timeout=None,
                                        user_sudo=True)
@@ -183,6 +182,7 @@ class MultiInstallExistingMaas(MultiInstall):
         # and we continue on our merry way.
         if not self.config.is_landscape:
             self.register_tasks(["Starting Juju server"])
+            self.start_task('Starting Juju server')
 
             self.display_controller.info_message("Please enter your MAAS "
                                                  "Server IP and your "
@@ -192,6 +192,7 @@ class MultiInstallExistingMaas(MultiInstall):
         else:
             self.register_tasks(["Starting Juju server",
                                  "Deploying Landscape"])
+            self.start_task('Starting Juju server')
             self.do_install()
 
 
@@ -745,7 +746,7 @@ class LandscapeInstallFinal:
         # FIXME: not sure if deployer is failing to access the juju
         # environment but i get random connection refused when
         # running juju-deployer
-        # time.sleep(10)
+        time.sleep(10)
 
         # Set remaining permissions
         self.set_perms()
