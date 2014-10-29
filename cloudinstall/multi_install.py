@@ -170,6 +170,7 @@ class MultiInstallExistingMaas(MultiInstall):
                                     maas_apikey)
 
         # Saved maas creds, start the show
+        self.start_task('Starting Juju server')
         self.do_install()
 
     def run(self):
@@ -178,7 +179,6 @@ class MultiInstallExistingMaas(MultiInstall):
         # and we continue on our merry way.
         if not self.config.is_landscape:
             self.register_tasks(["Starting Juju server"])
-            self.start_task('Starting Juju server')
 
             self.display_controller.info_message("Please enter your MAAS "
                                                  "Server IP and your "
