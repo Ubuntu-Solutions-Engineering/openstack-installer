@@ -57,9 +57,11 @@ class SingleInstall(InstallBase):
             extra_pkgs=['juju-local'])
         utils.spew(dst_file, modified_data)
 
+    @utils.async
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
+        self.start_task("Creating container")
         utils.container_create(self.container_name, self.userdata)
         utils.container_start(self.container_name)
         utils.container_wait(self.container_name)
@@ -118,6 +120,10 @@ class SingleInstall(InstallBase):
             "Creating container",
             "Starting Juju server",
             "Cleanup"])
+        self.do_install()
+
+    @utils.async
+    def do_install(self):
         if os.path.exists(self.container_abspath):
             # Container exists, handle return code in installer
             raise SystemExit("Container exists, please uninstall or kill "
@@ -131,7 +137,6 @@ class SingleInstall(InstallBase):
         self.prep_userdata()
 
         # Start container
-        self.start_task("Creating container")
         self.create_container_and_wait()
 
         # configure juju environment for bootstrap
