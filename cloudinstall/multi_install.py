@@ -112,15 +112,16 @@ class MultiInstall(InstallBase):
         # Starts the party
         self.display_controller.info_message("Bootstrapping juju ..")
 
-        out = utils.get_command_output("juju bootstrap",
+        if os.getenv("DEBUG_JUJU_BOOTSTRAP"):
+            dbgflag = "--debug"
+        else:
+            dbgflag = ""
+        out = utils.get_command_output("juju {} bootstrap".format(dbgflag),
                                        timeout=None,
                                        user_sudo=True)
         if out['status'] != 0:
             log.debug("Problem during bootstrap: '{}'".format(out))
-            # FIXME: This is raising an exception even though juju is in the
-            # middle of doing an apt-get upgrade on the bootstrapped
-            # node
-            # raise SystemExit("Problem with juju bootstrap.")
+            raise SystemExit("Problem with juju bootstrap.")
 
         # workaround to avoid connection failure at beginning of
         # openstack-status
