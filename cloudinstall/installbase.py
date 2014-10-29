@@ -65,7 +65,6 @@ class InstallBase:
         (n, s, e) = self.tasks[self.current_task_index]
         if s is not None and e is None:
             self.stop_current_task()
-            self.current_task_index += 1
             if len(self.tasks) <= self.current_task_index:
                 log.error("ran off end of task list")
                 return
@@ -87,6 +86,7 @@ class InstallBase:
     def stop_current_task(self):
         n, s, _ = self.tasks[self.current_task_index]
         self.tasks[self.current_task_index] = (n, s, time.time())
+        self.current_task_index += 1
         self.display_controller.loop.remove_alarm(self.progress_update_alarm)
 
     def update_progress(self, loop=None, userdata=None):
