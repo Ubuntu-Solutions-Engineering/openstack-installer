@@ -97,7 +97,6 @@ class MultiInstall(InstallBase):
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
-        self.start_task("Starting Juju server")
 
         # FIXME This is duplicated by write_juju_env
         maas_creds = self.config.maas_creds
@@ -116,6 +115,8 @@ class MultiInstall(InstallBase):
 
         # Starts the party
         self.display_controller.info_message("Bootstrapping juju ..")
+
+        self.start_task("Starting Juju server")
         out = utils.get_command_output("juju bootstrap",
                                        timeout=None,
                                        user_sudo=True)

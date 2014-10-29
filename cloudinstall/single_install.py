@@ -34,7 +34,7 @@ class SingleInstall(InstallBase):
 
     def __init__(self, opts, display_controller):
         self.opts = opts
-        self.display_controller = display_controller
+        super().__init__(display_controller)
         self.config = Config()
         self.container_name = 'uoi-bootstrap'
         self.container_path = '/var/lib/lxc'
