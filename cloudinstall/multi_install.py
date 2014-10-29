@@ -739,6 +739,7 @@ class LandscapeInstallFinal:
     def run(self):
         """ Finish installation once questionarre is finished.
         """
+
         # FIXME: not sure if deployer is failing to access the juju
         # environment but i get random connection refused when
         # running juju-deployer
@@ -791,15 +792,15 @@ class LandscapeInstallFinal:
 
         self.display_controller.info_message("Done!")
         msg = []
-        msg.append("You can now accept enlisted nodes in MaaS by visiting ")
-        msg.append("http://{0}/MAAS/. The username is root and the ".format(
+        msg.append("You can now accept enlisted nodes in MaaS by visiting: ")
+        msg.append("\n\nhttp://{0}/MAAS/. ".format(
             self.config.maas_creds['api_host']))
-        msg.append("password is the one you provided during the install "
-                   "process. ")
-        msg.append("Please go to: ")
+        msg.append("The username is root and the password is the one you ")
+        msg.append("provided during the install process. ")
+        msg.append("Please go to: \n\n")
         msg.append("http://{0}/account/standalone/openstack ".format(
-            out['output']))
-        msg.append("to continue with the installation of your OpenStack ")
+            out['output'].strip()))
+        msg.append("\n\nto continue with the installation of your OpenStack ")
         msg.append("cloud.")
 
         self.display_controller.step_info(msg, width=60, height=len(msg) + 5)
