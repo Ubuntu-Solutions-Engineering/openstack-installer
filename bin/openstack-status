@@ -65,7 +65,9 @@ if __name__ == '__main__':
         sys.exit(1)
     opts = parse_options(sys.argv)
     # Run openstack-status within container on single installs
-    if config.is_single:
+    out = utils.get_command_output('hostname', user_sudo=True)
+    hostname = out['output'].rstrip()
+    if config.is_single and 'uoi-bootstrap' not in hostname:
         logger.info("Running status within container")
         utils.container_run_status('uoi-bootstrap', 'openstack-status')
     gui = PegasusGUI()
