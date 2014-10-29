@@ -113,15 +113,17 @@ class SingleInstall(InstallBase):
         utils.container_run(self.container_name, "chmod 600 .ssh/id_rsa*")
 
     def run(self):
-        self.display_controller.render_node_install_wait(
-            message="Initializing single install")
+        self.register_tasks([
+            "Initializing Environment",
+            "Creating container",
+            "Starting Juju server",
+            "Cleanup"])
         if os.path.exists(self.container_abspath):
             # Container exists, handle return code in installer
             raise SystemExit("Container exists, please uninstall or kill "
                              "existing cloud before proceeding.")
 
-        self.display_controller.info_message(
-            "* Please wait while we generate your isolated environment ...")
+        self.start_task("Initializing Environment")
 
         utils.ssh_genkey()
 
@@ -129,6 +131,7 @@ class SingleInstall(InstallBase):
         self.prep_userdata()
 
         # Start container
+        self.start_task("Creating container")
         self.create_container_and_wait()
 
         # configure juju environment for bootstrap
@@ -158,8 +161,10 @@ class SingleInstall(InstallBase):
         if self.opts.enable_swift:
             cloud_status_bin.append('--enable-swift')
         self.display_controller.info_message("Bootstrapping Juju ..")
+        self.start_task("Starting Juju server")
         utils.container_run(self.container_name, "juju bootstrap")
         utils.container_run(self.container_name, "juju status")
+        self.start_task("Cleanup")
         self.display_controller.info_message("Starting cloud deployment ..")
         utils.container_run_status(
             self.container_name, " ".join(cloud_status_bin))
