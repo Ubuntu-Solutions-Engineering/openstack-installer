@@ -33,10 +33,6 @@ from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_network_interfaces,
                                    ip_range_max)
 
-from cloudinstall.maas import MaasState, MaasMachineStatus
-from maasclient.auth import MaasAuth
-from maasclient import MaasClient
-
 from cloudinstall import utils
 
 
