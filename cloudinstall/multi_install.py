@@ -739,37 +739,13 @@ class LandscapeInstallFinal:
                 raise SystemExit(
                     "Unable to set ownership for {}".format(d))
 
-    def wait_for_maas_machine_ready(self):
-        """ Wait for an available maas node in ready state
-        for our landscape deployment
-        """
-        ready = [m.instance_id for m in
-                 self.maas_state.machines(MaasMachineStatus.READY)]
-        if len(ready) >= 6:
-            return True
-        return False
-
-    def authenticate_maas(self):
-        if self.config.maas_creds:
-            api_host = self.config.maas_creds['api_host']
-            api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
-            api_key = self.config.maas_creds['api_key']
-            auth = MaasAuth(api_url=api_url,
-                            api_key=api_key)
-        else:
-            auth = MaasAuth()
-            auth.get_api_key('root')
-        self.maas = MaasClient(auth)
-        self.maas_state = MaasState(self.maas)
-        log.debug('Authenticated against maas api.')
-
     def run(self):
         """ Finish installation once questionarre is finished.
         """
         # FIXME: not sure if deployer is failing to access the juju
         # environment but i get random connection refused when
         # running juju-deployer
-        time.sleep(10)
+        # time.sleep(10)
 
         # Set remaining permissions
         self.set_perms()
