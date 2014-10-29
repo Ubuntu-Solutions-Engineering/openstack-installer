@@ -126,8 +126,6 @@ class MultiInstall(InstallBase):
             # node
             # raise SystemExit("Problem with juju bootstrap.")
 
-        self.start_task("Cleaning up")
-
         # workaround to avoid connection failure at beginning of
         # openstack-status
         out = utils.get_command_output("juju status",
@@ -150,6 +148,7 @@ class MultiInstall(InstallBase):
                 args.append('--placement')
             os.execvp('openstack-status', args)
         else:
+            self.start_task("Deploying Landscape")
             log.debug("Finished MAAS step, now deploying Landscape.")
             return LandscapeInstallFinal(self.opts,
                                          self.display_controller).run()
@@ -182,8 +181,7 @@ class MultiInstallExistingMaas(MultiInstall):
         # maas information there. Otherwise its a new maas installation
         # and we continue on our merry way.
         if not self.config.is_landscape:
-            self.register_tasks(["Starting Juju server",
-                                 "Cleaning up"])
+            self.register_tasks(["Starting Juju server"])
 
             self.display_controller.info_message("Please enter your MAAS "
                                                  "Server IP and your "
@@ -191,6 +189,8 @@ class MultiInstallExistingMaas(MultiInstall):
             self.display_controller.show_maas_input("MAAS Install",
                                                     self._save_maas_creds)
         else:
+            self.register_tasks(["Starting Juju server",
+                                 "Deploying Landscape"])
             self.do_install()
 
 
@@ -212,8 +212,7 @@ class MultiInstallNewMaas(MultiInstall):
                              "Importing MAAS boot images",
                              "Configuring Juju for MAAS",
                              "Creating KVM for Juju state server",
-                             "Starting Juju server",
-                             "Cleaning up"])
+                             "Starting Juju server"])
 
         self.prompt_for_interface()
 
