@@ -57,7 +57,6 @@ class SingleInstall(InstallBase):
             extra_pkgs=['juju-local'])
         utils.spew(dst_file, modified_data)
 
-    @utils.async
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
