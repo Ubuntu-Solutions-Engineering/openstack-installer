@@ -92,8 +92,9 @@ class MultiInstall(InstallBase):
                 raise MaasInstallError(
                     "Unable to set ownership for {}".format(d))
 
+    @utils.async
     def do_install(self):
-
+        self.start_task("Starting Juju server")
         # FIXME This is duplicated by write_juju_env
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
@@ -171,25 +172,20 @@ class MultiInstallExistingMaas(MultiInstall):
                                     maas_apikey)
 
         # Saved maas creds, start the show
-        self.start_task('Starting Juju server')
-        self.do_install()
+        self.continue_with_install()
 
     def run(self):
+        self.register_tasks(["Starting Juju server"])
         # This is a result of running a landscape install and entering
         # maas information there. Otherwise its a new maas installation
         # and we continue on our merry way.
         if not self.config.is_landscape:
-            self.register_tasks(["Starting Juju server"])
-
             self.display_controller.info_message("Please enter your MAAS "
                                                  "Server IP and your "
                                                  "administrator's API Key")
             self.display_controller.show_maas_input("MAAS Install",
                                                     self._save_maas_creds)
         else:
-            self.register_tasks(["Starting Juju server",
-                                 "Deploying Landscape"])
-            self.start_task('Starting Juju server')
             self.do_install()
 
 
@@ -306,6 +302,7 @@ class MultiInstallNewMaas(MultiInstall):
             raise MaasInstallError("Unable to set permissions on {}".format(
                 os.path.join(utils.install_home(), '.maascli.db')))
 
+        self.start_task("Starting Juju server")
         self.do_install()
 
     def prompt_for_bridge(self):
@@ -707,15 +704,15 @@ class MultiInstallNewMaas(MultiInstall):
 
 
 # TODO clean up the landscape installer classes
-class LandscapeInstallFinal:
+class LandscapeInstallFinal(InstallBase):
 
     """ Final phase of landscape install
     """
 
     def __init__(self, opts, display_controller):
-        self.config = Config()
         self.opts = opts
-        self.display_controller = display_controller
+        self.config = Config()
+        super().__init__(display_controller)
         self.maas = None
         self.maas_state = None
         self.lscape_configure_bin = os.path.join(
@@ -740,10 +737,20 @@ class LandscapeInstallFinal:
     def run(self):
         """ Finish installation once questionarre is finished.
         """
-
+        self.register_tasks(["Preparing Landscape",
+                             "Deploying Landscape",
+                             "Registering against Landscape",
+                             "Complete"])
         # FIXME: not sure if deployer is failing to access the juju
         # environment but i get random connection refused when
         # running juju-deployer
+        self.do_install()
+
+    @utils.async
+    def do_install(self):
+        self.start_task("Preparing Landscape")
+        self.display_controller.info_message(
+            "Running ..")
         time.sleep(10)
 
         # Set remaining permissions
@@ -758,8 +765,7 @@ class LandscapeInstallFinal:
                    lscape_env_modified)
 
         # Juju deployer
-        self.display_controller.info_message(
-            "Deploying Landscape ..")
+        self.start_task("Deploying Landscape")
 
         out = utils.get_command_output("juju-deployer -WdvL -w 180 -c {0} "
                                        "landscape-dense-maas".format(
@@ -774,7 +780,7 @@ class LandscapeInstallFinal:
         # /usr/share/openstack/bin/configure-landscape --admin-email adam
         # --admin-name foo@bar.com --system-email foo@bar.com --maas-host
         # 172.16.0.1
-
+        self.start_task("Registering against Landscape")
         cmd = ("{bin} --admin-email {admin_email} "
                "--admin-name {name} "
                "--system-email {sys_email} "
@@ -791,17 +797,16 @@ class LandscapeInstallFinal:
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
 
-        self.display_controller.info_message("Done!")
+        self.start_task("Complete")
+        self.display_controller.info_message("Complete")
         msg = []
-        msg.append("You can now accept enlisted nodes in MaaS by visiting: ")
-        msg.append("\n\nhttp://{0}/MAAS/. ".format(
-            self.config.maas_creds['api_host']))
-        msg.append("The username is root and the password is the one you ")
-        msg.append("provided during the install process. ")
-        msg.append("Please go to: \n\n")
+        msg.append("You can now continue with the installation of Openstack")
+        msg.append("by visiting:\n\n")
         msg.append("http://{0}/account/standalone/openstack ".format(
             out['output'].strip()))
-        msg.append("\n\nto continue with the installation of your OpenStack ")
-        msg.append("cloud.")
+        msg.append("\n\nCredentials:\n")
+        msg.append(" Email: {}".format(
+            self.config.landscape_creds['admin_email']))
+        msg.append(" Password: {}".format(self.config.openstack_password))
 
-        self.display_controller.step_info(msg, width=60, height=len(msg) + 5)
+        self.display_controller.step_info(msg, width=60, height=len(msg))
