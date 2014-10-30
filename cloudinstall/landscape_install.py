@@ -37,16 +37,22 @@ class LandscapeInstall:
                                 'landscape'),
                    'auto-generated')
 
+        self.landscape_tasks = ["Preparing Landscape",
+                                "Deploying Landscape",
+                                "Registering against Landscape"]
+
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
         """
         MultiInstallExistingMaas(
-            self.opts, self.display_controller).run()
+            self.opts, self.display_controller,
+            post_tasks=self.landscape_tasks).run()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
-        MultiInstallNewMaas(self.opts, self.display_controller).run()
+        MultiInstallNewMaas(self.opts, self.display_controller,
+                            post_tasks=self.landscape_tasks).run()
 
     def _save_lds_creds(self, creds):
         admin_name = creds['admin_name'].value
