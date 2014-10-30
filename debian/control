@@ -83,8 +83,8 @@ Depends: juju-core,
          maas,
          maas-dhcp,
          maas-dns,
-         virtinst,
          qemu-kvm,
+         virtinst,
          vlan,
          ${misc:Depends}
 Description: Ubuntu Openstack Installer (multi-system) - dependency package
