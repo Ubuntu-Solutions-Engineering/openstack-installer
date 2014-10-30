@@ -92,7 +92,6 @@ class MultiInstall(InstallBase):
                 raise MaasInstallError(
                     "Unable to set ownership for {}".format(d))
 
-    @utils.async
     def do_install(self):
         self.start_task("Starting Juju server")
         # FIXME This is duplicated by write_juju_env
