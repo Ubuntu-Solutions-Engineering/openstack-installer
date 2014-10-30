@@ -288,7 +288,7 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Done importing boot images.")
 
-        self.start_task("Configuring Juju")
+        self.start_task("Configuring Juju for MAAS")
         self.write_juju_env()
         self.start_task("Creating KVM for Juju state server")
         self.create_bootstrap_kvm()
