@@ -484,7 +484,8 @@ class Controller(DisplayController):
 
     def run_apt_go_fast(self, machine_id):
         utils.remote_cp(machine_id,
-                        src="/usr/share/cloud-installer/tools/apt-go-fast",
+                        src=path.join(self.config.share_path,
+                                      "tools/apt-go-fast"),
                         dst="/tmp/apt-go-fast")
         utils.remote_run(machine_id,
                          cmds="sudo sh /tmp/apt-go-fast")
@@ -492,7 +493,7 @@ class Controller(DisplayController):
     def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
         self.info_message('Copying network specifications to machine.')
-        srcpath = "/usr/share/cloud-installer/templates/lxc-host-only"
+        srcpath = path.join(self.config.tmpl_path, 'lxc-host-only')
         destpath = "/tmp/lxc-host-only"
         utils.remote_cp(machine_id, src=srcpath, dst=destpath)
         self.info_message('Updating network configuration for machine.')
