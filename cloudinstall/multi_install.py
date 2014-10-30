@@ -718,6 +718,7 @@ class LandscapeInstallFinal:
         self.opts = opts
         self.config = Config()
         self.multi_installer = multi_installer
+        self.display_controller = display_controller
         self.maas = None
         self.maas_state = None
         self.lscape_configure_bin = os.path.join(
