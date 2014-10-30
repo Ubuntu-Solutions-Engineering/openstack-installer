@@ -84,6 +84,13 @@ class InstallBase:
                    utils.install_user())
 
     def stop_current_task(self):
+        if self.current_task_index >= len(self.tasks):
+            log.error("stop_current_task called too many times, skipping.\n "
+                      "self.tasks={}\nself.current_task_index={}\n"
+                      "tasks_started: {}".format(self.tasks,
+                                                 self.current_task_index,
+                                                 self.tasks_started_debug))
+            return
         n, s, _ = self.tasks[self.current_task_index]
         self.tasks[self.current_task_index] = (n, s, time.time())
         self.current_task_index += 1

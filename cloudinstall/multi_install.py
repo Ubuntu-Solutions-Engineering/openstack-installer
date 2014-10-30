@@ -301,7 +301,6 @@ class MultiInstallNewMaas(MultiInstall):
             raise MaasInstallError("Unable to set permissions on {}".format(
                 os.path.join(utils.install_home(), '.maascli.db')))
 
-        self.start_task("Starting Juju server")
         self.do_install()
 
     def prompt_for_bridge(self):
