@@ -67,11 +67,15 @@ options {{
 
 class MultiInstall(InstallBase):
 
-    def __init__(self, opts, display_controller):
+    def __init__(self, opts, display_controller, post_tasks=None):
         self.opts = opts
         super().__init__(display_controller)
         self.config = Config()
         self.tempdir = TemporaryDirectory(suffix="cloud-install")
+        if post_tasks:
+            self.post_tasks = post_tasks
+        else:
+            self.post_tasks = []
         # Sets install type
         if not self.config.is_landscape:
             utils.spew(os.path.join(self.config.cfg_path,
@@ -148,6 +152,7 @@ class MultiInstall(InstallBase):
             self.start_task("Deploying Landscape")
             log.debug("Finished MAAS step, now deploying Landscape.")
             return LandscapeInstallFinal(self.opts,
+                                         self,
                                          self.display_controller).run()
 
     def drop_privileges(self):
@@ -174,7 +179,8 @@ class MultiInstallExistingMaas(MultiInstall):
         self.continue_with_install()
 
     def run(self):
-        self.register_tasks(["Starting Juju server"])
+        self.register_tasks(["Starting Juju server"] +
+                            self.post_tasks)
         # This is a result of running a landscape install and entering
         # maas information there. Otherwise its a new maas installation
         # and we continue on our merry way.
@@ -206,7 +212,8 @@ class MultiInstallNewMaas(MultiInstall):
                              "Importing MAAS boot images",
                              "Configuring Juju for MAAS",
                              "Creating KVM for Juju state server",
-                             "Starting Juju server"])
+                             "Starting Juju server"] +
+                            self.post_tasks)
 
         self.prompt_for_interface()
 
@@ -702,15 +709,15 @@ class MultiInstallNewMaas(MultiInstall):
 
 
 # TODO clean up the landscape installer classes
-class LandscapeInstallFinal(InstallBase):
+class LandscapeInstallFinal:
 
     """ Final phase of landscape install
     """
 
-    def __init__(self, opts, display_controller):
+    def __init__(self, opts, multi_installer, display_controller):
         self.opts = opts
         self.config = Config()
-        super().__init__(display_controller)
+        self.multi_installer = multi_installer
         self.maas = None
         self.maas_state = None
         self.lscape_configure_bin = os.path.join(
@@ -735,10 +742,6 @@ class LandscapeInstallFinal(InstallBase):
     def run(self):
         """ Finish installation once questionarre is finished.
         """
-        self.register_tasks(["Preparing Landscape",
-                             "Deploying Landscape",
-                             "Registering against Landscape",
-                             "Complete"])
         # FIXME: not sure if deployer is failing to access the juju
         # environment but i get random connection refused when
         # running juju-deployer
@@ -746,7 +749,7 @@ class LandscapeInstallFinal(InstallBase):
 
     @utils.async
     def do_install(self):
-        self.start_task("Preparing Landscape")
+        self.multi_installer.start_task("Preparing Landscape")
         self.display_controller.info_message(
             "Running ..")
         time.sleep(10)
@@ -763,7 +766,7 @@ class LandscapeInstallFinal(InstallBase):
                    lscape_env_modified)
 
         # Juju deployer
-        self.start_task("Deploying Landscape")
+        self.multi_installer.start_task("Deploying Landscape")
 
         out = utils.get_command_output("juju-deployer -WdvL -w 180 -c {0} "
                                        "landscape-dense-maas".format(
@@ -778,7 +781,7 @@ class LandscapeInstallFinal(InstallBase):
         # /usr/share/openstack/bin/configure-landscape --admin-email adam
         # --admin-name foo@bar.com --system-email foo@bar.com --maas-host
         # 172.16.0.1
-        self.start_task("Registering against Landscape")
+        self.multi_installer.start_task("Registering against Landscape")
         cmd = ("{bin} --admin-email {admin_email} "
                "--admin-name {name} "
                "--system-email {sys_email} "
@@ -795,7 +798,7 @@ class LandscapeInstallFinal(InstallBase):
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
 
-        self.start_task("Complete")
+        self.multi_installer.stop_current_task()
         self.display_controller.info_message("Complete")
         msg = []
         msg.append("You can now continue with the installation of Openstack")
