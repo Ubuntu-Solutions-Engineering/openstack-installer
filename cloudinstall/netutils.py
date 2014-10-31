@@ -60,33 +60,6 @@ def get_default_gateway():
     return out.decode('utf-8').splitlines()[0]
 
 
-def get_network_interface(iface):
-
-    """ Get network interface properties
-
-    :param iface: Interface to query (ex. eth0)
-    :type iface: str
-    :return: interface properties or empty if none
-    :rtype: dict
-
-    .. code::
-
-        # Get address, broadcast, and netmask of eth0
-        iface = utils.get_network_interface('eth0')
-    """
-    out = check_output(['ifconfig', iface]).decode()
-    line = out.split('\n')[1:2][0].lstrip()
-    regex = re.compile('^inet addr:([0-9]+(?:\.[0-9]+){3})\s+'
-                       'Bcast:([0-9]+(?:\.[0-9]+){3})\s+'
-                       'Mask:([0-9]+(?:\.[0-9]+){3})')
-    match = re.match(regex, line)
-    if match:
-        return {'address': match.group(1),
-                'broadcast': match.group(2),
-                'netmask': match.group(3)}
-    return {}
-
-
 def get_network_interfaces():
     """ Get network interfaces
 
@@ -99,7 +72,9 @@ def get_network_interfaces():
     for i in _ifconfig:
         name = i.split(' ')[0]
         if 'lo' not in name:
-            rd[name] = get_network_interface(name)
+            rd[name] = dict(ipaddress=get_ip_addr(name),
+                            broadcast=get_bcast_addr(name),
+                            netmask=get_netmask(name))
     return rd
 
 
