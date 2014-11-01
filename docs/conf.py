@@ -247,14 +247,9 @@ man_pages = [
     ('openstack-install', 'openstack-install',
      u'Ubuntu Openstack Installer Documentation',
      [u'Canonical Solutions Engineering'], 1),
-    ('openstack-status', 'openstack-status', u'Ubuntu Openstack Status Documentation',
-     [u'Canonical Solutions Engineering'], 1),
-    ('cloud-install', 'cloud-install',
-     u'Ubuntu Openstack Installer Documentation',
-     [u'Canonical Solutions Engineering'], 1),
-    ('cloud-status', 'cloud-status', u'Ubuntu Openstack Status Documentation',
+    ('openstack-status', 'openstack-status',
+     u'Ubuntu Openstack Status Documentation',
      [u'Canonical Solutions Engineering'], 1)
-
 ]
 
 # If true, show URL addresses after external links.

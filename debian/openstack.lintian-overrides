@@ -1,2 +1,0 @@
-openstack: binary-without-manpage usr/bin/cloud-install
-openstack: binary-without-manpage usr/bin/cloud-status
