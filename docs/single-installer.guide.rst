@@ -9,7 +9,7 @@ Add the Openstack installer ppa to your system.
 .. code::
 
    $ sudo apt-add-repository ppa:juju/stable
-   $ sudo apt-add-repository ppa:cloud-installer/ppa
+   $ sudo apt-add-repository ppa:cloud-installer/testing
    $ sudo apt-get update
 
 .. note::
