@@ -176,7 +176,7 @@ class MultiInstallExistingMaas(MultiInstall):
                                     maas_apikey)
 
         # Saved maas creds, start the show
-        self.continue_with_install()
+        self.do_install()
 
     def run(self):
         self.register_tasks(["Starting Juju server"] +
