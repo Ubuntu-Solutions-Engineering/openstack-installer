@@ -168,6 +168,10 @@ class MultiInstall(InstallBase):
 
 class MultiInstallExistingMaas(MultiInstall):
 
+    @utils.async
+    def do_install_async(self):
+        self.do_install()
+
     def _save_maas_creds(self, creds):
         maas_server = creds['maas_server'].value
         maas_apikey = creds['maas_apikey'].value
@@ -176,22 +180,24 @@ class MultiInstallExistingMaas(MultiInstall):
                                     maas_apikey)
 
         # Saved maas creds, start the show
-        self.do_install()
+        self.do_install_async()
 
     def run(self):
         self.register_tasks(["Starting Juju server"] +
                             self.post_tasks)
-        # This is a result of running a landscape install and entering
-        # maas information there. Otherwise its a new maas installation
-        # and we continue on our merry way.
-        if not self.config.is_landscape:
+
+        if self.config.is_landscape:
+            # This is a result of running a landscape install and
+            # entering maas information there.
+            self.do_install_async()
+        else:
+            # Otherwise it's a plain OpenStack installation on an
+            # existing maas, and we need to ask for the info here.
             self.display_controller.info_message("Please enter your MAAS "
                                                  "Server IP and your "
                                                  "administrator's API Key")
             self.display_controller.show_maas_input("MAAS Install",
                                                     self._save_maas_creds)
-        else:
-            self.do_install()
 
 
 class MaasInstallError(Exception):
@@ -746,10 +752,9 @@ class LandscapeInstallFinal:
         # FIXME: not sure if deployer is failing to access the juju
         # environment but i get random connection refused when
         # running juju-deployer
-        self.do_install()
+        self.deploy_landscape()
 
-    @utils.async
-    def do_install(self):
+    def deploy_landscape(self):
         self.multi_installer.start_task("Preparing Landscape")
         self.display_controller.info_message(
             "Running ..")
