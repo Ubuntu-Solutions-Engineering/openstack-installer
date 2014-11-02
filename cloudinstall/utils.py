@@ -51,12 +51,16 @@ def global_exchandler(type, value, tb):
 
 
 class ExceptionLoggingThread(Thread):
+    def __init__(self, *args, **kwargs):
+        error_message_cb = kwargs.get('error_message_cb', None)
 
     def run(self):
         try:
             super().run()
-        except Exception:
+        except Exception as e:
             global_exchandler(*sys.exc_info())
+            if error_message_cb:
+                error_message_cb(e)
 
 
 class UtilsException(Exception):
