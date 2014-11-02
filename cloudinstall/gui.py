@@ -428,7 +428,7 @@ class InstallHeader(WidgetWrap):
             Text("Ubuntu Openstack Installer - Software Installation")),
             "header_title"))
         w.append(AttrWrap(Text(
-            '(R)efresh \N{BULLET} (Q)uit', align='center'), "header_menu"))
+            '(R)efresh', align='center'), "header_menu"))
         w = Pile(w)
         super().__init__(w)
 
