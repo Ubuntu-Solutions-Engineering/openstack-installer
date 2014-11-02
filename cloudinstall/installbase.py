@@ -94,7 +94,9 @@ class InstallBase:
         n, s, _ = self.tasks[self.current_task_index]
         self.tasks[self.current_task_index] = (n, s, time.time())
         self.current_task_index += 1
-        self.display_controller.loop.remove_alarm(self.progress_update_alarm)
+        if self.progress_update_alarm:
+            self.display_controller.loop.remove_alarm(self.progress_update_alarm)
+            self.progress_update_alarm = None
 
     def update_progress(self, loop=None, userdata=None):
         m = []
@@ -116,4 +118,4 @@ class InstallBase:
 
         self.display_controller.render_node_install_wait(m)
         loop = self.display_controller.loop
-        self.progress_alarm = loop.set_alarm_in(0.6, self.update_progress)
+        self.progress_update_alarm = loop.set_alarm_in(0.6, self.update_progress)
