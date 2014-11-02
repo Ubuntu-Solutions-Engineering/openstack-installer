@@ -61,7 +61,7 @@ if __name__ == '__main__':
     if not os.path.exists('/etc/openstack') and \
        not config.is_single:
         print("It looks like you don't have a cloud installed.")
-        print("Plese run `sudo cloud-install` and then cloud-status")
+        print("Please run `sudo openstack-install`.")
         sys.exit(1)
     opts = parse_options(sys.argv)
     # Run openstack-status within container on single installs
