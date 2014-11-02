@@ -180,7 +180,9 @@ class MultiInstallExistingMaas(MultiInstall):
         self.config.save_maas_creds(maas_server,
                                     maas_apikey)
 
-        # Saved maas creds, start the show
+        # update_progress starts a timer, so should be called on 'main
+        # thread':
+        self.update_progress()
         self.do_install_async()
 
     def run(self):
@@ -190,6 +192,10 @@ class MultiInstallExistingMaas(MultiInstall):
         if self.config.is_landscape:
             # This is a result of running a landscape install and
             # entering maas information there.
+
+            # update_progress starts a timer, so should be called on
+            # 'main thread':
+            self.update_progress()
             self.do_install_async()
         else:
             # Otherwise it's a plain OpenStack installation on an
