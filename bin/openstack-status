@@ -58,11 +58,6 @@ if __name__ == '__main__':
     log.setup_logger()
     logger = logging.getLogger('cloudinstall')
     logger.info("openstack-status starting")
-    if not os.path.exists('/etc/openstack') and \
-       not config.is_single:
-        print("It looks like you don't have a cloud installed.")
-        print("Please run `sudo openstack-install`.")
-        sys.exit(1)
     opts = parse_options(sys.argv)
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
