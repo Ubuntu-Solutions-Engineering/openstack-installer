@@ -808,7 +808,7 @@ class LandscapeInstallFinal:
         self.display_controller.info_message("Complete")
         msg = []
         msg.append("You can now continue with the installation of Openstack")
-        msg.append("by visiting:\n\n")
+        msg.append(" by visiting:\n\n")
         msg.append("http://{0}/account/standalone/openstack ".format(
             out['output'].strip()))
         msg.append("\n\nCredentials:\n")
