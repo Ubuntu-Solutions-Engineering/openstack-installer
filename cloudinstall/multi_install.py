@@ -173,6 +173,7 @@ class MultiInstallExistingMaas(MultiInstall):
         self.do_install()
 
     def _save_maas_creds(self, creds):
+        self.display_controller.ui.hide_widget_on_top()
         maas_server = creds['maas_server'].value
         maas_apikey = creds['maas_apikey'].value
 
