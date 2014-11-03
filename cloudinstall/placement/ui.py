@@ -377,9 +377,12 @@ class MachinesList(WidgetWrap):
             if machine is None:
                 self.remove_machine(mw.machine)
 
+        n_satisfying_machines = len(machines)
+
         for m in machines:
             if not satisfies(m, self.constraints)[0]:
                 self.remove_machine(m)
+                n_satisfying_machines -= 1
                 continue
 
             if self.filter_string != "" and \
@@ -393,7 +396,7 @@ class MachinesList(WidgetWrap):
             mw.update()
 
         self.filter_edit_box.set_info(len(self.machine_widgets),
-                                      len(machines))
+                                      len(n_satisfying_machines))
 
     def add_machine_widget(self, machine):
         mw = MachineWidget(machine, self.controller, self.actions,
