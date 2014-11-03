@@ -40,7 +40,8 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              Selector,
                              PasswordInput,
                              MaasServerInput,
-                             LandscapeInput)
+                             LandscapeInput,
+                             InfoDialog)
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.placement.ui import PlacementView
 
@@ -624,6 +625,10 @@ class PegasusGUI(WidgetWrap):
 
     def hide_selector_info(self):
         self.hide_widget_on_top()
+
+    def show_fatal_error_message(self, msg, cb):
+        w = InfoDialog(msg, cb)
+        self.show_widget_on_top(w, width=50, height=20)
 
     def show_password_input(self, title, cb):
         widget = PasswordInput(title, cb)

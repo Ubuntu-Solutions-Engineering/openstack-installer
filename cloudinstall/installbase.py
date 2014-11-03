@@ -20,6 +20,7 @@ import time
 import yaml
 
 from cloudinstall import utils
+from cloudinstall.config import Config
 
 log = logging.getLogger('cloudinstall.installbase')
 
@@ -46,6 +47,9 @@ class InstallBase:
 
     def __init__(self, display_controller):
         self.display_controller = display_controller
+        cb = self.display_controller.show_exception_message
+        utils.register_async_exception_callback(cb)
+
         self.tasks = []  # (name, starttime, endtime=None)
         self.tasks_started_debug = []
         self.current_task_index = 0
@@ -125,3 +129,28 @@ class InstallBase:
 
         self.display_controller.render_node_install_wait(m)
         self.display_controller.loop.set_alarm_in(0.6, self.update_progress)
+
+
+class FakeInstall(InstallBase):
+    """For testing only, use as a replacement for MultiInstall*"""
+
+    def __init__(self, opts, display_controller):
+        super().__init__(display_controller)
+        self.config = Config()
+        self.display_controller = display_controller
+        cb = self.display_controller.show_exception_message
+        utils.register_async_exception_callback(cb)
+
+    def run(self):
+        self.tl = ['a', 'b', 'c']
+        self.register_tasks(self.tl)
+        self.update_progress()
+        self.async_go()
+
+    @utils.async
+    def async_go(self):
+        for t in self.tl:
+            self.start_task(t)
+            time.sleep(1.2)
+        raise Exception("ERROR IN ASYNC GO")
+        self.stop_current_task()

@@ -125,8 +125,8 @@ class SingleInstall(InstallBase):
         self.display_controller.info_message("Building environment")
         if os.path.exists(self.container_abspath):
             # Container exists, handle return code in installer
-            raise SystemExit("Container exists, please uninstall or kill "
-                             "existing cloud before proceeding.")
+            raise Exception("Container exists, please uninstall or kill "
+                            "existing cloud before proceeding.")
 
         utils.ssh_genkey()
 
