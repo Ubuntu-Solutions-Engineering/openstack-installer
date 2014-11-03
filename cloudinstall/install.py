@@ -18,7 +18,6 @@ import logging
 import urwid
 
 from cloudinstall.core import DisplayController
-from cloudinstall.installbase import FakeInstall
 from cloudinstall.single_install import SingleInstall
 from cloudinstall.landscape_install import LandscapeInstall
 from cloudinstall.multi_install import (MultiInstallNewMaas,
