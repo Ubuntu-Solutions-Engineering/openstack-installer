@@ -63,7 +63,11 @@ class Config:
     ]
 
     def __init__(self):
-        self._juju_env = None
+        if os.getenv("FAKE_APIS"):
+            self._juju_env = {"bootstrap-config": {'name': "fake",
+                                                   'maas-server': "FAKE"}}
+        else:
+            self._juju_env = None
         self.node_install_wait_interval = 0.2
 
     @property
@@ -137,6 +141,7 @@ class Config:
             with open(env_path) as f:
                 self._juju_env = yaml.load(f.read().strip())
             return self._juju_env
+
         raise ConfigException('Unable to load environments file. Is '
                               'juju bootstrapped?')
 
