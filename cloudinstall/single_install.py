@@ -94,6 +94,14 @@ class SingleInstall(InstallBase):
         # copy over the rest of our installation data from host
         # and setup permissions
 
+        # setup charm configurations
+        charm_conf = utils.load_template('charmconf.yaml')
+        charm_conf_modified = charm_conf.render(
+            openstack_password=self.config.openstack_password)
+        utils.spew(os.path.join(self.config.cfg_path,
+                                'charmconf.yaml'),
+                   charm_conf_modified)
+
         utils.container_run(self.container_name, 'mkdir -p ~/.cloud-install')
         utils.container_run(
             self.container_name, 'sudo mkdir -p /etc/openstack')
@@ -149,14 +157,6 @@ class SingleInstall(InstallBase):
 
         # Set permissions
         self.copy_installdata_and_set_perms()
-
-        # setup charm confingurations
-        charm_conf = utils.load_template('charmconf.yaml')
-        charm_conf_modified = charm_conf.render(
-            openstack_password=self.config.openstack_password)
-        utils.spew(os.path.join(self.config.cfg_path,
-                                'charmconf.yaml'),
-                   charm_conf_modified)
 
         # start the party
         cloud_status_bin = ['openstack-status']
