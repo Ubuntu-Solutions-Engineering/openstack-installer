@@ -187,6 +187,18 @@ class DisplayController:
         with dialog_context(self):
             self.ui.show_selector_info(title, install_types, cb)
 
+    def show_exception_message(self, ex):
+        def handle_done(*args, **kwargs):
+            raise urwid.ExitMainLoop()
+        log.debug("in show_exception_message, ex {}".format(ex))
+        with dialog_context(self):
+            logpath = path.join(self.config.cfg_path,
+                                "commands.log")
+            msg = ("A fatal error has occurred: {}\n"
+                   "See {} for further info.".format(ex.args[0],
+                                                     logpath))
+            self.ui.show_fatal_error_message(msg, handle_done)
+
     # - Footer
     def clear_status(self):
         self.ui.clear_status()
