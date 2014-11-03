@@ -190,7 +190,6 @@ class DisplayController:
     def show_exception_message(self, ex):
         def handle_done(*args, **kwargs):
             raise urwid.ExitMainLoop()
-        log.debug("in show_exception_message, ex {}".format(ex))
         with dialog_context(self):
             logpath = path.join(self.config.cfg_path,
                                 "commands.log")
