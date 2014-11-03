@@ -149,7 +149,6 @@ class MultiInstall(InstallBase):
                 args.append('--placement')
             os.execvp('openstack-status', args)
         else:
-            self.start_task("Deploying Landscape")
             log.debug("Finished MAAS step, now deploying Landscape.")
             return LandscapeInstallFinal(self.opts,
                                          self,
