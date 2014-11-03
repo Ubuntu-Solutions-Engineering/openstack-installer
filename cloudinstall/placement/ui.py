@@ -44,7 +44,7 @@ class FilterBox(WidgetWrap):
         w = Pile([Columns([('pack', self.label),
                            AttrMap(self.editbox,
                                    'filter', 'filter_focus')])
-                  #self.info_text # -- WORKAROUND for issue #194
+                  # self.info_text # -- WORKAROUND for issue #194
                   ])
         super().__init__(w)
 
@@ -77,7 +77,7 @@ class MachineWidget(WidgetWrap):
     passed the charm class.
 
     show_hardware - display hardware details about this machine
-    
+
     show_assignments - display info about which charms are assigned
     and what assignment type (LXC, KVM, etc) they have.
     """
@@ -575,11 +575,12 @@ class MachineChooser(WidgetWrap):
                    if atype in self.charm_class.allowed_assignment_types]
 
         constraints = self.charm_class.constraints
+        # NOTE: show_assignments=False is a WORKAROUND for #194
         self.machines_list = MachinesList(self.controller,
                                           actions,
                                           constraints=constraints,
                                           show_hardware=True,
-                                          show_assignments=False)  # WORKAROUND for issue #194
+                                          show_assignments=False)
         self.machines_list.update()
         close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
