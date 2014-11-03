@@ -70,7 +70,7 @@ class Config:
     def install_types(self):
         """ Installer types
         """
-        return ['Single', 'Multi', 'Multi with existing MAAS', 'Landscape']
+        return ['Single', 'Multi', 'Landscape']
 
     @property
     def share_path(self):

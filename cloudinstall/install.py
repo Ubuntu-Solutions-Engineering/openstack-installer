@@ -49,6 +49,18 @@ class InstallController(DisplayController):
             return self.show_password_input(
                 'Create a new Openstack Password', self._save_password)
 
+    def _save_maas_creds(self, creds):
+        self.ui.hide_widget_on_top()
+        maas_server = creds['maas_server'].value
+        maas_apikey = creds['maas_apikey'].value
+
+        if maas_server and maas_apikey:
+            self.config.save_maas_creds(maas_server,
+                                        maas_apikey)
+            MultiInstallExistingMaas(self.opts, self).run()
+        else:
+            MultiInstallNewMaas(self.opts, self).run()
+
     def select_install_type(self):
         """ Dialog for selecting installation type
         """
@@ -56,6 +68,17 @@ class InstallController(DisplayController):
         self.show_selector_info('Install Type',
                                 self.config.install_types,
                                 self.do_install)
+
+    def select_maas_type(self):
+        """ Perform multi install based on existing
+        MAAS or if a new MAAS will be installed
+        """
+        self.info_message(
+            "If a MAAS exists please enter the Server IP and your "
+            "administrator's API Key. Otherwise leave blank and a new "
+            "MAAS will be created for you.")
+        self.show_maas_input("MAAS Setup",
+                             self._save_maas_creds)
 
     def main_loop(self):
         if not hasattr(self, 'loop'):
@@ -78,12 +101,9 @@ class InstallController(DisplayController):
         if 'Single' in install_type:
             self.set_openstack_rel("Icehouse (2014.1.1)")
             SingleInstall(self.opts, self).run()
-        elif 'Multi with existing MAAS' == install_type:
-            self.set_openstack_rel("Icehouse (2014.1.1)")
-            MultiInstallExistingMaas(self.opts, self).run()
         elif 'Multi' == install_type:
             self.set_openstack_rel("Icehouse (2014.1.1)")
-            MultiInstallNewMaas(self.opts, self).run()
+            self.select_maas_type()
         else:
             self.set_openstack_rel("")
             LandscapeInstall(self.opts, self).run()

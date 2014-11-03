@@ -181,8 +181,8 @@ class MaasServerInput(Dialog):
 
     def __init__(self, title, cb):
         super().__init__(title, cb)
-        self.add_input('maas_server', 'MAAS IP Address: ')
-        self.add_input('maas_apikey', 'MAAS API Key: ')
+        self.add_input('maas_server', 'MAAS Server IP (optional): ')
+        self.add_input('maas_apikey', 'MAAS API Key (optional): ')
         self.show()
 
 
