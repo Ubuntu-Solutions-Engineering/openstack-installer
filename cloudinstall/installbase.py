@@ -25,6 +25,7 @@ log = logging.getLogger('cloudinstall.installbase')
 
 
 class InstallBase:
+
     """Parent class of single/multi install classes, provides progress
     updates and task tracking.
 
@@ -95,7 +96,8 @@ class InstallBase:
         self.tasks[self.current_task_index] = (n, s, time.time())
         self.current_task_index += 1
         if self.progress_update_alarm:
-            self.display_controller.loop.remove_alarm(self.progress_update_alarm)
+            self.display_controller.loop.remove_alarm(
+                self.progress_update_alarm)
             self.progress_update_alarm = None
 
     def update_progress(self, loop=None, userdata=None):
@@ -107,15 +109,16 @@ class InstallBase:
                                               ts='   -')))
             elif e is None:
                 e = time.time()
-                ts = "{:6.2f} sec elapsed".format(e-s)
+                ts = "{:6.2f} sec elapsed".format(e - s)
                 m.append("{n:>{mw}}: {ts:<22}"
                          "\n".format(n=n, mw=self.max_width, ts=ts))
             else:
-                ts = "{:6.2f} sec".format(e-s)
+                ts = "{:6.2f} sec".format(e - s)
                 m.append(('label', "{n:>{mw}}: {ts:<22}"
                           "\n".format(n=n, mw=self.max_width,
                                       ts=ts)))
 
         self.display_controller.render_node_install_wait(m)
         loop = self.display_controller.loop
-        self.progress_update_alarm = loop.set_alarm_in(0.6, self.update_progress)
+        self.progress_update_alarm = loop.set_alarm_in(0.6,
+                                                       self.update_progress)
