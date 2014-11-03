@@ -401,8 +401,9 @@ class Controller(DisplayController):
             controller_machine = self.juju_m_idmap['controller']
             self.configure_lxc_network(controller_machine)
 
-        for juju_machine_id in self.juju_m_idmap.values():
-            self.run_apt_go_fast(juju_machine_id)
+        # FIXME: this is never populated during a multi_install
+        # for juju_machine_id in self.juju_m_idmap.values():
+        #    self.run_apt_go_fast(juju_machine_id)
 
         self.deploy_using_placement()
         self.enqueue_deployed_charms()
