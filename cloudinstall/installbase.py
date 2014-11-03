@@ -46,10 +46,12 @@ class InstallBase:
 
     def __init__(self, display_controller):
         self.display_controller = display_controller
-        self.progress_update_alarm = None
         self.tasks = []  # (name, starttime, endtime=None)
         self.tasks_started_debug = []
         self.current_task_index = 0
+        # stop_current_task can be called from any thread, and uses
+        # stop_called to tell update to not reschedule itself.
+        self.stop_called = False
 
     def register_tasks(self, tasks):
         self.tasks = [(n, None, None) for n in tasks]
@@ -95,12 +97,15 @@ class InstallBase:
         n, s, _ = self.tasks[self.current_task_index]
         self.tasks[self.current_task_index] = (n, s, time.time())
         self.current_task_index += 1
-        if self.progress_update_alarm:
-            self.display_controller.loop.remove_alarm(
-                self.progress_update_alarm)
-            self.progress_update_alarm = None
+        self.stop_called = True
 
     def update_progress(self, loop=None, userdata=None):
+        if self.stop_called:
+            # if stop_called was set in a separate thread, return and
+            # do not reschedule.
+            self.stop_called = False
+            return
+
         m = []
         for (n, s, e) in self.tasks:
             if s is None:
@@ -119,6 +124,4 @@ class InstallBase:
                                       ts=ts)))
 
         self.display_controller.render_node_install_wait(m)
-        loop = self.display_controller.loop
-        self.progress_update_alarm = loop.set_alarm_in(0.6,
-                                                       self.update_progress)
+        self.display_controller.loop.set_alarm_in(0.6, self.update_progress)
