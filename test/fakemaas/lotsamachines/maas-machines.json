@@ -1,0 +1,393 @@
+[
+    {
+        "status": 6, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-6e99d892-1f2d-11e4-ba2f-eca86bfb9aa4/macs/00%3A16%3A3e%3Af5%3Ac8%3A3c/", 
+                "mac_address": "00:16:3e:f5:c8:3c"
+            }
+        ], 
+        "hostname": "juju-bootstrap.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": null, 
+        "netboot": true, 
+        "cpu_count": 0, 
+        "storage": 0, 
+        "owner": "root", 
+        "system_id": "node-6e99d892-1f2d-11e4-ba2f-eca86bfb9aa4", 
+        "architecture": "amd64/generic", 
+        "memory": 0, 
+        "power_type": "virsh", 
+        "tag_names": [
+            "use-fastpath-installer"
+        ], 
+        "ip_addresses": [
+            "10.0.100.3"
+        ], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-6e99d892-1f2d-11e4-ba2f-eca86bfb9aa4/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "one.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4", 
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "two.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-two",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-two"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-two/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "three.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-three",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-three"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-three/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "four.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-four",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-four"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-four/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "five.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-five",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-five"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-five/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "six.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-six",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-six"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-six/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "seven.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-seven",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-seven"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-seven/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "eight.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-eight",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-eight"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-eight/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "nine.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-nine",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-nine"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-nine/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "ten.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-ten",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-ten"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-ten/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "eleven.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-eleven",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-eleven"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-eleven/"
+    },
+    {
+        "status": 4, 
+        "macaddress_set": [
+            {
+                "resource_uri": "/MAAS/api/1.0/nodes/node-d66a310e-1f43-11e4-ba2f-eca86bfb9aa4/macs/ec%3Aa8%3A6b%3Afc%3A34%3Af8/", 
+                "mac_address": "ec:a8:6b:fc:34:f8"
+            }
+        ], 
+        "hostname": "twelve.maas", 
+        "zone": {
+            "resource_uri": "/MAAS/api/1.0/zones/default/", 
+            "name": "default", 
+            "description": ""
+        }, 
+        "routers": [], 
+        "netboot": false, 
+        "cpu_count": 12, 
+        "storage": 1024000,
+        "owner": "root", 
+        "system_id": "node-twelve",
+        "architecture": "amd64/generic", 
+        "memory": 20480, 
+        "power_type": "amt", 
+        "tag_names": [
+            "use-fastpath-installer", 
+            "node-twelve"
+        ], 
+        "ip_addresses": [], 
+        "resource_uri": "/MAAS/api/1.0/nodes/node-twelve/"
+    }
+]
