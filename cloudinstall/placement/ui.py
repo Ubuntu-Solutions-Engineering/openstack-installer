@@ -43,8 +43,8 @@ class FilterBox(WidgetWrap):
 
         w = Pile([Columns([('pack', self.label),
                            AttrMap(self.editbox,
-                                   'filter', 'filter_focus')]),
-                  self.info_text
+                                   'filter', 'filter_focus')])
+                  # self.info_text # -- WORKAROUND for issue #194
                   ])
         super().__init__(w)
 
@@ -52,7 +52,7 @@ class FilterBox(WidgetWrap):
         m = ["Filter ", ('label', "({} of {} shown): ".format(n_showing,
                                                               n_total))]
         self.label.set_text(m)
-        if self.editbox.edit_text == '':
+        if False:   # WORKAROUND for issue #194
             t = ''
         else:
             t = ('label',
@@ -77,10 +77,13 @@ class MachineWidget(WidgetWrap):
     passed the charm class.
 
     show_hardware - display hardware details about this machine
+
+    show_assignments - display info about which charms are assigned
+    and what assignment type (LXC, KVM, etc) they have.
     """
 
     def __init__(self, machine, controller, actions=None,
-                 show_hardware=False):
+                 show_hardware=False, show_assignments=True):
         self.machine = machine
         self.controller = controller
         if actions is None:
@@ -88,6 +91,7 @@ class MachineWidget(WidgetWrap):
         else:
             self.actions = actions
         self.show_hardware = show_hardware
+        self.show_assignments = show_assignments
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -114,7 +118,9 @@ class MachineWidget(WidgetWrap):
         pl = [Divider(' '), self.machine_info_widget]
         if self.show_hardware:
             pl.append(self.hardware_widget)
-        pl += [Divider(' '), self.assignments_widget, self.button_grid]
+        if self.show_assignments:
+            pl += [Divider(' '), self.assignments_widget]
+        pl.append(self.button_grid)
 
         p = Pile(pl)
 
@@ -316,7 +322,8 @@ class MachinesList(WidgetWrap):
     """
 
     def __init__(self, controller, actions, constraints=None,
-                 show_hardware=False, title_widgets=None):
+                 show_hardware=False, title_widgets=None,
+                 show_assignments=True):
         self.controller = controller
         self.actions = actions
         self.machine_widgets = []
@@ -325,6 +332,7 @@ class MachinesList(WidgetWrap):
         else:
             self.constraints = constraints
         self.show_hardware = show_hardware
+        self.show_assignments = show_assignments
         self.filter_string = ""
         w = self.build_widgets(title_widgets)
         self.update()
@@ -389,7 +397,7 @@ class MachinesList(WidgetWrap):
 
     def add_machine_widget(self, machine):
         mw = MachineWidget(machine, self.controller, self.actions,
-                           self.show_hardware)
+                           self.show_hardware, self.show_assignments)
         self.machine_widgets.append(mw)
         options = self.machine_pile.options()
         self.machine_pile.contents.append((mw, options))
@@ -567,10 +575,12 @@ class MachineChooser(WidgetWrap):
                    if atype in self.charm_class.allowed_assignment_types]
 
         constraints = self.charm_class.constraints
+        # NOTE: show_assignments=False is a WORKAROUND for #194
         self.machines_list = MachinesList(self.controller,
                                           actions,
                                           constraints=constraints,
-                                          show_hardware=True)
+                                          show_hardware=True,
+                                          show_assignments=False)
         self.machines_list.update()
         close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
