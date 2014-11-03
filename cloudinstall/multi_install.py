@@ -76,6 +76,7 @@ class MultiInstall(InstallBase):
             self.post_tasks = post_tasks
         else:
             self.post_tasks = []
+        self.installing_new_maas = False
         # Sets install type
         if not self.config.is_landscape:
             utils.spew(os.path.join(self.config.cfg_path,
@@ -116,11 +117,16 @@ class MultiInstall(InstallBase):
         # Starts the party
         self.display_controller.info_message("Bootstrapping juju ..")
 
+        dbgflags = ""
         if os.getenv("DEBUG_JUJU_BOOTSTRAP"):
-            dbgflag = "--debug"
-        else:
-            dbgflag = ""
-        out = utils.get_command_output("juju {} bootstrap".format(dbgflag),
+            dbgflags = "--debug"
+
+        bsflags = ""
+        if not self.installing_new_maas:
+            bsflags = " --constraints tags=physical"
+
+        out = utils.get_command_output("juju {} bootstrap {}".format(dbgflags,
+                                                                     bsflags),
                                        timeout=None,
                                        user_sudo=True)
         if out['status'] != 0:
@@ -214,6 +220,7 @@ class MultiInstallNewMaas(MultiInstall):
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
     def run(self):
+        self.installing_new_maas = True
         self.register_tasks(["Installing MAAS",
                              "Configuring MAAS",
                              "Waiting for MAAS cluster registration",
