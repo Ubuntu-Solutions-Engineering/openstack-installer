@@ -125,7 +125,7 @@ class MultiInstall(InstallBase):
                                        user_sudo=True)
         if out['status'] != 0:
             log.debug("Problem during bootstrap: '{}'".format(out))
-            raise SystemExit("Problem with juju bootstrap.")
+            raise Exception("Problem with juju bootstrap.")
 
         # workaround to avoid connection failure at beginning of
         # openstack-status
@@ -134,9 +134,7 @@ class MultiInstall(InstallBase):
                                        user_sudo=True)
         if out['status'] != 0:
             log.debug("failure to get initial juju status: '{}'".format(out))
-            # FIXME: dont raise exception here until we can fully verify there
-            # is a problem with juju status's return codes
-            # raise SystemExit("Problem with juju status poke.")
+            raise Exception("Problem with juju status poke.")
 
         self.drop_privileges()
         self.stop_current_task()
@@ -756,7 +754,7 @@ class LandscapeInstallFinal:
                             utils.install_user(),
                             recursive=True)
             except:
-                raise SystemExit(
+                raise Exception(
                     "Unable to set ownership for {}".format(d))
 
     def run(self):

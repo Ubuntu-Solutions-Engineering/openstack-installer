@@ -50,13 +50,22 @@ def global_exchandler(type, value, tb):
     log.debug("".join(tb_list))
 
 
-class ExceptionLoggingThread(Thread):
+_async_exception_callback = None
 
+
+def register_async_exception_callback(cb):
+    global _async_exception_callback
+    _async_exception_callback = cb
+
+
+class ExceptionLoggingThread(Thread):
     def run(self):
         try:
             super().run()
-        except Exception:
+        except Exception as e:
             global_exchandler(*sys.exc_info())
+            if _async_exception_callback:
+                _async_exception_callback(e)
 
 
 class UtilsException(Exception):
@@ -411,8 +420,8 @@ def container_run(name, cmd):
         ret = check_output(cmd, stderr=STDOUT, shell=True)
         log.debug(ret)
     except CalledProcessError as e:
-        raise SystemExit("There was a problem running ({0}) in the container "
-                         "({1}:{2}) Error: {3}".format(cmd, name, ip, e))
+        raise Exception("There was a problem running ({0}) in the container "
+                        "({1}:{2}) Error: {3}".format(cmd, name, ip, e))
 
 
 def container_run_status(name, cmd):
@@ -447,9 +456,9 @@ def container_cp(name, filepath, dst):
                                        filepath=filepath))
     ret = get_command_output(cmd)
     if ret['status'] > 0:
-        raise SystemExit("There was a problem copying ({0}) to the container "
-                         "({1}:{2}): ".format(
-                             filepath, name, ip, ret['output']))
+        raise Exception("There was a problem copying ({0}) to the container "
+                        "({1}:{2}): ".format(
+                            filepath, name, ip, ret['output']))
     return
 
 
@@ -460,8 +469,8 @@ def container_create(name, userdata):
         'sudo lxc-create -t ubuntu-cloud '
         '-n {0} -- -u {1}'.format(name, userdata))
     if out['status'] > 0:
-        raise SystemExit("Unable to create container: "
-                         "{0}".format(out['output']))
+        raise Exception("Unable to create container: "
+                        "{0}".format(out['output']))
     return out['status']
 
 
@@ -474,8 +483,8 @@ def container_start(name):
         'sudo lxc-start -n {0} -d'.format(name))
 
     if out['status'] > 0:
-        raise SystemExit("Unable to start container: "
-                         "{0}".format(out['output']))
+        raise Exception("Unable to start container: "
+                        "{0}".format(out['output']))
     return out['status']
 
 
@@ -488,8 +497,8 @@ def container_stop(name):
         'sudo lxc-stop -n {0}'.format(name))
 
     if out['status'] > 0:
-        raise SystemExit("Unable to stop container: "
-                         "{0}".format(out['output']))
+        raise Exception("Unable to stop container: "
+                        "{0}".format(out['output']))
 
     return out['status']
 
@@ -503,8 +512,8 @@ def container_destroy(name):
         'sudo lxc-destroy -n {0}'.format(name))
 
     if out['status'] > 0:
-        raise SystemExit("Unable to destroy container: "
-                         "{0}".format(out['output']))
+        raise Exception("Unable to destroy container: "
+                        "{0}".format(out['output']))
 
     return out['status']
 
