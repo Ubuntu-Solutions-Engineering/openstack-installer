@@ -8,6 +8,8 @@ Getting Help
 
 We are on IRC, server: irc.freenode.net, channel: #ubuntu-solutions
 
+`Mailing list <https://lists.ubuntu.com/mailman/listinfo/ubuntu-openstack-installer>`_
+
 
 Guides
 ^^^^^^
@@ -37,4 +39,5 @@ Reference
    log
    machine
    service
+   netutils
    utils
