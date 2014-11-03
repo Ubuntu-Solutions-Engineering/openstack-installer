@@ -18,20 +18,21 @@
 import logging
 import urwid
 from enum import Enum, unique
+import json
 import time
 import random
 import sys
 import requests
 
 from contextlib import contextmanager
-from os import path
+from os import path, getenv
 
 from operator import attrgetter
 
 from cloudinstall import utils
 from cloudinstall.config import Config
 from cloudinstall.juju import JujuState
-from cloudinstall.maas import MaasState, MaasMachineStatus
+from cloudinstall.maas import MaasState, MaasMachineStatus, MaasMachine
 from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from cloudinstall.charms import CharmQueue, get_charm
@@ -84,6 +85,35 @@ def view_context(view):
     view.redraw_screen()
 
 
+class FakeJujuState:
+    @property
+    def services(self):
+        return []
+
+    def machines(self):
+        return []
+
+    def invalidate_status_cache(self):
+        "does nothing"
+
+
+class FakeMaasState:
+
+    def machines(self, status=None):
+        fakepath = getenv("FAKE_APIS")
+        fn = path.join(fakepath, "maas-machines.json")
+        with open(fn) as f:
+            nodes = json.load(f)
+        return [MaasMachine(-1, m) for m in nodes
+                if m['hostname'] != 'juju-bootstrap.maas']
+
+    def invalidate_nodes_cache(self):
+        "no op"
+
+    def machines_summary(self):
+        return "no summary for fake state"
+
+
 class DisplayController:
 
     """ Controller for displaying juju and maas state."""
@@ -128,9 +158,13 @@ class DisplayController:
 
     def initialize(self):
         """Authenticates against juju/maas and sets up placement controller."""
-        self.authenticate_juju()
-        if self.config.is_multi:
-            self.authenticate_maas()
+        if getenv("FAKE_APIS"):
+            self.juju_state = FakeJujuState()
+            self.maas_state = FakeMaasState()
+        else:
+            self.authenticate_juju()
+            if self.config.is_multi:
+                self.authenticate_maas()
 
         self.placement_controller = PlacementController(
             self.maas_state, self.opts)
