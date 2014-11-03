@@ -39,13 +39,13 @@ from cloudinstall import utils
 log = logging.getLogger('cloudinstall.multi_install')
 
 BRIDGE_MODIFIED_WARNING = """
-## WARNING: This file has been modified by cloud-install
-##
-## cloud-install redefines interfaces in
-## /etc/network/interfaces.d/cloud-install.cfg.
-## You must edit or remove /etc/network/interfaces.d/cloud-install.cfg if you
-## want to re-enable interfaces here.
-## See 'cloud-install -u', which will uninstall these changes.
+# WARNING: This file has been modified by openstack-install
+#
+# openstack-install redefines interfaces in
+# /etc/network/interfaces.d/openstack.cfg.
+# You must edit or remove /etc/network/interfaces.d/openstack.cfg if you
+# want to re-enable interfaces here.
+# See 'openstack-install -u', which will uninstall these changes.
 """
 
 
@@ -231,10 +231,17 @@ class MultiInstallNewMaas(MultiInstall):
         self.prompt_for_interface()
 
     def prompt_for_interface(self):
+        # TODO: probably needs better wording
+        self.display_controller.info_message(
+            "Please select a network interface that is not currently "
+            "listening to any DHCP or DNS requests. "
+            "This will be the interface MAAS will use to manage its "
+            "own DNS/DHCP services.")
         if_names = sorted(get_network_interfaces().keys())
-        self.display_controller.show_selector_info("Choose Interface",
-                                                   if_names,
-                                                   self.interface_choice_cb)
+        self.display_controller.show_selector_info(
+            "Choose an unused Interface",
+            if_names,
+            self.interface_choice_cb)
 
     def interface_choice_cb(self, choice):
         self.target_iface = choice
@@ -823,4 +830,4 @@ class LandscapeInstallFinal:
             self.config.landscape_creds['admin_email']))
         msg.append(" Password: {}".format(self.config.openstack_password))
 
-        self.display_controller.step_info(msg, width=60, height=len(msg))
+        self.display_controller.step_info(msg, width=60, height=14)
