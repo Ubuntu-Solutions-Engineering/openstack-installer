@@ -109,6 +109,15 @@ class MultiInstall(InstallBase):
         check_output(['mkdir', '-p', self.config.juju_path])
         utils.spew(self.config.juju_environments_path,
                    maas_env_modified)
+
+        # setup charm configurations
+        charm_conf = utils.load_template('charmconf.yaml')
+        charm_conf_modified = charm_conf.render(
+            openstack_password=self.config.openstack_password)
+        utils.spew(os.path.join(self.config.cfg_path,
+                                'charmconf.yaml'),
+                   charm_conf_modified)
+
         utils.ssh_genkey()
 
         # Set remaining permissions
