@@ -826,8 +826,8 @@ class LandscapeInstallFinal:
         msg.append("http://{0}/account/standalone/openstack ".format(
             out['output'].strip()))
         msg.append("\n\nCredentials:\n")
-        msg.append(" Email: {}".format(
+        msg.append(" Email: {}\n".format(
             self.config.landscape_creds['admin_email']))
         msg.append(" Password: {}".format(self.config.openstack_password))
 
-        self.display_controller.step_info(msg, width=60, height=14)
+        self.display_controller.step_info(msg, width=60, height=10)
