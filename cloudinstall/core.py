@@ -423,7 +423,7 @@ class Controller(DisplayController):
         self.info_message("Waiting for {} maas machines to be ready."
                           " Machines Summary: {}".format(len(needed),
                                                          summary))
-        if needed != ready.union(allocated):
+        if not needed.issubset(ready.union(allocated)):
             return False
         return True
 
