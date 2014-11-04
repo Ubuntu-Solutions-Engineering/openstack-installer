@@ -43,8 +43,8 @@ class FilterBox(WidgetWrap):
 
         w = Pile([Columns([('pack', self.label),
                            AttrMap(self.editbox,
-                                   'filter', 'filter_focus')]),
-                  self.info_text  # -- WORKAROUND for issue #194
+                                   'filter', 'filter_focus')])
+                  # self.info_text  # -- WORKAROUND for issue #194
                   ])
         super().__init__(w)
 
