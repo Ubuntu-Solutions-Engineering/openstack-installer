@@ -63,7 +63,7 @@ class Config:
     ]
 
     def __init__(self):
-        if os.getenv("FAKE_APIS"):
+        if os.getenv("FAKE_API_DATA"):
             self._juju_env = {"bootstrap-config": {'name': "fake",
                                                    'maas-server': "FAKE"}}
         else:
