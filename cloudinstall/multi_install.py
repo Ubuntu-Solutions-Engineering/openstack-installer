@@ -186,39 +186,12 @@ class MultiInstallExistingMaas(MultiInstall):
     def do_install_async(self):
         self.do_install()
 
-    def _save_maas_creds(self, creds):
-        self.display_controller.ui.hide_widget_on_top()
-        maas_server = creds['maas_server'].value
-        maas_apikey = creds['maas_apikey'].value
-
-        self.config.save_maas_creds(maas_server,
-                                    maas_apikey)
-
-        # update_progress starts a timer, so should be called on 'main
-        # thread':
-        self.update_progress()
-        self.do_install_async()
-
     def run(self):
         self.register_tasks(["Starting Juju server"] +
                             self.post_tasks)
 
-        if self.config.is_landscape:
-            # This is a result of running a landscape install and
-            # entering maas information there.
-
-            # update_progress starts a timer, so should be called on
-            # 'main thread':
-            self.update_progress()
-            self.do_install_async()
-        else:
-            # Otherwise it's a plain OpenStack installation on an
-            # existing maas, and we need to ask for the info here.
-            self.display_controller.info_message("Please enter your MAAS "
-                                                 "Server IP and your "
-                                                 "administrator's API Key")
-            self.display_controller.show_maas_input("MAAS Install",
-                                                    self._save_maas_creds)
+        self.update_progress()
+        self.do_install_async()
 
 
 class MaasInstallError(Exception):
