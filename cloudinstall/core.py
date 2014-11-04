@@ -100,7 +100,7 @@ class FakeJujuState:
 class FakeMaasState:
 
     def machines(self, status=None):
-        fakepath = getenv("FAKE_APIS")
+        fakepath = getenv("FAKE_API_DATA")
         fn = path.join(fakepath, "maas-machines.json")
         with open(fn) as f:
             nodes = json.load(f)
@@ -158,7 +158,7 @@ class DisplayController:
 
     def initialize(self):
         """Authenticates against juju/maas and sets up placement controller."""
-        if getenv("FAKE_APIS"):
+        if getenv("FAKE_API_DATA"):
             self.juju_state = FakeJujuState()
             self.maas_state = FakeMaasState()
         else:
