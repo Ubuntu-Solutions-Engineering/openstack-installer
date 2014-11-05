@@ -412,21 +412,24 @@ def container_run(name, cmd):
     ip = container_ip(name)
     if ip is None:
         raise Exception("could not find ip for container '{}'".format(name))
-    cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
-           "-l ubuntu -o \"StrictHostKeyChecking=no\" "
-           "-o \"UserKnownHostsFile=/dev/null\" "
-           "-i {2} "
-           "{0} {1}".format(ip, cmd, ssh_privkey(), install_user()))
-    log.debug("Running in container: {0}".format(cmd))
-    # ret = os.system("{0} >>/dev/null".format(cmd))
+    quoted_cmd = shlex.quote(cmd)
+    wrapped_cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
+                   "-l ubuntu -o \"StrictHostKeyChecking=no\" "
+                   "-o \"UserKnownHostsFile=/dev/null\" "
+                   "-i {2} "
+                   "{0} {1}".format(ip, quoted_cmd, ssh_privkey(),
+                                    install_user()))
+    log.debug("Running in container: {0}".format(wrapped_cmd))
+
     try:
-        ret = check_output(cmd, stderr=STDOUT, shell=True)
+        ret = check_output(wrapped_cmd, stderr=STDOUT, shell=True)
         log.debug(ret)
         return ret
     except CalledProcessError as e:
         raise Exception("There was a problem running ({0}) in the container "
                         "({1}:{2}) Error: {3}\n"
-                        "Output: {4}".format(cmd, name, ip, e, e.output))
+                        "Output: {4}".format(quoted_cmd, name, ip, e,
+                                             e.output))
 
 
 def container_run_status(name, cmd):
