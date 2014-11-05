@@ -423,7 +423,7 @@ def container_run(name, cmd):
     except CalledProcessError as e:
         raise Exception("There was a problem running ({0}) in the container "
                         "({1}:{2}) Error: {3}\n"
-                        "Output: {}".format(cmd, name, ip, e, e.output))
+                        "Output: {4}".format(cmd, name, ip, e, e.output))
 
 
 def container_run_status(name, cmd):
