@@ -410,6 +410,8 @@ def container_run(name, cmd):
     :param str cmd: command to run
     """
     ip = container_ip(name)
+    if ip is None:
+        raise Exception("could not find ip for container '{}'".format(name))
     cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
            "-l ubuntu -o \"StrictHostKeyChecking=no\" "
            "-o \"UserKnownHostsFile=/dev/null\" "
@@ -420,6 +422,7 @@ def container_run(name, cmd):
     try:
         ret = check_output(cmd, stderr=STDOUT, shell=True)
         log.debug(ret)
+        return ret
     except CalledProcessError as e:
         raise Exception("There was a problem running ({0}) in the container "
                         "({1}:{2}) Error: {3}\n"
