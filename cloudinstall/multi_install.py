@@ -99,7 +99,7 @@ class MultiInstall(InstallBase):
 
     def do_install(self):
         self.start_task("Starting Juju server")
-        # FIXME This is duplicated by write_juju_env
+
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
         maas_env_modified = maas_env.render(
@@ -304,7 +304,6 @@ class MultiInstallNewMaas(MultiInstall):
         self.display_controller.info_message("Done importing boot images.")
 
         self.start_task("Configuring Juju for MAAS")
-        self.write_juju_env()
         self.start_task("Creating KVM for Juju state server")
         self.create_bootstrap_kvm()
 
@@ -702,18 +701,6 @@ class MultiInstallNewMaas(MultiInstall):
                                  " -i /etc/network/interfaces")
         utils.get_command_output('ifdown lo')
         utils.get_command_output('ifup lo')
-
-    def write_juju_env(self):
-        # FIXME Duplicated in do_install() we should pick one or the other
-        admin_secret = utils.random_password()
-
-        env = utils.load_template('juju-env/maas.yaml')
-        env_modified = env.render(
-            maas_server=self.config.maas_creds['api_host'],
-            maas_apikey=self.apikey,
-            openstack_password=admin_secret)
-        check_output(['mkdir', '-p', self.config.juju_path])
-        utils.spew(self.config.juju_environments_path, env_modified)
 
 
 # TODO clean up the landscape installer classes
