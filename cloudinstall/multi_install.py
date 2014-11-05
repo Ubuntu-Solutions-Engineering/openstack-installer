@@ -236,6 +236,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.iface_ip = get_ip_addr(self.target_iface)
         self.iface_network = get_network(self.target_iface)
 
+        self.update_progress()
         self.continue_with_interface()
 
     @utils.async
