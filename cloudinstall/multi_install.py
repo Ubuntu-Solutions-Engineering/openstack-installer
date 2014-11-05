@@ -362,21 +362,36 @@ class MultiInstallNewMaas(MultiInstall):
             log.debug("error restarting maas-clusterd: {}".format(out))
             raise MaasInstallError("error in creating bootstrap kvm")
 
+        if self.config.is_landscape:
+            vcpus = 2
+            ram = 4096
+            disk = 40
+        else:
+            # only juju state server
+            vcpus = 1
+            ram = 2048
+            disk = 20
         # TODO investigate if this breaks with someone attempting nested
         # kvm installations. REF http://git.io/8z4xBw
-        cmd = ("virt-install --name juju-bootstrap --ram=2048 --vcpus=1 "
+        cmd = ("virt-install --name juju-bootstrap "
+               "--ram={ram} --vcpus={vcpus} "
                "--hvm --virt-type=kvm --pxe --boot network,hd "
                "--os-variant=ubuntutrusty --graphics vnc --noautoconsole "
                "--os-type=linux --accelerate "
                "--disk=/var/lib/libvirt/images/juju-bootstrap.qcow2,"
                # no space here...
-               "bus=virtio,format=qcow2,cache=none,sparse=true,size=20 "
-               "--network=bridge=br0,model=virtio")
+               "bus=virtio,format=qcow2,cache=none,sparse=true,"
+               # no space here...
+               "size={disk} "
+               "--network=bridge=br0,model=virtio".format(ram=ram,
+                                                          vcpus=vcpus,
+                                                          disk=disk))
 
         out = utils.get_command_output(cmd)
         if out['status'] != 0:
             log.debug("error creating kvm: {}".format(out))
-            raise MaasInstallError("error in creating bootstrap kvm")
+            raise MaasInstallError("Could not create KVM with {}MB RAM, "
+                                   "{}G disk and {} vcpus.".format(ram, disk, vcpus))
 
         out = utils.get_command_output("virsh dumpxml juju-bootstrap "
                                        " | grep 'mac address' | cut -d\\' -f2")
