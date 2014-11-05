@@ -59,6 +59,7 @@ def register_async_exception_callback(cb):
 
 
 class ExceptionLoggingThread(Thread):
+
     def run(self):
         try:
             super().run()
@@ -576,10 +577,10 @@ def ssh_genkey():
                            user_sudo=True)
     else:
         log.debug(
-            '*** ssh keys exist for this user, they will be used instead'
-            '*** If the current ssh keys are not passwordless you\'ll be'
-            '*** required to enter your ssh key password during container'
-            '*** creation.')
+            'ssh keys exist for this user, they will be used instead. '
+            'If the current ssh keys are not passwordless you\'ll be '
+            'required to enter your ssh key password during container '
+            'creation.')
 
 
 def ssh_pubkey():
