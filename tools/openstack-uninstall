@@ -52,6 +52,8 @@ case $WHAT in
 
     virsh destroy juju-bootstrap
     virsh undefine juju-bootstrap
+    virsh vol-delete juju-bootstrap.qcow2
+    virsh pool-refresh default
 
     # clean up the networking
     interface=$(cat /etc/openstack/interface)
