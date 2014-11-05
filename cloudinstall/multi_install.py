@@ -391,7 +391,9 @@ class MultiInstallNewMaas(MultiInstall):
         if out['status'] != 0:
             log.debug("error creating kvm: {}".format(out))
             raise MaasInstallError("Could not create KVM with {}MB RAM, "
-                                   "{}G disk and {} vcpus.".format(ram, disk, vcpus))
+                                   "{}G disk and {} vcpus.".format(ram,
+                                                                   disk,
+                                                                   vcpus))
 
         out = utils.get_command_output("virsh dumpxml juju-bootstrap "
                                        " | grep 'mac address' | cut -d\\' -f2")
