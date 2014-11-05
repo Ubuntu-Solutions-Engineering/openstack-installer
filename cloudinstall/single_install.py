@@ -102,7 +102,8 @@ class SingleInstall(InstallBase):
                                 'charmconf.yaml'),
                    charm_conf_modified)
 
-        utils.container_run(self.container_name, 'mkdir -p ~/.cloud-install')
+        utils.container_run(
+            self.container_name, 'mkdir -p .cloud-install')
         utils.container_run(
             self.container_name, 'sudo mkdir -p /etc/openstack')
 
