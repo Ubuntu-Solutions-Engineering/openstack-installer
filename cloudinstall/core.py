@@ -622,6 +622,7 @@ class Controller(DisplayController):
 
         placements = self.placement_controller.machines_for_charm(charm_class)
         errs = []
+        first_deploy = True
         for atype, ml in placements.items():
             for machine in ml:
                 # get machine spec from atype and machine instance id:
@@ -629,13 +630,25 @@ class Controller(DisplayController):
                 if mspec is None:
                     errs.append(machine)
                     continue
-                self.info_message("Deploying {c} "
-                                  "to machine {mspec}".format(
-                                      c=charm_class.display_name,
-                                      mspec=mspec))
-                deploy_err = charm.deploy(mspec)
-                if deploy_err:
-                    errs.append(machine)
+                if first_deploy:
+                    self.info_message("Deploying {c} "
+                                      "to machine {mspec}".format(
+                                          c=charm_class.display_name,
+                                          mspec=mspec))
+                    deploy_err = charm.deploy(mspec)
+                    if deploy_err:
+                        errs.append(machine)
+                    else:
+                        first_deploy = False
+                else:
+                    # service already deployed, need to add-unit
+                    self.info_message("Adding one unit of {c} "
+                                      "to machine {mspec}".format(
+                                          c=charm_class.display_name,
+                                          mspec=mspec))
+                    deploy_err = charm.add_unit(machine_spec=mspec)
+                    if deploy_err:
+                        errs.append(machine)
 
         had_err = len(errs) > 0
         if had_err:
