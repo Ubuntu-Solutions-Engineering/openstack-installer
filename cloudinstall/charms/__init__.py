@@ -204,6 +204,18 @@ export OS_REGION_NAME=RegionOne
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
         return False
 
+    def add_unit(self, machine_spec, num_units=1):
+        """Add num_units of an already-deployed service onto machine_spec.
+
+        Returns true in case of an error.
+        """
+        try:
+            self.juju.add_unit(self.charm_name, num_units, machine_spec)
+        except MacumbaError:
+            log.exception("Error adding unit")
+            return True
+        return False
+
     def set_relations(self):
         """ Setup charm relations
 
