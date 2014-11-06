@@ -811,7 +811,7 @@ class LandscapeInstallFinal:
 
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
-            raise Exception("Error configurint Landscape.")
+            raise Exception("Error configuring Landscape.")
 
         self.multi_installer.stop_current_task()
         self.display_controller.info_message("Complete")
