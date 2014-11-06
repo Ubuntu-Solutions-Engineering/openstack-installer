@@ -16,6 +16,7 @@
 
 import logging
 import os
+import sys
 
 import time
 from cloudinstall.config import Config
@@ -123,8 +124,7 @@ class SingleInstall(InstallBase):
         self.register_tasks([
             "Initializing Environment",
             "Creating container",
-            "Starting Juju server",
-            "Cleanup"])
+            "Starting Juju server"])
 
         self.start_task("Initializing Environment")
         self.do_install()
@@ -167,7 +167,11 @@ class SingleInstall(InstallBase):
         self.start_task("Starting Juju server")
         utils.container_run(self.container_name, "juju bootstrap")
         utils.container_run(self.container_name, "juju status")
-        self.start_task("Cleanup")
+
+        if self.opts.install_only:
+            log.info("Done installing, stopping here per --install-only.")
+            sys.exit(0)
+
         self.display_controller.info_message("Starting cloud deployment ..")
         utils.container_run_status(
             self.container_name, " ".join(cloud_status_bin))

@@ -154,6 +154,10 @@ class MultiInstall(InstallBase):
             raise Exception("Problem with juju status poke.")
 
         self.stop_current_task()
+
+        if self.opts.install_only:
+            return
+
         # Return control back to landscape_install if need be
         if not self.config.is_landscape:
             args = ['openstack-status']
