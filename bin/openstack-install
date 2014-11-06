@@ -38,7 +38,11 @@ def parse_options(*args, **kwds):
                         help='Enable swift storage')
     parser.add_argument('-i', '--install-only', action='store_true',
                         dest='install_only', default=False,
-                        help='install only (dont invoke cloud-status)')
+                        help='install and bootstrap MAAS/Juju/Landscape '
+                        '(as applicable) only. '
+                        'Will not deploy any OpenStack services '
+                        'in single or multi mode. '
+                        'You can invoke cloud-status manually to continue.')
     parser.add_argument('-u', '--uninstall', action='store_true',
                         dest='uninstall', default=False,
                         help='Uninstalls the current cloud including removing'
