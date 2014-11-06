@@ -153,7 +153,6 @@ class MultiInstall(InstallBase):
             log.debug("failure to get initial juju status: '{}'".format(out))
             raise Exception("Problem with juju status poke.")
 
-        self.drop_privileges()
         self.stop_current_task()
         # Return control back to landscape_install if need be
         if not self.config.is_landscape:
@@ -162,6 +161,8 @@ class MultiInstall(InstallBase):
                 args.append('--enable-swift')
             if self.opts.edit_placement:
                 args.append('--placement')
+
+            self.drop_privileges()
             os.execvp('openstack-status', args)
         else:
             log.debug("Finished MAAS step, now deploying Landscape.")
