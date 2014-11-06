@@ -788,6 +788,7 @@ class LandscapeInstallFinal:
                                        user_sudo=True)
         if out['status']:
             log.error("Problem deploying Landscape: {}".format(out))
+            raise Exception("Error deploying Landscape.")
 
         # Configure landscape
         # Running landscape configure:
@@ -810,6 +811,7 @@ class LandscapeInstallFinal:
 
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
+            raise Exception("Error configurint Landscape.")
 
         self.multi_installer.stop_current_task()
         self.display_controller.info_message("Complete")
