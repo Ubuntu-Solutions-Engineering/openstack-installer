@@ -332,7 +332,10 @@ class NodeViewMode(ScrollableWidgetWrap):
             if maas_machine:
                 m = maas_machine
             else:
-                return self._get_container_info(unit)
+                try:
+                    return self._get_container_info(unit)
+                except:
+                    log.exception("failed to get container info for unit {}.".format(unit))
 
         return ["Machine {}: ".format(juju_machine.machine_id)] \
             + self._hardware_info_for_machine(m)
@@ -355,7 +358,13 @@ class NodeViewMode(ScrollableWidgetWrap):
 
         # rl = ["{} {} (Machine {}".format(ctypestr, container_id,
         #                                  base_id)]
-        container_id = unit.machine_id.split('/')[-1]
+        try:
+            container_id = unit.machine_id.split('/')[-1]
+        except:
+            log.exception("ERROR: base_machine is {} and m is {}, and unit.machine_id is {}".format(
+                base_machine, m, unit.machine_id))
+            return "?"
+
         base_id = base_machine.machine_id
         rl = ["Container {} (Machine {}".format(container_id,
                                                 base_id)]
