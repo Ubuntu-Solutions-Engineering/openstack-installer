@@ -214,6 +214,11 @@ class MultiInstallNewMaas(MultiInstall):
                    'auto-generated')
 
         self.installing_new_maas = True
+        if self.config.is_landscape:
+            kvm_task = []
+        else:
+            kvm_task = ["Creating KVM for Juju state server"]
+
         self.register_tasks(["Installing MAAS",
                              "Configuring MAAS",
                              "Waiting for MAAS cluster registration",
@@ -222,6 +227,8 @@ class MultiInstallNewMaas(MultiInstall):
                              "Importing MAAS boot images",
                              "Creating KVM for Juju state server",
                              "Starting Juju server"] +
+                            kvm_task +
+                            ["Starting Juju server"] +
                             self.post_tasks)
 
         self.prompt_for_interface()
@@ -321,10 +328,13 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Done importing boot images.")
 
-        self.start_task("Creating KVM for Juju state server")
-        self.create_bootstrap_kvm()
+        if self.config.is_landscape:
+            # todo: wait for landscape machines here, callback to do_install
+        else:
+            self.start_task("Creating KVM for Juju state server")
+            self.create_bootstrap_kvm()
+            self.do_install()
 
-        self.do_install()
 
     def prompt_for_dhcp_range(self):
         """ Prompts for configurable dhcp ranges
@@ -397,15 +407,9 @@ class MultiInstallNewMaas(MultiInstall):
             log.debug("error restarting maas-clusterd: {}".format(out))
             raise MaasInstallError("error in creating bootstrap kvm")
 
-        if self.config.is_landscape:
-            vcpus = 2
-            ram = 4096
-            disk = 40
-        else:
-            # only juju state server
-            vcpus = 1
-            ram = 2048
-            disk = 20
+        vcpus = 1
+        ram = 2048
+        disk = 20
         # TODO investigate if this breaks with someone attempting nested
         # kvm installations. REF http://git.io/8z4xBw
         cmd = ("virt-install --name juju-bootstrap "
