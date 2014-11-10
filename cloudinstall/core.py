@@ -86,6 +86,7 @@ def view_context(view):
 
 
 class FakeJujuState:
+
     @property
     def services(self):
         return []
@@ -220,6 +221,10 @@ class DisplayController:
     def show_selector_info(self, title, install_types, cb):
         with dialog_context(self):
             self.ui.show_selector_info(title, install_types, cb)
+
+    def show_dhcp_range(self, range_low, range_high, title, cb):
+        with dialog_context(self):
+            self.ui.show_dhcp_range(range_low, range_high, title, cb)
 
     def show_exception_message(self, ex):
         def handle_done(*args, **kwargs):

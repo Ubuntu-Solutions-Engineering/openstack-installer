@@ -241,8 +241,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.iface_ip = get_ip_addr(self.target_iface)
         self.iface_network = get_network(self.target_iface)
 
-        self.update_progress()
-        self.continue_with_interface()
+        self.prompt_for_dhcp_range()
 
     @utils.async
     def continue_with_interface(self):
@@ -323,6 +322,28 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.do_install()
 
+    def prompt_for_dhcp_range(self):
+        """ Prompts for configurable dhcp ranges
+
+        :returns: Tuple of low/high ranges
+        """
+        self.display_controller.info_message(
+            "Set the minimum and maximumu dhcp ranges for your environment")
+
+        def set_dhcp_range(ranges):
+            self.dhcp_range = (ranges['dhcp_low'].value,
+                               ranges['dhcp_high'].value)
+
+            self.update_progress()
+            self.continue_with_interface()
+        nw = ip_network(self.iface_network, strict=False)
+        excludes = list(map(ip_address, [self.iface_ip]))
+        dhcp_range = ip_range_max(nw, excludes)
+        self.display_controller.show_dhcp_range(str(dhcp_range[0]),
+                                                str(dhcp_range[1]),
+                                                "Define DHCP Range",
+                                                set_dhcp_range)
+
     def prompt_for_bridge(self):
         # TODO prompt user to ask about bridging maas nw interface
         self.should_bridge_maasnw = True
@@ -335,23 +356,24 @@ class MultiInstallNewMaas(MultiInstall):
             self.enable_ipv4_forwarding()
             log.debug("enabled forwarding")
             self.gateway = get_ip_addr('br0')
-            excludes = [self.iface_ip]
+            # excludes = [self.iface_ip]
         else:
             self.gateway = get_default_gateway()
-            excludes = [self.iface_ip, self.gateway]
+            # excludes = [self.iface_ip, self.gateway]
 
-        excludes = list(map(ip_address, excludes))
-        nw = ip_network(self.iface_network, strict=False)
-        self.dhcp_range = ip_range_max(nw, excludes)
-        # TODO: allow customization
+        # excludes = list(map(ip_address, excludes))
+        # nw = ip_network(self.iface_network, strict=False)
+        # self.dhcp_range = ip_range_max(nw, excludes)
 
-        self.display_controller.info_message("Detecting Existing DHCP server")
+        self.display_controller.info_message(
+            "Detecting Existing DHCP server")
         self.start_task("Searching for existing DHCP servers")
         # TODO Handle existing dhcp with another dialog or user interaction
         # to accept the consequences.
         if self.detect_existing_dhcp(self.target_iface):
-            log.error("An existing DHCP server was found on this interface, "
-                      "the network may be incorrectly configured.")
+            log.error(
+                "An existing DHCP server was found on this interface, "
+                "the network may be incorrectly configured.")
             pass
 
     def create_bootstrap_kvm(self):
