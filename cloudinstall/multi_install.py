@@ -328,7 +328,7 @@ class MultiInstallNewMaas(MultiInstall):
         :returns: Tuple of low/high ranges
         """
         self.display_controller.info_message(
-            "Set the minimum and maximumu dhcp ranges for your environment")
+            "Set the minimum and maximum DHCP ranges for your environment")
 
         def set_dhcp_range(ranges):
             self.dhcp_range = (ranges['dhcp_low'].value,
