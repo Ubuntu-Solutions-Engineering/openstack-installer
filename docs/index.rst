@@ -1,7 +1,7 @@
 Ubuntu Openstack Installer
 ==========================
 
-`Github project page <https://github.com/ubuntu-solutions-engineering/openstck>`_
+`Github project page <https://github.com/Ubuntu-Solutions-Engineering/openstack-installer>`_
 
 Getting Help
 ^^^^^^^^^^^^
