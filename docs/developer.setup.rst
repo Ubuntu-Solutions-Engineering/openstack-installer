@@ -121,14 +121,14 @@ Documentation will be built in **docs/_build/html**, and requires **Sphinx** to 
 Running Tests
 ^^^^^^^^^^^^^
 
-Tests can be ran against a set of exported data(**default**) or a live machine. In
-order to test against live data the following environment variable is
-used.
+A unit test suite is in tests/ and is run using [`nose`](https://nose.readthedocs.org/en/latest/).
+Unit tests do not require a live Juju or MAAS connection.
+Run it as follows:
 
 
 .. code::
 
-   $ JUJU_LIVE=1 nosetests3 test
+   $ make test
 
 For the python code, using pep8 and pyflakes is encouraged:
 
