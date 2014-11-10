@@ -34,12 +34,14 @@ class Dialog(WidgetWrap):
 
     __metaclass__ = signals.MetaSignals
     signals = ['done']
+    key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
 
     def __init__(self, title, cb):
         self.title = title
         self.cb = cb
         self.input_items = OrderedDict()
         self.input_lbox = []
+        self.container_lbox = []
 
     def show(self):
         w = self._build_widget()
@@ -49,21 +51,32 @@ class Dialog(WidgetWrap):
         super().__init__(w)
 
     def keypress(self, size, key):
-        if key != 'tab':
-            super().keypress(size, key)
-        if key == 'tab':
-            old_widget, old_pos = self.input_lbox.get_focus()
-            self.input_lbox.set_focus((old_pos + 1) % len(
-                list(self.input_items.keys())))
+        key = self.key_conversion_map.get(key, key)
+        if key == 'down':
+            old_pos = self.container_lbox.focus
+            log.debug("Old focus item: {}".format(old_pos))
+            if old_pos == self.btn_columns:
+                if self.btn_columns.focus_position == 0:
+                    self.btn_columns.set_focus(self.btn_cancel)
+        elif key == 'up':
+            old_pos = self.container_lbox.focus
+            if old_pos == self.btn_columns:
+                # This should work as if cancel button
+                # is old_pos during shift tab
+                # we should go back to the ok button
+                if old_pos.focus_position == 1:
+                    log.debug("Hit cancel position: {}".format(old_pos))
+                    self.btn_columns.set_focus(self.btn_ok)
+        return super().keypress(size, key)
 
     def add_buttons(self):
         """ Adds default OK/Cancel buttons for dialog
         """
-        buttons = [AttrWrap(Button("Ok", self.submit),
-                            'button', 'button focus'),
-                   AttrWrap(Button("Cancel", self.cancel),
-                            'button', 'button focus')]
-        return Columns(buttons)
+        self.btn_ok = AttrWrap(Button("Ok", self.submit),
+                               'button', 'button focus')
+        self.btn_cancel = AttrWrap(Button("Cancel", self.cancel),
+                                   'button', 'button focus')
+        self.btn_columns = Columns([self.btn_ok, self.btn_cancel])
 
     def add_input(self, key, caption, **kwargs):
         """ Adds input boxes while setting their label attributes for
@@ -99,8 +112,13 @@ class Dialog(WidgetWrap):
 
         log.debug("Num items: {}, items: {}".format(num_of_items,
                                                     items))
+
+        # Add buttons
+        self.add_buttons()
+        self.container_lbox = ListBox([items, Divider(), self.btn_columns])
+
         return LineBox(
-            BoxAdapter(ListBox([items, Divider(), self.add_buttons()]),
+            BoxAdapter(self.container_lbox,
                        height=num_of_items + 2),
             title=self.title)
 
