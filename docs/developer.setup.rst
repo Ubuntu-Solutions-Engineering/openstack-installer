@@ -121,14 +121,15 @@ Documentation will be built in **docs/_build/html**, and requires **Sphinx** to 
 Running Tests
 ^^^^^^^^^^^^^
 
-A unit test suite is in tests/ and is run using [`nose`](https://nose.readthedocs.org/en/latest/).
+A unit test suite is in tests/ and is run using Nose_.
 Unit tests do not require a live Juju or MAAS connection.
 Run it as follows:
-
 
 .. code::
 
    $ make test
+
+.. _Nose: https://nose.readthedocs.org/en/latest/
 
 For the python code, using pep8 and pyflakes is encouraged:
 
