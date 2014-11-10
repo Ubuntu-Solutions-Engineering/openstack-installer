@@ -99,10 +99,10 @@ class InstallController(DisplayController):
         """
         self.ui.hide_selector_info()
         if 'Single' in install_type:
-            self.set_openstack_rel("Icehouse (2014.1.1)")
+            self.set_openstack_rel("Icehouse (2014.1.3)")
             SingleInstall(self.opts, self).run()
         elif 'Multi' == install_type:
-            self.set_openstack_rel("Icehouse (2014.1.1)")
+            self.set_openstack_rel("Icehouse (2014.1.3)")
             self.select_maas_type()
         else:
             self.set_openstack_rel("")
