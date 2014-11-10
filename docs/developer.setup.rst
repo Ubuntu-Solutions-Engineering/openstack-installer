@@ -62,7 +62,11 @@ where your openstack project is kept.
 Running the Openstack installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Running the installer for test currently requires installing the packages.
+Running the installer for testing currently requires installing the packages. (Unit tests can be run without installing the packages, provided the `install-dependencies` make target has been run.)
+
+.. note::
+   Running the installer as below will install MAAS on your development system. This will create a 'maas' user and add a database to your local postgres instance. It will also configure bind9 DNS and a DHCP server for use with MAAS, although MAAS should not activate those by default. If any of this is not desirable, you will need to find a different machine to develop on.
+
 After building the packages using either 'make deb' or 'make sbuild', you can install and run with the 'run' target:
 
 .. code::
