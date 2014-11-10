@@ -216,7 +216,6 @@ class MultiInstallNewMaas(MultiInstall):
                              "Searching for existing DHCP servers",
                              "Configuring MAAS networks",
                              "Importing MAAS boot images",
-                             "Configuring Juju for MAAS",
                              "Creating KVM for Juju state server",
                              "Starting Juju server"] +
                             self.post_tasks)
@@ -308,7 +307,6 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Done importing boot images.")
 
-        self.start_task("Configuring Juju for MAAS")
         self.start_task("Creating KVM for Juju state server")
         self.create_bootstrap_kvm()
 
