@@ -30,6 +30,7 @@ class InstallController(DisplayController):
 
     """ Install controller """
 
+    # These are overriden in tests
     SingleInstall = SingleInstall
     MultiInstallExistingMaas = MultiInstallExistingMaas
     MultiInstallNewMaas = MultiInstallNewMaas
