@@ -82,7 +82,6 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     lxc-stop -n uoi-bootstrap
     lxc-destroy -n uoi-bootstrap
-
     ;;
   landscape-system)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -92,8 +91,16 @@ case $WHAT in
     echo destructive. Therefore, it is recommended to uninstall
     echo the Landscape bits manually.
     echo
-    echo Example:
-    echo $ sudo apt-get remove openstack openstack-landscape
+    echo Suggested Steps:
+    echo
+    echo First:
+    echo $ sudo apt-get purge maas* openstack openstack-landscape
+    echo
+    echo You will want to deconfigure and purge the maas database
+    echo when prompted.
+    echo
+    echo Second:
+    echo $ mv ~/.cloud-install ~/.cloud-install-backup
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     exit 1
     ;;
