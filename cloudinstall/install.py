@@ -42,8 +42,7 @@ class InstallController(DisplayController):
         password = creds['password'].value
         if 'confirm_password' in creds:
             confirm_password = creds['confirm_password'].value
-        if password and \
-           password == confirm_password:
+        if password and password == confirm_password:
             self.config.save_password(password)
             self.ui.hide_show_password_input()
             self.select_install_type()

@@ -85,15 +85,12 @@ class Dialog(WidgetWrap):
         :param str caption: viewable label of input
         :param dict **kwargs: additional Edit attributes
         """
-        edit = EditInput(caption=caption, **kwargs)
-        self.input_items[key] = edit
+        self.input_items[key] = EditInput(caption=caption, **kwargs)
 
     def add_radio(self, item, group=[]):
         """ Adds radio selections
         """
-        r = RadioButton(group, item)
-        r.text_label = item
-        self.input_items[item] = r
+        self.input_items[item] = RadioButton(group, item)
 
     def _build_widget(self, **kwargs):
 
