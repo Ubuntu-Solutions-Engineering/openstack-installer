@@ -30,9 +30,6 @@ class InstallController(DisplayController):
 
     """ Install controller """
 
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
-
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
         """
