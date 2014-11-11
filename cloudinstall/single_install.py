@@ -16,6 +16,7 @@
 
 import logging
 import os
+import sys
 import json
 import time
 from cloudinstall.config import Config
