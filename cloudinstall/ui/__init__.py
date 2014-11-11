@@ -208,6 +208,8 @@ class DhcpRangeInput(Dialog):
 
     def __init__(self, low, high, title, cb):
         super().__init__(title, cb)
-        self.add_input('dhcp_low', 'DHCP Range Low IP: ', edit_text=low)
-        self.add_input('dhcp_high', 'DHCP Range High IP: ', edit_text=high)
+        self.add_input('dhcp_low', 'DHCP IP range low: ', edit_text=low)
+        self.add_input('dhcp_high', 'DHCP IP range high: ', edit_text=high)
+        self.add_input('static_low', 'Static IP range low (optional): ')
+        self.add_input('static_high', 'Static IP range high (optional): ')
         self.show()
