@@ -272,7 +272,8 @@ class MultiInstallNewMaas(MultiInstall):
         self.configure_maas_networking(cluster_uuid,
                                        'br0',
                                        self.gateway,
-                                       self.dhcp_range)
+                                       self.dhcp_range,
+                                       self.static_range)
 
         self.configure_dns()
 
@@ -326,11 +327,15 @@ class MultiInstallNewMaas(MultiInstall):
         :returns: Tuple of low/high ranges
         """
         self.display_controller.info_message(
-            "Set the minimum and maximum DHCP ranges for your environment")
+            "Set the minimum and maximum DHCP ranges for your environment and "
+            "optionally set static ip ranges. Both ranges must be the same "
+            "network and cannot overlap.")
 
         def set_dhcp_range(ranges):
             self.dhcp_range = (ranges['dhcp_low'].value,
                                ranges['dhcp_high'].value)
+            self.static_range = (ranges['static_low'].value,
+                                 ranges['static_high'].value)
 
             self.update_progress()
             self.continue_with_interface()
@@ -690,7 +695,7 @@ class MultiInstallNewMaas(MultiInstall):
         utils.get_command_output('sysctl -p')
 
     def configure_maas_networking(self, cluster_uuid, interface,
-                                  gateway, dhcp_range):
+                                  gateway, dhcp_range, static_range):
         """ set up or update the node-group-interface.
 
         dhcp_range is a tuple of ip addresses as strings: (low, high)
@@ -707,7 +712,9 @@ class MultiInstallNewMaas(MultiInstall):
                     'management=2 subnet_mask={netmask} '
                     'broadcast_ip={bcast} router_ip={gateway} '
                     'ip_range_low={ip_range_low} '
-                    'ip_range_high={ip_range_high} ')
+                    'ip_range_high={ip_range_high} '
+                    'static_ip_range_low={static_ip_range_low} '
+                    'static_ip_range_high={static_ip_range_high}')
         args = dict(uuid=cluster_uuid,
                     interface=interface,
                     address=get_ip_addr(interface),
@@ -715,7 +722,9 @@ class MultiInstallNewMaas(MultiInstall):
                     bcast=get_bcast_addr(interface),
                     gateway=gateway,
                     ip_range_low=dhcp_range[0],
-                    ip_range_high=dhcp_range[1])
+                    ip_range_high=dhcp_range[1],
+                    static_ip_range_low=static_range[0],
+                    static_ip_range_high=static_range[1])
 
         if interface_exists:
             cmd = ('maas maas node-group-interface update {uuid} {interface} '
