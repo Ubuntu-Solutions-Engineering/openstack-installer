@@ -41,6 +41,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              PasswordInput,
                              MaasServerInput,
                              LandscapeInput,
+                             DhcpRangeInput,
                              InfoDialog)
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.placement.ui import PlacementView
@@ -615,7 +616,7 @@ class PegasusGUI(WidgetWrap):
     def hide_help_info(self):
         self.hide_widget_on_top()
 
-    def show_step_info(self, msg=None, width=50, height=10):
+    def show_step_info(self, msg, width=60, height=10):
         self.hide_step_info()
         widget = StepInfo(msg, height)
         self.show_widget_on_top(widget, width=width, height=height + 1,
@@ -648,6 +649,13 @@ class PegasusGUI(WidgetWrap):
         self.show_widget_on_top(widget, width=50, height=10)
 
     def hide_show_maas_input(self):
+        self.hide_widget_on_top()
+
+    def show_dhcp_range(self, range_low, range_high, title, cb):
+        widget = DhcpRangeInput(range_low, range_high, title, cb)
+        self.show_widget_on_top(widget, width=50, height=10)
+
+    def hide_show_dhcp_range(self):
         self.hide_widget_on_top()
 
     def show_landscape_input(self, title, cb):

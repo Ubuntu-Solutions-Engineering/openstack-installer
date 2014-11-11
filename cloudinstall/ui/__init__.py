@@ -199,3 +199,15 @@ class LandscapeInput(Dialog):
         self.add_input('maas_server', 'MAAS Server IP (optional): ')
         self.add_input('maas_apikey', 'MAAS API Key (optional): ')
         self.show()
+
+
+class DhcpRangeInput(Dialog):
+
+    """ DHCP Range dialog
+    """
+
+    def __init__(self, low, high, title, cb):
+        super().__init__(title, cb)
+        self.add_input('dhcp_low', 'DHCP Range Low IP: ', edit_text=low)
+        self.add_input('dhcp_high', 'DHCP Range High IP: ', edit_text=high)
+        self.show()

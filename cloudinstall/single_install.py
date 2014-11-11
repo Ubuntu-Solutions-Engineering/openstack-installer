@@ -17,7 +17,7 @@
 import logging
 import os
 import sys
-
+import json
 import time
 from cloudinstall.config import Config
 from cloudinstall.installbase import InstallBase
@@ -71,14 +71,32 @@ class SingleInstall(InstallBase):
             tries = tries + 1
 
     def cloud_init_finished(self):
-        """ checks the log to see if cloud-init finished
+        """checks cloud-init result.json in container to find out status
+
+        returns True if cloud-init finished with no errors, False if
+        it's not done yet, and raises an exception if it had errors.
         """
-        log_file = os.path.join(self.container_abspath,
-                                'rootfs/var/log/cloud-init-output.log')
-        out = utils.get_command_output('sudo tail -n1 {0}'.format(log_file))
-        if 'finished at' in out['output']:
-            return True
-        return False
+        result_json = os.path.join(self.container_abspath,
+                                   'rootfs/var/lib/cloud/data/result.json')
+        if not os.path.isfile(result_json):
+            return False
+
+        result_json = utils.slurp(result_json)
+        log.debug("Cloud-init finished: {}".format(result_json))
+
+        if result_json == '':
+            return False
+
+        ret = json.loads(result_json)
+        errors = ret['v1']['errors']
+        if len(errors):
+            log.error("Container cloud-init finished with "
+                      "errors: {}".format(errors))
+            # FIXME: Log errors for now, don't be fatal as the main
+            # error is coming from a pollinate command unable
+            # to run which doesn't seem to effect the installer.
+            # raise Exception("Container cloud-init returned errors")
+        return True
 
     def copy_installdata_and_set_perms(self):
         """ copies install data and sets permissions on files/dirs
