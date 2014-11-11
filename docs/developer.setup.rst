@@ -28,7 +28,14 @@ installer:
 .. code::
 
    $ git clone https://github.com/Ubuntu-Solutions-Engineering/openstack-installer.git ~/openstack-installer
-   $ cd openstack
+   $ cd ~/openstack-installer
+
+There are a few dependencies for the OpenStack installer which are kept in a PPA. To add it:
+
+.. code::
+
+   $ sudo add-apt-repository -y ppa:cloud-installer/ppa
+   $ sudo apt-get update
 
 Use the target 'install-dependencies' to install a custom binary package for the build dependencies:
 
@@ -53,9 +60,13 @@ where your openstack project is kept.
    $ ls ../*.deb
 
 Running the Openstack installer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Running the installer for test currently requires installing the packages.
+Running the installer for testing currently requires installing the packages. (Unit tests can be run without installing the packages, provided the `install-dependencies` make target has been run.)
+
+.. note::
+   Running the installer as below will install MAAS on your development system. This will create a 'maas' user and add a database to your local postgres instance. It will also configure bind9 DNS and a DHCP server for use with MAAS, although MAAS should not activate those by default. If any of this is not desirable, you will need to find a different machine to develop on.
+
 After building the packages using either 'make deb' or 'make sbuild', you can install and run with the 'run' target:
 
 .. code::
@@ -121,14 +132,15 @@ Documentation will be built in **docs/_build/html**, and requires **Sphinx** to 
 Running Tests
 ^^^^^^^^^^^^^
 
-Tests can be ran against a set of exported data(**default**) or a live machine. In
-order to test against live data the following environment variable is
-used.
-
+A unit test suite is in tests/ and is run using Nose_.
+Unit tests do not require a live Juju or MAAS connection.
+Run it as follows:
 
 .. code::
 
-   $ JUJU_LIVE=1 nosetests3 test
+   $ make test
+
+.. _Nose: https://nose.readthedocs.org/en/latest/
 
 For the python code, using pep8 and pyflakes is encouraged:
 

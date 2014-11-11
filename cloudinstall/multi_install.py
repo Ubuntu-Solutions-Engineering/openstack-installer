@@ -216,7 +216,6 @@ class MultiInstallNewMaas(MultiInstall):
                              "Searching for existing DHCP servers",
                              "Configuring MAAS networks",
                              "Importing MAAS boot images",
-                             "Configuring Juju for MAAS",
                              "Creating KVM for Juju state server",
                              "Starting Juju server"] +
                             self.post_tasks)
@@ -241,8 +240,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.iface_ip = get_ip_addr(self.target_iface)
         self.iface_network = get_network(self.target_iface)
 
-        self.update_progress()
-        self.continue_with_interface()
+        self.prompt_for_dhcp_range()
 
     @utils.async
     def continue_with_interface(self):
@@ -309,7 +307,6 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Done importing boot images.")
 
-        self.start_task("Configuring Juju for MAAS")
         self.start_task("Creating KVM for Juju state server")
         self.create_bootstrap_kvm()
 
@@ -323,6 +320,28 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.do_install()
 
+    def prompt_for_dhcp_range(self):
+        """ Prompts for configurable dhcp ranges
+
+        :returns: Tuple of low/high ranges
+        """
+        self.display_controller.info_message(
+            "Set the minimum and maximum DHCP ranges for your environment")
+
+        def set_dhcp_range(ranges):
+            self.dhcp_range = (ranges['dhcp_low'].value,
+                               ranges['dhcp_high'].value)
+
+            self.update_progress()
+            self.continue_with_interface()
+        nw = ip_network(self.iface_network, strict=False)
+        excludes = list(map(ip_address, [self.iface_ip]))
+        dhcp_range = ip_range_max(nw, excludes)
+        self.display_controller.show_dhcp_range(str(dhcp_range[0]),
+                                                str(dhcp_range[1]),
+                                                "Define DHCP Range",
+                                                set_dhcp_range)
+
     def prompt_for_bridge(self):
         # TODO prompt user to ask about bridging maas nw interface
         self.should_bridge_maasnw = True
@@ -335,23 +354,24 @@ class MultiInstallNewMaas(MultiInstall):
             self.enable_ipv4_forwarding()
             log.debug("enabled forwarding")
             self.gateway = get_ip_addr('br0')
-            excludes = [self.iface_ip]
+            # excludes = [self.iface_ip]
         else:
             self.gateway = get_default_gateway()
-            excludes = [self.iface_ip, self.gateway]
+            # excludes = [self.iface_ip, self.gateway]
 
-        excludes = list(map(ip_address, excludes))
-        nw = ip_network(self.iface_network, strict=False)
-        self.dhcp_range = ip_range_max(nw, excludes)
-        # TODO: allow customization
+        # excludes = list(map(ip_address, excludes))
+        # nw = ip_network(self.iface_network, strict=False)
+        # self.dhcp_range = ip_range_max(nw, excludes)
 
-        self.display_controller.info_message("Detecting Existing DHCP server")
+        self.display_controller.info_message(
+            "Detecting Existing DHCP server")
         self.start_task("Searching for existing DHCP servers")
         # TODO Handle existing dhcp with another dialog or user interaction
         # to accept the consequences.
         if self.detect_existing_dhcp(self.target_iface):
-            log.error("An existing DHCP server was found on this interface, "
-                      "the network may be incorrectly configured.")
+            log.error(
+                "An existing DHCP server was found on this interface, "
+                "the network may be incorrectly configured.")
             pass
 
     def create_bootstrap_kvm(self):
@@ -759,17 +779,17 @@ class LandscapeInstallFinal:
                     "Unable to set ownership for {}".format(d))
 
     def run(self):
-        """ Finish installation once questionarre is finished.
+        """Finish the installation once the questionnaire is finished.
         """
-        # FIXME: not sure if deployer is failing to access the juju
-        # environment but i get random connection refused when
-        # running juju-deployer
         self.deploy_landscape()
 
     def deploy_landscape(self):
         self.multi_installer.start_task("Preparing Landscape")
         self.display_controller.info_message(
             "Running ..")
+        # FIXME: not sure if deployer is failing to access the juju
+        # environment but I get random connection refused when
+        # running juju-deployer (adam.stokes)
         time.sleep(10)
 
         # Set remaining permissions
@@ -810,6 +830,7 @@ class LandscapeInstallFinal:
                    name=self.config.landscape_creds['admin_name'],
                    sys_email=self.config.landscape_creds['system_email'],
                    maas_host=self.config.maas_creds['api_host']))
+
         log.debug("Running landscape configure: {}".format(cmd))
 
         out = utils.get_command_output(cmd, timeout=None, user_sudo=True)
@@ -820,6 +841,7 @@ class LandscapeInstallFinal:
 
         self.multi_installer.stop_current_task()
         self.display_controller.info_message("Complete")
+
         msg = []
         msg.append("You can now continue with the installation of Openstack")
         msg.append(" by visiting:\n\n")
@@ -830,4 +852,4 @@ class LandscapeInstallFinal:
             self.config.landscape_creds['admin_email']))
         msg.append(" Password: {}".format(self.config.openstack_password))
 
-        self.display_controller.step_info(msg, width=60, height=10)
+        self.display_controller.step_info(msg)
