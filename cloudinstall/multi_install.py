@@ -781,15 +781,15 @@ class LandscapeInstallFinal:
     def run(self):
         """Finish the installation once the questionnaire is finished.
         """
-        # FIXME: not sure if deployer is failing to access the juju
-        # environment but I get random connection refused when
-        # running juju-deployer (adam.stokes)
         self.deploy_landscape()
 
     def deploy_landscape(self):
         self.multi_installer.start_task("Preparing Landscape")
         self.display_controller.info_message(
             "Running ..")
+        # FIXME: not sure if deployer is failing to access the juju
+        # environment but I get random connection refused when
+        # running juju-deployer (adam.stokes)
         time.sleep(10)
 
         # Set remaining permissions
