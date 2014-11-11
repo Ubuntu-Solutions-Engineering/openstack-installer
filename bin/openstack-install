@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     if opts.uninstall:
         logger.info("Restoring system to last known state.")
-        os.execl('/usr/share/openstack/tools/openstack-uninstall')
+        os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
 
     if opts.killcloud:
         if cfg.is_single:
