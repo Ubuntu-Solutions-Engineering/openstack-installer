@@ -58,10 +58,10 @@ def setup_logger(name=__name__):
     .. code::
 
         # Running cloud-status from cli
-        $ UCI_LOGLEVEL=INFO cloud-status
+        $ UCI_LOGLEVEL=INFO openstack-status
 
         # Disable log filtering
-        $ UCI_NOFILTER=1 cloud-status
+        $ UCI_NOFILTER=1 openstack-status
 
     :params str name: logger name
     :returns: a log object
