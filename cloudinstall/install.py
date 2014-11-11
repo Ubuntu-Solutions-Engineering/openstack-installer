@@ -30,6 +30,12 @@ class InstallController(DisplayController):
 
     """ Install controller """
 
+    # These are overriden in tests
+    SingleInstall = SingleInstall
+    MultiInstallExistingMaas = MultiInstallExistingMaas
+    MultiInstallNewMaas = MultiInstallNewMaas
+    LandscapeInstall = LandscapeInstall
+
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
         """
@@ -54,9 +60,9 @@ class InstallController(DisplayController):
         if maas_server and maas_apikey:
             self.config.save_maas_creds(maas_server,
                                         maas_apikey)
-            MultiInstallExistingMaas(self.opts, self).run()
+            self.MultiInstallExistingMaas(self.opts, self).run()
         else:
-            MultiInstallNewMaas(self.opts, self).run()
+            self.MultiInstallNewMaas(self.opts, self).run()
 
     def select_install_type(self):
         """ Dialog for selecting installation type
@@ -95,12 +101,14 @@ class InstallController(DisplayController):
         """ Callback for install type selector
         """
         self.ui.hide_selector_info()
-        if 'Single' in install_type:
+        if install_type == "Single":
             self.set_openstack_rel("Icehouse (2014.1.3)")
-            SingleInstall(self.opts, self).run()
-        elif 'Multi' == install_type:
+            self.SingleInstall(self.opts, self).run()
+        elif install_type == "Multi":
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.select_maas_type()
-        else:
+        elif install_type == "Landscape":
             self.set_openstack_rel("")
-            LandscapeInstall(self.opts, self).run()
+            self.LandscapeInstall(self.opts, self).run()
+        else:
+            raise ValueError("Unknown install type: {}".format(install_type))
