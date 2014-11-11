@@ -779,11 +779,11 @@ class LandscapeInstallFinal:
                     "Unable to set ownership for {}".format(d))
 
     def run(self):
-        """ Finish installation once questionarre is finished.
+        """Finish the installation once the questionnaire is finished.
         """
         # FIXME: not sure if deployer is failing to access the juju
-        # environment but i get random connection refused when
-        # running juju-deployer
+        # environment but I get random connection refused when
+        # running juju-deployer (adam.stokes)
         self.deploy_landscape()
 
     def deploy_landscape(self):
@@ -830,6 +830,7 @@ class LandscapeInstallFinal:
                    name=self.config.landscape_creds['admin_name'],
                    sys_email=self.config.landscape_creds['system_email'],
                    maas_host=self.config.maas_creds['api_host']))
+
         log.debug("Running landscape configure: {}".format(cmd))
 
         out = utils.get_command_output(cmd, timeout=None, user_sudo=True)
@@ -840,6 +841,7 @@ class LandscapeInstallFinal:
 
         self.multi_installer.stop_current_task()
         self.display_controller.info_message("Complete")
+
         msg = []
         msg.append("You can now continue with the installation of Openstack")
         msg.append(" by visiting:\n\n")
