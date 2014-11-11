@@ -736,7 +736,3 @@ class Controller(DisplayController):
                 charm_q.is_running = True
         self.ui.hide_add_charm_info()
         return
-
-    def initialize(self):
-        """ authenticates against juju/maas and begins deployment """
-        super().initialize()
