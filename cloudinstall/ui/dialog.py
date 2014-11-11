@@ -100,11 +100,6 @@ class Dialog(WidgetWrap):
                 self.input_items[_item], 'input', 'input focus'))
         self.input_lbox = ListBox(SimpleListWalker(total_items))
 
-<<<<<<< HEAD
-        num_of_items, items = box_adapter(total_items, self.input_lbox)
-
-        log.debug("Num items: {}, items: {}".format(num_of_items, items))
-=======
         log.debug("Num items: {}, items: {}".format(len(total_items),
                                                     self.input_lbox))
 
@@ -117,7 +112,6 @@ class Dialog(WidgetWrap):
              Divider(),
              self.btn_columns])
 
->>>>>>> master
         return LineBox(
             BoxAdapter(self.container_lbox,
                        height=len(total_items) + 2),
