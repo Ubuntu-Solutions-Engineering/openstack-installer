@@ -616,7 +616,7 @@ class PegasusGUI(WidgetWrap):
     def hide_help_info(self):
         self.hide_widget_on_top()
 
-    def show_step_info(self, msg, width, height):
+    def show_step_info(self, msg, width=60, height=10):
         self.hide_step_info()
         widget = StepInfo(msg, height)
         self.show_widget_on_top(widget, width=width, height=height + 1,
