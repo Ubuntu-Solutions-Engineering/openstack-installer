@@ -131,7 +131,7 @@ def async(func):
 def apt_install(pkgs):
     """ runs apt-get install against space separated list of `pkgs`
     """
-    cmd = ("DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -qyf "
+    cmd = ("LANG=C DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -qyf "
            "-o Dpkg::Options::=--force-confdef "
            "-o Dpkg::Options::=--force-confold "
            "install {0}".format(pkgs))
