@@ -35,9 +35,6 @@ class InstallController(DisplayController):
     MultiInstallNewMaas = MultiInstallNewMaas
     LandscapeInstall = LandscapeInstall
 
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
-
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
         """
