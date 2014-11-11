@@ -262,6 +262,15 @@ class MultiInstallNewMaas(MultiInstall):
         self.apikey = self.get_apikey()
 
         self.login_to_maas(self.apikey)
+
+        try:
+            utils.chown(os.path.join(utils.install_home(), '.maascli.db'),
+                        utils.install_user(),
+                        utils.install_user())
+        except:
+            raise MaasInstallError("Unable to set permissions on {}".format(
+                os.path.join(utils.install_home(), '.maascli.db')))
+
         self.start_task("Waiting for MAAS cluster registration")
         cluster_uuid = self.wait_for_registration()
         self.create_maas_bridge(self.target_iface)
@@ -310,14 +319,6 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.start_task("Creating KVM for Juju state server")
         self.create_bootstrap_kvm()
-
-        try:
-            utils.chown(os.path.join(utils.install_home(), '.maascli.db'),
-                        utils.install_user(),
-                        utils.install_user())
-        except:
-            raise MaasInstallError("Unable to set permissions on {}".format(
-                os.path.join(utils.install_home(), '.maascli.db')))
 
         self.do_install()
 
@@ -526,6 +527,11 @@ class MultiInstallNewMaas(MultiInstall):
         out = utils.get_command_output(cmd)
         if out['status'] != 0:
             log.debug("failed to login to maas: {}".format(out))
+
+            # Remove maascli.db that gets created regardless of
+            # status of login
+            utils.get_command_output('rm -f {}'.format(
+                os.path.join(utils.install_home(), '.maascli.db')))
             raise MaasInstallError("Couldn't log in")
 
     def wait_for_registration(self):
