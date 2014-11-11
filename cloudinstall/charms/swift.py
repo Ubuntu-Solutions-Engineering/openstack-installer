@@ -21,6 +21,7 @@ log = logging.getLogger('cloudinstall.charms.compute')
 
 
 class CharmSwift(CharmBase):
+
     """ swift directives """
 
     charm_name = 'swift-storage'
@@ -45,6 +46,6 @@ class CharmSwift(CharmBase):
 
     def post_proc(self):
         self.juju.set_config('glance-simplestreams-sync',
-                             {'use_swift': True})
+                             {'use_swift': 'True'})
 
 __charm_class__ = CharmSwift
