@@ -155,9 +155,9 @@ class Selector(Dialog):
 
     def submit(self, button):
         log.debug("Callback on : {}".format(self.input_items))
-        for item in self.input_items.keys():
-            if self.input_items[item].get_state():
-                selected_item = self.input_items[item].label
+        for item in self.input_items.values():
+            if item.get_state():
+                selected_item = item.label
         self.emit_done_signal(selected_item)
 
 

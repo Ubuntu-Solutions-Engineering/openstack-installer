@@ -49,12 +49,12 @@ class Dialog(WidgetWrap):
         super().__init__(w)
 
     def keypress(self, size, key):
-        if key != 'tab':
-            super().keypress(size, key)
         if key == 'tab':
             old_widget, old_pos = self.input_lbox.get_focus()
             self.input_lbox.set_focus((old_pos + 1) % len(
-                list(self.input_items.keys())))
+                self.input_items))
+        else:
+            super().keypress(size, key)
 
     def add_buttons(self):
         """ Adds default OK/Cancel buttons for dialog
@@ -72,15 +72,12 @@ class Dialog(WidgetWrap):
         :param str caption: viewable label of input
         :param dict **kwargs: additional Edit attributes
         """
-        edit = EditInput(caption=caption, **kwargs)
-        self.input_items[key] = edit
+        self.input_items[key] = EditInput(caption=caption, **kwargs)
 
     def add_radio(self, item, group=[]):
         """ Adds radio selections
         """
-        r = RadioButton(group, item)
-        r.text_label = item
-        self.input_items[item] = r
+        self.input_items[item] = RadioButton(group, item)
 
     def _build_widget(self, **kwargs):
 
@@ -94,11 +91,9 @@ class Dialog(WidgetWrap):
                 self.input_items[_item], 'input', 'input focus'))
         self.input_lbox = ListBox(SimpleListWalker(total_items))
 
-        num_of_items, items = box_adapter(total_items,
-                                          self.input_lbox)
+        num_of_items, items = box_adapter(total_items, self.input_lbox)
 
-        log.debug("Num items: {}, items: {}".format(num_of_items,
-                                                    items))
+        log.debug("Num items: {}, items: {}".format(num_of_items, items))
         return LineBox(
             BoxAdapter(ListBox([items, Divider(), self.add_buttons()]),
                        height=num_of_items + 2),
