@@ -22,17 +22,16 @@ import argparse
 import sys
 import os
 import logging
-from subprocess import call
-from cloudinstall import utils
-from cloudinstall.gui import (PegasusGUI, InstallHeader)
+from cloudinstall.log import setup_logger
+import cloudinstall.utils as utils
+from cloudinstall.gui import PegasusGUI, InstallHeader
 from cloudinstall.install import InstallController
-from cloudinstall import log
 from cloudinstall.config import Config
 
 
-def parse_options(*args, **kwds):
+def parse_options(argv, cfg):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
-                                     prog='cloud-status')
+                                     prog='sudo openstack-install')
     parser.add_argument('-s', '--enable-swift', action='store_true',
                         dest='enable_swift', default=False,
                         help='Enable swift storage')
@@ -42,7 +41,8 @@ def parse_options(*args, **kwds):
                         '(as applicable) only. '
                         'Will not deploy any OpenStack services '
                         'in single or multi mode. '
-                        'You can invoke cloud-status manually to continue.')
+                        'You can invoke openstack-status manually to '
+                        'continue.')
     parser.add_argument('-u', '--uninstall', action='store_true',
                         dest='uninstall', default=False,
                         help='Uninstalls the current cloud including removing'
@@ -52,41 +52,39 @@ def parse_options(*args, **kwds):
                         help='Tear down existing cloud leaving userdata '
                         'in place. Useful for iterative deploys.')
     parser.add_argument('-a', type=str, default=None,
-                        help='<arch, ..> comma-seperated list of '
+                        help='<arch, ..> comma-separated list of '
                         'architectures to filter available cloud '
                         'images with which to populate Glance, '
                         'e.g. amd64,arm64', dest='arch')
     parser.add_argument('-r', type=str, default=None, dest='release',
-                        help='<rel, ..> comma-seperated list of Ubuntu '
+                        help='<rel, ..> comma-separated list of Ubuntu '
                         'releases to filter available cloud images with '
                         'which to populate Glance, e.g. precise,trusty')
     parser.add_argument('--with-maas-address', type=str,
-                        dest='with_maas_address',
+                        dest='with_maas_address', metavar="IP",
                         help='Specify an existing MAAS ip address')
     parser.add_argument('--with-maas-apikey', type=str,
-                        dest='with_maas_apikey',
+                        dest='with_maas_apikey', metavar="KEY",
                         help='Specify a MAAS admin user apikey')
     parser.add_argument('-p', '--placement', action='store_true',
                         dest='edit_placement', default=False,
                         help='Show machine placement UI before deploying')
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 if __name__ == '__main__':
-    log.setup_logger()
+    setup_logger()
     logger = logging.getLogger('cloudinstall')
-    opts = parse_options(sys.argv)
     cfg = Config()
+    opts = parse_options(sys.argv[1:], cfg)
 
     if os.geteuid() != 0:
-        print("Installing a cloud requires root privileges. Rerun with sudo")
-        sys.exit(1)
+        sys.exit(
+            "Installing a cloud requires root privileges. Rerun with sudo")
 
     if opts.uninstall:
         logger.info("Restoring system to last known state.")
-        ret = call(['/usr/share/openstack/tools/openstack-uninstall'],
-                   shell=True)
-        raise SystemExit
+        os.execl('/usr/share/openstack/tools/openstack-uninstall')
 
     if opts.killcloud:
         if cfg.is_single:
