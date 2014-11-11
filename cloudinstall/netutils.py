@@ -22,29 +22,52 @@ from subprocess import check_output
 
 
 def _networkinfo(interface):
+    """Given an interface name, returns dict containing network and
+    broadcast address as IPv4Interface objects
+
+    If an interface has no IP, returns None
+    """
     ipcmds = "ip -o -4 address show dev {}".format(interface).split()
     out = check_output(ipcmds).decode('utf-8')
-    nw = re.search("inet (\d+\.\d+\.\d+\.\d+/\d+)", out).groups()[0]
-    nw = IPv4Interface(nw)
-    bcastaddr = re.search("brd (\d+\.\d+\.\d+\.\d+)", out).groups()[0]
-    bcastaddr = IPv4Interface(bcastaddr)
+    nwmatch = re.search("inet (\d+\.\d+\.\d+\.\d+/\d+)", out)
+    if nwmatch is None:
+        return None
+    nw = IPv4Interface(nwmatch.groups()[0])
+
+    bcastaddrmatch = re.search("brd (\d+\.\d+\.\d+\.\d+)", out)
+    if bcastaddrmatch is None:
+        return None
+
+    bcastaddr = IPv4Interface(bcastaddrmatch.groups()[0])
     return dict(network=nw, bcastaddr=bcastaddr)
 
 
 def get_ip_addr(interface):
-    return str(_networkinfo(interface)['network'].ip)
+    info = _networkinfo(interface)
+    if info is None:
+        return None
+    return str(info['network'].ip)
 
 
 def get_bcast_addr(interface):
-    return str(_networkinfo(interface)['bcastaddr'].ip)
+    info = _networkinfo(interface)
+    if info is None:
+        return None
+    return str(info['bcastaddr'].ip)
 
 
 def get_network(interface):
-    return str(_networkinfo(interface)['network'])
+    info = _networkinfo(interface)
+    if info is None:
+        return None
+    return str(info['network'])
 
 
 def get_netmask(interface):
-    info = _networkinfo(interface)['network'].with_netmask
+    info = _networkinfo(interface)
+    if info is None:
+        return None
+    info = info['network'].with_netmask
     return info.split('/')[-1]
 
 
@@ -71,10 +94,14 @@ def get_network_interfaces():
     rd = {}
     for i in _ifconfig:
         name = i.split(' ')[0]
-        if 'lo' not in name:
-            rd[name] = dict(ipaddress=get_ip_addr(name),
-                            broadcast=get_bcast_addr(name),
-                            netmask=get_netmask(name))
+        if 'lo' in name:
+            continue
+        ip_addr = get_ip_addr(name)
+        if ip_addr is None:
+            continue
+        rd[name] = dict(ipaddress=get_ip_addr(name),
+                        broadcast=get_bcast_addr(name),
+                        netmask=get_netmask(name))
     return rd
 
 
