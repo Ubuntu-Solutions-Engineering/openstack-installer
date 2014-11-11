@@ -42,6 +42,9 @@ class Dialog(WidgetWrap):
         self.input_items = OrderedDict()
         self.input_lbox = []
         self.container_lbox = []
+        self.btn_columns = None
+        self.btn_ok = None
+        self.btn_cancel = None
 
     def show(self):
         w = self._build_widget()
@@ -54,19 +57,16 @@ class Dialog(WidgetWrap):
         key = self.key_conversion_map.get(key, key)
         if key == 'down':
             old_pos = self.container_lbox.focus
-            log.debug("Old focus item: {}".format(old_pos))
+            log.debug("Previous focus item: {}".format(old_pos))
             if old_pos == self.btn_columns:
                 if self.btn_columns.focus_position == 0:
-                    self.btn_columns.set_focus(self.btn_cancel)
+                    return self.btn_columns.set_focus(self.btn_cancel)
         elif key == 'up':
             old_pos = self.container_lbox.focus
+            log.debug("Previous focus item: {}".format(old_pos))
             if old_pos == self.btn_columns:
-                # This should work as if cancel button
-                # is old_pos during shift tab
-                # we should go back to the ok button
-                if old_pos.focus_position == 1:
-                    log.debug("Hit cancel position: {}".format(old_pos))
-                    self.btn_columns.set_focus(self.btn_ok)
+                if self.btn_columns.focus_position == 1:
+                    return self.btn_columns.set_focus(self.btn_ok)
         return super().keypress(size, key)
 
     def add_buttons(self):
@@ -97,29 +97,27 @@ class Dialog(WidgetWrap):
 
     def _build_widget(self, **kwargs):
 
-        def box_adapter(items, box):
-            box.set_focus(0)
-            return (len(items), BoxAdapter(box, len(items)))
-
         total_items = []
         for _item in self.input_items.keys():
             total_items.append(AttrWrap(
                 self.input_items[_item], 'input', 'input focus'))
         self.input_lbox = ListBox(SimpleListWalker(total_items))
 
-        num_of_items, items = box_adapter(total_items,
-                                          self.input_lbox)
-
-        log.debug("Num items: {}, items: {}".format(num_of_items,
-                                                    items))
+        log.debug("Num items: {}, items: {}".format(len(total_items),
+                                                    self.input_lbox))
 
         # Add buttons
         self.add_buttons()
-        self.container_lbox = ListBox([items, Divider(), self.btn_columns])
+        self.container_box_adapter = BoxAdapter(self.input_lbox,
+                                                len(total_items))
+        self.container_lbox = ListBox(
+            [self.container_box_adapter,
+             Divider(),
+             self.btn_columns])
 
         return LineBox(
             BoxAdapter(self.container_lbox,
-                       height=num_of_items + 2),
+                       height=len(total_items) + 2),
             title=self.title)
 
     def submit(self, button):
