@@ -21,6 +21,7 @@ import logging
 import os
 import pwd
 import re
+import sys
 import time
 
 from subprocess import check_output
@@ -28,6 +29,7 @@ from tempfile import TemporaryDirectory
 
 from cloudinstall.config import Config
 from cloudinstall.installbase import InstallBase
+from cloudinstall.installstate import InstallState
 from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_default_gateway, get_netmask,
                                    get_network_interfaces,
@@ -98,6 +100,9 @@ class MultiInstall(InstallBase):
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
+        #@ MMCC TEMP
+        log.info("TEMP: STOPPING AFTER DO_INSTALL")
+        sys.exit(0)
         self.start_task("Starting Juju server")
 
         maas_creds = self.config.maas_creds
@@ -254,7 +259,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.prompt_for_dhcp_range()
 
     @utils.async
-    def continue_with_interface(self):
+    def continue_with_interface_ORIG(self):
         self.display_controller.ui.hide_widget_on_top()
         self.start_task("Installing MAAS")
 
@@ -329,12 +334,22 @@ class MultiInstallNewMaas(MultiInstall):
         self.display_controller.info_message("Done importing boot images.")
 
         if self.config.is_landscape:
-            # todo: wait for landscape machines here, callback to do_install
+            self.stop_current_task()
+            self.display_controller.current_installer = self
+            self.display_controller.current_state = InstallState.LDS_WAIT
+            # return here and end thread. display_controller will call
+            # back on new async thread
         else:
             self.start_task("Creating KVM for Juju state server")
             self.create_bootstrap_kvm()
             self.do_install()
 
+    @utils.async
+    def continue_with_interface(self):
+        # TEMP shortcut to LDS WAIT
+        self.stop_current_task()
+        self.display_controller.current_installer = self
+        self.display_controller.current_state = InstallState.LDS_WAIT
 
     def prompt_for_dhcp_range(self):
         """ Prompts for configurable dhcp ranges
