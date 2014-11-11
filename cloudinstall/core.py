@@ -202,7 +202,7 @@ class DisplayController:
 
     # overlays
 
-    def step_info(self, message, width, height):
+    def step_info(self, message, width=60, height=10):
         with dialog_context(self):
             self.ui.show_step_info(message, width, height)
 

@@ -852,4 +852,4 @@ class LandscapeInstallFinal:
             self.config.landscape_creds['admin_email']))
         msg.append(" Password: {}".format(self.config.openstack_password))
 
-        self.display_controller.step_info(msg, width=60, height=10)
+        self.display_controller.step_info(msg)
