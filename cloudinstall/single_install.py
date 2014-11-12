@@ -76,13 +76,15 @@ class SingleInstall(InstallBase):
         returns True if cloud-init finished with no errors, False if
         it's not done yet, and raises an exception if it had errors.
         """
-        result_json = os.path.join(self.container_abspath,
-                                   'rootfs/var/lib/cloud/data/result.json')
-        if not os.path.isfile(result_json):
+        cmd = 'sudo cat /run/cloud-init/result.json'
+        try:
+            result_json = utils.container_run(self.container_name, cmd)
+            # convert from bytes for json to process
+            result_json = result_json.decode("utf-8")
+            log.debug(result_json)
+        except:
+            log.debug("Waiting for cloud-init status result")
             return False
-
-        result_json = utils.slurp(result_json)
-        log.debug("Cloud-init finished: {}".format(result_json))
 
         if result_json == '':
             return False
