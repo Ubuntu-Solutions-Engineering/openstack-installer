@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from cloudinstall.machine import Machine
+from maasclient.auth import MaasAuth
+from maasclient import MaasClient
 from collections import Counter
 from enum import Enum, unique
 import logging
@@ -279,3 +281,18 @@ class MaasState:
         log.debug("in summary, self.nodes is {}".format(self.nodes()))
         return Counter([MaasMachineStatus(m['status'])
                         for m in self.nodes()])
+
+
+def connect_to_maas(self, creds=None):
+    if creds:
+        api_host = creds['api_host']
+        api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
+        api_key = creds['api_key']
+        auth = MaasAuth(api_url=api_url,
+                        api_key=api_key)
+    else:
+        auth = MaasAuth()
+        auth.get_api_key('root')
+    maas = MaasClient(auth)
+    maas_state = MaasState(self.maas)
+    return maas, maas_state
