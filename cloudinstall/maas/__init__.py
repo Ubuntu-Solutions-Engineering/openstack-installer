@@ -166,13 +166,13 @@ class MaasMachine(Machine):
         return self.machine.get('ip_addresses', [])
 
     @property
-    def mac_address(self):
+    def macaddress_set(self):
         """ Macaddress set of maas machine
 
-        :returns: mac_address and resource_uri
-        :rtype: dict
+        :returns: list of dict(mac_address, resource_uri)
+        :rtype: list
         """
-        return self.machine.get('macaddress_set', {})
+        return self.machine.get('macaddress_set', [])
 
     @property
     def tag_names(self):
