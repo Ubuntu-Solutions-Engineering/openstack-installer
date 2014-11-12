@@ -32,9 +32,7 @@ from operator import attrgetter
 from cloudinstall import utils
 from cloudinstall.config import Config
 from cloudinstall.juju import JujuState
-from cloudinstall.maas import MaasState, MaasMachineStatus, MaasMachine
-from maasclient.auth import MaasAuth
-from maasclient import MaasClient
+from cloudinstall.maas import connect_to_maas, MaasMachine, MaasMachineStatus
 from cloudinstall.charms import CharmQueue, get_charm
 from cloudinstall.log import PrettyLog
 from cloudinstall.placement.controller import (PlacementController,
@@ -143,20 +141,6 @@ class DisplayController:
         self.juju_state = JujuState(self.juju)
         log.debug('Authenticated against juju api.')
 
-    def authenticate_maas(self):
-        if self.config.maas_creds:
-            api_host = self.config.maas_creds['api_host']
-            api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
-            api_key = self.config.maas_creds['api_key']
-            auth = MaasAuth(api_url=api_url,
-                            api_key=api_key)
-        else:
-            auth = MaasAuth()
-            auth.get_api_key('root')
-        self.maas = MaasClient(auth)
-        self.maas_state = MaasState(self.maas)
-        log.debug('Authenticated against maas api.')
-
     def initialize(self):
         """Authenticates against juju/maas and sets up placement controller."""
         if getenv("FAKE_API_DATA"):
@@ -165,7 +149,8 @@ class DisplayController:
         else:
             self.authenticate_juju()
             if self.config.is_multi:
-                self.authenticate_maas()
+                creds = self.config.maas_creds
+                self.maas, self.maas_state = connect_to_maas(creds)
 
         self.placement_controller = PlacementController(
             self.maas_state, self.opts)
