@@ -335,7 +335,9 @@ class NodeViewMode(ScrollableWidgetWrap):
                 try:
                     return self._get_container_info(unit)
                 except:
-                    log.exception("failed to get container info for unit {}.".format(unit))
+                    log.exception(
+                        "failed to get container info for unit {}.".format(
+                            unit))
 
         return ["Machine {}: ".format(juju_machine.machine_id)] \
             + self._hardware_info_for_machine(m)
@@ -361,8 +363,9 @@ class NodeViewMode(ScrollableWidgetWrap):
         try:
             container_id = unit.machine_id.split('/')[-1]
         except:
-            log.exception("ERROR: base_machine is {} and m is {}, and unit.machine_id is {}".format(
-                base_machine, m, unit.machine_id))
+            log.exception("ERROR: base_machine is {} and m is {}, "
+                          "and unit.machine_id is {}".format(
+                              base_machine, m, unit.machine_id))
             return "?"
 
         base_id = base_machine.machine_id
