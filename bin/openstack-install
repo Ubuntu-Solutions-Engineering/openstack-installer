@@ -83,8 +83,16 @@ if __name__ == '__main__':
             "Installing a cloud requires root privileges. Rerun with sudo")
 
     if opts.uninstall:
-        logger.info("Restoring system to last known state.")
-        os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
+        msg = ("Warning:\n\nThis will uninstall OpenStack and "
+               "make a best effort to return the system back "
+               "to its original state.")
+        print(msg)
+        yn = input("Proceed? [y/N] ")
+        if "y" in yn or "Y" in yn:
+            logger.info("Restoring system to last known state.")
+            os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
+        else:
+            raise SystemExit("Uninstall canceled.")
 
     if opts.killcloud:
         if cfg.is_single:
