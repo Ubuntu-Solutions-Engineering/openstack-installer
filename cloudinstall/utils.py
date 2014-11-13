@@ -128,9 +128,26 @@ def async(func):
     return wrapper
 
 
+def ensure_locale():
+    """
+    Makes sure LC_ALL is defined to something sensible
+    """
+    locale_conf = slurp('/etc/default/locale')
+    for line in locale_conf.split('\n'):
+        if line.startswith('#'):
+            continue
+        if "LC_ALL" in line:
+            return
+    new_locale = "LC_ALL=\"{}\"".format(os.getenv('LANG', 'C'))
+    with open('/etc/default/locale', 'a+') as f:
+        f.write(new_locale)
+    return
+
+
 def apt_install(pkgs):
     """ runs apt-get install against space separated list of `pkgs`
     """
+    ensure_locale()
     cmd = ("DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -qyf "
            "-o Dpkg::Options::=--force-confdef "
            "-o Dpkg::Options::=--force-confold "
