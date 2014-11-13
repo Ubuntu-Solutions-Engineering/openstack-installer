@@ -18,7 +18,6 @@
 import logging
 import urwid
 from enum import Enum, unique
-import json
 import time
 import random
 import sys
@@ -32,7 +31,8 @@ from operator import attrgetter
 from cloudinstall import utils
 from cloudinstall.config import Config
 from cloudinstall.juju import JujuState
-from cloudinstall.maas import connect_to_maas, MaasMachine, MaasMachineStatus
+from cloudinstall.maas import (connect_to_maas, FakeMaasState,
+                               MaasMachineStatus)
 from cloudinstall.charms import CharmQueue, get_charm
 from cloudinstall.log import PrettyLog
 from cloudinstall.placement.controller import (PlacementController,
@@ -94,23 +94,6 @@ class FakeJujuState:
 
     def invalidate_status_cache(self):
         "does nothing"
-
-
-class FakeMaasState:
-
-    def machines(self, status=None):
-        fakepath = getenv("FAKE_API_DATA")
-        fn = path.join(fakepath, "maas-machines.json")
-        with open(fn) as f:
-            nodes = json.load(f)
-        return [MaasMachine(-1, m) for m in nodes
-                if m['hostname'] != 'juju-bootstrap.maas']
-
-    def invalidate_nodes_cache(self):
-        "no op"
-
-    def machines_summary(self):
-        return "no summary for fake state"
 
 
 class DisplayController:

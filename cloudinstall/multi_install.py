@@ -259,7 +259,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.prompt_for_dhcp_range()
 
     @utils.async
-    def continue_with_interface_ORIG(self):
+    def continue_with_interface(self):
         self.display_controller.ui.hide_widget_on_top()
         self.start_task("Installing MAAS")
 
@@ -335,21 +335,16 @@ class MultiInstallNewMaas(MultiInstall):
 
         if self.config.is_landscape:
             self.stop_current_task()
+            msg = "Waiting for sufficient resources in MAAS."
+            self.display_controller.info_message(msg)
             self.display_controller.current_installer = self
             self.display_controller.current_state = InstallState.LDS_WAIT
-            # return here and end thread. display_controller will call
-            # back on new async thread
+            # return here and end thread. lds_machine_view will call
+            # do_install back on new async thread
         else:
             self.start_task("Creating KVM for Juju state server")
             self.create_bootstrap_kvm()
             self.do_install()
-
-    @utils.async
-    def continue_with_interface(self):
-        # TEMP shortcut to LDS WAIT
-        self.stop_current_task()
-        self.display_controller.current_installer = self
-        self.display_controller.current_state = InstallState.LDS_WAIT
 
     def prompt_for_dhcp_range(self):
         """ Prompts for configurable dhcp ranges
