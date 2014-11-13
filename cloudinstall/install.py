@@ -82,6 +82,10 @@ class InstallController(DisplayController):
         self.show_maas_input("MAAS Setup",
                              self._save_maas_creds)
 
+    def header_hotkeys(self, key):
+        if key in ['q', 'Q']:
+            self.exit()
+
     def main_loop(self):
         if not hasattr(self, 'loop'):
             self.loop = urwid.MainLoop(self.ui,
