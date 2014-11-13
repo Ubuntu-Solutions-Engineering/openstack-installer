@@ -21,7 +21,9 @@ from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from collections import Counter
 from enum import Enum, unique
+import json
 import logging
+import os
 import time
 
 
@@ -296,3 +298,24 @@ def connect_to_maas(self, creds=None):
     maas = MaasClient(auth)
     maas_state = MaasState(self.maas)
     return maas, maas_state
+
+
+class FakeMaasState:
+
+    def machines(self, state=None):
+        fakepath = os.getenv("FAKE_API_DATA")
+        fn = os.path.join(fakepath, "maas-machines.json")
+        with open(fn) as f:
+            try:
+                nodes = json.load(f)
+            except:
+                log.exception("Error loading JSON")
+                return []
+        return [MaasMachine(-1, m) for m in nodes
+                if m['hostname'] != 'juju-bootstrap.maas']
+
+    def invalidate_nodes_cache(self):
+        "no op"
+
+    def machines_summary(self):
+        return "no summary for fake state"
