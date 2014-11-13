@@ -136,11 +136,13 @@ def ensure_locale():
     for line in locale_conf.split('\n'):
         if line.startswith('#'):
             continue
-        if "LC_ALL" or "LANG" in line:
+        if "LC_ALL" in line:
             return
     new_locale = os.getenv('LANG', 'C')
     locale_conf += "\nLC_ALL=\"{}\"".format(new_locale)
-    return spew('/etc/default/locale', locale_conf)
+    with open('/etc/default/locale', 'a+') as f:
+        f.write(locale_conf)
+    return
 
 
 def apt_install(pkgs):
