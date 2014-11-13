@@ -138,10 +138,9 @@ def ensure_locale():
             continue
         if "LC_ALL" in line:
             return
-    new_locale = os.getenv('LANG', 'C')
-    locale_conf += "\nLC_ALL=\"{}\"".format(new_locale)
+    new_locale = "LC_ALL=\"{}\"".format(os.getenv('LANG', 'C'))
     with open('/etc/default/locale', 'a+') as f:
-        f.write(locale_conf)
+        f.write(new_locale)
     return
 
 
