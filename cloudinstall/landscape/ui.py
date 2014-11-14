@@ -21,6 +21,7 @@ from urwid import (AttrMap, Button, Divider, Filler, GridFlow, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.config import Config
+from cloudinstall.landscape.lshw import LSHWParser
 from cloudinstall.maas import connect_to_maas, FakeMaasState, MaasMachineStatus
 from cloudinstall import utils
 
@@ -71,12 +72,26 @@ class LandscapeMachineView(WidgetWrap):
         n_powerable = len(powerable_machines)
         multinic_machines = [m for m in machines if len(m.macaddress_set) > 1]
 
+        n_multidisks = 0
+        for m in powerable_machines:
+            if self.maas_client is None:
+                # Fake API testing, just don't break:
+                continue
+
+            lshw_data = self.maas_client.node_details(m.instance_id)
+            disk_info = LSHWParser(lshw_data).get_disks()
+            if len(disk_info) > 1:
+                n_multidisks += 1
+
         conditions = [(n_powerable >= 6,
                        "At least 6 machines enlisted with power "
                        "control (currently {})".format(n_powerable)),
                       (len(multinic_machines) >= 1,
                        "At least one with 2 nics available for OpenStack"
-                       " (currently {})".format(len(multinic_machines)))]
+                       " (currently {})".format(len(multinic_machines))),
+                      (n_multidisks >= 5,
+                       "Five machines with multiple disks"
+                       " (currently {})".format(n_multidisks))]
         global_ok = all([ok for ok, _ in conditions])
         return global_ok, conditions
 
