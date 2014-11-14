@@ -21,7 +21,6 @@ import logging
 import os
 import pwd
 import re
-import sys
 import time
 
 from subprocess import check_output
@@ -100,9 +99,6 @@ class MultiInstall(InstallBase):
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
-        #@ MMCC TEMP
-        log.info("TEMP: STOPPING AFTER DO_INSTALL")
-        sys.exit(0)
         self.start_task("Starting Juju server")
 
         maas_creds = self.config.maas_creds
