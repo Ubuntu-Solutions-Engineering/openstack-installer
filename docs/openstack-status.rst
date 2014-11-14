@@ -1,20 +1,20 @@
 
 .. code::
 
-    usage: cloud-status [-h] [--enable-swift]
-
-    Ubuntu Openstack Installer
-
+    usage: openstack-status [-h] [--enable-swift] [--placement]
+    
+    Ubuntu OpenStack Installer
+    
     optional arguments:
       -h, --help      show this help message and exit
       --enable-swift  Enable swift storage
-
+      --placement     Show machine placement UI before deploying
 
 DESCRIPTION
 ===========
 
-Ubuntu Openstack installer is a metal to cloud image that provides an extremely
-simple way to install, deploy and scale an openstack cloud on top of
+Ubuntu OpenStack installer is a metal to cloud image that provides an extremely
+simple way to install, deploy and scale an OpenStack cloud on top of
 Ubuntu server. Initial configurations are available for single
 physical system deployments as well as multiple physical system
 deployments.
