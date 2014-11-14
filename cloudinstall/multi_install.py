@@ -209,6 +209,10 @@ class MultiInstallNewMaas(MultiInstall):
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
     def run(self):
+        utils.spew(os.path.join(self.config.cfg_path,
+                                'new-maas'),
+                   'auto-generated')
+
         self.installing_new_maas = True
         self.register_tasks(["Installing MAAS",
                              "Configuring MAAS",
