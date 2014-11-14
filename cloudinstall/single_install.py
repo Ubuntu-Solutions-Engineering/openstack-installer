@@ -49,13 +49,17 @@ class SingleInstall(InstallBase):
                    'auto-generated')
 
     def prep_userdata(self):
-        """ preps userdata file for container install """
+        """ preps userdata file for container install
+        """
+        render_parts = {'extra_sshkeys': [utils.ssh_readkey()],
+                        'extra_pkgs': ['juju-local']}
+        if self.opts.extra_ppa:
+            render_parts['extra_ppa'] = self.opts.extra_ppa
         dst_file = os.path.join(self.config.cfg_path,
                                 'userdata.yaml')
         original_data = utils.load_template('userdata.yaml')
-        modified_data = original_data.render(
-            extra_sshkeys=[utils.ssh_readkey()],
-            extra_pkgs=['juju-local'])
+        log.debug("Userdata options: {}".format(render_parts))
+        modified_data = original_data.render(render_parts)
         utils.spew(dst_file, modified_data)
 
     def create_container_and_wait(self):
