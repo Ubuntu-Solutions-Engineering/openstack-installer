@@ -146,7 +146,21 @@ Once in the container simply use juju as normal:
 Troubleshooting
 ^^^^^^^^^^^^^^^
 
-The installer keeps its own logs in **$HOME/.cloud-install/commands.log**.
+The installer keeps its own logs in **$HOME/.cloud-install/commands.log** within the
+container.
+
+Killing the current OpenStack deployment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Because the entire installation is within a single container it is easy to start a new
+deployment without uninstalling everything beforehand. To do that run:
+
+.. code::
+
+   $ sudo openstack-install -k
+
+This will stop and destroy the container housing the OpenStack installation and allow you
+to start over.
 
 Uninstalling
 ^^^^^^^^^^^^
