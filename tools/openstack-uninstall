@@ -137,6 +137,4 @@ if [ ${RET} -eq 0 ]; then
   fi
 fi
 
-# FIXME: Probably shouldnt blindly remove known_hosts
-rm -rf ~/.juju ~/.cloud-install ~/.ssh/known_hosts || true
 rm -rf /etc/openstack || true
