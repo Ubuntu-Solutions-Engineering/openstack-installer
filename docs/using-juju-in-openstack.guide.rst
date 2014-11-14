@@ -1,7 +1,7 @@
-Using Juju in Openstack
+Using Juju in OpenStack
 =======================
 
-Once the Openstack cloud has been deployed there are only a couple of steps
+Once the OpenStack cloud has been deployed there are only a couple of steps
 to enable juju to deploy charms into the private cloud.
 
 .. note::
@@ -44,7 +44,7 @@ Once the environments are updated run:
     $ juju sync-tools
     $ juju bootstrap --metadata-source /home/ubuntu
 
-Now you can deploy charms within your Openstack cloud.
+Now you can deploy charms within your OpenStack cloud.
 
 .. note::
 

@@ -135,7 +135,7 @@ html_theme = 'default'
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = "Ubuntu Openstack Installer"
+html_short_title = "Ubuntu OpenStack Installer"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -214,7 +214,7 @@ latex_elements = {
 # [howto/manual]).
 latex_documents = [
     ('index', 'UbuntuCloudInstaller.tex',
-     u'Ubuntu Openstack Installer Documentation',
+     u'Ubuntu OpenStack Installer Documentation',
      u'Solutions Engineering', 'manual'),
 ]
 
@@ -245,10 +245,10 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('openstack-install', 'openstack-install',
-     u'Ubuntu Openstack Installer Documentation',
+     u'Ubuntu OpenStack Installer Documentation',
      [u'Canonical Solutions Engineering'], 1),
     ('openstack-status', 'openstack-status',
-     u'Ubuntu Openstack Status Documentation',
+     u'Ubuntu OpenStack Status Documentation',
      [u'Canonical Solutions Engineering'], 1)
 ]
 
@@ -263,8 +263,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'UbuntuCloudInstaller',
-     u'Ubuntu Openstack Installer Documentation',
-     u'Solutions Engineering', 'UbuntuCloudInstaller', 'Openstack',
+     u'Ubuntu OpenStack Installer Documentation',
+     u'Solutions Engineering', 'UbuntuCloudInstaller', 'OpenStack',
      'Miscellaneous'),
 ]
 

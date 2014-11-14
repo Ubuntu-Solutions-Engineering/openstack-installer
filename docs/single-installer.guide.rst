@@ -4,7 +4,7 @@ Single Installer Guide
 Pre-requisites
 ^^^^^^^^^^^^^^
 
-Add the Openstack installer ppa to your system.
+Add the OpenStack installer ppa to your system.
 
 .. code::
 
@@ -28,7 +28,7 @@ The installer would work best with at least:
 Installation
 ^^^^^^^^^^^^
 
-Install the Openstack installer via `apt-get`
+Install the OpenStack installer via `apt-get`
 
 .. code::
 
@@ -67,7 +67,7 @@ Optional Flags
 
 .. note::
 
-    If you wish to deploy services to this openstack using juju you will need
+    If you wish to deploy services to this OpenStack using juju you will need
     to enable swift storage.
 
 An initial dialog box will appear asking you to select which type of
@@ -76,8 +76,8 @@ install, choose **Single system**.
 Setting a password
 ^^^^^^^^^^^^^^^^^^
 
-When asked to set the openstack password it should be noted that this password
-is used throughout all openstack related services (ie Horizon login password).
+When asked to set the OpenStack password it should be noted that this password
+is used throughout all OpenStack related services (ie Horizon login password).
 
 Installing of Services
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -88,14 +88,14 @@ and ending with a `juju` bootstrapped system.
 
 When the bootstrapping has finished it will immediately load the
 status screen. From there you can see the nodes listed along with the
-deployed charms necessary to start your private openstack cloud.
+deployed charms necessary to start your private OpenStack cloud.
 
 Adding additional compute nodes, block storage, object storage, and
 controllers can be done by pressing `A` and making the selection on
 the dialog box.
 
 Finally, once those nodes are displayed and the charms deployed the
-horizon dashboard will be available to you for managing your openstack
+horizon dashboard will be available to you for managing your OpenStack
 cloud.
 
 Logging into Horizon (Openstack Dashboard)
