@@ -25,15 +25,18 @@ log = logging.getLogger('cloudinstall.machine')
 def satisfies(machine, constraints):
     """Evaluates whether a machine's hardware matches constraints.
 
-    returns tuple of (bool, list-of-failed constraint keys)
-
-    success will be (True, [])
-
     If constraints is None or an empty dict, then any machine will be
     evaluated as satisfying the constraints.
 
-    Note that if a machine has '*' as a value, that value satisfies
-    any constraint.
+    .. note::
+
+        That if a machine has '*' as a value, that value satisfies
+        any constraint.
+
+    If successful the return will be (True, [])
+
+    :rtype: tuple
+    :returns: (bool, [list-of-failed constraint keys])
 
     """
     kmap = dict(mem='memory',
@@ -70,6 +73,7 @@ def satisfies(machine, constraints):
 
 
 class Machine:
+
     """ Base machine class """
 
     def __init__(self, machine_id, machine):
