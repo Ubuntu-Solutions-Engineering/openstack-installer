@@ -16,12 +16,15 @@
 
 import logging
 import urwid
+import os
 
 from cloudinstall.core import DisplayController
 from cloudinstall.single_install import SingleInstall
 from cloudinstall.landscape_install import LandscapeInstall
 from cloudinstall.multi_install import (MultiInstallNewMaas,
                                         MultiInstallExistingMaas)
+import cloudinstall.utils as utils
+
 
 log = logging.getLogger('cloudinstall.install')
 
@@ -104,6 +107,10 @@ class InstallController(DisplayController):
         """ Callback for install type selector
         """
         self.ui.hide_selector_info()
+
+        # Set installed placeholder
+        utils.spew(os.path.join(
+            self.config.cfg_path, 'installed'), 'auto-generated')
         if install_type == "Single":
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.SingleInstall(self.opts, self).run()
@@ -114,4 +121,5 @@ class InstallController(DisplayController):
             self.set_openstack_rel("")
             self.LandscapeInstall(self.opts, self).run()
         else:
+            os.remove(os.path.join(self.config.cfg_path, 'installed'))
             raise ValueError("Unknown install type: {}".format(install_type))
