@@ -87,6 +87,12 @@ class InstallController(DisplayController):
 
     def header_hotkeys(self, key):
         if key in ['q', 'Q']:
+            # If triggered during install usually means an incomplete
+            # installation. Cleanup installed placeholder file
+            try:
+                os.remove(os.path.join(self.config.cfg_path, 'installed'))
+            except OSError:
+                log.debug("Failed to remove the installed file.")
             self.exit()
 
     def main_loop(self):
