@@ -13,9 +13,15 @@ elif [ -f ~/.cloud-install/multi ]; then
 elif [ -f ~/.cloud-install/single ]; then
   WHAT=single-system
 elif [ -f ~/.cloud-install/landscape ]; then
-  WHAT=landscape-system
+  WHAT=multi-system
 else
   echo "could not determine install type"
+fi
+
+if [ -f ~/.cloud-install/new-maas ]; then
+  MAAS_TYPE=new
+else
+  MAAS_TYPE=existing
 fi
 
 apt_purge() {
@@ -28,53 +34,45 @@ case $WHAT in
     echo Multi install cleansing.
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    # Here we shut down all the maas machines before doing a juju-destroy. We
-    # do this because there might be more than one juju environment in the
-    # maas (in fact, in the case of landscape it creates another for its
-    # openstack environment), and we want to make sure to power off all the
-    # machines.
-    allocated=$(maas maas nodes list-allocated | \
-      python3 -c 'import json; import sys; print(" ".join(map(lambda x: x["system_id"], json.load(sys.stdin))))')
-    for system_id in $allocated; do
-      maas maas node stop $system_id
-    done
-
     juju destroy-environment --yes --force maas
-    rm -r ~/.maascli.db
 
-    apt_purge '.*maas.*'
-    apt_purge 'bind9'
-    sudo -u postgres psql -c 'drop database maasdb;'
+    if [ "$MAAS_TYPE" == "new" ]; then
+        rm -r ~/.maascli.db
 
-    # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
-    # so we kill it explicitly.
-    sudo killall -u maas twistd
+        apt_purge '.*maas.*'
+        apt_purge 'bind9'
+        sudo -u postgres psql -c 'drop database maasdb;'
 
-    virsh destroy juju-bootstrap
-    virsh undefine juju-bootstrap
-    virsh vol-delete juju-bootstrap.qcow2
-    virsh pool-refresh default
+        # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
+        # so we kill it explicitly.
+        sudo killall -u maas twistd
 
-    # clean up the networking
-    interface=$(cat /etc/openstack/interface)
-    ifconfig br0 down
-    brctl delbr br0
-    if [ -n "$interface" ]; then
-        ifdown $interface
+        virsh destroy juju-bootstrap
+        virsh undefine juju-bootstrap
+        virsh vol-delete juju-bootstrap.qcow2
+        virsh pool-refresh default
+
+        # clean up the networking
+        interface=$(cat /etc/openstack/interface)
+        ifconfig br0 down
+        brctl delbr br0
+        if [ -n "$interface" ]; then
+            ifdown $interface
+        fi
+
+        cp /etc/openstack/interfaces.cloud.bak /etc/network/interfaces
+        cp -r /etc/openstack/interfaces.cloud.d.bak/* /etc/network/interfaces.d
+        rm /etc/network/interfaces.d/openstack.cfg
+
+        # iptables rule
+        cp /etc/network/iptables.rules /etc/network/iptables.rules.bak
+        rm /etc/network/iptables.rules
+
+        if [ -n "$interface" ]; then
+            ifup $interface
+        fi
+        ifdown lo && ifup lo
     fi
-
-    cp /etc/openstack/interfaces.cloud.bak /etc/network/interfaces
-    cp -r /etc/openstack/interfaces.cloud.d.bak/* /etc/network/interfaces.d
-    rm /etc/network/interfaces.d/openstack.cfg
-
-    # iptables rule
-    cp /etc/network/iptables.rules /etc/network/iptables.rules.bak
-    rm /etc/network/iptables.rules
-
-    if [ -n "$interface" ]; then
-        ifup $interface
-    fi
-    ifdown lo && ifup lo
     ;;
   single-system)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -82,27 +80,6 @@ case $WHAT in
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     lxc-stop -n uoi-bootstrap
     lxc-destroy -n uoi-bootstrap
-    ;;
-  landscape-system)
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    echo Landscape installed system.
-    echo
-    echo Removing a Landscape environment is could potentionally be
-    echo destructive. Therefore, it is recommended to uninstall
-    echo the Landscape bits manually.
-    echo
-    echo Suggested Steps:
-    echo
-    echo First:
-    echo $ sudo apt-get purge maas* openstack openstack-landscape
-    echo
-    echo You will want to deconfigure and purge the maas database
-    echo when prompted.
-    echo
-    echo Second:
-    echo $ mv ~/.cloud-install ~/.cloud-install-backup
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    exit 1
     ;;
   *)
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
