@@ -39,7 +39,9 @@ case $WHAT in
     if [ "$MAAS_TYPE" == "new" ]; then
         rm -r ~/.maascli.db
 
-        apt_purge '.*maas.*'
+        whiptail --msgbox "MAAS packaging requires manual interaction.\nPlease answer YES to the questions in the next two screens." 15 30
+
+        apt-get -y purge '.*maas.*'
         apt_purge 'bind9'
         sudo -u postgres psql -c 'drop database maasdb;'
 
