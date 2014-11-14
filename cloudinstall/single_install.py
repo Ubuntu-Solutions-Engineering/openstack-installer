@@ -112,6 +112,10 @@ class SingleInstall(InstallBase):
                         utils.install_user(),
                         utils.install_user(),
                         recursive=True)
+            utils.get_command_output("sudo chmod 700 {}".format(
+                self.config.cfg_path))
+            utils.get_command_output("sudo chmod 600 -R {}/*".format(
+                self.config.cfg_path))
         except:
             raise SingleInstallException(
                 "Unable to set ownership for {}".format(self.config.cfg_path))
@@ -136,6 +140,12 @@ class SingleInstall(InstallBase):
                            os.path.join(
                                utils.install_home(), '.cloud-install/*'),
                            '.cloud-install/.')
+
+        utils.container_run(
+            self.container_name, "chmod 700 .cloud-install")
+
+        utils.container_run(
+            self.container_name, "chmod 600 -R .cloud-install/*")
 
         # our ssh keys too
         utils.container_cp(self.container_name,
