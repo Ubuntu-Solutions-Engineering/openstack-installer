@@ -1,8 +1,8 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CLOUD-STATUS" "1" "April 29, 2014" "0.15+git20140417" "Ubuntu Openstack Installer"
+.TH "OPENSTACK-STATUS" "1" "November 13, 2014" "0.21" "Ubuntu Openstack Installer"
 .SH NAME
-cloud-status \- Ubuntu Openstack Status Documentation
+openstack-status \- Ubuntu OpenStack Status Documentation
 .
 .nr rst2man-indent-level 0
 .
@@ -30,10 +30,29 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-Ubuntu OpenStack Installer provides an extremely simple way to
-install, deploy and scale an OpenStack cloud on top of Ubuntu server
-and Juju. Deploy onto a single physical system using virtual machines
-for testing, or use MAAS to deploy onto a cluster of any size.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+usage: openstack\-status [\-h] [\-\-enable\-swift] [\-\-placement]
+
+Ubuntu OpenStack Installer
+
+optional arguments:
+  \-h, \-\-help      show this help message and exit
+  \-\-enable\-swift  Enable swift storage
+  \-\-placement     Show machine placement UI before deploying
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Ubuntu OpenStack installer is a metal to cloud image that provides an extremely
+simple way to install, deploy and scale an OpenStack cloud on top of
+Ubuntu server. Initial configurations are available for single
+physical system deployments as well as multiple physical system
+deployments.
 .sp
 This is the user interface for managing the deployed cloud.
 .SH AUTHOR
