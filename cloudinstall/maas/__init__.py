@@ -285,7 +285,7 @@ class MaasState:
                         for m in self.nodes()])
 
 
-def connect_to_maas(self, creds=None):
+def connect_to_maas(creds=None):
     if creds:
         api_host = creds['api_host']
         api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
@@ -296,7 +296,7 @@ def connect_to_maas(self, creds=None):
         auth = MaasAuth()
         auth.get_api_key('root')
     maas = MaasClient(auth)
-    maas_state = MaasState(self.maas)
+    maas_state = MaasState(maas)
     return maas, maas_state
 
 
