@@ -32,6 +32,7 @@ from cloudinstall.core import Controller
 from cloudinstall import utils
 from cloudinstall import log
 from cloudinstall.config import Config
+from cloudinstall import __version__ as version
 
 
 def sig_handler(signum, frame):
@@ -44,13 +45,15 @@ for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
 
 def parse_options(*args, **kwds):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
-                                     prog='cloud-status')
+                                     prog='openstack-status')
     parser.add_argument('--enable-swift', action='store_true',
                         dest='enable_swift', default=False,
                         help='Enable swift storage')
     parser.add_argument('--placement', action='store_true',
                         dest='edit_placement', default=False,
                         help='Show machine placement UI before deploying')
+    parser.add_argument(
+        '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args()
 
 if __name__ == '__main__':
