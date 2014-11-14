@@ -27,11 +27,12 @@ import cloudinstall.utils as utils
 from cloudinstall.gui import PegasusGUI, InstallHeader
 from cloudinstall.install import InstallController
 from cloudinstall.config import Config
+from cloudinstall import __version__ as version
 
 
 def parse_options(argv, cfg):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
-                                     prog='sudo openstack-install')
+                                     prog='openstack-install')
     parser.add_argument('-s', '--enable-swift', action='store_true',
                         dest='enable_swift', default=False,
                         help='Enable swift storage')
@@ -72,6 +73,8 @@ def parse_options(argv, cfg):
     parser.add_argument('--extra-ppa', nargs='+', dest='extra_ppa',
                         help='Append additional ppas to the single installers '
                         'cloud-init configuration.')
+    parser.add_argument(
+        '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)
 
 
