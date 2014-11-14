@@ -43,7 +43,7 @@ apt_sources:
   - source: "ppa:juju/stable"
 {% if extra_ppa %}
 {% for ppa in extra_ppa %}
-  - {{ ppa }}
+  - source: "{{ ppa }}"
 {% endfor %}
 {% endif %}
 {% if extra_sshkeys %}
