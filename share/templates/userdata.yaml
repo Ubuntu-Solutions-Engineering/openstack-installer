@@ -59,8 +59,8 @@ chpasswd: { expire: False }
 ssh_pwauth: True
 
 bootcmd:
-  - rm /etc/network/interfaces.d/{{ network_interface }}.cfg
   - ifdown {{ network_interface }}
+  - rm /etc/network/interfaces.d/{{ network_interface }}.cfg
   - ifup {{ bridge_network_interface }} {{ network_interface }}
 
 # Make sure we load our modules on first creation
