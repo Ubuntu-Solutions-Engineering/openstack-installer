@@ -116,4 +116,5 @@ if [ ${RET} -eq 0 ]; then
   fi
 fi
 
+rm -rf ~/.juju ~/.cloud-install || true
 rm -rf /etc/openstack || true
