@@ -1,4 +1,4 @@
-Ubuntu Openstack Installer
+Ubuntu OpenStack Installer
 ==========================
 
 `Github project page <https://github.com/Ubuntu-Solutions-Engineering/openstack-installer>`_

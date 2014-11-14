@@ -59,7 +59,7 @@ where your openstack project is kept.
 
    $ ls ../*.deb
 
-Running the Openstack installer
+Running the OpenStack installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Running the installer for testing currently requires installing the packages. (Unit tests can be run without installing the packages, provided the `install-dependencies` make target has been run.)
