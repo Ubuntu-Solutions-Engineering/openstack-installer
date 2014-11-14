@@ -283,7 +283,8 @@ class DisplayController:
                 logging.critical(message)
 
     def exit(self):
-        raise urwid.ExitMainLoop()
+        urwid.ExitMainLoop()
+        return sys.exit(0)
 
     def main_loop(self):
         if not hasattr(self, 'loop'):
