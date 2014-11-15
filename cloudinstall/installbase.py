@@ -54,8 +54,8 @@ class InstallBase:
         self.tasks_started_debug = []
         self.current_task_index = 0
         # stop_current_task can be called from any thread, and uses
-        # stop_called to tell update to not reschedule itself.
-        self.stop_called = False
+        # stopped to tell update to not reschedule itself.
+        self.stopped = False
 
     def register_tasks(self, tasks):
         self.tasks = [(n, None, None) for n in tasks]
@@ -85,6 +85,7 @@ class InstallBase:
                                                 self.tasks_started_debug))
 
         self.tasks[self.current_task_index] = (expectedname, time.time(), None)
+        self.stopped = False
         self.update_progress()
         utils.spew(os.path.join(self.config.cfg_path, 'timings.yaml'),
                    yaml.dump(self.tasks),
@@ -104,10 +105,9 @@ class InstallBase:
         self.stop_called = True
 
     def update_progress(self, loop=None, userdata=None):
-        if self.stop_called:
-            # if stop_called was set in a separate thread, return and
+        if self.stopped:
+            # if stopped was set in a separate thread, return and
             # do not reschedule.
-            self.stop_called = False
             return
 
         m = []

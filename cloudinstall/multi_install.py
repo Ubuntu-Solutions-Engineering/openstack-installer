@@ -196,8 +196,16 @@ class MultiInstallExistingMaas(MultiInstall):
         self.register_tasks(["Starting Juju server"] +
                             self.post_tasks)
 
-        self.update_progress()
-        self.do_install_async()
+        if self.config.is_landscape:
+            msg = "Waiting for sufficient resources in MAAS."
+            self.display_controller.info_message(msg)
+            self.display_controller.current_installer = self
+            self.display_controller.current_state = InstallState.LDS_WAIT
+            # return here and end thread. lds_machine_view will call
+            # do_install back on new async thread
+        else:
+            self.update_progress()
+            self.do_install_async()
 
 
 class MaasInstallError(Exception):
