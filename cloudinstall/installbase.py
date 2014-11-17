@@ -132,7 +132,7 @@ class InstallBase:
 
         self.display_controller.render_node_install_wait(m)
         f = self.update_progress
-        self.alarm = self.display_controller.loop.set_alarm_in(0.6, f)
+        self.alarm = self.display_controller.loop.set_alarm_in(0.3, f)
 
 
 class FakeInstall(InstallBase):
