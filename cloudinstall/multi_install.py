@@ -233,9 +233,7 @@ class MultiInstallNewMaas(MultiInstall):
                              "Waiting for MAAS cluster registration",
                              "Searching for existing DHCP servers",
                              "Configuring MAAS networks",
-                             "Importing MAAS boot images",
-                             "Creating KVM for Juju state server",
-                             "Starting Juju server"] +
+                             "Importing MAAS boot images"] +
                             kvm_task +
                             ["Starting Juju server"] +
                             self.post_tasks)
