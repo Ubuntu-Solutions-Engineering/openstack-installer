@@ -17,9 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from cloudinstall.machine import Machine
+from maasclient.auth import MaasAuth
+from maasclient import MaasClient
 from collections import Counter
 from enum import Enum, unique
+import json
 import logging
+import os
 import time
 
 
@@ -164,13 +168,13 @@ class MaasMachine(Machine):
         return self.machine.get('ip_addresses', [])
 
     @property
-    def mac_address(self):
+    def macaddress_set(self):
         """ Macaddress set of maas machine
 
-        :returns: mac_address and resource_uri
-        :rtype: dict
+        :returns: list of dict(mac_address, resource_uri)
+        :rtype: list
         """
-        return self.machine.get('macaddress_set', {})
+        return self.machine.get('macaddress_set', [])
 
     @property
     def tag_names(self):
@@ -279,3 +283,39 @@ class MaasState:
         log.debug("in summary, self.nodes is {}".format(self.nodes()))
         return Counter([MaasMachineStatus(m['status'])
                         for m in self.nodes()])
+
+
+def connect_to_maas(creds=None):
+    if creds:
+        api_host = creds['api_host']
+        api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
+        api_key = creds['api_key']
+        auth = MaasAuth(api_url=api_url,
+                        api_key=api_key)
+    else:
+        auth = MaasAuth()
+        auth.get_api_key('root')
+    maas = MaasClient(auth)
+    maas_state = MaasState(maas)
+    return maas, maas_state
+
+
+class FakeMaasState:
+
+    def machines(self, state=None):
+        fakepath = os.getenv("FAKE_API_DATA")
+        fn = os.path.join(fakepath, "maas-machines.json")
+        with open(fn) as f:
+            try:
+                nodes = json.load(f)
+            except:
+                log.exception("Error loading JSON")
+                return []
+        return [MaasMachine(-1, m) for m in nodes
+                if m['hostname'] != 'juju-bootstrap.maas']
+
+    def invalidate_nodes_cache(self):
+        "no op"
+
+    def machines_summary(self):
+        return "no summary for fake state"

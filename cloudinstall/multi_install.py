@@ -28,6 +28,7 @@ from tempfile import TemporaryDirectory
 
 from cloudinstall.config import Config
 from cloudinstall.installbase import InstallBase
+from cloudinstall.installstate import InstallState
 from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_default_gateway, get_netmask,
                                    get_network_interfaces,
@@ -195,8 +196,16 @@ class MultiInstallExistingMaas(MultiInstall):
         self.register_tasks(["Starting Juju server"] +
                             self.post_tasks)
 
-        self.update_progress()
-        self.do_install_async()
+        if self.config.is_landscape:
+            msg = "Waiting for sufficient resources in MAAS."
+            self.display_controller.info_message(msg)
+            self.display_controller.current_installer = self
+            self.display_controller.current_state = InstallState.LDS_WAIT
+            # return here and end thread. lds_machine_view will call
+            # do_install back on new async thread
+        else:
+            self.update_progress()
+            self.do_install_async()
 
 
 class MaasInstallError(Exception):
@@ -214,14 +223,19 @@ class MultiInstallNewMaas(MultiInstall):
                    'auto-generated')
 
         self.installing_new_maas = True
+        if self.config.is_landscape:
+            kvm_task = []
+        else:
+            kvm_task = ["Creating KVM for Juju state server"]
+
         self.register_tasks(["Installing MAAS",
                              "Configuring MAAS",
                              "Waiting for MAAS cluster registration",
                              "Searching for existing DHCP servers",
                              "Configuring MAAS networks",
-                             "Importing MAAS boot images",
-                             "Creating KVM for Juju state server",
-                             "Starting Juju server"] +
+                             "Importing MAAS boot images"] +
+                            kvm_task +
+                            ["Starting Juju server"] +
                             self.post_tasks)
 
         self.prompt_for_interface()
@@ -321,10 +335,18 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Done importing boot images.")
 
-        self.start_task("Creating KVM for Juju state server")
-        self.create_bootstrap_kvm()
-
-        self.do_install()
+        if self.config.is_landscape:
+            self.stop_current_task()
+            msg = "Waiting for sufficient resources in MAAS."
+            self.display_controller.info_message(msg)
+            self.display_controller.current_installer = self
+            self.display_controller.current_state = InstallState.LDS_WAIT
+            # return here and end thread. lds_machine_view will call
+            # do_install back on new async thread
+        else:
+            self.start_task("Creating KVM for Juju state server")
+            self.create_bootstrap_kvm()
+            self.do_install()
 
     def prompt_for_dhcp_range(self):
         """ Prompts for configurable dhcp ranges
@@ -397,15 +419,9 @@ class MultiInstallNewMaas(MultiInstall):
             log.debug("error restarting maas-clusterd: {}".format(out))
             raise MaasInstallError("error in creating bootstrap kvm")
 
-        if self.config.is_landscape:
-            vcpus = 2
-            ram = 4096
-            disk = 40
-        else:
-            # only juju state server
-            vcpus = 1
-            ram = 2048
-            disk = 20
+        vcpus = 1
+        ram = 2048
+        disk = 20
         # TODO investigate if this breaks with someone attempting nested
         # kvm installations. REF http://git.io/8z4xBw
         cmd = ("virt-install --name juju-bootstrap "
