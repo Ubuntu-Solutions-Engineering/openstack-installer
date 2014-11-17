@@ -83,3 +83,9 @@ class LandscapeInstall:
             "is not defined a new one will be created for you.")
         self.display_controller.show_landscape_input("Landscape Setup",
                                                      self._save_lds_creds)
+
+
+# TODO: do we want this?
+class LandscapeMachineChecker:
+    def __init__(self, maas):
+        pass

@@ -24,8 +24,7 @@ from cloudinstall import core
 
 
 @patch('cloudinstall.core.JujuClient')
-@patch('cloudinstall.core.MaasAuth')
-@patch('cloudinstall.core.MaasClient')
+@patch('cloudinstall.core.connect_to_maas')
 @patch('cloudinstall.core.Config')
 class DisplayControllerTestCase(unittest.TestCase):
 
@@ -36,13 +35,17 @@ class DisplayControllerTestCase(unittest.TestCase):
         self.p_placementsfilename = PropertyMock(return_value=tf.name)
         self.mock_opts = MagicMock()
 
-    def test_initialize_multi(self, mock_config, mock_maasclient,
-                              mock_maasauth, mock_jujuclient):
+    def test_initialize_multi(self, mock_config, mock_conn_maas,
+                              mock_jujuclient):
 
         p_yes = PropertyMock(return_value=True)
         type(mock_config()).is_multi = p_yes
         type(mock_config()).juju_api_password = self.p_pass
         type(mock_config()).placements_filename = self.p_placementsfilename
+        type(mock_config()).maas_creds = PropertyMock(return_value={})
+
+        mock_conn_maas.return_value = (MagicMock(name='fake maasclient'),
+                                       MagicMock(name='fake maas state'))
 
         dc = core.DisplayController(opts=self.mock_opts)
 
@@ -50,10 +53,10 @@ class DisplayControllerTestCase(unittest.TestCase):
 
         mock_jujuclient.assert_called_once_with(url=ANY,
                                                 password=self.passwd)
-        mock_maasclient.assert_called_with(mock_maasauth())
+        mock_conn_maas.assert_called_with({})
 
-    def test_initialize_single(self, mock_config, mock_maasclient,
-                               mock_maasauth, mock_jujuclient):
+    def test_initialize_single(self, mock_config, mock_conn_maas,
+                               mock_jujuclient):
 
         p_no = PropertyMock(return_value=False)
         type(mock_config()).is_multi = p_no
@@ -66,5 +69,4 @@ class DisplayControllerTestCase(unittest.TestCase):
 
         mock_jujuclient.assert_called_once_with(url=ANY,
                                                 password=self.passwd)
-        assert mock_maasauth.called is False
-        assert mock_maasclient.called is False
+        assert mock_conn_maas.called is False

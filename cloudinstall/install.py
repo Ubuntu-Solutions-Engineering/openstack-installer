@@ -19,6 +19,7 @@ import urwid
 import os
 
 from cloudinstall.core import DisplayController
+from cloudinstall.installstate import InstallState
 from cloudinstall.single_install import SingleInstall
 from cloudinstall.landscape_install import LandscapeInstall
 from cloudinstall.multi_install import (MultiInstallNewMaas,
@@ -107,7 +108,21 @@ class InstallController(DisplayController):
 
         self.ui.show_password_input(
             'Create a new Openstack Password', self._save_password)
+        self.update()
         self.loop.run()
+
+    def update(self, *args, **kwargs):
+        "periodically check for display changes"
+        if self.current_state == InstallState.RUNNING:
+            pass
+        elif self.current_state == InstallState.LDS_WAIT:
+            self.render_lds_machine_view()
+
+        self.loop.set_alarm_in(1, self.update)
+
+    def render_lds_machine_view(self):
+        self.ui.render_lds_machine_view(self, self.current_installer)
+        self.redraw_screen()
 
     def do_install(self, install_type):
         """ Callback for install type selector
