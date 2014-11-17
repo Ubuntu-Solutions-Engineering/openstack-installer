@@ -56,6 +56,7 @@ class InstallBase:
         # stop_current_task can be called from any thread, and uses
         # stopped to tell update to not reschedule itself.
         self.stopped = False
+        self.alarm = None
 
     def register_tasks(self, tasks):
         self.tasks = [(n, None, None) for n in tasks]
@@ -86,7 +87,8 @@ class InstallBase:
 
         self.tasks[self.current_task_index] = (expectedname, time.time(), None)
         self.stopped = False
-        self.update_progress()
+        if self.alarm == None:
+            self.update_progress()
         utils.spew(os.path.join(self.config.cfg_path, 'timings.yaml'),
                    yaml.dump(self.tasks),
                    utils.install_user())
@@ -102,9 +104,10 @@ class InstallBase:
         n, s, _ = self.tasks[self.current_task_index]
         self.tasks[self.current_task_index] = (n, s, time.time())
         self.current_task_index += 1
-        self.stop_called = True
+        self.stopped = True
 
     def update_progress(self, loop=None, userdata=None):
+        self.alarm = None
         if self.stopped:
             # if stopped was set in a separate thread, return and
             # do not reschedule.
@@ -128,7 +131,7 @@ class InstallBase:
                                       ts=ts)))
 
         self.display_controller.render_node_install_wait(m)
-        self.display_controller.loop.set_alarm_in(0.6, self.update_progress)
+        self.alarm = self.display_controller.loop.set_alarm_in(0.6, self.update_progress)
 
 
 class FakeInstall(InstallBase):
