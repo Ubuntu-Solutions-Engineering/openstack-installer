@@ -87,7 +87,7 @@ class InstallBase:
 
         self.tasks[self.current_task_index] = (expectedname, time.time(), None)
         self.stopped = False
-        if self.alarm == None:
+        if self.alarm is None:
             self.update_progress()
         utils.spew(os.path.join(self.config.cfg_path, 'timings.yaml'),
                    yaml.dump(self.tasks),
@@ -131,7 +131,8 @@ class InstallBase:
                                       ts=ts)))
 
         self.display_controller.render_node_install_wait(m)
-        self.alarm = self.display_controller.loop.set_alarm_in(0.6, self.update_progress)
+        f = self.update_progress
+        self.alarm = self.display_controller.loop.set_alarm_in(0.6, f)
 
 
 class FakeInstall(InstallBase):
