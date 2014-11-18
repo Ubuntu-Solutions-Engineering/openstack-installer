@@ -35,11 +35,16 @@ import hmac
 from hashlib import sha256
 from base64 import b64encode
 from cloudinstall.config import Config
+import logging
 
 MAGIC_OK_STRING = 'New user - Landscape'
 LATEST_VERSION = "2011-08-01"
 
 cfg = Config()
+
+
+logfilename = os.path.expanduser("~/.cloud-install/configure-landscape.log")
+logging.basicConfig(filename=logfilename, level=logging.DEBUG)
 
 
 def parse(url):
@@ -148,8 +153,11 @@ def wait_for_landscape(host):
                 # for a while)
                 r = requests.get('http://%s/api/' % host, verify=False)
                 if r.status_code == 200:
+                    log.debug("got status code {} for landscape "
+                              " api".format(r.status))
                     break
         except ConnectionError:
+            log.debug("connection error waiting for landscape")
             pass
         time.sleep(10)
 
