@@ -100,6 +100,7 @@ class MultiInstall(InstallBase):
 
     def do_install(self):
         self.start_task("Starting Juju server")
+        self.display_controller.current_state = InstallState.RUNNING
 
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
