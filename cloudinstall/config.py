@@ -19,6 +19,10 @@ import os
 import yaml
 import json
 from cloudinstall import utils
+import logging
+
+
+log = logging.getLogger('cloudinstall.config')
 
 
 class ConfigException(Exception):
@@ -177,7 +181,8 @@ class Config:
         try:
             _password = utils.slurp(PASSWORD_FILE)
         except IOError:
-            _password = 'password'
+            log.exception('exception loading openstack password')
+            raise ConfigException('cannot load saved openstack password')
         return _password
 
     def save_password(self, password):
@@ -204,7 +209,8 @@ class Config:
         try:
             _maascreds = json.loads(utils.slurp(MAAS_CREDS_FILE))
         except IOError:
-            _maascreds = dict()
+            log.exception('exception loading maas creds')
+            raise ConfigException("cannot load saved maas creds")
         return _maascreds
 
     def save_landscape_creds(self, admin_name, admin_email,
@@ -233,5 +239,6 @@ class Config:
         try:
             _creds = json.loads(utils.slurp(LANDSCAPE_CREDS_FILE))
         except IOError:
-            _creds = dict()
+            log.exception("exception loading lanscape creds")
+            raise ConfigException("cannot load landscape creds")
         return _creds
