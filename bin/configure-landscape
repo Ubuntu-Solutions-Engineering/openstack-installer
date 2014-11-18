@@ -43,8 +43,7 @@ LATEST_VERSION = "2011-08-01"
 cfg = Config()
 
 
-logfilename = os.path.expanduser("~/.cloud-install/configure-landscape.log")
-logging.basicConfig(filename=logfilename, level=logging.DEBUG)
+log = logging.getLogger('configure-landscape')
 
 
 def parse(url):
@@ -154,7 +153,7 @@ def wait_for_landscape(host):
                 r = requests.get('http://%s/api/' % host, verify=False)
                 if r.status_code == 200:
                     log.debug("got status code {} for landscape "
-                              " api".format(r.status))
+                              " api".format(r))
                     break
         except ConnectionError:
             log.debug("connection error waiting for landscape")
