@@ -196,16 +196,12 @@ class MultiInstallExistingMaas(MultiInstall):
         self.register_tasks(["Starting Juju server"] +
                             self.post_tasks)
 
-        if self.config.is_landscape:
-            msg = "Waiting for sufficient resources in MAAS."
-            self.display_controller.info_message(msg)
-            self.display_controller.current_installer = self
-            self.display_controller.current_state = InstallState.LDS_WAIT
-            # return here and end thread. lds_machine_view will call
-            # do_install back on new async thread
-        else:
-            self.update_progress()
-            self.do_install_async()
+        msg = "Waiting for sufficient resources in MAAS."
+        self.display_controller.info_message(msg)
+        self.display_controller.current_installer = self
+        self.display_controller.current_state = InstallState.NODE_WAIT
+        # return here and end thread. machine_wait_view will call
+        # do_install back on new async thread
 
 
 class MaasInstallError(Exception):
@@ -329,17 +325,13 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.display_controller.info_message("Done importing boot images.")
 
-        if self.config.is_landscape:
-            self.stop_current_task()
-            msg = "Waiting for sufficient resources in MAAS."
-            self.display_controller.info_message(msg)
-            self.display_controller.current_installer = self
-            self.display_controller.current_state = InstallState.LDS_WAIT
-            # return here and end thread. lds_machine_view will call
-            # do_install back on new async thread
-        else:
-            # TODO wait for maas pxe machine here
-            self.do_install()
+        self.stop_current_task()
+        msg = "Waiting for sufficient resources in MAAS."
+        self.display_controller.info_message(msg)
+        self.display_controller.current_installer = self
+        self.display_controller.current_state = InstallState.NODE_WAIT
+        # return here and end thread. machine_wait_view will call
+        # do_install back on new async thread
 
     def prompt_for_dhcp_range(self):
         """ Prompts for configurable dhcp ranges

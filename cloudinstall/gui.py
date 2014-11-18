@@ -44,7 +44,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              DhcpRangeInput,
                              InfoDialog)
 from cloudinstall.ui.helpscreen import HelpScreen
-from cloudinstall.landscape.ui import LandscapeMachineView
+from cloudinstall.machinewait import MachineWaitView
 from cloudinstall.placement.ui import PlacementView
 
 log = logging.getLogger('cloudinstall.gui')
@@ -568,7 +568,7 @@ class PegasusGUI(WidgetWrap):
                            footer=self.footer)
 
         self.placement_view = None
-        self.lds_machine_view = None
+        self.machine_wait_view = None
         super().__init__(self.frame)
 
     def _build_overlay_widget(self,
@@ -729,10 +729,10 @@ class PegasusGUI(WidgetWrap):
         self.placement_view.update()
         self.frame.body = self.placement_view
 
-    def render_lds_machine_view(self, display_controller,
-                                installer):
-        if self.lds_machine_view is None:
-            self.lds_machine_view = LandscapeMachineView(display_controller,
-                                                         installer)
-        self.lds_machine_view.update()
-        self.frame.body = self.lds_machine_view
+    def render_machine_wait_view(self, display_controller,
+                                 installer):
+        if self.machine_wait_view is None:
+            self.machine_wait_view = MachineWaitView(display_controller,
+                                                     installer)
+        self.machine_wait_view.update()
+        self.frame.body = self.machine_wait_view
