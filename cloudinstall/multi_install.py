@@ -750,7 +750,7 @@ class LandscapeInstallFinal:
 
         log.debug("Running landscape configure: {}".format(cmd))
 
-        out = utils.get_command_output(cmd, timeout=None, user_sudo=True)
+        out = utils.get_command_output(cmd, timeout=None)
 
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
