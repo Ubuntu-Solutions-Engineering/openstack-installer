@@ -21,14 +21,13 @@ from urwid import (AttrMap, Button, Divider, Filler, GridFlow, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.config import Config
-from cloudinstall.landscape.lshw import LSHWParser
 from cloudinstall.maas import connect_to_maas, FakeMaasState, MaasMachineStatus
 from cloudinstall import utils
 
 log = logging.getLogger('cloudinstall.install')
 
 
-class LandscapeMachineView(WidgetWrap):
+class MachineWaitView(WidgetWrap):
     def __init__(self, display_controller, installer):
         self.display_controller = display_controller
         self.installer = installer
@@ -70,34 +69,17 @@ class LandscapeMachineView(WidgetWrap):
         machines = self.maas_state.machines(state=MaasMachineStatus.READY)
         powerable_machines = [m for m in machines if m.power_type is not None]
         n_powerable = len(powerable_machines)
-        multinic_machines = [m for m in machines if len(m.macaddress_set) > 1]
 
-        n_multidisks = 0
-        for m in powerable_machines:
-            if self.maas_client is None:
-                # Fake API testing, just don't break:
-                continue
+        conditions = [(n_powerable >= 1,
+                       "At least one machine enlisted with power "
+                       "control (currently {})".format(n_powerable))]
 
-            lshw_data = self.maas_client.node_details(m.instance_id)
-            disk_info = LSHWParser(lshw_data).get_disks()
-            if len(disk_info) > 1:
-                n_multidisks += 1
-
-        conditions = [(n_powerable >= 6,
-                       "At least 6 machines enlisted with power "
-                       "control (currently {})".format(n_powerable)),
-                      (len(multinic_machines) >= 1,
-                       "At least one with 2 nics available for OpenStack"
-                       " (currently {})".format(len(multinic_machines))),
-                      (n_multidisks >= 5,
-                       "Five machines with multiple disks"
-                       " (currently {})".format(n_multidisks))]
         global_ok = all([ok for ok, _ in conditions])
         return global_ok, conditions
 
     def update(self):
-        msg = ("Before continuing, check to be ensure sufficient machines are "
-               "enlisted into MAAS to deploy Landscape:")
+        msg = ("Before continuing, ensure that at least one machine is "
+               "enlisted into MAAS:")
         self.message = Text(self.spinner.next_frame() + ['\n', msg, '\n'],
                             align='center')
         self.main_pile.contents[0] = (self.message,

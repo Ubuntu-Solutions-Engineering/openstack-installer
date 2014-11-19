@@ -115,13 +115,13 @@ class InstallController(DisplayController):
         "periodically check for display changes"
         if self.current_state == InstallState.RUNNING:
             pass
-        elif self.current_state == InstallState.LDS_WAIT:
-            self.render_lds_machine_view()
+        elif self.current_state == InstallState.NODE_WAIT:
+            self.render_machine_wait_view()
 
         self.loop.set_alarm_in(1, self.update)
 
-    def render_lds_machine_view(self):
-        self.ui.render_lds_machine_view(self, self.current_installer)
+    def render_machine_wait_view(self):
+        self.ui.render_machine_wait_view(self, self.current_installer)
         self.redraw_screen()
 
     def do_install(self, install_type):
