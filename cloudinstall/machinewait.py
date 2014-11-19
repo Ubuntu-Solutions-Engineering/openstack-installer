@@ -86,8 +86,9 @@ class MachineWaitView(WidgetWrap):
                                       self.main_pile.options())
 
         global_ok, statuses = self.get_status()
-        status_map = {True: "\u2713 ", False: "\N{TETRAGRAM FOR FAILURE} "}
-        contents = [(Text([('label', status_map[status]), condition],
+        status_map = {True: ('success_icon', "\u2713 "),
+                      False: ('error_icon', "<!> ")}
+        contents = [(Text([status_map[status], condition],
                           align='center'),
                      self.status_pile.options())
                     for status, condition
