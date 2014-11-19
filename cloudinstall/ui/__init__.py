@@ -195,9 +195,8 @@ class LandscapeInput(Dialog):
         super().__init__(title, cb)
         self.add_input('admin_email', 'Admin Email: ')
         self.add_input('admin_name', 'Admin Name: ')
-        self.add_input('system_email', 'System Email: ')
-        self.add_input('maas_server', 'MAAS Server IP (optional): ')
-        self.add_input('maas_apikey', 'MAAS API Key (optional): ')
+        self.add_input('maas_server', 'MAAS Server IP: ')
+        self.add_input('maas_apikey', 'MAAS API Key: ')
         self.show()
 
 
