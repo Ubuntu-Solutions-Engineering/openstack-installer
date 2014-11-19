@@ -19,4 +19,4 @@ from enum import Enum
 
 class InstallState(Enum):
     RUNNING = 0
-    LDS_WAIT = 1
+    NODE_WAIT = 1
