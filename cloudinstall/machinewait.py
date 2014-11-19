@@ -46,10 +46,9 @@ class MachineWaitView(WidgetWrap):
     def build_widgets(self):
         self.message = Text("Please review available machines in MAAS",
                             align='center')
-        self.status_pile = Pile([])
         self.button_grid = GridFlow([], 22, 1, 1, 'center')
 
-        self.main_pile = Pile([self.message, self.status_pile,
+        self.main_pile = Pile([self.message,
                                Divider(),
                                self.button_grid])
         return Filler(self.main_pile, valign='middle')
@@ -82,28 +81,32 @@ class MachineWaitView(WidgetWrap):
                "enlisted into MAAS:")
         self.message = Text(self.spinner.next_frame() + ['\n', msg, '\n'],
                             align='center')
-        self.main_pile.contents[0] = (self.message,
-                                      self.main_pile.options())
+        contents = [(self.message,
+                     self.main_pile.options())]
 
         global_ok, statuses = self.get_status()
         status_map = {True: ('success_icon', "\u2713 "),
                       False: ('error_icon', "<!> ")}
-        contents = [(Text([status_map[status], condition],
-                          align='center'),
-                     self.status_pile.options())
-                    for status, condition
-                    in statuses]
-        self.status_pile.contents = contents
+        contents += [(Text([status_map[status], condition],
+                           align='center'),
+                      self.main_pile.options())
+                     for status, condition
+                     in statuses]
+        contents += [(Divider(), self.main_pile.options()),
+                     (self.button_grid, self.main_pile.options())]
+        self.main_pile.contents = contents
 
         if not global_ok:
-            b = AttrMap(SelectableIcon(" ( Can't Continue )"),
+            b = AttrMap(SelectableIcon("{:^22}".format(" ( Can't Continue )")),
                         'disabled_button', 'disabled_button_focus')
         else:
-            b = AttrMap(Button("Continue",
+            b = AttrMap(Button("{:^22}".format("Continue"),
                                on_press=self.do_continue),
                         'button', 'button_focus')
 
         self.button_grid.contents = [(b, self.button_grid.options())]
+        # ensure that the button is always focused:
+        self.main_pile.focus_position = len(self.main_pile.contents) - 1
 
     @utils.async
     def do_continue(self, *args, **kwargs):
