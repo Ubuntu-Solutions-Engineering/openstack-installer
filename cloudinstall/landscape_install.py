@@ -83,9 +83,3 @@ class LandscapeInstall:
             "to find your API Key")
         self.display_controller.show_landscape_input("Landscape Setup",
                                                      self._save_lds_creds)
-
-
-# TODO: do we want this?
-class LandscapeMachineChecker:
-    def __init__(self, maas):
-        pass
