@@ -18,6 +18,9 @@ import logging
 import urwid
 import os
 
+from cloudinstall.config import (INSTALL_TYPE_SINGLE,
+                                 INSTALL_TYPE_MULTI,
+                                 INSTALL_TYPE_LANDSCAPE)
 from cloudinstall.core import DisplayController
 from cloudinstall.installstate import InstallState
 from cloudinstall.single_install import SingleInstall
@@ -132,13 +135,13 @@ class InstallController(DisplayController):
         # Set installed placeholder
         utils.spew(os.path.join(
             self.config.cfg_path, 'installed'), 'auto-generated')
-        if install_type == "Single":
+        if install_type == INSTALL_TYPE_SINGLE:
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.SingleInstall(self.opts, self).run()
-        elif install_type == "Multi":
+        elif install_type == INSTALL_TYPE_MULTI:
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.select_maas_type()
-        elif install_type == "Landscape":
+        elif install_type == INSTALL_TYPE_LANDSCAPE:
             self.set_openstack_rel("")
             self.LandscapeInstall(self.opts, self).run()
         else:

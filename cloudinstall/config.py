@@ -1,4 +1,3 @@
-
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -23,6 +22,12 @@ import logging
 
 
 log = logging.getLogger('cloudinstall.config')
+
+
+# The values of these three install types are user-visible strings:
+INSTALL_TYPE_SINGLE = "Single"
+INSTALL_TYPE_MULTI = "Multi"
+INSTALL_TYPE_LANDSCAPE = "Landscape OpenStack Autopilot"
 
 
 class ConfigException(Exception):
@@ -78,7 +83,9 @@ class Config:
     def install_types(self):
         """ Installer types
         """
-        return ['Single', 'Multi', 'Landscape']
+        return [INSTALL_TYPE_SINGLE,
+                INSTALL_TYPE_MULTI,
+                INSTALL_TYPE_LANDSCAPE]
 
     @property
     def share_path(self):

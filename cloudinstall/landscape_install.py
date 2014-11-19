@@ -57,7 +57,7 @@ class LandscapeInstall:
     def _save_lds_creds(self, creds):
         admin_name = creds['admin_name'].value
         admin_email = creds['admin_email'].value
-        system_email = creds['system_email'].value
+        system_email = creds['admin_email'].value
         maas_server = creds['maas_server'].value
         maas_apikey = creds['maas_apikey'].value
         self.config.save_landscape_creds(
@@ -79,13 +79,7 @@ class LandscapeInstall:
     def run(self):
         self.display_controller.info_message(
             "Please enter your Landscape information and "
-            "optionally an existing MAAS Server IP. If MAAS "
-            "is not defined a new one will be created for you.")
+            "MAAS Server IP and API Key. Use the MAAS web UI or 'maas list' "
+            "to find your API Key")
         self.display_controller.show_landscape_input("Landscape Setup",
                                                      self._save_lds_creds)
-
-
-# TODO: do we want this?
-class LandscapeMachineChecker:
-    def __init__(self, maas):
-        pass
