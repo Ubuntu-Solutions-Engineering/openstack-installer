@@ -156,7 +156,7 @@ class Banner(ScrollableWidgetWrap):
 
     def __init__(self):
         self.text = []
-
+        self.flash_text = Text('', align='center')
         self.BANNER = [
             "",
             "",
@@ -164,7 +164,7 @@ class Banner(ScrollableWidgetWrap):
             "",
             "By Canonical, Ltd.",
             "",
-
+            ""
         ]
         super().__init__(self._create_text())
 
@@ -173,11 +173,18 @@ class Banner(ScrollableWidgetWrap):
         for line in self.BANNER:
             self._insert_line(line)
 
+        self.text.append(self.flash_text)
         return ScrollableListBox(self.text)
 
     def _insert_line(self, line):
         text = Text(line, align='center')
         self.text.append(text)
+
+    def flash(self, msg):
+        self.flash_text.set_text([('error', "Error: \n\n{}".format(msg))])
+
+    def flash_reset(self):
+        self.flash_text.set_text('')
 
 
 class NodeInstallWaitMode(ScrollableWidgetWrap):
@@ -688,6 +695,12 @@ class PegasusGUI(WidgetWrap):
 
     def set_pending_deploys(self, pending_charms):
         self.frame.footer.set_pending_deploys(pending_charms)
+
+    def flash(self, msg):
+        self.frame.body.flash(msg)
+
+    def flash_reset(self):
+        self.frame.body.flash_reset()
 
     def status_message(self, text):
         self.frame.footer.message(text)

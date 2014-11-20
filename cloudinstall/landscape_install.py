@@ -67,9 +67,13 @@ class LandscapeInstall:
         self.display_controller.ui.hide_widget_on_top()
         self.display_controller.info_message("Running ..")
         if not maas_server:
-            log.debug("No maas credentials entered, doing a new MAAS install")
-            self._do_install_new_maas()
+            log.error("No maas credentials entered, restarting dialog.")
+            self.display_controller.flash(
+                "Missing required MAAS server information. Please fill out "
+                "MAAS Server IP and MAAS API Key.")
+            return self.run()
         else:
+            self.display_controller.flash_reset()
             log.debug("Existing MAAS defined, doing a LDS "
                       "installation with existing MAAS.")
             self.config.save_maas_creds(maas_server,
