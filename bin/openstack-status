@@ -58,9 +58,20 @@ def parse_options(*args, **kwds):
 
 if __name__ == '__main__':
     config = Config()
-    log.setup_logger()
+    try:
+        log.setup_logger()
+    except PermissionError:
+        print("Permission error accessing log file.\n"
+              "This probably indicates a broken partial install.\n"
+              "Please use 'openstack-install -u' to uninstall, "
+              "and try again.\n"
+              "(You may want to save a copy of ~/.cloud-install/commands.log"
+              " for reporting a bug.)")
+        sys.exit()
+
     logger = logging.getLogger('cloudinstall')
     logger.info("openstack-status starting")
+
     opts = parse_options(sys.argv)
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
