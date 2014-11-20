@@ -69,8 +69,8 @@ class LandscapeInstall:
         if not maas_server:
             log.error("No maas credentials entered, restarting dialog.")
             self.display_controller.flash(
-                "Missing required MAAS server information. Please fill out "
-                "MAAS Server IP and MAAS API Key.")
+                "Missing required MAAS server "
+                "information\N{HORIZONTAL ELLIPSIS}")
             return self.run()
         else:
             self.display_controller.flash_reset()
@@ -85,5 +85,6 @@ class LandscapeInstall:
             "Please enter your Landscape information and "
             "MAAS Server IP and API Key. Use the MAAS web UI or 'maas list' "
             "to find your API Key")
-        self.display_controller.show_landscape_input("Landscape Setup",
-                                                     self._save_lds_creds)
+        self.display_controller.show_landscape_input(
+            "Landscape OpenStack Autopilot Setup",
+            self._save_lds_creds)
