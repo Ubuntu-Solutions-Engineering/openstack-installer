@@ -27,6 +27,8 @@ import yaml
 from cloudinstall.charms.jujugui import CharmJujuGui
 from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
+from cloudinstall.charms.swift import CharmSwift
+from cloudinstall.charms.swift_proxy import CharmSwiftProxy
 
 from cloudinstall.placement.controller import (AssignmentType,
                                                PlacementController)
@@ -215,20 +217,36 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.reset_unplaced()
         self.assertEqual(len(self.pc.unplaced_services), 1)
 
-    def test_service_is_core(self):
-        "Test a sampling of core services and special handling for compute"
-        self.assertTrue(self.pc.service_is_core(CharmKeystone))
-        self.assertTrue(self.pc.service_is_core(CharmNovaCompute))
-        self.assertFalse(self.pc.service_is_core(CharmJujuGui))
+    def test_service_is_required(self):
+        "Test a sampling of required services and special handling for compute"
+        self.assertTrue(self.pc.service_is_required(CharmKeystone))
+        self.assertTrue(self.pc.service_is_required(CharmNovaCompute))
+        self.assertFalse(self.pc.service_is_required(CharmJujuGui))
 
-        # after being assigned at least once, novacompute is no longer
-        # considered 'core' (aka required)
+    def test_one_compute_required(self):
+        """after being assigned at least once, novacompute is no longer
+        considered 'required' (aka required)"""
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        self.assertFalse(self.pc.service_is_core(CharmNovaCompute))
+        self.assertFalse(self.pc.service_is_required(CharmNovaCompute))
 
-        # but the others don't change
-        self.assertTrue(self.pc.service_is_core(CharmKeystone))
-        self.assertFalse(self.pc.service_is_core(CharmJujuGui))
+    def test_swift_unrequired_then_required(self):
+        "Swift and swift-proxy are both optional until you add swift"
+
+        self.assertFalse(self.pc.service_is_required(CharmSwift))
+        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        self.pc.assign(self.mock_machine, CharmSwift, AssignmentType.LXC)
+        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+
+    def test_swift_proxy_unrequired_then_required(self):
+        "Swift and swift-proxy are both optional until you add swift-proxy"
+        self.assertFalse(self.pc.service_is_required(CharmSwift))
+        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
+        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        # Only one swift-proxy is required, so now that we've added
+        # it, it is still not required:
+        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
 
     def test_persistence(self):
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)

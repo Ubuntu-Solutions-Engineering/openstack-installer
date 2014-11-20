@@ -163,8 +163,6 @@ class MultiInstall(InstallBase):
         # Return control back to landscape_install if need be
         if not self.config.is_landscape:
             args = ['openstack-status']
-            if self.opts.enable_swift:
-                args.append('--enable-swift')
             if self.opts.edit_placement:
                 args.append('--placement')
 
