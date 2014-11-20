@@ -133,10 +133,10 @@ class MultiInstall(InstallBase):
             dbgflags = "--debug"
 
         bsflags = ""
-        # FIXME: this tag is never defined, removing to allow
-        # installers to work again
-        # if not self.installing_new_maas:
         #    bsflags = " --constraints tags=physical"
+        bstarget = os.getenv("JUJU_BOOTSTRAP_TO")
+        if bstarget:
+            bsflags += " --to {}".format(bstarget)
 
         out = utils.get_command_output("juju {} bootstrap {}".format(dbgflags,
                                                                      bsflags),
