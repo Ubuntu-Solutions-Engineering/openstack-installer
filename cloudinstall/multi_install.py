@@ -755,16 +755,14 @@ class LandscapeInstallFinal:
             raise Exception("Error configuring Landscape.")
 
         self.multi_installer.stop_current_task()
-        self.display_controller.info_message("Complete")
+        self.display_controller.clear_status()
 
         msg = []
-        msg.append("You can now continue with the installation of Openstack")
-        msg.append(" by visiting:\n\n")
+        msg.append("To continue with OpenStack installation visit:\n\n")
         msg.append("http://{0}/account/standalone/openstack ".format(
             out['output'].strip()))
-        msg.append("\n\nCredentials:\n")
+        msg.append("\n\nLandscape Login Credentials:\n")
         msg.append(" Email: {}\n".format(
             self.config.landscape_creds['admin_email']))
         msg.append(" Password: {}".format(self.config.openstack_password))
-
-        self.display_controller.step_info(msg)
+        return self.display_controller.step_info(msg)

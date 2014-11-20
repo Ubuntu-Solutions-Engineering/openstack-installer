@@ -219,7 +219,8 @@ class DisplayController:
 
     def info_message(self, message):
         with status_context(self, 'info', message):
-            self.ui.status_info_message(message)
+            self.ui.status_info_message(
+                "{}\N{HORIZONTAL ELLIPSIS}".format(message))
 
     def error_message(self, message):
         with status_context(self, 'error', message):
@@ -268,7 +269,7 @@ class DisplayController:
                                        self.config.STYLES,
                                        handle_mouse=True,
                                        unhandled_input=self.header_hotkeys)
-            self.info_message("Welcome ..")
+            self.info_message("Welcome")
             self.initialize()
 
         self.update()
@@ -341,7 +342,7 @@ class DisplayController:
         if key in ['q', 'Q']:
             self.exit()
         if key in ['r', 'R', 'f5']:
-            self.info_message("View was refreshed.")
+            self.info_message("View was refreshed")
             self.update()
 
 
@@ -521,11 +522,11 @@ class Controller(DisplayController):
 
     def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
-        self.info_message('Copying network specifications to machine.')
+        self.info_message('Copying network specifications to machine')
         srcpath = path.join(self.config.tmpl_path, 'lxc-host-only')
         destpath = "/tmp/lxc-host-only"
         utils.remote_cp(machine_id, src=srcpath, dst=destpath)
-        self.info_message('Updating network configuration for machine.')
+        self.info_message('Updating network configuration for machine')
         utils.remote_run(machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only")
         utils.remote_run(machine_id,
@@ -572,7 +573,7 @@ class Controller(DisplayController):
                 name = charm_class.display_name
                 if err:
                     self.info_message("{} is waiting for another service, will"
-                                      " re-try in a few seconds.".format(name))
+                                      " re-try in a few seconds".format(name))
                     break
                 else:
                     log.debug("Issued deploy for {}".format(name))
@@ -679,7 +680,7 @@ class Controller(DisplayController):
         self.info_message(
             "Services deployed, relationships may still be"
             " pending. Please wait for all services to be checked before"
-            " deploying compute nodes.")
+            " deploying compute nodes")
         self.render_nodes(self.nodes, self.juju_state, self.maas_state)
 
     def add_charm(self, count=0, charm=None):

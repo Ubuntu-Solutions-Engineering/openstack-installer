@@ -681,7 +681,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_landscape_input(self, title, cb):
         widget = LandscapeInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=10)
+        self.show_widget_on_top(widget, width=50, height=14)
 
     def hide_show_landscape_input(self):
         self.hide_widget_on_top()

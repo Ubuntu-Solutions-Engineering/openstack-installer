@@ -55,7 +55,7 @@ class InstallController(DisplayController):
             self.ui.hide_show_password_input()
             self.select_install_type()
         else:
-            self.flash('Passwords did not match, try again ..')
+            self.flash('Passwords did not match\N{HORIZONTAL ELLIPSIS}')
             return self.show_password_input(
                 'Create a new Openstack Password', self._save_password)
 
@@ -74,7 +74,7 @@ class InstallController(DisplayController):
     def select_install_type(self):
         """ Dialog for selecting installation type
         """
-        self.info_message("Choose your installation path ..")
+        self.info_message("Choose your installation path")
         self.show_selector_info('Install Type',
                                 self.config.install_types,
                                 self.do_install)
@@ -86,7 +86,7 @@ class InstallController(DisplayController):
         self.info_message(
             "If a MAAS exists please enter the Server IP and your "
             "administrator's API Key. Otherwise leave blank and a new "
-            "MAAS will be created for you.")
+            "MAAS will be created for you")
         self.show_maas_input("MAAS Setup",
                              self._save_maas_creds)
 
@@ -107,8 +107,8 @@ class InstallController(DisplayController):
                                        handle_mouse=True,
                                        unhandled_input=self.header_hotkeys)
 
-        self.info_message("Get started by entering an Openstack password "
-                          "to use in your cloud ..")
+        self.info_message("Get started by entering an OpenStack password "
+                          "for your cloud")
 
         self.ui.show_password_input(
             'Create a new Openstack Password', self._save_password)
