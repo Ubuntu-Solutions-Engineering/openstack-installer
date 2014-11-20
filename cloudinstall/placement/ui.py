@@ -385,8 +385,19 @@ class MachinesList(WidgetWrap):
                 n_satisfying_machines -= 1
                 continue
 
+            assignment_names = ""
+            ad = self.controller.assignments_for_machine(m)
+            for atype, al in ad.items():
+                assignment_names += " ".join(["{} {}".format(cc.charm_name,
+                                                             cc.display_name)
+                                              for cc in al])
+            filter_label = "{} {}".format(m.filter_label(),
+                                          assignment_names)
+
+            log.debug("filter_label for {} is '{}'".format(m, filter_label))
+
             if self.filter_string != "" and \
-               self.filter_string not in m.filter_label():
+               self.filter_string not in filter_label:
                 self.remove_machine(m)
                 continue
 
