@@ -272,7 +272,6 @@ class PlacementController:
             unrequired_services += swift_charmnames
 
         if cc.name() in unrequired_services:
-            log.debug("{} in unrequired, returning FALSE".format(cc.name()))
             return False
 
         n_required = cc.required_num_units()
@@ -283,7 +282,6 @@ class PlacementController:
                       "multi units.".format(cc.charm_name, n_required))
 
         n_units = self.machine_count_for_charm(cc)
-        log.debug("n_units = {}, n_required = {}".format(n_units, n_required))
         return n_units < n_required
 
     def can_deploy(self):
