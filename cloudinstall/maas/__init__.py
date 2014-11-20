@@ -222,7 +222,7 @@ class MaasMachine(Machine):
                  storage=self.storage,
                  cpus=self.cpu_cores)
         return ("hostname:{dns_name} tag:{tag} mem:{mem} arch:{arch}"
-                "storage:{storage} cores:{cpus})>").format(**d)
+                "storage:{storage} cores:{cpus}").format(**d)
 
 
 class MaasState:
