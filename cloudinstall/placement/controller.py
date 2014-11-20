@@ -78,8 +78,7 @@ class PlacementController:
 
     def __init__(self, maas_state=None, opts=None):
         self.maas_state = maas_state
-        if self.maas_state is None:
-            self._machines = []
+        self._machines = []
         # id -> {atype: [charm class]}
         self.assignments = defaultdict(lambda: defaultdict(list))
         self.opts = opts
