@@ -33,9 +33,6 @@ from cloudinstall import __version__ as version
 def parse_options(argv, cfg):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
                                      prog='openstack-install')
-    parser.add_argument('-s', '--enable-swift', action='store_true',
-                        dest='enable_swift', default=False,
-                        help='Enable swift storage')
     parser.add_argument('-i', '--install-only', action='store_true',
                         dest='install_only', default=False,
                         help='install and bootstrap MAAS/Juju/Landscape '

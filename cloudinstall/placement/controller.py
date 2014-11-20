@@ -78,8 +78,7 @@ class PlacementController:
 
     def __init__(self, maas_state=None, opts=None):
         self.maas_state = maas_state
-        if self.maas_state is None:
-            self._machines = []
+        self._machines = []
         # id -> {atype: [charm class]}
         self.assignments = defaultdict(lambda: defaultdict(list))
         self.opts = opts
@@ -170,14 +169,8 @@ class PlacementController:
 
     def charm_classes(self):
         cl = [m.__charm_class__ for m in load_charms()
-              if not m.__charm_class__.optional and
-              not m.__charm_class__.disabled]
+              if not m.__charm_class__.disabled]
 
-        if self.opts.enable_swift:
-            for m in load_charms():
-                n = m.__charm_class__.name()
-                if n == "swift-storage" or n == "swift-proxy":
-                    cl.append(m.__charm_class__)
         return cl
 
     def placed_charm_classes(self):
@@ -256,7 +249,7 @@ class PlacementController:
             if not is_placed:
                 self.unplaced_services.add(cc)
 
-    def service_is_core(self, cc):
+    def service_is_required(self, cc):
         """Returns True if service needs to be placed before deploying is
         OK.
         """
@@ -265,13 +258,20 @@ class PlacementController:
            and cc in self.unplaced_services:
             return True
 
-        uncore_services = ['nova-compute',
-                           'juju-gui']
-        if not self.opts.enable_swift:
-            uncore_services += ['swift-storage',
-                                'swift-proxy']
+        unrequired_services = ['nova-compute',
+                               'juju-gui']
 
-        if cc.name() in uncore_services:
+        # if we place one of swift-proxy or swift-storage, we must
+        # place the others.
+        unplaced_services_names = [c.name() for c in
+                                   self.unplaced_services]
+        swift_charmnames = ['swift-storage', 'swift-proxy']
+
+        # if both swift charms are unplaced, then they are unrequired.
+        if set(swift_charmnames).issubset(unplaced_services_names):
+            unrequired_services += swift_charmnames
+
+        if cc.name() in unrequired_services:
             return False
 
         n_required = cc.required_num_units()
@@ -282,14 +282,13 @@ class PlacementController:
                       "multi units.".format(cc.charm_name, n_required))
 
         n_units = self.machine_count_for_charm(cc)
-
         return n_units < n_required
 
     def can_deploy(self):
-        unplaced_cores = [cc for cc in self.unplaced_services
-                          if self.service_is_core(cc)]
+        unplaced_requireds = [cc for cc in self.unplaced_services
+                              if self.service_is_required(cc)]
 
-        return len(unplaced_cores) == 0
+        return len(unplaced_requireds) == 0
 
     def machine_count_for_charm(self, cc):
         """Returns the total number of placements of any type for a given
