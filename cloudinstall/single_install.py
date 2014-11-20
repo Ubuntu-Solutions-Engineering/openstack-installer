@@ -195,8 +195,6 @@ class SingleInstall(InstallBase):
 
         # start the party
         cloud_status_bin = ['openstack-status']
-        if self.opts.enable_swift:
-            cloud_status_bin.append('--enable-swift')
         self.display_controller.info_message("Bootstrapping Juju ..")
         self.start_task("Starting Juju server")
         utils.container_run(self.container_name, "juju bootstrap")
