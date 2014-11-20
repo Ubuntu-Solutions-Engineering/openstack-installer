@@ -204,6 +204,15 @@ class DisplayController:
                                                      logpath))
             self.ui.show_fatal_error_message(msg, handle_done)
 
+    # - Body
+    def flash(self, text):
+        with view_context(self):
+            self.ui.flash(text)
+
+    def flash_reset(self):
+        with view_context(self):
+            self.ui.flash_reset()
+
     # - Footer
     def clear_status(self):
         self.ui.clear_status()

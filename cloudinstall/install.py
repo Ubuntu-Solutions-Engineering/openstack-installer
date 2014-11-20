@@ -50,11 +50,12 @@ class InstallController(DisplayController):
         if 'confirm_password' in creds:
             confirm_password = creds['confirm_password'].value
         if password and password == confirm_password:
+            self.flash_reset()
             self.config.save_password(password)
             self.ui.hide_show_password_input()
             self.select_install_type()
         else:
-            self.error_message('Passwords did not match, try again ..')
+            self.flash('Passwords did not match, try again ..')
             return self.show_password_input(
                 'Create a new Openstack Password', self._save_password)
 
