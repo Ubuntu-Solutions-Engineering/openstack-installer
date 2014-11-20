@@ -263,7 +263,7 @@ class ServiceWidget(WidgetWrap):
         md = self.controller.machines_for_charm(self.charm_class)
         mstr = [""]
 
-        if self.controller.service_is_core(self.charm_class):
+        if self.controller.service_is_required(self.charm_class):
             np = self.controller.machine_count_for_charm(self.charm_class)
             nr = self.charm_class.required_num_units()
             self.title_markup[1] = ('info',
@@ -490,12 +490,13 @@ class ServicesList(WidgetWrap):
                     self.remove_service_widget(cc)
                     continue
 
-            is_core = self.controller.service_is_core(cc)
-            if self.show_type == 'core':
-                if not is_core:
+            is_required = self.controller.service_is_required(cc)
+            if self.show_type == 'required':
+                if not is_required:
+                    self.remove_service_widget(cc)
                     continue
-            elif self.show_type == 'non-core':
-                if is_core:
+            elif self.show_type == 'non-required':
+                if is_required:
                     self.remove_service_widget(cc)
                     continue
                 if not cc.allow_multi_units and \
@@ -704,12 +705,12 @@ class ServicesColumn(WidgetWrap):
         self.required_services_list = ServicesList(self.placement_controller,
                                                    actions,
                                                    unplaced_only=True,
-                                                   show_type='core',
+                                                   show_type='required',
                                                    show_constraints=True,
                                                    title="Required Services")
         self.additional_services_list = ServicesList(self.placement_controller,
                                                      actions,
-                                                     show_type='non-core',
+                                                     show_type='non-required',
                                                      show_constraints=True,
                                                      title="Additional "
                                                      "Services")
@@ -788,7 +789,7 @@ class DeployView(WidgetWrap):
         return True
 
     def build_widgets(self):
-        self.deploy_ok_msg = ("\u2713 All the core OpenStack services are "
+        self.deploy_ok_msg = ("\u2713 All the required OpenStack services are "
                               "placed on a machine, and you can now deploy.")
 
         self.deploy_button = AttrMap(Button("Deploy",
@@ -796,7 +797,7 @@ class DeployView(WidgetWrap):
                                      'button', 'button_focus')
         self.deploy_grid = GridFlow([self.deploy_button], 10, 1, 0, 'center')
 
-        self.unplaced_msg = "Some core services are still unplaced."
+        self.unplaced_msg = "Some required services are still unplaced."
 
         self.main_pile = Pile([Divider()])
         return self.main_pile
