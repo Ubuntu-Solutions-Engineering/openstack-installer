@@ -43,7 +43,7 @@ def parse_options(argv, cfg):
                         'continue.')
     parser.add_argument('-u', '--uninstall', action='store_true',
                         dest='uninstall', default=False,
-                        help='Uninstalls the current cloud including removing'
+                        help='Uninstalls the current cloud including removing '
                         'of packages.')
     parser.add_argument('-k', '--kill', action='store_true',
                         dest='killcloud', default=False,
