@@ -18,8 +18,10 @@
 from __future__ import unicode_literals
 
 import logging
-from urwid import (Button, LineBox, ListBox, Pile,
-                   SimpleListWalker, Text, WidgetWrap)
+from urwid import (Button, LineBox, ListBox, Pile, AttrWrap,
+                   RadioButton, SimpleListWalker, Text, WidgetWrap,
+                   BoxAdapter, Divider)
+from collections import OrderedDict
 from cloudinstall.ui.dialog import Dialog
 
 log = logging.getLogger('cloudinstall.ui')
@@ -149,15 +151,46 @@ class Selector(Dialog):
 
     def __init__(self, title, opts, cb):
         super().__init__(title, cb)
-        for item in opts:
-            self.add_radio(item)
+        self.radio_items = OrderedDict()
+        for item, desc in opts:
+            self.add_radio(item, desc)
         self.show()
+
+    def add_radio(self, item, desc, group=[]):
+        self.radio_items[item] = (RadioButton(group, item), desc)
+
+    def _build_widget(self, **kwargs):
+        total_items = []
+        for _item in self.radio_items.keys():
+            desc = AttrWrap(
+                Text("  {}".format(
+                    self.radio_items[_item][1])), 'input', 'input focus')
+            total_items.append(
+                AttrWrap(self.radio_items[_item][0], 'input', 'input focus'))
+            total_items.append(AttrWrap(desc, 'input'))
+            total_items.append(Divider('-'))
+
+        self.input_lbox = ListBox(SimpleListWalker(total_items[:-1]))
+        self.add_buttons()
+
+        self.container_box_adapter = BoxAdapter(self.input_lbox,
+                                                len(total_items))
+        self.container_lbox = ListBox(
+            [self.container_box_adapter,
+             Divider(),
+             self.btn_columns])
+
+        return LineBox(
+            BoxAdapter(self.container_lbox,
+                       height=len(total_items) + 2),
+            title=self.title)
 
     def submit(self, button):
         log.debug("Callback on : {}".format(self.input_items))
-        for item in self.input_items.values():
-            if item.get_state():
-                selected_item = item.label
+        for item in self.input_items.keys():
+            _item = self.input_items[item][0]
+            if _item.get_state():
+                selected_item = _item.label
         self.emit_done_signal(selected_item)
 
 

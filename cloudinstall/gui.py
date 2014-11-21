@@ -649,7 +649,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_selector_info(self, title, opts, cb):
         widget = Selector(title, opts, cb)
-        self.show_widget_on_top(widget, width=50, height=10)
+        self.show_widget_on_top(widget, width=80, height=25)
 
     def hide_selector_info(self):
         self.hide_widget_on_top()

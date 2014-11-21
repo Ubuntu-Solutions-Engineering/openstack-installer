@@ -25,9 +25,13 @@ log = logging.getLogger('cloudinstall.config')
 
 
 # The values of these three install types are user-visible strings:
-INSTALL_TYPE_SINGLE = "Single"
-INSTALL_TYPE_MULTI = "Multi"
-INSTALL_TYPE_LANDSCAPE = "Landscape OpenStack Autopilot"
+INSTALL_TYPE_SINGLE = ("Single", "Fully containerized OpenStack installation "
+                       "on a single machine.")
+INSTALL_TYPE_MULTI = ("Multi", "OpenStack installation utilizing MAAS.")
+INSTALL_TYPE_LANDSCAPE = ("Landscape OpenStack Autopilot",
+                          "Benefit from best practices in cloud building, "
+                          "and get up and running within minutes, all from "
+                          "an intuitive web UI.")
 
 
 class ConfigException(Exception):
@@ -83,9 +87,9 @@ class Config:
     def install_types(self):
         """ Installer types
         """
-        return [INSTALL_TYPE_SINGLE,
+        return [INSTALL_TYPE_LANDSCAPE,
                 INSTALL_TYPE_MULTI,
-                INSTALL_TYPE_LANDSCAPE]
+                INSTALL_TYPE_SINGLE]
 
     @property
     def share_path(self):
