@@ -169,4 +169,4 @@ To uninstall and cleanup your system run the following
 
 .. code::
 
-    $ sudo openstack -u
+    $ sudo openstack-install -u
