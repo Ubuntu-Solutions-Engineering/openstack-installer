@@ -679,3 +679,11 @@ def format_constraint(k, v):
     if vs.isdecimal():
         vs = mb_to_human(v)
     return "{}={}".format(k, vs)
+
+
+def make_screen_hicolor(screen):
+    """returns a screen to pass to MainLoop init
+    with 256 colors.
+    """
+    screen.set_terminal_properties(256)
+    screen.reset_default_terminal_palette()

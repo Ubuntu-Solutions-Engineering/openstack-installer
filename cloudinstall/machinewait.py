@@ -102,15 +102,22 @@ class MachineWaitView(WidgetWrap):
         else:
             b = AttrMap(Button("{:^22}".format("Continue"),
                                on_press=self.do_continue),
-                        'button', 'button_focus')
+                        'button_primary', 'button_primary focus')
+        cancel_b = AttrMap(Button("{:^22}".format("Cancel"),
+                                  on_press=self.do_cancel),
+                           'button_secondary', 'button_secondary focus')
+        self.button_grid.contents = [(cancel_b, self.button_grid.options()),
+                                     (b, self.button_grid.options())]
 
-        self.button_grid.contents = [(b, self.button_grid.options())]
         # ensure that the button is always focused:
         self.main_pile.focus_position = len(self.main_pile.contents) - 1
 
     @utils.async
     def do_continue(self, *args, **kwargs):
         self.installer.do_install()
+
+    def do_cancel(self, *args, **kwargs):
+        raise SystemExit("Installation cancelled.")
 
 
 class Spinner:

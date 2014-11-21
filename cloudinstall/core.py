@@ -268,7 +268,9 @@ class DisplayController:
             self.loop = urwid.MainLoop(self.ui,
                                        self.config.STYLES,
                                        handle_mouse=True,
+                                       screen=utils.get_hicolor_screen(),
                                        unhandled_input=self.header_hotkeys)
+            utils.setup_term_colors()
             self.info_message("Welcome")
             self.initialize()
 
