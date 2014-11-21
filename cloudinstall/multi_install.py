@@ -126,7 +126,7 @@ class MultiInstall(InstallBase):
         self.set_perms()
 
         # Starts the party
-        self.display_controller.info_message("Bootstrapping juju ..")
+        self.display_controller.info_message("Bootstrapping juju")
 
         dbgflags = ""
         if os.getenv("DEBUG_JUJU_BOOTSTRAP"):
@@ -195,7 +195,7 @@ class MultiInstallExistingMaas(MultiInstall):
         self.register_tasks(["Starting Juju server"] +
                             self.post_tasks)
 
-        msg = "Waiting for sufficient resources in MAAS."
+        msg = "Waiting for sufficient resources in MAAS"
         self.display_controller.info_message(msg)
         self.display_controller.current_installer = self
         self.display_controller.current_state = InstallState.NODE_WAIT
@@ -235,7 +235,7 @@ class MultiInstallNewMaas(MultiInstall):
             "Please select a network interface that is not currently "
             "listening to any DHCP or DNS requests. "
             "This will be the interface MAAS will use to manage its "
-            "own DNS/DHCP services.")
+            "own DNS/DHCP services")
         if_names = sorted(get_network_interfaces().keys())
         self.display_controller.show_selector_info(
             "Choose an unused Interface",
@@ -322,10 +322,10 @@ class MultiInstallNewMaas(MultiInstall):
             log.debug("poll timed out for getting boot images")
             raise MaasInstallError("Downloading boot images timed out")
 
-        self.display_controller.info_message("Done importing boot images.")
+        self.display_controller.info_message("Done importing boot images")
 
         self.stop_current_task()
-        msg = "Waiting for sufficient resources in MAAS."
+        msg = "Waiting for sufficient resources in MAAS"
         self.display_controller.info_message(msg)
         self.display_controller.current_installer = self
         self.display_controller.current_state = InstallState.NODE_WAIT
@@ -340,7 +340,7 @@ class MultiInstallNewMaas(MultiInstall):
         self.display_controller.info_message(
             "Set the minimum and maximum DHCP ranges for your environment and "
             "optionally set static ip ranges. Both ranges must be the same "
-            "network and cannot overlap.")
+            "network and cannot overlap")
 
         def set_dhcp_range(ranges):
             self.dhcp_range = (ranges['dhcp_low'].value,
@@ -701,7 +701,7 @@ class LandscapeInstallFinal:
     def deploy_landscape(self):
         self.multi_installer.start_task("Preparing Landscape")
         self.display_controller.info_message(
-            "Running ..")
+            "Running")
         # FIXME: not sure if deployer is failing to access the juju
         # environment but I get random connection refused when
         # running juju-deployer (adam.stokes)
