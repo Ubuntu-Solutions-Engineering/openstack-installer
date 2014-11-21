@@ -178,11 +178,11 @@ class Selector(Dialog):
         self.container_lbox = ListBox(
             [self.container_box_adapter,
              Divider(),
-             self.btn_columns])
+             self.btn_pile])
 
         return LineBox(
             BoxAdapter(self.container_lbox,
-                       height=len(total_items) + 2),
+                       height=len(total_items) + 3),
             title=self.title)
 
     def submit(self, button):
