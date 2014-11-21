@@ -136,13 +136,13 @@ class InstallController(DisplayController):
         # Set installed placeholder
         utils.spew(os.path.join(
             self.config.cfg_path, 'installed'), 'auto-generated')
-        if install_type == INSTALL_TYPE_SINGLE:
+        if install_type == INSTALL_TYPE_SINGLE[0]:
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.SingleInstall(self.opts, self).run()
-        elif install_type == INSTALL_TYPE_MULTI:
+        elif install_type == INSTALL_TYPE_MULTI[0]:
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.select_maas_type()
-        elif install_type == INSTALL_TYPE_LANDSCAPE:
+        elif install_type == INSTALL_TYPE_LANDSCAPE[0]:
             self.set_openstack_rel("")
             self.LandscapeInstall(self.opts, self).run()
         else:
