@@ -54,7 +54,7 @@ class MachineWaitView(WidgetWrap):
                                self.button_pile])
         return Filler(self.main_pile, valign='middle')
 
-    def keypress(self,size, key):
+    def keypress(self, size, key):
         key = {'tab': 'down', 'shift tab': 'up'}.get(key, key)
         return super().keypress(size, key)
 
