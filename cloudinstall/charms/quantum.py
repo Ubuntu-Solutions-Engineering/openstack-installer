@@ -23,6 +23,7 @@ log = logging.getLogger('cloudinstall.charms.quantum')
 
 
 class CharmQuantum(CharmBase):
+
     """ quantum directives """
 
     charm_name = 'quantum-gateway'
@@ -81,7 +82,7 @@ class CharmQuantum(CharmBase):
         utils.remote_run(unit.machine_id,
                          cmds="sudo /tmp/quantum-network.sh")
         self.ui.status_info_message(
-            "Neutron deployed and configured, images will now be synced.")
+            "Neutron deployed and configured")
         return False
 
 
