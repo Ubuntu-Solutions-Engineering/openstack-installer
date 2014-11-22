@@ -185,9 +185,13 @@ class DisplayController:
         with dialog_context(self):
             self.ui.show_landscape_input(title, cb)
 
-    def show_selector_info(self, title, install_types, cb):
+    def show_selector_info(self, title, opts, cb):
         with dialog_context(self):
-            self.ui.show_selector_info(title, install_types, cb)
+            self.ui.show_selector_info(title, opts, cb)
+
+    def show_selector_with_desc(self, title, install_types, cb):
+        with dialog_context(self):
+            self.ui.show_selector_with_desc(title, install_types, cb)
 
     def show_dhcp_range(self, range_low, range_high, title, cb):
         with dialog_context(self):

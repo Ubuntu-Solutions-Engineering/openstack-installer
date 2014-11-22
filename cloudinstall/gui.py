@@ -38,6 +38,7 @@ from cloudinstall.status import get_sync_status
 from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox,
                              Selector,
+                             SelectorWithDescription,
                              PasswordInput,
                              MaasServerInput,
                              LandscapeInput,
@@ -649,9 +650,16 @@ class PegasusGUI(WidgetWrap):
 
     def show_selector_info(self, title, opts, cb):
         widget = Selector(title, opts, cb)
-        self.show_widget_on_top(widget, width=80, height=25)
+        self.show_widget_on_top(widget, width=50, height=10)
 
     def hide_selector_info(self):
+        self.hide_widget_on_top()
+
+    def show_selector_with_desc(self, title, opts, cb):
+        widget = SelectorWithDescription(title, opts, cb)
+        self.show_widget_on_top(widget, width=80, height=25)
+
+    def hide_selector_with_desc(self):
         self.hide_widget_on_top()
 
     def show_fatal_error_message(self, msg, cb):

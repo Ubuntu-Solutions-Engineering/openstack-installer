@@ -75,9 +75,9 @@ class InstallController(DisplayController):
         """ Dialog for selecting installation type
         """
         self.info_message("Choose your installation path")
-        self.show_selector_info('Install Type',
-                                self.config.install_types,
-                                self.do_install)
+        self.show_selector_with_desc('Install Type',
+                                     self.config.install_types,
+                                     self.do_install)
 
     def select_maas_type(self):
         """ Perform multi install based on existing
