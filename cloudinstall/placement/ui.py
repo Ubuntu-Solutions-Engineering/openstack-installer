@@ -182,7 +182,7 @@ class MachineWidget(WidgetWrap):
             else:
                 b = AttrMap(Button(label, on_press=func,
                                    user_data=self.machine),
-                            'button', 'button_focus')
+                            'button_secondary', 'button_secondary focus')
             buttons.append((b, self.button_grid.options()))
 
         self.button_grid.contents = buttons
@@ -298,7 +298,7 @@ class ServiceWidget(WidgetWrap):
             else:
                 b = AttrMap(Button(label, on_press=func,
                                    user_data=self.charm_class),
-                            'button', 'button_focus')
+                            'button_secondary', 'button_secondary focus')
             buttons.append((b, self.button_grid.options()))
 
         self.button_grid.contents = buttons
@@ -599,7 +599,7 @@ class MachineChooser(WidgetWrap):
         self.machines_list.update()
         close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
-                               'button', 'button_focus')
+                               'button_secondary', 'button_secondary focus')
         p = Pile([GridFlow([close_button], 5, 1, 0, 'right'),
                   instructions, Divider(), self.service_widget,
                   Divider(), self.machines_list])
@@ -665,7 +665,7 @@ class ServiceChooser(WidgetWrap):
 
         close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
-                               'button', 'button_focus')
+                               'button_secondary', 'button_secondary focus')
         p = Pile([GridFlow([close_button], 5, 1, 0, 'right'),
                   instructions, Divider(), self.machine_widget,
                   Divider(), self.services_list])
@@ -729,12 +729,14 @@ class ServicesColumn(WidgetWrap):
         autoplace_func = self.placement_view.do_autoplace
         self.autoplace_button = AttrMap(Button("Auto-place Remaining Services",
                                                on_press=autoplace_func),
-                                        'button', 'button_focus')
+                                        'button_secondary',
+                                        'button_secondary focus')
 
         clear_all_func = self.placement_view.do_clear_all
         self.clear_all_button = AttrMap(Button("Clear all Placements",
                                                on_press=clear_all_func),
-                                        'button', 'button_focus')
+                                        'button_secondary',
+                                        'button_secondary focus')
 
         self.required_services_pile = Pile([self.required_services_list,
                                             Divider()])
@@ -805,7 +807,7 @@ class DeployView(WidgetWrap):
 
         self.deploy_button = AttrMap(Button("Deploy",
                                             on_press=self.do_deploy),
-                                     'button', 'button_focus')
+                                     'button_primary', 'button_primary focus')
         self.deploy_grid = GridFlow([self.deploy_button], 10, 1, 0, 'center')
 
         self.unplaced_msg = "Some required services are still unplaced."
@@ -879,7 +881,8 @@ class MachinesColumn(WidgetWrap):
 
         self.open_maas_button = AttrMap(Button("Open in Browser",
                                                on_press=self.browse_maas),
-                                        'button', 'button_focus')
+                                        'button_secondary',
+                                        'button_secondary focus')
 
         bc = self.config.juju_env['bootstrap-config']
         maasname = "'{}' <{}>".format(bc['name'], bc['maas-server'])
