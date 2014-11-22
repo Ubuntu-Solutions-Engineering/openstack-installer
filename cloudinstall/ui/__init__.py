@@ -151,6 +151,24 @@ class Selector(Dialog):
 
     def __init__(self, title, opts, cb):
         super().__init__(title, cb)
+        for item in opts:
+            self.add_radio(item)
+        self.show()
+
+
+class SelectorWithDescription(Dialog):
+
+    """
+    Simple selector box
+
+    :param str title: title of selections
+    :param list opts: items to select
+    :param cb: callback
+    :returns: item selected from dialog
+    """
+
+    def __init__(self, title, opts, cb):
+        super().__init__(title, cb)
         self.radio_items = OrderedDict()
         for item, desc in opts:
             self.add_radio(item, desc)
