@@ -14,10 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from urwid import (AttrWrap, Columns, LineBox,
+from urwid import (AttrWrap, LineBox,
                    ListBox, BoxAdapter, WidgetWrap,
-                   RadioButton, SimpleListWalker, Divider, Button,
-
+                   Pile, RadioButton, SimpleListWalker, Divider, Button,
                    signals, emit_signal, connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
@@ -42,8 +41,8 @@ class Dialog(WidgetWrap):
         self.input_items = OrderedDict()
         self.input_lbox = []
         self.container_lbox = []
-        self.btn_columns = None
-        self.btn_ok = None
+        self.btn_pile = None
+        self.btn_confirm = None
         self.btn_cancel = None
 
     def show(self):
@@ -55,28 +54,18 @@ class Dialog(WidgetWrap):
 
     def keypress(self, size, key):
         key = self.key_conversion_map.get(key, key)
-        if key == 'down':
-            old_pos = self.container_lbox.focus
-            log.debug("Previous focus item: {}".format(old_pos))
-            if old_pos == self.btn_columns:
-                if self.btn_columns.focus_position == 0:
-                    return self.btn_columns.set_focus(self.btn_cancel)
-        elif key == 'up':
-            old_pos = self.container_lbox.focus
-            log.debug("Previous focus item: {}".format(old_pos))
-            if old_pos == self.btn_columns:
-                if self.btn_columns.focus_position == 1:
-                    return self.btn_columns.set_focus(self.btn_ok)
         return super().keypress(size, key)
 
     def add_buttons(self):
-        """ Adds default OK/Cancel buttons for dialog
+        """ Adds default CONFIRM/Cancel buttons for dialog
         """
-        self.btn_ok = AttrWrap(Button("Ok", self.submit),
-                               'button', 'button focus')
+        self.btn_confirm = AttrWrap(Button("Confirm", self.submit),
+                                    'button_primary',
+                                    'button_primary focus')
         self.btn_cancel = AttrWrap(Button("Cancel", self.cancel),
-                                   'button', 'button focus')
-        self.btn_columns = Columns([self.btn_ok, self.btn_cancel])
+                                   'button_secondary',
+                                   'button_secondary focus')
+        self.btn_pile = Pile([self.btn_confirm, self.btn_cancel])
 
     def add_input(self, key, caption, **kwargs):
         """ Adds input boxes while setting their label attributes for
@@ -110,11 +99,12 @@ class Dialog(WidgetWrap):
         self.container_lbox = ListBox(
             [self.container_box_adapter,
              Divider(),
-             self.btn_columns])
+             self.btn_pile])
 
         return LineBox(
             BoxAdapter(self.container_lbox,
-                       height=len(total_items) + 2),
+                       height=len(total_items) + 1 +
+                       len(self.btn_pile.contents)),
             title=self.title)
 
     def submit(self, button):

@@ -44,13 +44,6 @@ class Config:
         ('header_menu', 'light gray', 'dark gray'),
         ('header_title', 'light gray,bold', 'dark magenta'),
         ('subheading', 'dark gray,bold', 'default'),
-        # TODO MERGE: item marked 'from head' are changed in master vs
-        # head and need to be reviewed. the uncommented versions of
-        # these three are as they were in master, below
-
-        # from head: ('dialog',       'black',      'light gray'),
-        # from head: ('button', 'dark blue', 'light gray'),
-        # from head: ('button_focus', 'light gray', 'dark gray'),
         ('deploy_highlight_start', 'dark gray', 'light green'),
         ('deploy_highlight_end', 'dark gray', 'dark green'),
         ('disabled_button', 'black', 'white'),
@@ -71,8 +64,13 @@ class Config:
         ('pending_icon_on', 'light blue,bold', 'default'),
         ('pending_icon', 'dark blue', 'default'),
         ('success_icon', 'light green', 'default'),
-        ('button', 'white', 'dark gray'),
-        ('button focus', 'dark magenta,bold', 'dark gray')
+        ('button_primary', 'white', 'dark gray', 'default', 'white', '#d51'),
+        ('button_primary focus', 'dark blue,bold', 'dark gray', 'default',
+         'white', '#b30'),
+        ('button_secondary', 'white', 'dark gray', 'default',
+         '#aaa', 'dark gray'),
+        ('button_secondary focus', 'dark blue,bold', 'dark gray', 'default',
+         'white', 'dark gray')
     ]
 
     def __init__(self):

@@ -76,7 +76,17 @@ def parse_options(argv, cfg):
 
 
 if __name__ == '__main__':
-    setup_logger()
+    try:
+        setup_logger()
+    except PermissionError:
+        print("Permission error accessing log file.\n"
+              "This probably indicates a broken partial install.\n"
+              "Please use 'openstack-install -u' to uninstall, "
+              "and try again.\n"
+              "(You may want to save a copy of ~/.cloud-install/commands.log"
+              " for reporting a bug.)")
+        sys.exit()
+
     logger = logging.getLogger('cloudinstall')
     cfg = Config()
     opts = parse_options(sys.argv[1:], cfg)

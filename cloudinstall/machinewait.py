@@ -17,7 +17,7 @@
 import logging
 import os
 import random
-from urwid import (AttrMap, Button, Divider, Filler, GridFlow, Pile,
+from urwid import (AttrMap, Button, Divider, Filler, Padding, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.config import Config
@@ -46,12 +46,17 @@ class MachineWaitView(WidgetWrap):
     def build_widgets(self):
         self.message = Text("Please review available machines in MAAS",
                             align='center')
-        self.button_grid = GridFlow([], 22, 1, 1, 'center')
+
+        self.button_pile = Pile([])
 
         self.main_pile = Pile([self.message,
                                Divider(),
-                               self.button_grid])
+                               self.button_pile])
         return Filler(self.main_pile, valign='middle')
+
+    def keypress(self, size, key):
+        key = {'tab': 'down', 'shift tab': 'up'}.get(key, key)
+        return super().keypress(size, key)
 
     def scroll_down(self):
         pass
@@ -93,24 +98,36 @@ class MachineWaitView(WidgetWrap):
                      for status, condition
                      in statuses]
         contents += [(Divider(), self.main_pile.options()),
-                     (self.button_grid, self.main_pile.options())]
+                     (self.button_pile, self.main_pile.options())]
         self.main_pile.contents = contents
 
         if not global_ok:
-            b = AttrMap(SelectableIcon("{:^22}".format(" ( Can't Continue )")),
+            b = AttrMap(SelectableIcon(" ( Can't Continue ) "),
                         'disabled_button', 'disabled_button_focus')
         else:
-            b = AttrMap(Button("{:^22}".format("Continue"),
+            b = AttrMap(Button("Continue",
                                on_press=self.do_continue),
-                        'button', 'button_focus')
+                        'button_primary', 'button_primary focus')
 
-        self.button_grid.contents = [(b, self.button_grid.options())]
+        cancel_b = AttrMap(Button("Cancel",
+                                  on_press=self.do_cancel),
+                           'button_secondary',
+                           'button_secondary focus')
+        self.button_pile.contents = [(Padding(cancel_b, width=24,
+                                              align='center'),
+                                      self.button_pile.options()),
+                                     (Padding(b, width=24, align='center'),
+                                      self.button_pile.options())]
+
         # ensure that the button is always focused:
         self.main_pile.focus_position = len(self.main_pile.contents) - 1
 
     @utils.async
     def do_continue(self, *args, **kwargs):
         self.installer.do_install()
+
+    def do_cancel(self, *args, **kwargs):
+        raise SystemExit("Installation cancelled.")
 
 
 class Spinner:

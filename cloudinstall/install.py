@@ -106,6 +106,9 @@ class InstallController(DisplayController):
                                        self.config.STYLES,
                                        handle_mouse=True,
                                        unhandled_input=self.header_hotkeys)
+            utils.make_screen_hicolor(self.loop.screen)
+            self.loop.screen.register_palette(self.config.STYLES)
+            log.debug("loop's screen is {}".format(self.loop.screen))
 
         self.info_message("Get started by entering an OpenStack password "
                           "for your cloud")
