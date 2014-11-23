@@ -54,7 +54,6 @@ def parse_options(*args, **kwds):
     return parser.parse_args()
 
 if __name__ == '__main__':
-    utils.setup_term_colors()
     config = Config()
     try:
         log.setup_logger()

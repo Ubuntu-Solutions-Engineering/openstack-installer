@@ -28,6 +28,7 @@ import random
 import fnmatch
 import logging
 import traceback
+import urwid
 from threading import Thread
 from functools import wraps
 import time
@@ -687,3 +688,10 @@ def make_screen_hicolor(screen):
     """
     screen.set_terminal_properties(256)
     screen.reset_default_terminal_palette()
+    return screen
+
+
+def get_hicolor_screen(palette):
+    screen = urwid.raw_display.Screen()
+    screen.register_palette(palette)
+    return make_screen_hicolor(screen)
