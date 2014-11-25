@@ -69,6 +69,10 @@ class SingleInstall(InstallBase):
         utils.container_create(self.container_name, self.userdata)
         utils.container_start(self.container_name)
         utils.container_wait(self.container_name)
+
+        # Set autostart bit
+        with open(os.path.join(self.container_abspath, 'config'), 'a+') as f:
+            f.write("lxc.start.auto = 1\nlxc.start.delay = 5\n")
         tries = 1
         while not self.cloud_init_finished():
             time.sleep(1)
