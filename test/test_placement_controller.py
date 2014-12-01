@@ -313,3 +313,10 @@ class PlacementControllerTestCase(unittest.TestCase):
         m2 = next((m for m in singlepc.machines_used()
                    if m.instance_id == 'fake_iid_2'))
         self.assertEqual(m2.constraints, {'cpu': 8})
+
+    def test_is_assigned(self):
+        self.assertFalse(self.pc.is_assigned(CharmSwiftProxy,
+                                             self.mock_machine))
+        self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
+        self.assertTrue(self.pc.is_assigned(CharmSwiftProxy,
+                                            self.mock_machine))
