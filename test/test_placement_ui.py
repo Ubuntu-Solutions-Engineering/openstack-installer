@@ -74,7 +74,7 @@ class ServiceWidgetTestCase(unittest.TestCase):
         """Widget showing a required charm should have a label showing how
         many units are required"""
         w = ServiceWidget(CharmKeystone, self.pc)
-        w.update()
+
         self.assertTrue(search_in_widget("0 of 1 placed", w))
 
     def test_required_label_not_shown(self):
@@ -82,35 +82,28 @@ class ServiceWidgetTestCase(unittest.TestCase):
         how many units are required.
         """
         w = ServiceWidget(CharmJujuGui, self.pc)
-        w.update()
 
         self.assertFalse(search_in_widget(".* of .* placed", w))
 
     def test_show_assignments(self):
         """Widget with show_assignments set should show assignments"""
-        w = ServiceWidget(CharmNovaCompute, self.pc, show_assignments=True)
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        log.debug(self.pc.machines_for_charm(CharmNovaCompute))
-        w.update()
+        w = ServiceWidget(CharmNovaCompute, self.pc, show_assignments=True)
 
         self.assertTrue(search_in_widget("LXC.*machine1-hostname", w))
 
     def test_dont_show_assignments(self):
         """Widget with show_assignments set to FALSE should NOT show
         assignments"""
-        w = ServiceWidget(CharmNovaCompute, self.pc, show_assignments=False)
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        log.debug(self.pc.machines_for_charm(CharmNovaCompute))
-        w.update()
+        w = ServiceWidget(CharmNovaCompute, self.pc, show_assignments=False)
 
         self.assertFalse(search_in_widget("LXC.*machine1-hostname", w))
 
     def test_show_constraints(self):
         """Widget with show_constraints set should show constraints"""
-        w = ServiceWidget(CharmNovaCompute, self.pc, show_constraints=True)
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        log.debug(self.pc.machines_for_charm(CharmNovaCompute))
-        w.update()
+        w = ServiceWidget(CharmNovaCompute, self.pc, show_constraints=True)
 
         conpat = ("constraints.*" +
                   ".*".join(CharmNovaCompute.constraints.keys()))
@@ -120,9 +113,35 @@ class ServiceWidgetTestCase(unittest.TestCase):
     def test_dont_show_constraints(self):
         """Widget with show_constraints set to FALSE should NOT show
         constraints"""
-        w = ServiceWidget(CharmNovaCompute, self.pc, show_constraints=False)
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        log.debug(self.pc.machines_for_charm(CharmNovaCompute))
-        w.update()
-
+        w = ServiceWidget(CharmNovaCompute, self.pc, show_constraints=False)
         self.assertFalse(search_in_widget("constraints", w))
+
+    def test_show_actions(self):
+        """Actions should be shown as buttons"""
+        fake_action_func = MagicMock()
+        actions = [("fake-action", fake_action_func)]
+        w = ServiceWidget(CharmNovaCompute, self.pc, actions=actions)
+        self.assertTrue(search_in_widget("fake-action", w))
+
+    def test_actions_use_pred(self):
+        """Action predicates control whether a button appears (disabled)"""
+
+        # NOTE: this test assumes that disabled buttons are just the
+        # button label with parentheses.
+
+        fake_action_func = MagicMock()
+        fake_pred = MagicMock()
+        fake_pred.return_value = False
+        actions = [(fake_pred, "fake-action", fake_action_func)]
+        w = ServiceWidget(CharmNovaCompute, self.pc, actions=actions)
+
+        self.assertTrue(search_in_widget("\(.*fake-action.*\)", w))
+        fake_pred.assert_called_with(CharmNovaCompute)
+
+        fake_pred.return_value = True
+        fake_pred.reset_mock()
+
+        w.update()
+        self.assertTrue(search_in_widget("<.*fake-action.*>", w))
+        fake_pred.assert_called_with(CharmNovaCompute)
