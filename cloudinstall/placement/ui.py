@@ -196,7 +196,7 @@ class ServiceWidget(WidgetWrap):
 
     controller - a PlacementController instance
 
-    actions - a list of ('label', function) pairs that wil be used to
+    actions - a list of ('label', function) pairs that will be used to
     create buttons for each machine.  The machine will be passed to
     the function as userdata.
 
