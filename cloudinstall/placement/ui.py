@@ -212,8 +212,7 @@ class ServiceWidget(WidgetWrap):
     """
 
     def __init__(self, charm_class, controller, actions=None,
-                 show_constraints=False, show_assignments=False,
-                 show_required_label=False):
+                 show_constraints=False, show_assignments=False):
         self.charm_class = charm_class
         self.controller = controller
         if actions is None:
@@ -222,7 +221,6 @@ class ServiceWidget(WidgetWrap):
             self.actions = actions
         self.show_constraints = show_constraints
         self.show_assignments = show_assignments
-        self.show_required_label = show_required_label
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -522,8 +520,7 @@ class ServicesList(WidgetWrap):
 
     def add_service_widget(self, charm_class):
         sw = ServiceWidget(charm_class, self.controller, self.actions,
-                           self.show_constraints,
-                           show_required_label=self.unplaced_only)
+                           self.show_constraints)
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))
