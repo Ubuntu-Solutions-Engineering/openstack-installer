@@ -73,7 +73,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.assign(self.mock_machine, CharmNovaCompute, assignment_type)
         print("assignments is {}".format(self.pc.assignments))
         machines = self.pc.machines_for_charm(CharmNovaCompute)
-        print('machines fo charm is {}'.format(machines))
+        print('machines for charm is {}'.format(machines))
         self.assertEqual(machines,
                          {assignment_type: [self.mock_machine]})
 
