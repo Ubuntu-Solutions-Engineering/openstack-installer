@@ -155,6 +155,13 @@ class Selector(Dialog):
             self.add_radio(item)
         self.show()
 
+    def submit(self, button):
+        for item in self.input_items.keys():
+            _item = self.input_items[item]
+            if _item.get_state():
+                selected_item = _item.label
+        self.emit_done_signal(selected_item)
+
 
 class SelectorWithDescription(Dialog):
 
