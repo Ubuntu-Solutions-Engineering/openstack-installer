@@ -28,7 +28,7 @@ from cloudinstall.charms.compute import CharmNovaCompute
 
 from cloudinstall.placement.controller import (AssignmentType,
                                                PlacementController)
-from cloudinstall.placement.ui import (ServiceWidget)
+from cloudinstall.placement.ui import (MachineWidget, ServiceWidget)
 
 
 log = logging.getLogger('cloudinstall.test_placement_ui')
@@ -45,6 +45,26 @@ def search_in_widget(pat, w):
     return matches is not None
 
 
+def make_fake_machine(name):
+    m = MagicMock(name=name)
+    pmid = PropertyMock(return_value="fake-iid-{}".format(name))
+    type(m).instance_id = pmid
+    hnstr = "{}-hostname".format(name)
+    pmhostname = PropertyMock(return_value=hnstr)
+    type(m).hostname = pmhostname
+    pmstatus = PropertyMock(return_value="{}-status".format(name))
+    type(m).status = pmstatus
+    pmarch = PropertyMock(return_value="{}-arch".format(name))
+    type(m).arch = pmarch
+    pmcores = PropertyMock(return_value="{}-cores".format(name))
+    type(m).cpu_cores = pmcores
+    pmmem = PropertyMock(return_value="{}-mem".format(name))
+    type(m).mem = pmmem
+    pmstorage = PropertyMock(return_value="{}-storage".format(name))
+    type(m).storage = pmstorage
+    return m
+
+
 class ServiceWidgetTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -53,15 +73,6 @@ class ServiceWidgetTestCase(unittest.TestCase):
 
         self.pc = PlacementController(self.mock_maas_state,
                                       self.mock_opts)
-
-        def make_fake_machine(name):
-            m = MagicMock(name=name)
-            pmid = PropertyMock(return_value="fake-iid-{}".format(name))
-            type(m).instance_id = pmid
-            hnstr = "{}-hostname".format(name)
-            pmhostname = PropertyMock(return_value=hnstr)
-            type(m).hostname = pmhostname
-            return m
 
         self.mock_machine = make_fake_machine('machine1')
         self.mock_machine_2 = make_fake_machine('machine2')
@@ -145,3 +156,78 @@ class ServiceWidgetTestCase(unittest.TestCase):
         w.update()
         self.assertTrue(search_in_widget("<.*fake-action.*>", w))
         fake_pred.assert_called_with(CharmNovaCompute)
+
+
+class MachineWidgetTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_maas_state = MagicMock()
+        self.mock_opts = MagicMock()
+
+        self.pc = PlacementController(self.mock_maas_state,
+                                      self.mock_opts)
+        self.mock_machine = make_fake_machine('machine1')
+
+        self.mock_machines = [self.mock_machine]
+
+        self.mock_maas_state.machines.return_value = self.mock_machines
+
+    def test_hardware_shown(self):
+        """show_hardware=True should show hardware details"""
+        w = MachineWidget(self.mock_machine, self.pc, show_hardware=True)
+        self.assertTrue(search_in_widget("arch", w))
+        self.assertTrue(search_in_widget("cores", w))
+        self.assertTrue(search_in_widget("mem", w))
+        self.assertTrue(search_in_widget("storage", w))
+
+    def test_hardware_not_shown(self):
+        """show_hardware=False should NOT show hardware details"""
+        w = MachineWidget(self.mock_machine, self.pc, show_hardware=False)
+        self.assertFalse(search_in_widget("arch", w))
+        self.assertFalse(search_in_widget("cores", w))
+        self.assertFalse(search_in_widget("mem", w))
+        self.assertFalse(search_in_widget("storage", w))
+
+    def test_show_assignments(self):
+        """Widget with show_assignments set should show assignments"""
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        w = MachineWidget(self.mock_machine, self.pc, show_assignments=True)
+
+        self.assertTrue(search_in_widget("LXC.*Compute", w))
+
+    def test_dont_show_assignments(self):
+        """Widget with show_assignments set to FALSE should NOT show
+        assignments"""
+        self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
+        w = MachineWidget(self.mock_machine, self.pc, show_assignments=False)
+
+        self.assertFalse(search_in_widget("LXC.*Compute", w))
+
+    def test_show_actions(self):
+        """Actions passed as 2-tuples should always be shown as buttons"""
+        fake_action_func = MagicMock()
+        actions = [("fake-action", fake_action_func)]
+        w = MachineWidget(self.mock_machine, self.pc, actions=actions)
+        self.assertTrue(search_in_widget("fake-action", w))
+
+    def test_actions_use_pred(self):
+        """Action predicates control whether a button appears (disabled)"""
+
+        # NOTE: this test assumes that disabled buttons are just the
+        # button label with parentheses.
+
+        fake_action_func = MagicMock()
+        fake_pred = MagicMock()
+        fake_pred.return_value = False
+        actions = [(fake_pred, "fake-action", fake_action_func)]
+        w = MachineWidget(self.mock_machine, self.pc, actions=actions)
+
+        self.assertTrue(search_in_widget("\(.*fake-action.*\)", w))
+        fake_pred.assert_called_with(self.mock_machine)
+
+        fake_pred.return_value = True
+        fake_pred.reset_mock()
+
+        w.update()
+        self.assertTrue(search_in_widget("<.*fake-action.*>", w))
+        fake_pred.assert_called_with(self.mock_machine)
