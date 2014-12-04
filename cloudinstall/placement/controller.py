@@ -19,7 +19,7 @@ import logging
 from multiprocessing import cpu_count
 import yaml
 
-from cloudinstall.machine import satisfies
+from cloudinstall.maas import satisfies
 from cloudinstall.utils import load_charms
 
 log = logging.getLogger('cloudinstall.placement')

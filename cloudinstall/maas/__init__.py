@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from cloudinstall.machine import Machine
+from cloudinstall.utils import human_to_mb
 from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from collections import Counter
@@ -28,6 +29,56 @@ import time
 
 
 log = logging.getLogger('cloudinstall.maas')
+
+
+def satisfies(machine, constraints):
+    """Evaluates whether a MAAS machine's hardware matches constraints.
+
+    If constraints is None or an empty dict, then any machine will be
+    evaluated as satisfying the constraints.
+
+    .. note::
+
+        That if a machine has '*' as a value, that value satisfies
+        any constraint.
+
+    If successful the return will be (True, [])
+
+    :rtype: tuple
+    :returns: (bool, [list-of-failed constraint keys])
+
+    """
+    kmap = dict(mem='memory',
+                arch='architecture',
+                storage='storage',
+                cpu_cores='cpu_count')
+    kmap['root-disk'] = 'storage'
+
+    cons_checks = []
+
+    if constraints is None:
+        return (True, [])
+
+    for k, v in constraints.items():
+        if k == 'arch':
+            mval = machine.machine[kmap[k]]
+            if mval != '*' and mval != v:
+                cons_checks.append(k)
+        else:
+            mval = machine.machine[kmap[k]]
+
+            if mval == '*':
+                # '*' always satisfies.
+                continue
+
+            if not str(v).isdecimal():
+                v = human_to_mb(v)
+
+            if mval < v:
+                cons_checks.append(k)
+
+    rval = (len(cons_checks) == 0), cons_checks
+    return rval
 
 
 @unique
