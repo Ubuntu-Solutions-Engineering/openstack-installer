@@ -35,9 +35,16 @@ class SatisfiesTestCase(unittest.TestCase):
                'memory': 2048,
                'architecture': 'amd64'}
         self.machine1 = MaasMachine('m1id', m1d)
+        m2d = {'cpu_count': '*',
+               'storage': '*',
+               'memory': '*',
+               'architecture': '*'}
+        self.machine2 = MaasMachine('m2id', m2d)
 
-    def _do_test(self, cons, nfailures):
-        sat, failures = satisfies(self.machine1, cons)
+    def _do_test(self, cons, nfailures, machine=None):
+        if not machine:
+            machine = self.machine1
+        sat, failures = satisfies(machine, cons)
         self.assertEqual(sat, nfailures == 0)
         self.assertEqual(len(failures), nfailures)
 
@@ -61,6 +68,11 @@ class SatisfiesTestCase(unittest.TestCase):
 
     def test_handles_units_insufficient(self):
         self._do_test(dict(mem='64G'), 1)
+
+    def test_asterisk_satisfies_all(self):
+        self._do_test(dict(mem='64G'), 0, machine=self.machine2)
+        self._do_test(dict(storage='64G'), 0, machine=self.machine2)
+        self._do_test(dict(arch='ENIAC'), 0, machine=self.machine2)
 
 
 class MaasMachineTestCase(unittest.TestCase):
