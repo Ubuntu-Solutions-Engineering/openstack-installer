@@ -22,9 +22,57 @@ import unittest
 from unittest.mock import MagicMock, PropertyMock
 import json
 
-from cloudinstall.maas import MaasMachine, MaasMachineStatus, MaasState
+from cloudinstall.maas import (MaasMachine, MaasMachineStatus, MaasState,
+                               satisfies)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'maas-output')
+
+
+class SatisfiesTestCase(unittest.TestCase):
+    def setUp(self):
+        m1d = {'cpu_count': 2,
+               'storage': 20,
+               'memory': 2048,
+               'architecture': 'amd64'}
+        self.machine1 = MaasMachine('m1id', m1d)
+        m2d = {'cpu_count': '*',
+               'storage': '*',
+               'memory': '*',
+               'architecture': '*'}
+        self.machine2 = MaasMachine('m2id', m2d)
+
+    def _do_test(self, cons, nfailures, machine=None):
+        if not machine:
+            machine = self.machine1
+        sat, failures = satisfies(machine, cons)
+        self.assertEqual(sat, nfailures == 0)
+        self.assertEqual(len(failures), nfailures)
+
+    def test_satisfies_empty(self):
+        self._do_test(dict(), 0)
+
+    def test_satisfies_some(self):
+        self._do_test(dict(storage=15, arch='amd64'), 0)
+
+    def test_satisfies_nomatch(self):
+        self._do_test(dict(storage=15, arch='ENIAC'), 1)
+
+    def test_satisfies_insufficient(self):
+        self._do_test(dict(storage=100000000), 1)
+
+    def test_satisfies_multifail(self):
+        self._do_test({'cpu_cores': 20, 'arch': 'ENIAC'}, 2)
+
+    def test_handles_units_sufficient(self):
+        self._do_test(dict(mem='2G'), 0)
+
+    def test_handles_units_insufficient(self):
+        self._do_test(dict(mem='64G'), 1)
+
+    def test_asterisk_satisfies_all(self):
+        self._do_test(dict(mem='64G'), 0, machine=self.machine2)
+        self._do_test(dict(storage='64G'), 0, machine=self.machine2)
+        self._do_test(dict(arch='ENIAC'), 0, machine=self.machine2)
 
 
 class MaasMachineTestCase(unittest.TestCase):
