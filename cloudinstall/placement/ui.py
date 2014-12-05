@@ -21,7 +21,7 @@ from urwid import (AttrMap, Button, Columns, connect_signal, Divider,
                    Pile, SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.config import Config
-from cloudinstall.machine import satisfies
+from cloudinstall.maas import satisfies
 from cloudinstall.placement.controller import AssignmentType
 from cloudinstall.ui import InfoDialog
 from cloudinstall.utils import format_constraint
