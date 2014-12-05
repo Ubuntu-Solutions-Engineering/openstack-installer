@@ -44,10 +44,11 @@ class MaasMachineStatus(Enum):
     MISSING = 3
     READY = 4
     RESERVED = 5
-    DEPLOYED = 6  # as of maas 1.7, state #s 6, and 9-15 are mapped
-                  # onto 6 by the view that services the nodes/
-                  # url. so we will only ever see '6' for any of
-                  # these, until sometime in the future.
+    # as of maas 1.7, state #s 6, and 9-15 are mapped
+    # onto 6 by the view that services the nodes/
+    # url. so we will only ever see '6' for any of
+    # these, until sometime in the future.
+    DEPLOYED = 6
     RETIRED = 7
     BROKEN = 8
     DEPLOYING = 9  # see DEPLOYED
