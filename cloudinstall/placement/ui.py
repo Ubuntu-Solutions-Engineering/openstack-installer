@@ -392,8 +392,6 @@ class MachinesList(WidgetWrap):
             filter_label = "{} {}".format(m.filter_label(),
                                           assignment_names)
 
-            log.debug("filter_label for {} is '{}'".format(m, filter_label))
-
             if self.filter_string != "" and \
                self.filter_string not in filter_label:
                 self.remove_machine(m)
