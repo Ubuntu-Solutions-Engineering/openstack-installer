@@ -20,7 +20,7 @@
 import logging
 import re
 import unittest
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock, patch
 
 from cloudinstall.charms.jujugui import CharmJujuGui
 from cloudinstall.charms.keystone import CharmKeystone
@@ -28,7 +28,8 @@ from cloudinstall.charms.compute import CharmNovaCompute
 
 from cloudinstall.placement.controller import (AssignmentType,
                                                PlacementController)
-from cloudinstall.placement.ui import (MachineWidget, ServiceWidget)
+from cloudinstall.placement.ui import (MachinesList, MachineWidget,
+                                       ServiceWidget)
 
 
 log = logging.getLogger('cloudinstall.test_placement_ui')
@@ -45,23 +46,22 @@ def search_in_widget(pat, w):
     return matches is not None
 
 
-def make_fake_machine(name):
+def make_fake_machine(name, md=None):
     m = MagicMock(name=name)
-    pmid = PropertyMock(return_value="fake-iid-{}".format(name))
-    type(m).instance_id = pmid
-    hnstr = "{}-hostname".format(name)
-    pmhostname = PropertyMock(return_value=hnstr)
-    type(m).hostname = pmhostname
-    pmstatus = PropertyMock(return_value="{}-status".format(name))
-    type(m).status = pmstatus
-    pmarch = PropertyMock(return_value="{}-arch".format(name))
-    type(m).arch = pmarch
-    pmcores = PropertyMock(return_value="{}-cores".format(name))
-    type(m).cpu_cores = pmcores
-    pmmem = PropertyMock(return_value="{}-mem".format(name))
-    type(m).mem = pmmem
-    pmstorage = PropertyMock(return_value="{}-storage".format(name))
-    type(m).storage = pmstorage
+    m.instance_id = "fake-iid-{}".format(name)
+    m.hostname = "{}-hostname".format(name)
+    m.status = "{}-status".format(name)
+
+    if md is None:
+        md = {}
+
+    m.machine = md
+    m.arch = md.get("arch", "{}-arch".format(name))
+    m.cpu_cores = md.get("cpu_count", "{}-cpu_count".format(name))
+    m.mem = md.get("mem", "{}-mem".format(name))
+    m.storage = md.get("storage", "{}-storage".format(name))
+    m.filter_label.return_value = "{}-filter_label".format(name)
+
     return m
 
 
@@ -231,3 +231,68 @@ class MachineWidgetTestCase(unittest.TestCase):
         w.update()
         self.assertTrue(search_in_widget("<.*fake-action.*>", w))
         fake_pred.assert_called_with(self.mock_machine)
+
+
+@patch('cloudinstall.placement.ui.MachineWidget')
+class MachinesListTestCase(unittest.TestCase):
+    def setUp(self):
+        self.mock_maas_state = MagicMock()
+        self.mock_opts = MagicMock()
+
+        self.pc = PlacementController(self.mock_maas_state,
+                                      self.mock_opts)
+        self.mock_machine = make_fake_machine('machine1', {'cpu_count': 3})
+        self.mock_machine2 = make_fake_machine('machine2')
+        self.mock_machine3 = make_fake_machine('machine3')
+
+        self.mock_machines = [self.mock_machine]
+
+        self.mock_maas_state.machines.return_value = self.mock_machines
+
+        self.actions = []
+
+    def test_widgets_config(self, mock_machinewidget):
+        for show_hardware in [False, True]:
+            for show_assignments in [False, True]:
+                MachinesList(self.pc, self.actions,
+                             show_hardware=show_hardware,
+                             show_assignments=show_assignments)
+                mock_machinewidget.assert_called_with(
+                    self.mock_machine,
+                    self.pc,
+                    self.actions,
+                    show_hardware,
+                    show_assignments)
+                mock_machinewidget.reset_mock()
+
+    def test_show_matching_constraints(self, mock_machinewidget):
+        ml = MachinesList(self.pc, self.actions,
+                          {'cpu_cores': 2})
+        self.assertEqual(1, len(ml.machine_widgets))
+
+    def test_hide_non_matching_constraints(self, mock_machinewidget):
+        ml = MachinesList(self.pc, self.actions,
+                          {'cpu_cores': 16384})
+        self.assertEqual(0, len(ml.machine_widgets))
+
+    def test_show_matching_filter(self, mock_machinewidget):
+        self.mock_maas_state.machines.return_value = [self.mock_machine,
+                                                      self.mock_machine2,
+                                                      self.mock_machine3]
+        # a little extra work to ensure that calls to
+        # MockWidget.__init__() return mocks with the intended machine
+        # attribute set:
+        mw1 = MagicMock(name="mw1")
+        mw1.machine = self.mock_machine
+        mw2 = MagicMock(name="mw2")
+        mw2.machine = self.mock_machine2
+        mw3 = MagicMock(name="mw3")
+        mw3.machine = self.mock_machine3
+        mock_machinewidget.side_effect = [mw1, mw2, mw3]
+
+        ml = MachinesList(self.pc, self.actions)
+        self.assertEqual(3, len(ml.machine_widgets))
+
+        ml.filter_string = "machine1-filter_label"
+        ml.update()
+        self.assertEqual(1, len(ml.machine_widgets))
