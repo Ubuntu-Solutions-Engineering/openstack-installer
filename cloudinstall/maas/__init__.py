@@ -21,7 +21,7 @@ from cloudinstall.utils import human_to_mb
 from maasclient.auth import MaasAuth
 from maasclient import MaasClient
 from collections import Counter
-from enum import Enum, unique
+from enum import Enum
 import json
 import logging
 import os
@@ -81,7 +81,6 @@ def satisfies(machine, constraints):
     return rval
 
 
-@unique
 class MaasMachineStatus(Enum):
     """Symbolic names for maas API status numbers.
 
@@ -90,14 +89,27 @@ class MaasMachineStatus(Enum):
     return.
     """
     UNKNOWN = -1
-    DECLARED = 0
+    NEW = 0
     COMMISSIONING = 1
-    FAILED_TESTS = 2
+    FAILED_COMMISSIONING = 2
     MISSING = 3
     READY = 4
     RESERVED = 5
-    ALLOCATED = 6
+    # as of maas 1.7, state #s 6, and 9-15 are mapped
+    # onto 6 by the view that services the nodes/
+    # url. so we will only ever see '6' for any of
+    # these, until sometime in the future.
+    DEPLOYED = 6
     RETIRED = 7
+    BROKEN = 8
+    DEPLOYING = 9  # see DEPLOYED
+    MAAS_1_7_ALLOCATED = 10  # the actual "ALLOCATED" state. see DEPLOYED
+    FAILED_DEPLOYMENT = 11  # see DEPLOYED.
+    RELEASING = 12
+    FAILED_RELEASING = 13
+    DISK_ERASING = 14
+    FAILED_DISK_ERASING = 15
+    ALLOCATED = 6  # for backward compatibility with internal uses
 
     def __str__(self):
         return self.name.lower()
