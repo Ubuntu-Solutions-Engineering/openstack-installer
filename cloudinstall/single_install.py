@@ -162,7 +162,7 @@ class SingleInstall(InstallBase):
         self.register_tasks([
             "Initializing Environment",
             "Creating container",
-            "Starting Juju server"])
+            "Bootstrapping Juju"])
 
         self.start_task("Initializing Environment")
         self.do_install()
@@ -199,8 +199,8 @@ class SingleInstall(InstallBase):
 
         # start the party
         cloud_status_bin = ['openstack-status']
-        self.display_controller.info_message("Bootstrapping Juju ..")
-        self.start_task("Starting Juju server")
+        self.display_controller.info_message("Bootstrapping Juju")
+        self.start_task("Bootstrapping Juju")
         utils.container_run(self.container_name, "juju bootstrap")
         utils.container_run(self.container_name, "juju status")
 
@@ -208,6 +208,6 @@ class SingleInstall(InstallBase):
             log.info("Done installing, stopping here per --install-only.")
             sys.exit(0)
 
-        self.display_controller.info_message("Starting cloud deployment ..")
+        self.display_controller.info_message("Starting cloud deployment")
         utils.container_run_status(
             self.container_name, " ".join(cloud_status_bin))

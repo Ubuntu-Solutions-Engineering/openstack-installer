@@ -100,7 +100,7 @@ class MultiInstall(InstallBase):
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
-        self.start_task("Starting Juju server")
+        self.start_task("Bootstrapping Juju")
         self.display_controller.current_state = InstallState.RUNNING
 
         maas_creds = self.config.maas_creds
@@ -127,7 +127,7 @@ class MultiInstall(InstallBase):
         self.set_perms()
 
         # Starts the party
-        self.display_controller.info_message("Bootstrapping juju")
+        self.display_controller.info_message("Bootstrapping Juju")
 
         dbgflags = ""
         if os.getenv("DEBUG_JUJU_BOOTSTRAP"):
@@ -192,7 +192,7 @@ class MultiInstallExistingMaas(MultiInstall):
         self.do_install()
 
     def run(self):
-        self.register_tasks(["Starting Juju server"] +
+        self.register_tasks(["Bootstrapping Juju"] +
                             self.post_tasks)
 
         msg = "Waiting for sufficient resources in MAAS"
@@ -224,7 +224,7 @@ class MultiInstallNewMaas(MultiInstall):
                              "Searching for existing DHCP servers",
                              "Configuring MAAS networks",
                              "Importing MAAS boot images",
-                             "Starting Juju server"] +
+                             "Bootstrapping Juju"] +
                             self.post_tasks)
 
         self.prompt_for_interface()
