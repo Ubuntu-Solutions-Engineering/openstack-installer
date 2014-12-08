@@ -529,11 +529,11 @@ class Controller(DisplayController):
 
     def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
-        self.info_message('Copying network specifications to machine')
+        log.debug('Copying network specifications to machine')
         srcpath = path.join(self.config.tmpl_path, 'lxc-host-only')
         destpath = "/tmp/lxc-host-only"
         utils.remote_cp(machine_id, src=srcpath, dst=destpath)
-        self.info_message('Updating network configuration for machine')
+        log.debug('Updating network configuration for machine')
         utils.remote_run(machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only")
         utils.remote_run(machine_id,
