@@ -440,7 +440,7 @@ def container_run(name, cmd):
     log.debug("Running in container: {0}".format(wrapped_cmd))
 
     try:
-        ret = check_output(wrapped_cmd, stderr=STDOUT, shell=True)
+        ret = check_output(wrapped_cmd, shell=True)
         log.debug(ret)
         return ret
     except CalledProcessError as e:
