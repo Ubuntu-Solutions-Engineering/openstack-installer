@@ -20,11 +20,6 @@ Add the OpenStack installer ppa to your system.
    Adding the ppa is only necessary until an official release to the
    archives has been announced.
 
-   Also note that currently we use the **testing** ppa for MAAS
-   The installers release should coincide with the next version
-   of MAAS. Once that occurs the ppa location will be updated
-   to reflect the stable ppa locations.
-
 For a proper installation the system must have an available network interface that can be managed by MAAS
 and respond to DNS/DHCP requests. The private network can then be configured to forward traffic out via public
 network interface.
