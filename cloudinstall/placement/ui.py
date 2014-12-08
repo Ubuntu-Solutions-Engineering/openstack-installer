@@ -317,6 +317,12 @@ class MachinesList(WidgetWrap):
     show_hardware - bool, whether or not to show the hardware details
     for each of the machines
 
+    title_widgets - A Text Widget to be used in place of the default
+    title.
+
+    show_assignments - bool, whether or not to show the assignments
+    for each of the machines.
+
     """
 
     def __init__(self, controller, actions, constraints=None,
