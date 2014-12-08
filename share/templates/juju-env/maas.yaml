@@ -10,6 +10,7 @@ environments:
     authorized-keys-path: ~/.ssh/id_rsa.pub
     apt-http-proxy: 'http://{{maas_server}}:8000/'
     lxc-clone: true
+    bootstrap-timeout: 3600
 
   openstack:
     type: openstack
