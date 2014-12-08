@@ -492,13 +492,14 @@ class StatusBar(WidgetWrap):
         """
         return self._openstack_rel.set_text(text)
 
-    def set_dashboard_url(self, ip=None):
+    def set_dashboard_url(self, ip=None, user=None, password=None):
         """ sets horizon dashboard url """
         text = "Openstack Dashboard: "
         if not ip:
             text += "(pending)"
         else:
-            text += "http://{}/horizon".format(ip)
+            text += "http://{}/horizon l:{} p:{}".format(
+                ip, user, password)
         return self._horizon_url.set_text(text)
 
     def set_jujugui_url(self, ip=None):
@@ -722,8 +723,8 @@ class PegasusGUI(WidgetWrap):
     def status_info_message(self, message):
         self.frame.footer.info_message(message)
 
-    def status_dashboard_url(self, ip):
-        self.frame.footer.set_dashboard_url(ip)
+    def status_dashboard_url(self, ip, user, password):
+        self.frame.footer.set_dashboard_url(ip, user, password)
 
     def status_jujugui_url(self, ip):
         self.frame.footer.set_jujugui_url(ip)
