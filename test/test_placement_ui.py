@@ -29,7 +29,7 @@ from cloudinstall.charms.compute import CharmNovaCompute
 from cloudinstall.placement.controller import (AssignmentType,
                                                PlacementController)
 from cloudinstall.placement.ui import (MachinesList, MachineWidget,
-                                       ServiceWidget)
+                                       ServicesList, ServiceWidget)
 
 
 log = logging.getLogger('cloudinstall.test_placement_ui')
@@ -296,3 +296,185 @@ class MachinesListTestCase(unittest.TestCase):
         ml.filter_string = "machine1-filter_label"
         ml.update()
         self.assertEqual(1, len(ml.machine_widgets))
+
+
+@patch('cloudinstall.placement.ui.ServiceWidget')
+class ServicesListTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_maas_state = MagicMock()
+        self.mock_opts = MagicMock()
+
+        self.pc = PlacementController(self.mock_maas_state,
+                                      self.mock_opts)
+        self.mock_machine = make_fake_machine('machine1', {'cpu_count': 3})
+        self.mock_machine2 = make_fake_machine('machine2')
+        self.mock_machine3 = make_fake_machine('machine3')
+
+        self.mock_machines = [self.mock_machine]
+
+        self.mock_maas_state.machines.return_value = self.mock_machines
+
+        self.actions = []
+
+    def test_widgets_config(self, mock_servicewidgetclass):
+        for show_constraints in [False, True]:
+            ServicesList(self.pc, self.actions,
+                         show_constraints=show_constraints)
+
+            mock_servicewidgetclass.assert_any_call(
+                CharmNovaCompute,
+                self.pc,
+                self.actions,
+                show_constraints)
+            mock_servicewidgetclass.reset_mock()
+
+    def test_no_machine_no_constraints(self, mock_servicewidgetclass):
+        with patch.object(self.pc, 'charm_classes') as mock_classesfunc:
+            fc = MagicMock(name='fakeclass1')
+            fc.required_num_units.return_value = 1
+            fc.constraints = {'cpu_count': 1000}
+            mock_classesfunc.return_value = [fc]
+            sl = ServicesList(self.pc, self.actions)
+            self.assertEqual(len(sl.service_widgets), 1)
+
+    def test_machine_checks_constraints(self, mock_servicewidgetclass):
+        mock_machine = make_fake_machine('fm', {'cpu_count': 0,
+                                                'storage': 0,
+                                                'memory': 0})
+        sl = ServicesList(self.pc, self.actions, machine=mock_machine)
+        self.assertEqual(len(sl.service_widgets), 0)
+
+    def test_do_not_show_assigned(self, mock_servicewidgetclass):
+        mock_machine = make_fake_machine('fm', {'cpu_count': 0,
+                                                'storage': 0,
+                                                'memory': 0})
+        self.pc.assign(mock_machine, CharmNovaCompute,
+                       AssignmentType.LXC)
+        sl = ServicesList(self.pc, self.actions, machine=mock_machine)
+        classes = [sw.charm_class for sw in sl.service_widgets]
+        self.assertTrue(CharmNovaCompute not in classes)
+
+    def test_show_type(self, mock_servicewidgetclass):
+        """Test combinations of show_type values.
+
+        This tests three values of show_type with three return values
+        for is_required(): all required, no required, and 1/3
+        required. It's all lumped in one test to consolidate setup.
+
+        """
+        mock_sw1 = MagicMock(name='sw1')
+        mock_sw1.charm_class.charm_name = 'cc1'
+        mock_sw2 = MagicMock(name='sw2')
+        mock_sw2.charm_class.charm_name = 'cc2'
+        mock_sw3 = MagicMock(name='sw3')
+        mock_sw3.charm_class.charm_name = 'cc3'
+        mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                               mock_sw3]
+
+        with patch.object(self.pc, 'service_is_required') as mock_isreq:
+            with patch.object(self.pc, 'charm_classes') as mock_classesfunc:
+                mock_classesfunc.return_value = [MagicMock(name='fake-class-1',
+                                                           charm_name='cc1'),
+                                                 MagicMock(name='fake-class-2',
+                                                           charm_name='cc2'),
+                                                 MagicMock(name='fake-class-3',
+                                                           charm_name='cc3')]
+
+                # First, test when all charms are required
+                mock_isreq.return_value = True
+
+                # rsl shows required charms
+                rsl = ServicesList(self.pc, self.actions, machine=None,
+                                   show_type='required')
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should show all 3
+                self.assertEqual(len(rsl.service_widgets), 3)
+
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+
+                # usl shows ONLY un-required charms
+                usl = ServicesList(self.pc, self.actions, machine=None,
+                                   show_type='non-required')
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should show 0
+                self.assertEqual(len(usl.service_widgets), 0)
+
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+
+                # asl has default show_type='all', showing all charms
+                asl = ServicesList(self.pc, self.actions)
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should show all 3
+                self.assertEqual(len(asl.service_widgets), 3)
+
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+
+                # next, test where no charms are required
+                mock_isreq.return_value = False
+                rsl.update()
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should show 0 charms
+                self.assertEqual(len(rsl.service_widgets), 0)
+
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+
+                usl.update()
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should show all 3
+                self.assertEqual(len(usl.service_widgets), 3)
+
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+
+                asl.update()
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should still show all 3
+                self.assertEqual(len(asl.service_widgets), 3)
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+
+                # next test two un-required and one required charm:
+                mock_isreq.side_effect = [False, True, False]
+                rsl.update()
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should show 1:
+                self.assertEqual(len(rsl.service_widgets), 1)
+
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+                mock_isreq.side_effect = [False, True, False]
+
+                usl.update()
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should show two
+                self.assertEqual(len(usl.service_widgets), 2)
+
+                mock_isreq.reset_mock()
+                mock_servicewidgetclass.reset_mock()
+                mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
+                                                       mock_sw3]
+                mock_isreq.side_effect = [False, True, False]
+
+                asl.update()
+                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                # should still show all three
+                self.assertEqual(len(asl.service_widgets), 3)
