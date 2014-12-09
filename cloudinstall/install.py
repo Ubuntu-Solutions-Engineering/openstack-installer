@@ -55,7 +55,7 @@ class InstallController(DisplayController):
             self.ui.hide_show_password_input()
             self.select_install_type()
         else:
-            self.flash('Passwords did not match\N{HORIZONTAL ELLIPSIS}')
+            self.flash('Passwords did not match')
             return self.show_password_input(
                 'Create a new Openstack Password', self._save_password)
 
