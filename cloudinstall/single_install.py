@@ -108,6 +108,14 @@ class SingleInstall(InstallBase):
             # raise Exception("Container cloud-init returned errors")
         return True
 
+    def _install_upstream_deb(self):
+        log.debug('Found upstream deb, installing that instead')
+        filename = os.path.basename(self.opts.upstream_deb)
+        utils.container_cp(self.container_name, self.opts.upstream_deb,
+                           filename)
+        utils.container_run(
+            self.container_name, 'sudo dpkg -i {}'.format(filename))
+
     def copy_installdata_and_set_perms(self):
         """ copies install data and sets permissions on files/dirs
         """
@@ -123,6 +131,10 @@ class SingleInstall(InstallBase):
         except:
             raise SingleInstallException(
                 "Unable to set ownership for {}".format(self.config.cfg_path))
+
+        # Install local copy of openstack installer if provided
+        if self.opts.upstream_deb and os.path.isfile(self.opts.upstream_deb):
+            self._install_upstream_deb()
 
         # copy over the rest of our installation data from host
         # and setup permissions
