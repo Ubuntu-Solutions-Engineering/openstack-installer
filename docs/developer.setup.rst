@@ -53,7 +53,7 @@ From here you can build the entire package set by running:
    $ make deb
 
 Once finished your packages will be stored in the top level directory
-where your openstack project is kept.
+where your OpenStack project is kept.
 
 .. code::
 
@@ -70,9 +70,9 @@ Running the installer for testing currently requires installing the packages. (U
 After building the packages using either 'make deb' or 'make sbuild', you can install and run with the 'run' target:
 
 .. code::
-   
+
    $ sudo make run type=single
-   # or 
+   # or
    $ sudo make run type=multi
 
 You can also set the MAAS_HTTP_PROXY env var for the openstack-install command like this:
@@ -87,8 +87,8 @@ If you are running the landscape installer, you will want to use the 'landscape'
 
    $ sudo make landscape proxy=http://myproxy/
 
-Running the Pegasus status screen
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running the OpenStack status screen
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have run the installer and are working on changes to the status screen (in cloudinstall/), you can re-run the status screen with the correct python path using this target:
 
