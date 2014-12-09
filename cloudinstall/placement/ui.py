@@ -196,7 +196,7 @@ class ServiceWidget(WidgetWrap):
 
     controller - a PlacementController instance
 
-    actions - a list of ('label', function) pairs that wil be used to
+    actions - a list of ('label', function) pairs that will be used to
     create buttons for each machine.  The machine will be passed to
     the function as userdata.
 
@@ -212,8 +212,7 @@ class ServiceWidget(WidgetWrap):
     """
 
     def __init__(self, charm_class, controller, actions=None,
-                 show_constraints=False, show_assignments=False,
-                 show_required_label=False):
+                 show_constraints=False, show_assignments=False):
         self.charm_class = charm_class
         self.controller = controller
         if actions is None:
@@ -222,7 +221,6 @@ class ServiceWidget(WidgetWrap):
             self.actions = actions
         self.show_constraints = show_constraints
         self.show_assignments = show_assignments
-        self.show_required_label = show_required_label
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -319,6 +317,12 @@ class MachinesList(WidgetWrap):
     show_hardware - bool, whether or not to show the hardware details
     for each of the machines
 
+    title_widgets - A Text Widget to be used in place of the default
+    title.
+
+    show_assignments - bool, whether or not to show the assignments
+    for each of the machines.
+
     """
 
     def __init__(self, controller, actions, constraints=None,
@@ -393,8 +397,6 @@ class MachinesList(WidgetWrap):
                                               for cc in al])
             filter_label = "{} {}".format(m.filter_label(),
                                           assignment_names)
-
-            log.debug("filter_label for {} is '{}'".format(m, filter_label))
 
             if self.filter_string != "" and \
                self.filter_string not in filter_label:
@@ -522,8 +524,7 @@ class ServicesList(WidgetWrap):
 
     def add_service_widget(self, charm_class):
         sw = ServiceWidget(charm_class, self.controller, self.actions,
-                           self.show_constraints,
-                           show_required_label=self.unplaced_only)
+                           self.show_constraints)
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))
