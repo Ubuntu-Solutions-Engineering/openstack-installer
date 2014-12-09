@@ -80,6 +80,7 @@ class CharmBase:
     """ Base charm class """
 
     charm_name = None
+    charm_rev = None
     display_name = None
     related = []
     isolate = False
@@ -185,17 +186,23 @@ export OS_REGION_NAME=RegionOne
         """
         config_yaml = ""
 
+        _charm_name_rev = self.charm_name
+
         if self.charm_name in CHARM_CONFIG:
             config_yaml = CHARM_CONFIG_RAW
+
+        # Set revision
+        if self.charm_rev:
+            _charm_name_rev = "{}-{}".format(self.charm_name, self.charm_rev)
 
         try:
             # TODO - might not need to pass self.constraints to deploy
 
             log.debug('calling deploy({}, {}, {}, {}, {}, {})'.format(
-                self.charm_name, self.charm_name, num_units,
+                _charm_name_rev, self.charm_name, num_units,
                 config_yaml, self.constraints, machine_spec))
 
-            self.juju.deploy(self.charm_name, self.charm_name, num_units,
+            self.juju.deploy(_charm_name_rev, self.charm_name, num_units,
                              config_yaml, self.constraints, machine_spec)
         except MacumbaError:
             log.exception("Error deploying")
