@@ -93,28 +93,6 @@ case $WHAT in
     ;;
   esac
 
-# these may or may not be installed, so we list them all individually
-apt_purge '.*juju.*'
-apt_purge cloud-install-single
-apt_purge cloud-install-multi
-apt_purge cloud-install-landscape
-apt_purge openstack
-apt_purge openstack-single
-apt_purge openstack-multi
-apt_purge openstack-landscape
 
-
-# Remove any extra packages that aren't needed after purging.
-apt-get -yy autoremove
-
-# just make sure juju-mongodb died. LP#1306315
-MONGOD=$(pgrep mongod)
-RET=$?
-if [ ${RET} -eq 0 ]; then
-  if [ ${MONGOD} -gt 0 ]; then
-    kill -9 ${MONGOD}
-  fi
-fi
-
-rm -rf ~/.juju ~/.cloud-install || true
+rm -rf ~/.cloud-install || true
 rm -rf /etc/openstack || true

@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+#
+# Copyright 2014 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+sys.path.insert(0, '/usr/share/openstack')
+
+import uuid
+import os
+import argparse
+import cloudinstall.utils as utils
+import shlex
+import time
+from cloudinstall.config import Config
+
+from subprocess import call
+
+
+def parse_options(argv, cfg):
+    parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
+                                     prog='openstack-install')
+    parser.add_argument('--num-vms', type=int, default=1,
+                        help='Number of VMs to spin up', dest='num_vms')
+    parser.add_argument('--prefix', type=str,
+                        dest='vm_prefix', metavar="NAME",
+                        help='Specify a vm prefix', default='uoi-bootstrap')
+    parser.add_argument('--vm-config', type=str, dest='vm_config',
+                        help='Location of vm configuration')
+    parser.add_argument('--bridge-iface', type=str, dest='bridge_interface',
+                        help='Network bridge for VMs to utilize during '
+                        'MAAS deployments (e.g. "br0")',
+                        default="br0")
+    parser.add_argument('--destroy-all', dest='destroy', action='store_true',
+                        default=False,
+                        help='Destroy all machines (destructive)')
+    return parser.parse_args(argv)
+
+if __name__ == '__main__':
+    cfg = Config()
+    opts = parse_options(sys.argv[1:], cfg)
+
+    if os.geteuid() != 0:
+        sys.exit('Please run with sudo.')
+
+    if not opts.vm_config and not opts.destroy:
+        raise SystemExit('A libvirt vm definition file is required.')
+
+    if opts.destroy:
+        msg = ("Warning:\n\nThis will tear down and remove all vms "
+               "created with this script.")
+        print(msg)
+        yn = input("Proceed? [y/N] ")
+        if "y" in yn or "Y" in yn:
+            for vm in range(opts.num_vms):
+                img_name = "{0}-{1}".format(opts.vm_prefix, vm)
+                cmd = 'virsh destroy {0}'.format(img_name)
+                call(shlex.split(cmd))
+            raise SystemExit('Removal completed.')
+        else:
+            raise SystemExit("Removal canceled.")
+
+    # create image disks
+    print("Creating virtual machines...")
+    dst_file = os.path.join('virt-uoi-bootstrap.xml')
+    original_data = utils.load_template('virt-uoi-bootstrap.xml')
+
+    for vm in range(opts.num_vms):
+        if os.path.isfile('{0}-{1}.img'.format(opts.vm_prefix, vm)):
+            raise SystemExit('Disk image already exists, will not overwrite.')
+
+        # image name
+        img_name = "{0}-{1}".format(opts.vm_prefix, vm)
+        img = ".".join((img_name, 'img'))
+
+        # populate proper xml
+        uuid_str = uuid.uuid1()
+        modified_data = original_data.render(
+            dict(vm_name=img_name,
+                 uuid=str(uuid_str),
+                 macaddr=utils.macgen(),
+                 bridge=opts.bridge_interface,
+                 image_path=os.path.join(utils.install_home(), img)))
+        vm_conf = ".".join((img_name, 'xml'))
+        utils.spew(vm_conf, modified_data)
+
+        cmd = 'qemu-img create {0} 15G'.format(img)
+        print(cmd)
+        call(shlex.split(cmd))
+
+        time.sleep(1)
+        cmd = 'virsh define {0}'.format(vm_conf)
+        print(cmd)
+        call(shlex.split(cmd))
+
+        time.sleep(1)
+        cmd = 'virsh start {0}'.format(img_name)
+        print(cmd)
+        call(shlex.split(cmd))
