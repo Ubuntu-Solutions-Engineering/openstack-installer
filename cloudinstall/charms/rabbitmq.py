@@ -20,6 +20,7 @@ class CharmRabbitMQ(CharmBase):
     """ RabbitMQ directives """
 
     charm_name = 'rabbitmq-server'
+    charm_rev = 19
     display_name = 'RabbitMQ Server'
     menuable = True
 

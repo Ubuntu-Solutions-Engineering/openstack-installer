@@ -230,9 +230,9 @@ class DisplayController:
         with status_context(self, 'error', message):
             self.ui.status_error_message(message)
 
-    def set_dashboard_url(self, ip):
+    def set_dashboard_url(self, ip, user, password):
         with status_context(self):
-            self.ui.status_dashboard_url(ip)
+            self.ui.status_dashboard_url(ip, user, password)
 
     def set_jujugui_url(self, ip):
         with status_context(self):
@@ -319,7 +319,9 @@ class DisplayController:
         for n in deployed_services:
             for u in n.units:
                 if u.is_horizon and u.agent_state == "started":
-                    self.set_dashboard_url(u.public_address)
+                    self.set_dashboard_url(
+                        u.public_address, 'root',
+                        self.config.openstack_password)
                 if u.is_jujugui and u.agent_state == "started":
                     self.set_jujugui_url(u.public_address)
         if len(self.nodes) == 0:
@@ -527,11 +529,11 @@ class Controller(DisplayController):
 
     def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
-        self.info_message('Copying network specifications to machine')
+        log.debug('Copying network specifications to machine')
         srcpath = path.join(self.config.tmpl_path, 'lxc-host-only')
         destpath = "/tmp/lxc-host-only"
         utils.remote_cp(machine_id, src=srcpath, dst=destpath)
-        self.info_message('Updating network configuration for machine')
+        log.debug('Updating network configuration for machine')
         utils.remote_run(machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only")
         utils.remote_run(machine_id,

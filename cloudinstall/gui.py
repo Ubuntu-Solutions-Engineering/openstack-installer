@@ -164,7 +164,6 @@ class Banner(ScrollableWidgetWrap):
             "Ubuntu Openstack Installer",
             "",
             "By Canonical, Ltd.",
-            "",
             ""
         ]
         super().__init__(self._create_text())
@@ -182,7 +181,7 @@ class Banner(ScrollableWidgetWrap):
         self.text.append(text)
 
     def flash(self, msg):
-        self.flash_text.set_text([('error', "Error: \n\n{}".format(msg))])
+        self.flash_text.set_text([('error', msg)])
 
     def flash_reset(self):
         self.flash_text.set_text('')
@@ -492,13 +491,14 @@ class StatusBar(WidgetWrap):
         """
         return self._openstack_rel.set_text(text)
 
-    def set_dashboard_url(self, ip=None):
+    def set_dashboard_url(self, ip=None, user=None, password=None):
         """ sets horizon dashboard url """
         text = "Openstack Dashboard: "
         if not ip:
             text += "(pending)"
         else:
-            text += "http://{}/horizon".format(ip)
+            text += "http://{}/horizon l:{} p:{}".format(
+                ip, user, password)
         return self._horizon_url.set_text(text)
 
     def set_jujugui_url(self, ip=None):
@@ -638,12 +638,14 @@ class PegasusGUI(WidgetWrap):
     def hide_help_info(self):
         self.hide_widget_on_top()
 
-    def show_step_info(self, msg, width=60, height=10):
+    def show_step_info(self, msg, width=60):
         self.hide_step_info()
-        widget = StepInfo(msg, height)
-        self.show_widget_on_top(widget, width=width, height=height + 1,
+        widget = StepInfo(msg)
+        self.show_widget_on_top(widget, width=width,
+                                height=20,
                                 align="center",
-                                valign="middle", min_height=10)
+                                valign="middle",
+                                min_height=10)
 
     def hide_step_info(self):
         self.hide_widget_on_top()
@@ -657,7 +659,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_selector_with_desc(self, title, opts, cb):
         widget = SelectorWithDescription(title, opts, cb)
-        self.show_widget_on_top(widget, width=80, height=25)
+        self.show_widget_on_top(widget, width=80, height=14)
 
     def hide_selector_with_desc(self):
         self.hide_widget_on_top()
@@ -668,7 +670,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_password_input(self, title, cb):
         widget = PasswordInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=10)
+        self.show_widget_on_top(widget, width=50, height=7)
 
     def hide_show_password_input(self):
         self.hide_widget_on_top()
@@ -689,7 +691,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_landscape_input(self, title, cb):
         widget = LandscapeInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=14)
+        self.show_widget_on_top(widget, width=50, height=9)
 
     def hide_show_landscape_input(self):
         self.hide_widget_on_top()
@@ -705,7 +707,7 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer.set_pending_deploys(pending_charms)
 
     def flash(self, msg):
-        self.frame.body.flash(msg)
+        self.frame.body.flash("{}\N{HORIZONTAL ELLIPSIS}".format(msg))
 
     def flash_reset(self):
         self.frame.body.flash_reset()
@@ -720,8 +722,8 @@ class PegasusGUI(WidgetWrap):
     def status_info_message(self, message):
         self.frame.footer.info_message(message)
 
-    def status_dashboard_url(self, ip):
-        self.frame.footer.set_dashboard_url(ip)
+    def status_dashboard_url(self, ip, user, password):
+        self.frame.footer.set_dashboard_url(ip, user, password)
 
     def status_jujugui_url(self, ip):
         self.frame.footer.set_jujugui_url(ip)

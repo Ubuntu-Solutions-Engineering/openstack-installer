@@ -70,6 +70,9 @@ def parse_options(argv, cfg):
     parser.add_argument('--extra-ppa', nargs='+', dest='extra_ppa',
                         help='Append additional ppas to the single installers '
                         'cloud-init configuration.')
+    parser.add_argument('--upstream-deb', dest='upstream_deb',
+                        help='Upload a local copy of openstack debian package '
+                        'to be used in a single install. (DEVELOPERS)')
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)

@@ -21,6 +21,7 @@ import logging
 import os
 import pwd
 import re
+import shlex
 import time
 
 from subprocess import check_output
@@ -99,7 +100,7 @@ class MultiInstall(InstallBase):
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
-        self.start_task("Starting Juju server")
+        self.start_task("Bootstrapping Juju")
         self.display_controller.current_state = InstallState.RUNNING
 
         maas_creds = self.config.maas_creds
@@ -126,7 +127,7 @@ class MultiInstall(InstallBase):
         self.set_perms()
 
         # Starts the party
-        self.display_controller.info_message("Bootstrapping juju")
+        self.display_controller.info_message("Bootstrapping Juju")
 
         dbgflags = ""
         if os.getenv("DEBUG_JUJU_BOOTSTRAP"):
@@ -170,8 +171,7 @@ class MultiInstall(InstallBase):
             os.execvp('openstack-status', args)
         else:
             log.debug("Finished MAAS step, now deploying Landscape.")
-            return LandscapeInstallFinal(self.opts,
-                                         self,
+            return LandscapeInstallFinal(self,
                                          self.display_controller).run()
 
     def drop_privileges(self):
@@ -192,7 +192,7 @@ class MultiInstallExistingMaas(MultiInstall):
         self.do_install()
 
     def run(self):
-        self.register_tasks(["Starting Juju server"] +
+        self.register_tasks(["Bootstrapping Juju"] +
                             self.post_tasks)
 
         msg = "Waiting for sufficient resources in MAAS"
@@ -224,7 +224,7 @@ class MultiInstallNewMaas(MultiInstall):
                              "Searching for existing DHCP servers",
                              "Configuring MAAS networks",
                              "Importing MAAS boot images",
-                             "Starting Juju server"] +
+                             "Bootstrapping Juju"] +
                             self.post_tasks)
 
         self.prompt_for_interface()
@@ -667,9 +667,11 @@ class LandscapeInstallFinal:
     """ Final phase of landscape install
     """
 
-    def __init__(self, opts, multi_installer, display_controller):
-        self.opts = opts
-        self.config = Config()
+    def __init__(self, multi_installer, display_controller, config=None):
+        if config is None:
+            self.config = Config()
+        else:
+            self.config = config
         self.multi_installer = multi_installer
         self.display_controller = display_controller
         self.maas = None
@@ -710,6 +712,25 @@ class LandscapeInstallFinal:
         # Set remaining permissions
         self.set_perms()
 
+        self.multi_installer.start_task("Deploying Landscape")
+        self.run_deployer()
+
+        self.multi_installer.start_task("Registering against Landscape")
+        hostname = self.run_configure_script()
+
+        self.multi_installer.stop_current_task()
+        self.display_controller.clear_status()
+
+        msg = []
+        msg.append("To continue with OpenStack installation visit:\n\n")
+        msg.append("http://{0}/account/standalone/openstack ".format(hostname))
+        msg.append("\n\nLandscape Login Credentials:\n")
+        msg.append(" Email: {}\n".format(
+            self.config.landscape_creds['admin_email']))
+        msg.append(" Password: {}".format(self.config.openstack_password))
+        return self.display_controller.step_info(msg)
+
+    def run_deployer(self):
         # Prep deployer template for landscape
         lscape_password = utils.random_password()
         lscape_env = utils.load_template('landscape-deployments.yaml')
@@ -717,9 +738,6 @@ class LandscapeInstallFinal:
             landscape_password=lscape_password.strip())
         utils.spew(self.lscape_yaml_path,
                    lscape_env_modified)
-
-        # Juju deployer
-        self.multi_installer.start_task("Deploying Landscape")
 
         out = utils.get_command_output("juju-deployer -WdvL -w 180 -c {0} "
                                        "landscape-dense-maas".format(
@@ -730,21 +748,20 @@ class LandscapeInstallFinal:
             log.error("Problem deploying Landscape: {}".format(out))
             raise Exception("Error deploying Landscape.")
 
-        # Configure landscape
-        # Running landscape configure:
-        # /usr/share/openstack/bin/configure-landscape --admin-email adam
-        # --admin-name foo@bar.com --system-email foo@bar.com --maas-host
-        # 172.16.0.1
-        self.multi_installer.start_task("Registering against Landscape")
+    def run_configure_script(self):
+        "runs configure-landscape, returns output (LDS hostname)"
+
+        ldscreds = self.config.landscape_creds
+        args = {"bin": self.lscape_configure_bin,
+                "admin_email": shlex.quote(ldscreds['admin_email']),
+                "admin_name": shlex.quote(ldscreds['admin_name']),
+                "sys_email": shlex.quote(ldscreds['system_email']),
+                "maas_host": shlex.quote(self.config.maas_creds['api_host'])}
+
         cmd = ("{bin} --admin-email {admin_email} "
-               "--admin-name {name} "
+               "--admin-name {admin_name} "
                "--system-email {sys_email} "
-               "--maas-host {maas_host}".format(
-                   bin=self.lscape_configure_bin,
-                   admin_email=self.config.landscape_creds['admin_email'],
-                   name=self.config.landscape_creds['admin_name'],
-                   sys_email=self.config.landscape_creds['system_email'],
-                   maas_host=self.config.maas_creds['api_host']))
+               "--maas-host {maas_host}".format(**args))
 
         log.debug("Running landscape configure: {}".format(cmd))
 
@@ -754,15 +771,4 @@ class LandscapeInstallFinal:
             log.error("Problem with configuring Landscape: {}.".format(out))
             raise Exception("Error configuring Landscape.")
 
-        self.multi_installer.stop_current_task()
-        self.display_controller.clear_status()
-
-        msg = []
-        msg.append("To continue with OpenStack installation visit:\n\n")
-        msg.append("http://{0}/account/standalone/openstack ".format(
-            out['output'].strip()))
-        msg.append("\n\nLandscape Login Credentials:\n")
-        msg.append(" Email: {}\n".format(
-            self.config.landscape_creds['admin_email']))
-        msg.append(" Password: {}".format(self.config.openstack_password))
-        return self.display_controller.step_info(msg)
+        return out['output'].strip()

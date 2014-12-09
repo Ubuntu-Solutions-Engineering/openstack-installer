@@ -440,7 +440,7 @@ def container_run(name, cmd):
     log.debug("Running in container: {0}".format(wrapped_cmd))
 
     try:
-        ret = check_output(wrapped_cmd, stderr=STDOUT, shell=True)
+        ret = check_output(wrapped_cmd, shell=True)
         log.debug(ret)
         return ret
     except CalledProcessError as e:
@@ -695,3 +695,13 @@ def get_hicolor_screen(palette):
     screen = urwid.raw_display.Screen()
     screen.register_palette(palette)
     return make_screen_hicolor(screen)
+
+
+def macgen():
+    """ generates mac addresses
+    """
+    mac = [0x00, 0x16, 0x3e,
+           random.randint(0x00, 0x7f),
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff)]
+    return ':'.join(map(lambda x: "%02x" % x, mac))
