@@ -39,6 +39,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     """ Charm directives for glance-simplestreams-sync  """
 
     charm_name = 'glance-simplestreams-sync'
+    charm_rev = 1
     menuable = True
     display_name = 'Glance - Simplestreams Image Sync'
     display_priority = DisplayPriorities.Other
