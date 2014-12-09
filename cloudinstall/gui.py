@@ -164,7 +164,6 @@ class Banner(ScrollableWidgetWrap):
             "Ubuntu Openstack Installer",
             "",
             "By Canonical, Ltd.",
-            "",
             ""
         ]
         super().__init__(self._create_text())
@@ -182,7 +181,7 @@ class Banner(ScrollableWidgetWrap):
         self.text.append(text)
 
     def flash(self, msg):
-        self.flash_text.set_text([('error', "Error: \n\n{}".format(msg))])
+        self.flash_text.set_text([('error', msg)])
 
     def flash_reset(self):
         self.flash_text.set_text('')
@@ -660,7 +659,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_selector_with_desc(self, title, opts, cb):
         widget = SelectorWithDescription(title, opts, cb)
-        self.show_widget_on_top(widget, width=80, height=25)
+        self.show_widget_on_top(widget, width=80, height=14)
 
     def hide_selector_with_desc(self):
         self.hide_widget_on_top()
@@ -671,7 +670,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_password_input(self, title, cb):
         widget = PasswordInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=10)
+        self.show_widget_on_top(widget, width=50, height=7)
 
     def hide_show_password_input(self):
         self.hide_widget_on_top()
@@ -692,7 +691,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_landscape_input(self, title, cb):
         widget = LandscapeInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=14)
+        self.show_widget_on_top(widget, width=50, height=9)
 
     def hide_show_landscape_input(self):
         self.hide_widget_on_top()
@@ -708,7 +707,7 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer.set_pending_deploys(pending_charms)
 
     def flash(self, msg):
-        self.frame.body.flash(msg)
+        self.frame.body.flash("{}\N{HORIZONTAL ELLIPSIS}".format(msg))
 
     def flash_reset(self):
         self.frame.body.flash_reset()
