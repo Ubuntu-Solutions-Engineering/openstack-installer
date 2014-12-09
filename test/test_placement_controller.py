@@ -73,7 +73,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.assign(self.mock_machine, CharmNovaCompute, assignment_type)
         print("assignments is {}".format(self.pc.assignments))
         machines = self.pc.machines_for_charm(CharmNovaCompute)
-        print('machines fo charm is {}'.format(machines))
+        print('machines for charm is {}'.format(machines))
         self.assertEqual(machines,
                          {assignment_type: [self.mock_machine]})
 
@@ -290,3 +290,33 @@ class PlacementControllerTestCase(unittest.TestCase):
         m2 = next((m for m in singlepc.machines_used()
                    if m.instance_id == 'fake_iid_2'))
         self.assertEqual(m2.constraints, {'cpu': 8})
+
+    def test_load_error_mismatch_charm_name(self):
+        """Should safely ignore (and log) a charm name in a placement file
+        that can't be matched to a loaded charm class."""
+        singlepc = PlacementController(None, self.mock_opts)
+        fake_assignments = {'fake_iid': {'constraints': {},
+                                         'assignments': {'KVM':
+                                                         ['non-existent']}},
+                            'fake_iid_2': {'constraints': {'cpu': 8},
+                                           'assignments':
+                                           {'BareMetal': ['nova-compute']}}}
+        with TemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            yaml.dump(fake_assignments, tempf)
+            tempf.seek(0)
+            singlepc.load(tempf)
+
+        self.assertEqual(set([m.instance_id for m in
+                              singlepc.machines_used()]),
+                         set(['fake_iid_2']))
+
+        m2 = next((m for m in singlepc.machines_used()
+                   if m.instance_id == 'fake_iid_2'))
+        self.assertEqual(m2.constraints, {'cpu': 8})
+
+    def test_is_assigned(self):
+        self.assertFalse(self.pc.is_assigned(CharmSwiftProxy,
+                                             self.mock_machine))
+        self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
+        self.assertTrue(self.pc.is_assigned(CharmSwiftProxy,
+                                            self.mock_machine))
