@@ -29,7 +29,6 @@ import fnmatch
 import logging
 import traceback
 import urwid
-import atexit
 from threading import Thread
 from functools import wraps
 import time
@@ -75,9 +74,11 @@ class UtilsException(Exception):
     pass
 
 
-@atexit.register
 def cleanup():
     log.debug('Attempting to reset the terminal')
+    pid = os.path.join(install_home(), '.cloud-install/openstack.pid')
+    if os.path.isfile(pid):
+        os.remove(pid)
     os.system('stty sane')
 
 
