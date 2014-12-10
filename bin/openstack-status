@@ -36,7 +36,6 @@ from cloudinstall import __version__ as version
 
 
 def sig_handler(signum, frame):
-    utils.reset_blanking()
     sys.exit(1)
 
 for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):

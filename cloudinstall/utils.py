@@ -29,6 +29,7 @@ import fnmatch
 import logging
 import traceback
 import urwid
+import atexit
 from threading import Thread
 from functools import wraps
 import time
@@ -72,6 +73,12 @@ class ExceptionLoggingThread(Thread):
 
 class UtilsException(Exception):
     pass
+
+
+@atexit.register
+def cleanup():
+    log.debug('Attempting to reset the terminal')
+    os.system('stty sane')
 
 
 def load_charms():
