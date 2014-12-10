@@ -320,7 +320,7 @@ class DisplayController:
             for u in n.units:
                 if u.is_horizon and u.agent_state == "started":
                     self.set_dashboard_url(
-                        u.public_address, 'root',
+                        u.public_address, 'ubuntu',
                         self.config.openstack_password)
                 if u.is_jujugui and u.agent_state == "started":
                     self.set_jujugui_url(u.public_address)
