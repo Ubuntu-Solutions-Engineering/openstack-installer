@@ -22,12 +22,20 @@ import argparse
 import sys
 import os
 import logging
+import signal
 from cloudinstall.log import setup_logger
 import cloudinstall.utils as utils
 from cloudinstall.gui import PegasusGUI, InstallHeader
 from cloudinstall.install import InstallController
 from cloudinstall.config import Config
 from cloudinstall import __version__ as version
+
+
+def sig_handler(signum, frame):
+    sys.exit(1)
+
+for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
+    signal.signal(sig, sig_handler)
 
 
 def parse_options(argv, cfg):
