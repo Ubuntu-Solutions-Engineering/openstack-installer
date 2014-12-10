@@ -68,6 +68,12 @@ if __name__ == '__main__':
     logger = logging.getLogger('cloudinstall')
     logger.info("openstack-status starting")
 
+    if os.path.isfile(config.pidfile):
+        print("Another instance of openstack-status is running. If you're "
+              "sure there are no other instances, please remove "
+              "~/.cloud-install/openstack.pid")
+        sys.exit()
+
     opts = parse_options(sys.argv)
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
@@ -78,6 +84,11 @@ if __name__ == '__main__':
     gui = PegasusGUI()
     core = Controller(ui=gui, opts=opts)
     try:
+        # Create pidfile
+        utils.spew(config.pidfile, str(os.getppid()), utils.install_user())
+
+        import atexit
+        atexit.register(utils.cleanup)
         sys.exit(core.start())
     except Exception as e:
         logger.exception("core.start() raised exception")

@@ -90,6 +90,10 @@ class Config:
                 INSTALL_TYPE_SINGLE]
 
     @property
+    def pidfile(self):
+        return os.path.join(self.cfg_path, 'openstack.pid')
+
+    @property
     def share_path(self):
         """ base share path
         """
