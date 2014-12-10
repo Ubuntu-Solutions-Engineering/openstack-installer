@@ -57,6 +57,7 @@ package_update: true
 password: ubuntu
 chpasswd: { expire: False }
 ssh_pwauth: True
+manage_etc_hosts: localhost
 
 bootcmd:
   - rm /etc/network/interfaces.d/{{ network_interface }}.cfg
