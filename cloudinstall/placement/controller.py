@@ -209,6 +209,12 @@ class PlacementController:
         self.update_and_save()
 
     def clear_assignments(self, m):
+        """clears all assignments for machine m.
+        If m has no assignments, does nothing.
+        """
+        if m.instance_id not in self.assignments:
+            return
+
         del self.assignments[m.instance_id]
         self.update_and_save()
 

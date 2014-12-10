@@ -320,3 +320,12 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
         self.assertTrue(self.pc.is_assigned(CharmSwiftProxy,
                                             self.mock_machine))
+
+    def test_double_clear_ok(self):
+        """clearing assignments for a machine that isn't assigned (anymore) is
+        OK and should do nothing
+        """
+        self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
+        self.pc.clear_assignments(self.mock_machine)
+        self.pc.clear_assignments(self.mock_machine)
+        self.pc.clear_assignments(self.mock_machine_2)
