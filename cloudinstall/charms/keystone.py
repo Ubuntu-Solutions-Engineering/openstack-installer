@@ -20,6 +20,7 @@ log = logging.getLogger('cloudinstall.charms.keystone')
 
 
 class CharmKeystone(CharmBase):
+
     """ Openstack Keystone directives """
 
     charm_name = 'keystone'
@@ -37,19 +38,18 @@ class CharmKeystone(CharmBase):
         log.debug("mysql is available, deploying keystone")
         return super().deploy(m)
 
-    # FIXME: needs work, currently overwrites entire yaml file :\
-    # def post_proc(self):
-    #     keystone = self.wait_for_agent('keystone')
-    #     if not keystone:
-    #         return True
-    #     service = self.juju_state.service('keystone')
-    #     if len(service.units) > 0:
-    #         unit = service.units[0]
-    #     self.config.update_environments_yaml(
-    #         key='auth-url',
-    #         val='http://{0}:5000/v2.0/'.format(unit.public_address),
-    #         provider='openstack'
-    #     )
-    #     log.debug("Updated keystone auth-url in openstack provider.")
+    def post_proc(self):
+        keystone = self.wait_for_agent()
+        if not keystone:
+            return True
+        service = self.juju_state.service('keystone')
+        if len(service.units) > 0:
+            unit = service.units[0]
+        self.config.update_environments_yaml(
+            key='auth-url',
+            val='http://{0}:5000/v2.0/'.format(unit.public_address),
+            provider='openstack'
+        )
+        log.debug("Updated keystone auth-url in openstack provider.")
 
 __charm_class__ = CharmKeystone
