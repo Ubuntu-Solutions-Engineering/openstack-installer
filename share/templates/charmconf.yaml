@@ -13,6 +13,8 @@ keystone:
   admin-user: 'admin'
 mysql:
   dataset-size: 512M
+neutron-openvswitch:
+  openstack-origin: {{openstack_origin}}
 nova-cloud-controller:
   openstack-origin: {{openstack_origin}}
   network-manager: Neutron
