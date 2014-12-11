@@ -491,7 +491,7 @@ def container_cp(name, filepath, dst):
     ret = get_command_output(cmd)
     if ret['status'] > 0:
         raise Exception("There was a problem copying ({0}) to the container "
-                        "({1}:{2}): {}".format(
+                        "({1}:{2}): {3}".format(
                             filepath, name, ip, ret['output']))
 
 
