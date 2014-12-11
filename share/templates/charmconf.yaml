@@ -2,6 +2,7 @@ ceph:
   openstack-origin: {{openstack_origin}}
 glance:
   openstack-origin: {{openstack_origin}}
+{{worker_multiplier}}
 glance-simplestreams-sync:
   use_swift: False
 juju-gui:
@@ -15,7 +16,7 @@ mysql:
 nova-cloud-controller:
   openstack-origin: {{openstack_origin}}
   network-manager: Neutron
-{{nova_worker_multiplier}}
+{{worker_multiplier}}
 nova-compute:
   openstack-origin: {{openstack_origin}}
 openstack-dashboard:

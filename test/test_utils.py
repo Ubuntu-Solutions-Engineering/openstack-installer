@@ -74,11 +74,10 @@ class TestRenderCharmConfig(unittest.TestCase):
         self.config.is_single = is_single
         render_charm_config(self.config, MagicMock(openstack_release='klaxon'))
         (fake_path, generated_yaml), kwargs = mockspew.call_args
-        log.debug("genyaml i s {}".format(generated_yaml))
         d = yaml.load(generated_yaml)
-        import pprint
-        log.debug('d is {}'.format(pprint.pformat(d)))
         wmul = d['nova-cloud-controller'].get('worker-multiplier', None)
+        self.assertEqual(wmul, expected)
+        wmul = d['glance'].get('worker-multiplier', None)
         self.assertEqual(wmul, expected)
 
     def test_render_worker_multiplier_multi(self, mockspew):
