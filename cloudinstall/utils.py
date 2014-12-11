@@ -113,12 +113,12 @@ def render_charm_config(config, opts):
         openstack_origin = "distro"  # the default
 
     if config.is_single:
-        nova_worker_multiplier = "  worker-multiplier: 1"
+        worker_multiplier = "  worker-multiplier: 1"
     else:
-        nova_worker_multiplier = ""
+        worker_multiplier = ""
 
     charm_conf_modified = charm_conf.render(
-        nova_worker_multiplier=nova_worker_multiplier,
+        worker_multiplier=worker_multiplier,
         openstack_origin=openstack_origin,
         openstack_password=config.openstack_password)
     dest_yaml_path = os.path.join(config.cfg_path, 'charmconf.yaml')
