@@ -34,6 +34,7 @@ from functools import wraps
 import time
 from importlib import import_module
 import pkgutil
+import platform
 import sys
 import errno
 import shlex
@@ -99,6 +100,29 @@ def load_charm_byname(name):
     :param str name: name of charm
     """
     return import_module('cloudinstall.charms.{}'.format(name))
+
+
+def render_charm_config(config, opts):
+    charm_conf = load_template('charmconf.yaml')
+
+    if opts.openstack_release:
+        ubuntu_distname = platform.dist()[-1]
+        openstack_origin = "cloud:{}-{}".format(ubuntu_distname,
+                                                opts.openstack_release)
+    else:
+        openstack_origin = "distro"  # the default
+
+    if config.is_single:
+        nova_worker_multiplier = "  worker-multiplier: 1"
+    else:
+        nova_worker_multiplier = ""
+
+    charm_conf_modified = charm_conf.render(
+        nova_worker_multiplier=nova_worker_multiplier,
+        openstack_origin=openstack_origin,
+        openstack_password=config.openstack_password)
+    dest_yaml_path = os.path.join(config.cfg_path, 'charmconf.yaml')
+    spew(dest_yaml_path, charm_conf_modified)
 
 
 def chown(path, user, group, recursive=False):
