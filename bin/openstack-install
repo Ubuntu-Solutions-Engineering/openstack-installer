@@ -144,7 +144,8 @@ if __name__ == '__main__':
                "    $ sudo openstack-install -u\n\n")
         raise SystemExit(msg)
 
-    out = utils.get_command_output('juju api-endpoints', user_sudo=True)
+    out = utils.get_command_output(
+        'JUJU_HOME={} juju api-endpoints'.format(cfg.cfg_path), user_sudo=True)
     if out['status'] == 0:
         msg = ("\n\nExisting OpenStack environment detected. Please destroy "
                "that environment before proceeding with a new install.\n\n")
