@@ -113,13 +113,7 @@ class MultiInstall(InstallBase):
         utils.spew(self.config.juju_environments_path,
                    maas_env_modified)
 
-        # setup charm configurations
-        charm_conf = utils.load_template('charmconf.yaml')
-        charm_conf_modified = charm_conf.render(
-            openstack_password=self.config.openstack_password)
-        utils.spew(os.path.join(self.config.cfg_path,
-                                'charmconf.yaml'),
-                   charm_conf_modified)
+        utils.render_charm_config(self.config, self.opts)
 
         utils.ssh_genkey()
 

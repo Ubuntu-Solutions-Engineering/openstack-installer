@@ -1,19 +1,29 @@
+{% if worker_multiplier is defined %}
+glance:
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
+glance-simplestreams-sync:
+  use_swift: False
+juju-gui:
+  password: {{openstack_password}}
 keystone:
   admin-password: {{openstack_password}}
   admin-user: 'admin'
-juju-gui:
-  password: {{openstack_password}}
+{% if worker_multiplier is defined %}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
 mysql:
   dataset-size: 512M
+nova-cloud-controller:
+  network-manager: Neutron
+{% if worker_multiplier is defined %}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
+quantum-gateway:
+  instance-mtu: 1400
 swift-proxy:
   zone-assignment: auto
   replicas: 3
 swift-storage:
   zone: 1
   block-device: /etc/swift/storage.img|2G
-quantum-gateway:
-  instance-mtu: 1400
-nova-cloud-controller:
-  network-manager: Neutron
-glance-simplestreams-sync:
-  use_swift: False
