@@ -1,36 +1,84 @@
+{# NOTE: this template is a little complex in order to avoid
+duplicating charm default values in installer code, which could then
+get out of sync.
+
+To avoid None values in the top-level dict, we also do not include
+keys if there are no values for them, e.g. ceph is only included if
+openstack_origin is defined.
+#}
+
+{% if openstack_origin is defined %}
 ceph:
   openstack-origin: {{openstack_origin}}
+{% endif %}
+
+{% if openstack_origin is defined or worker_multiplier is defined %}
 glance:
+{% endif %}
+{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
-{{worker_multiplier}}
+{% endif %}
+{% if worker_multiplier is defined %}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
+
 glance-simplestreams-sync:
   use_swift: False
+
 juju-gui:
   password: {{openstack_password}}
+
 keystone:
-  openstack-origin: {{openstack_origin}}
   admin-password: {{openstack_password}}
   admin-user: 'admin'
+{% if openstack_origin is defined %}
+  openstack-origin: {{openstack_origin}}
+{% endif %}
+{% if worker_multiplier is defined %}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
+
 mysql:
   dataset-size: 512M
+  max-connections: 25000
+
+{% if openstack_origin is defined %}
 neutron-openvswitch:
   openstack-origin: {{openstack_origin}}
+{% endif %}
+
 nova-cloud-controller:
-  openstack-origin: {{openstack_origin}}
   network-manager: Neutron
-{{worker_multiplier}}
+{% if openstack_origin is defined %}
+  openstack-origin: {{openstack_origin}}
+{% endif %}
+{% if worker_multiplier is defined %}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
+
+{% if openstack_origin is defined %}
 nova-compute:
   openstack-origin: {{openstack_origin}}
 openstack-dashboard:
   openstack-origin: {{openstack_origin}}
+{% endif %}
+
 quantum-gateway:
-  openstack-origin: {{openstack_origin}}
   instance-mtu: 1400
-swift-proxy:
+{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{% endif %}
+
+swift-proxy:
   zone-assignment: auto
   replicas: 3
-swift-storage:
+{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{% endif %}
+
+swift-storage:
   zone: 1
   block-device: /etc/swift/storage.img|2G
+{% if openstack_origin is defined %}
+  openstack-origin: {{openstack_origin}}
+{% endif %}

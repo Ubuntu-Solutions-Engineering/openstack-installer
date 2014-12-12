@@ -105,22 +105,18 @@ def load_charm_byname(name):
 def render_charm_config(config, opts):
     charm_conf = load_template('charmconf.yaml')
 
+    template_args = dict(openstack_password=config.openstack_password)
+
     if opts.openstack_release:
         ubuntu_distname = platform.dist()[-1]
         openstack_origin = "cloud:{}-{}".format(ubuntu_distname,
                                                 opts.openstack_release)
-    else:
-        openstack_origin = "distro"  # the default
+        template_args['openstack_origin'] = openstack_origin
 
     if config.is_single:
-        worker_multiplier = "  worker-multiplier: 1"
-    else:
-        worker_multiplier = ""
+        template_args['worker_multiplier'] = '1'
 
-    charm_conf_modified = charm_conf.render(
-        worker_multiplier=worker_multiplier,
-        openstack_origin=openstack_origin,
-        openstack_password=config.openstack_password)
+    charm_conf_modified = charm_conf.render(**template_args)
     dest_yaml_path = os.path.join(config.cfg_path, 'charmconf.yaml')
     spew(dest_yaml_path, charm_conf_modified)
 
@@ -515,7 +511,7 @@ def container_cp(name, filepath, dst):
     ret = get_command_output(cmd)
     if ret['status'] > 0:
         raise Exception("There was a problem copying ({0}) to the container "
-                        "({1}:{2}): {}".format(
+                        "({1}:{2}): {3}".format(
                             filepath, name, ip, ret['output']))
 
 

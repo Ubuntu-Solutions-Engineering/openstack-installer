@@ -181,10 +181,6 @@ class MultiInstall(InstallBase):
 
 class MultiInstallExistingMaas(MultiInstall):
 
-    @utils.async
-    def do_install_async(self):
-        self.do_install()
-
     def run(self):
         self.register_tasks(["Bootstrapping Juju"] +
                             self.post_tasks)

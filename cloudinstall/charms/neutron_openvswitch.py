@@ -35,7 +35,7 @@ class CharmNeutronOpenvswitch(CharmBase):
         for other_serv, interface in [('rabbitmq-server', 'amqp'),
                                       ('nova-compute', 'neutron-plugin'),
                                       ('neutron-api', 'neutron-plugin-api')]:
-            
+
             if self.is_related(other_serv, service.relations):
                 return False
 

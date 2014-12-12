@@ -172,9 +172,12 @@ class SingleInstall(InstallBase):
             "Bootstrapping Juju"])
 
         self.start_task("Initializing Environment")
-        self.do_install()
+        self.do_install_async()
 
     @utils.async
+    def do_install_async(self):
+        self.do_install()
+
     def do_install(self):
         self.display_controller.info_message("Building environment")
         if os.path.exists(self.container_abspath):

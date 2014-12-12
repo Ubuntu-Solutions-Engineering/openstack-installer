@@ -41,7 +41,7 @@ class TestRenderCharmConfig(unittest.TestCase):
         self.config = MagicMock()
         self.config.is_single = False
         self.config.cfg_path = 'fake_cfg_path'
-
+        self.config.openstack_password = 'fake_pw'
         self.ltp = patch('cloudinstall.utils.load_template')
         self.mock_load_template = self.ltp.start()
         self.mock_load_template.side_effect = source_tree_template_loader
@@ -59,11 +59,14 @@ class TestRenderCharmConfig(unittest.TestCase):
         d = yaml.load(generated_yaml)
         for oscharmname in ['nova-cloud-controller', 'glance',
                             'openstack-dashboard', 'keystone', 'swift-proxy']:
-            self.assertEqual(d[oscharmname]['openstack-origin'],
-                             expected)
+            if expected is None:
+                self.assertTrue(oscharmname not in d or
+                                'openstack-origin' not in d[oscharmname])
+            else:
+                self.assertEqual(d[oscharmname]['openstack-origin'], expected)
 
     def test_render_openstack_release_default(self, mockspew):
-        self._do_test_osrel(None, 'distro', mockspew)
+        self._do_test_osrel(None, None, mockspew)
 
     def test_render_openstack_release_given(self, mockspew):
         with patch('cloudinstall.utils.platform.dist') as mock_dist:
@@ -78,6 +81,8 @@ class TestRenderCharmConfig(unittest.TestCase):
         wmul = d['nova-cloud-controller'].get('worker-multiplier', None)
         self.assertEqual(wmul, expected)
         wmul = d['glance'].get('worker-multiplier', None)
+        self.assertEqual(wmul, expected)
+        wmul = d['keystone'].get('worker-multiplier', None)
         self.assertEqual(wmul, expected)
 
     def test_render_worker_multiplier_multi(self, mockspew):
