@@ -155,17 +155,22 @@ class DisplayController:
         self.placement_controller.do_autosave()
 
         if self.config.is_single:
-            self.begin_deployment()
+            self.begin_deployment_async()
             return
 
         if self.opts.edit_placement or \
            not self.placement_controller.can_deploy():
             self.current_state = ControllerState.PLACEMENT
         else:
-            self.begin_deployment()
+            self.begin_deployment_async()
+
+    def begin_deployment_async(self):
+        """To be overridden in subclasses."""
+        pass
 
     def begin_deployment(self):
         """To be overridden in subclasses."""
+        pass
 
     # overlays
 
@@ -364,6 +369,11 @@ class Controller(DisplayController):
         super().__init__(**kwds)
 
     @utils.async
+    def wait_for_maas_async(self):
+        """ explicit async method
+        """
+        self.wait_for_maas()
+
     def wait_for_maas(self):
         """ install and configure maas """
         random_status = ["Packages are being installed to a MAAS container.",
@@ -392,9 +402,14 @@ class Controller(DisplayController):
     def commit_placement(self):
         self.current_state = ControllerState.SERVICES
         self.render_nodes(self.nodes, self.juju_state, self.maas_state)
-        self.begin_deployment()
+        self.begin_deployment_async()
 
     @utils.async
+    def begin_deployment_async(self):
+        """ async deployment
+        """
+        self.begin_deployment()
+
     def begin_deployment(self):
         log.debug("begin_deployment")
         if self.config.is_multi:
