@@ -101,6 +101,19 @@ def load_charm_byname(name):
     return import_module('cloudinstall.charms.{}'.format(name))
 
 
+def render_charm_config(config, opts):
+    charm_conf = load_template('charmconf.yaml')
+
+    template_args = dict(openstack_password=config.openstack_password)
+
+    if config.is_single:
+        template_args['worker_multiplier'] = '1'
+
+    charm_conf_modified = charm_conf.render(**template_args)
+    dest_yaml_path = os.path.join(config.cfg_path, 'charmconf.yaml')
+    spew(dest_yaml_path, charm_conf_modified)
+
+
 def chown(path, user, group, recursive=False):
     """
     Change user/group ownership of file
