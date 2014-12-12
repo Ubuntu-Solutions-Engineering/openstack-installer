@@ -72,7 +72,8 @@ class SingleInstall(InstallBase):
             openstack_password=self.config.openstack_password)
         utils.spew(os.path.join(self.config.juju_path,
                                 'environments.yaml'),
-                   single_env_modified)
+                   single_env_modified,
+                   owner=utils.install_user())
 
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
