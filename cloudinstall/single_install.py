@@ -206,8 +206,12 @@ class SingleInstall(InstallBase):
         cloud_status_bin = ['openstack-status']
         self.display_controller.info_message("Bootstrapping Juju")
         self.start_task("Bootstrapping Juju")
-        utils.container_run(self.container_name, "juju bootstrap")
-        utils.container_run(self.container_name, "juju status")
+        utils.container_run(
+            self.container_name, "JUJU_HOME={} juju bootstrap".format(
+                self.config.cfg_path))
+        utils.container_run(
+            self.container_name, "JUJU_HOME={} juju status".format(
+                self.config.cfg_path))
 
         if self.opts.install_only:
             log.info("Done installing, stopping here per --install-only.")

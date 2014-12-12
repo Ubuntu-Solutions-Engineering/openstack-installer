@@ -133,8 +133,12 @@ class MultiInstall(InstallBase):
         if bstarget:
             bsflags += " --to {}".format(bstarget)
 
-        out = utils.get_command_output("juju {} bootstrap {}".format(dbgflags,
-                                                                     bsflags),
+        cmd = ("JUJU_HOME={0} juju {1} bootstrap {2}".format(
+            self.config.cfg_path, dbgflags, bsflags))
+
+        log.debug("Bootstrapping Juju: {}".format(cmd))
+
+        out = utils.get_command_output(cmd,
                                        timeout=None,
                                        user_sudo=True)
         if out['status'] != 0:
@@ -143,9 +147,11 @@ class MultiInstall(InstallBase):
 
         # workaround to avoid connection failure at beginning of
         # openstack-status
-        out = utils.get_command_output("juju status",
-                                       timeout=None,
-                                       user_sudo=True)
+        out = utils.get_command_output(
+            "JUJU_HOME={} juju status".format(
+                self.config.cfg_path),
+            timeout=None,
+            user_sudo=True)
         if out['status'] != 0:
             log.debug("failure to get initial juju status: '{}'".format(out))
             raise Exception("Problem with juju status poke.")
