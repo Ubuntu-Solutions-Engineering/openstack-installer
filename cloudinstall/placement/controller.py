@@ -389,7 +389,7 @@ class PlacementController:
             max_cpus = max_cpus // 2
 
         controller = PlaceholderMachine('controller', 'controller',
-                                        {'mem': 3072,
+                                        {'mem': 6144,
                                          'root-disk': 20480,
                                          'cpu-cores': max_cpus})
         self._machines.append(controller)
