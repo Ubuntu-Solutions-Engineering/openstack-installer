@@ -1,5 +1,7 @@
+{% if worker_multiplier is defined %}
 glance:
-{{worker_multiplier}}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
 glance-simplestreams-sync:
   use_swift: False
 juju-gui:
@@ -7,12 +9,16 @@ juju-gui:
 keystone:
   admin-password: {{openstack_password}}
   admin-user: 'admin'
-{{worker_multiplier}}
+{% if worker_multiplier is defined %}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
 mysql:
   dataset-size: 512M
 nova-cloud-controller:
   network-manager: Neutron
-{{worker_multiplier}}
+{% if worker_multiplier is defined %}
+  worker-multiplier: {{worker_multiplier}}
+{% endif %}
 quantum-gateway:
   instance-mtu: 1400
 swift-proxy:
