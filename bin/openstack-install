@@ -147,6 +147,12 @@ if __name__ == '__main__':
                "    $ sudo openstack-install -u\n\n")
         raise SystemExit(msg)
 
+    out = utils.get_command_output('juju api-endpoints')
+    if out['status'] == 0:
+        msg = ("\n\nExisting OpenStack environment detected. Please destroy "
+               "that environment before proceeding with a new install.\n\n")
+        raise SystemExit(msg)
+
     install = InstallController(
         ui=PegasusGUI(header=InstallHeader()), opts=opts)
     logger.info("cloud-install starting with options: {}".format(opts))

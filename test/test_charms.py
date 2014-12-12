@@ -22,7 +22,6 @@ import logging
 import os
 import unittest
 from unittest.mock import call, MagicMock, patch
-import yaml
 
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
 
@@ -39,8 +38,8 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
     def setUp(self):
         self.mock_juju = MagicMock(name='juju')
         self.mock_juju_state = MagicMock(name='juju_state')
-        with patch("cloudinstall.charms.neutron_openvswitch.CharmBase") \
-             as mock_charmbase:
+        charmbase_str = "cloudinstall.charms.neutron_openvswitch.CharmBase"
+        with patch(charmbase_str) as mock_charmbase:
             mock_charmbase.set_relations.return_value = False
             mock_charmbase.is_related.return_value = False
             self.charm = CharmNeutronOpenvswitch(self.mock_juju,
@@ -48,7 +47,7 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
 
     def test_set_relations_ok(self):
         self.charm.set_relations()
-        
+
         expected = [call.add_relation('neutron-openvswitch:amqp',
                                       'rabbitmq-server:amqp'),
                     call.add_relation('neutron-openvswitch:neutron-plugin',
