@@ -68,3 +68,6 @@ bootcmd:
 runcmd:
   - [ sh, /etc/rc.local ]
   - echo "export PATH=$PATH:/usr/sbin" >> /home/ubuntu/.bashrc
+
+power_state:
+  mode: reboot
