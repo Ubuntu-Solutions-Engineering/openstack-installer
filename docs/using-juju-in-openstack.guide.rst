@@ -16,13 +16,26 @@ Bootstrap Juju onto the new OpenStack deployment:
 
 .. code::
 
-    $ juju switch openstack
-    $ juju metadata generate-image -i <image_id> -s trusty
-    $ juju sync-tools
-    $ juju bootstrap --metadata-source /home/ubuntu
-
-Now you can deploy charms within your OpenStack cloud.
+    $ openstack-juju metadata generate-image -i <image_id> -s trusty
+    $ openstack-juju sync-tools
+    $ openstack-juju bootstrap --metadata-source /home/ubuntu
 
 .. note::
 
     <image_id> is found in the horizon dashboard `http://<public-ip>/horizon/project/images/`
+
+Now you can deploy charms within your OpenStack cloud.
+
+.. code::
+
+    $ openstack-juju deploy jenkins
+    $ openstack-juju deploy -n 5 jenkins-slave
+    $ openstack-juju add-relation jenkins jenkins-slave
+    $ openstack-juju set jenkins password=AseCreTPassWoRd
+    $ openstack-juju expose jenkins
+
+.. note::
+
+    *Single Install Note* - Resources are limited in a single installation of OpenStack. So
+    anything more than deploying a small service will fail due to resource constraints. For example,
+    you could probably get away with deploying Wordpress and MySQL, but, not Hadoop or Jenkins.
