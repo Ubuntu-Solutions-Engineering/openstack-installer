@@ -117,8 +117,6 @@ class SingleInstall(InstallBase):
         cmd = 'sudo cat /run/cloud-init/result.json'
         try:
             result_json = utils.container_run(self.container_name, cmd)
-            # convert from bytes for json to process
-            result_json = result_json.decode("utf-8")
             log.debug(result_json)
         except:
             log.debug("Waiting for cloud-init status result")
