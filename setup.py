@@ -64,7 +64,7 @@ setup(name='openstack',
       url='https://github.com/Ubuntu-Solutions-Engineering/openstack',
       license="AGPLv3+",
       scripts=['bin/openstack-install', 'bin/openstack-status',
-               'bin/openstack'],
+               'bin/openstack-juju'],
       packages=find_packages(exclude=["test"]),
       data_files=[
           ('share/man/man1', ['man/en/openstack-status.1',
