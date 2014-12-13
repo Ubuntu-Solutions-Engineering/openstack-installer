@@ -42,11 +42,6 @@ mysql:
   dataset-size: 512M
   max-connections: 25000
 
-{% if openstack_origin is defined %}
-neutron-openvswitch:
-  openstack-origin: {{openstack_origin}}
-{% endif %}
-
 nova-cloud-controller:
   network-manager: Neutron
 {% if openstack_origin is defined %}
