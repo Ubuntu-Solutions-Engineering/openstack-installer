@@ -68,6 +68,7 @@ setup(name='openstack',
       packages=find_packages(exclude=["test"]),
       data_files=[
           ('share/man/man1', ['man/en/openstack-status.1',
-                              'man/en/openstack-install.1'])
+                              'man/en/openstack-install.1',
+                              'man/en/openstack-juju.1'])
       ],
       )

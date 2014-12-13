@@ -249,7 +249,11 @@ man_pages = [
      [u'Canonical Solutions Engineering'], 1),
     ('openstack-status', 'openstack-status',
      u'Ubuntu OpenStack Status Documentation',
+     [u'Canonical Solutions Engineering'], 1),
+    ('openstack-juju', 'openstack-juju',
+     u'Ubuntu OpenStack Juju Documentation',
      [u'Canonical Solutions Engineering'], 1)
+
 ]
 
 # If true, show URL addresses after external links.

@@ -12,17 +12,36 @@ to enable juju to deploy charms into the private cloud.
 Bootstrap Juju
 ^^^^^^^^^^^^^^
 
-Bootstrap Juju onto the new OpenStack deployment:
+Generate necessary image metadata for Juju to utilize:
 
 .. code::
 
     $ openstack-juju metadata generate-image -i <image_id> -s trusty
-    $ openstack-juju sync-tools
-    $ openstack-juju bootstrap --metadata-source /home/ubuntu
 
 .. note::
 
     <image_id> is found in the horizon dashboard `http://<public-ip>/horizon/project/images/`
+
+    Alternatively, install **glance** client and retrieve the image list:
+
+    .. code::
+
+       $ sudo apt-get install glance
+       $ source ~/.cloud-install/openstack-admin-rc
+       $ glance image-list
+
+       +--------------------------------------+---------------------------------------------------------------+-------------+------------------+-----------+--------+
+       | ID                                   | Name                                                          | Disk Format | Container Format | Size      | Status |
+       +--------------------------------------+---------------------------------------------------------------+-------------+------------------+-----------+--------+
+       | 69dde281-db3c-4736-a5b4-a1999c201f58 | auto-sync/ubuntu-trusty-14.04-amd64-server-20141125-disk1.img | qcow2       | bare             | 255984128 | active |
+       +--------------------------------------+---------------------------------------------------------------+-------------+------------------+-----------+--------+
+
+Sync Juju tools and bootstrap onto your OpenStack private cloud:
+
+.. code::
+
+    $ openstack-juju sync-tools
+    $ openstack-juju bootstrap --metadata-source /home/ubuntu
 
 Now you can deploy charms within your OpenStack cloud.
 

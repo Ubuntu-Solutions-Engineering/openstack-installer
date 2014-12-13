@@ -1,8 +1,8 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "OPENSTACK-STATUS" "1" "December 12, 2014" "0.21" "Ubuntu Openstack Installer"
+.TH "OPENSTACK-JUJU" "1" "December 12, 2014" "0.21" "Ubuntu Openstack Installer"
 .SH NAME
-openstack-status \- Ubuntu OpenStack Status Documentation
+openstack-juju \- Ubuntu OpenStack Juju Documentation
 .
 .nr rst2man-indent-level 0
 .
@@ -35,26 +35,20 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .sp
 .nf
 .ft C
-usage: openstack\-status [\-h] [\-\-enable\-swift] [\-\-placement]
+usage: openstack\-juju [subcommand] [opts]
 
-Ubuntu OpenStack Installer
-
-optional arguments:
-  \-h, \-\-help      show this help message and exit
-  \-\-enable\-swift  Enable swift storage
-  \-\-placement     Show machine placement UI before deploying
+$ openstack\-juju deploy jenkins
+$ openstack\-juju deploy \-n 5 jenkins\-slave
+$ openstack\-juju add\-relation jenkins jenkins\-slave
+$ openstack\-juju set jenkins password=AseCreTPassWoRd
+$ openstack\-juju expose jenkins
 .ft P
 .fi
 .UNINDENT
 .UNINDENT
 .sp
-Ubuntu OpenStack installer is a metal to cloud image that provides an extremely
-simple way to install, deploy and scale an OpenStack cloud on top of
-Ubuntu server. Initial configurations are available for single
-physical system deployments as well as multiple physical system
-deployments.
-.sp
-This is the user interface for managing the deployed cloud.
+This is a wrapper around Juju to setup necessary requirements for allowing
+a user to orchestrate services on top of OpenStack.
 .SH AUTHOR
 Canonical Solutions Engineering
 .SH COPYRIGHT
