@@ -735,11 +735,13 @@ class LandscapeInstallFinal:
         utils.spew(self.lscape_yaml_path,
                    lscape_env_modified)
 
-        out = utils.get_command_output("juju-deployer -WdvL -w 180 -c {0} "
-                                       "landscape-dense-maas".format(
-                                           self.lscape_yaml_path),
-                                       timeout=None,
-                                       user_sudo=True)
+        out = utils.get_command_output(
+            "JUJU_HOME={0} juju-deployer -WdvL -w 180 -c {1} "
+            "landscape-dense-maas".format(
+                self.config.cfg_path,
+                self.lscape_yaml_path),
+            timeout=None,
+            user_sudo=True)
         if out['status']:
             log.error("Problem deploying Landscape: {}".format(out))
             raise Exception("Error deploying Landscape.")
