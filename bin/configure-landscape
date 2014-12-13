@@ -35,6 +35,7 @@ import hmac
 from hashlib import sha256
 from base64 import b64encode
 from cloudinstall.config import Config
+import cloudinstall.utils as utils
 import logging
 
 MAGIC_OK_STRING = 'New user - Landscape'
@@ -79,7 +80,7 @@ def run_query(access_key, secret_key, action, params, uri,
     """Make a low-level query against the Landscape API.
 
     @param access_key: The user access key.
-    param secret_key: The user secret key.
+    @param secret_key: The user secret key.
     @param action: The type of methods to call. For example, "GetComputers".
     @param params: A dictionary of the parameters to pass to the action.
     @param uri: The root URI of the API service. For example,
@@ -131,7 +132,9 @@ def run_query(access_key, secret_key, action, params, uri,
 def get_landscape_host():
     """ Assuming landscape has been deployed in landscape-dense-maas form,
     find the "dns-name" of the landscape web server. """
-    juju = yaml.load(check_output(['juju', 'status']))
+    out = utils.get_command_output(
+        'JUJU_HOME={} juju status'.format(cfg.cfg_path))
+    juju = yaml.load(out['output'])
 
     try:
         return juju['services']['apache2']['units']['apache2/0']['public-address']
