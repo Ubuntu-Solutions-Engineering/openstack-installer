@@ -596,7 +596,7 @@ def install_user():
 def install_home():
     """ returns installer user home
     """
-    return os.path.join('/home', install_user())
+    return os.path.expanduser("~"+install_user())
 
 
 def ssh_readkey():
