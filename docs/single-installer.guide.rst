@@ -106,42 +106,10 @@ The login credentials for the dashboard are:
 * username: **ubuntu**
 * password: **"password that was set during installation"**
 
-Accessing the Juju environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Accessing the OpenStack environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since the entire installation is contained within an lxc container an
-additional step is required to access the juju environment.
-
-To find out the ip address of the container housing the environment run:
-
-.. code::
-
-   $ sudo lxc-ls -f uoi-bootstrap
-
-   NAME           STATE    IPV4                      IPV6  AUTOSTART
-   -----------------------------------------------------------------
-   uoi-bootstrap  RUNNING  10.0.3.19, 192.168.122.1  -     NO       
-
-From here you can ssh into the container:
-
-.. code::
-
-   $ ssh ubuntu@10.0.3.19
-
-
-.. note::
-
-   By default the ssh key from the host system will already be available within the
-   container. If the installer generated an ssh-key that key will be passwordless,
-   however, if an existing ssh key was found it will use that instead.
-
-Once in the container simply use juju as normal:
-
-.. code::
-
-   ubuntu@uoi-bootstrap $ juju status
-   ubuntu@uoi-bootstrap $ juju deploy <service>
-
+See :doc:`Using Juju in OpenStack Guide <using-juju-in-openstack.guide>`
 
 Troubleshooting
 ^^^^^^^^^^^^^^^
