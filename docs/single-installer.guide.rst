@@ -114,8 +114,7 @@ See :doc:`Using Juju in OpenStack Guide <using-juju-in-openstack.guide>`
 Troubleshooting
 ^^^^^^^^^^^^^^^
 
-The installer keeps its own logs in **$HOME/.cloud-install/commands.log** within the
-container.
+The installer keeps its own logs in **$HOME/.cloud-install/commands.log**.
 
 Killing the current OpenStack deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
