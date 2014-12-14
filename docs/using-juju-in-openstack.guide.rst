@@ -1,16 +1,16 @@
 Using Juju in OpenStack
 =======================
 
+.. toctree::
+   :maxdepth: 2
+
 Once the OpenStack cloud has been deployed there are only a couple of steps
 to enable juju to deploy charms into the private cloud.
 
-.. note::
+.. attention::
 
     Juju requires swift storage so this needs to have been enabled
     during the install.
-
-Bootstrap Juju
-^^^^^^^^^^^^^^
 
 Generate necessary image metadata for Juju to utilize:
 
@@ -18,7 +18,7 @@ Generate necessary image metadata for Juju to utilize:
 
     $ openstack-juju metadata generate-image -i <image_id> -s trusty
 
-.. note::
+.. hint::
 
     <image_id> is found in the horizon dashboard `http://<public-ip>/horizon/project/images/`
 
@@ -53,7 +53,7 @@ Now you can deploy charms within your OpenStack cloud.
     $ openstack-juju set jenkins password=AseCreTPassWoRd
     $ openstack-juju expose jenkins
 
-.. note::
+.. caution::
 
     *Single Install Note* - Resources are limited in a single installation of OpenStack. So
     anything more than deploying a small service will fail due to resource constraints. For example,
