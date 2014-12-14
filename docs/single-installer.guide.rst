@@ -43,7 +43,7 @@ To start the installation run the following command
 
    $ sudo openstack-install
 
-.. note::
+.. important::
 
     The installer should be run as a non-root user.
 
@@ -60,12 +60,10 @@ Optional Flags
       -h          print this message
 
 
-.. note::
+.. attention::
 
     Enabling swift storage requires at least 3 instances and another additional
     instance for swift-proxy.
-
-.. note::
 
     If you wish to deploy services to this OpenStack using juju you will need
     to enable swift storage.
