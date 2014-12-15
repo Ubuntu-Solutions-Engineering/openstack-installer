@@ -32,12 +32,19 @@ from cloudinstall.placement.controller import AssignmentType
 log = logging.getLogger('cloudinstall.charms')
 
 CHARM_CONFIG_FILENAME = path.expanduser("~/.cloud-install/charmconf.yaml")
-CHARM_CONFIG = {}
-CHARM_CONFIG_RAW = None
-if path.exists(CHARM_CONFIG_FILENAME):
-    with open(CHARM_CONFIG_FILENAME) as f:
-        CHARM_CONFIG_RAW = f.read()
-        CHARM_CONFIG = yaml.load(CHARM_CONFIG_RAW)
+
+
+def get_charm_config():
+    """Returns charm config as python dict and raw yaml, if the file exists.
+    Returns {}, None if the file does not exist.
+    """
+    charm_config = {}
+    charm_config_raw = None
+    if path.exists(CHARM_CONFIG_FILENAME):
+        with open(CHARM_CONFIG_FILENAME) as f:
+            charm_config_raw = f.read()
+            charm_config = yaml.load(charm_config_raw)
+    return charm_config, charm_config_raw
 
 
 def query_cs(charm, series='trusty'):
@@ -92,6 +99,7 @@ class CharmBase:
     optional = False
     disabled = False
     menuable = False
+    subordinate = False
 
     def __init__(self, juju=None, juju_state=None, machine=None, ui=None):
         """ initialize
@@ -172,7 +180,7 @@ export OS_REGION_NAME=RegionOne
         all_args = " ".join(args)
         return "\"{}\"".format(all_args)
 
-    def deploy(self, machine_spec, num_units=1):
+    def deploy(self, machine_spec, num_units=None):
         """ Deploy charm and configuration options
 
         The default should be sufficient but if more functionality
@@ -188,12 +196,24 @@ export OS_REGION_NAME=RegionOne
 
         _charm_name_rev = self.charm_name
 
-        if self.charm_name in CHARM_CONFIG:
-            config_yaml = CHARM_CONFIG_RAW
+        charm_config, charm_config_raw = get_charm_config()
+        log.debug("charm_config = {} ".format(charm_config))
+        if self.charm_name in charm_config:
+            config_yaml = charm_config_raw
 
         # Set revision
         if self.charm_rev:
             _charm_name_rev = "{}-{}".format(self.charm_name, self.charm_rev)
+
+        if self.subordinate:
+            assert(num_units is None)
+            num_units = 0
+            assert(len(self.constraints) == 0)
+            self.constraints = None
+            machine_spec = None
+        else:
+            if num_units is None:
+                num_units = 1
 
         try:
             # TODO - might not need to pass self.constraints to deploy

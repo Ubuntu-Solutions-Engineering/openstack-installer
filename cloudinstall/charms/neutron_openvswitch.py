@@ -26,6 +26,7 @@ class CharmNeutronOpenvswitch(CharmBase):
     charm_rev = 1
     display_name = 'Neutron OpenVSwitch'
     menuable = True
+    subordinate = True
 
     def set_relations(self):
         repoll = super().set_relations()

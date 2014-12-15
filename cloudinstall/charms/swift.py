@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from cloudinstall.charms import (CharmBase, CHARM_CONFIG,
+from cloudinstall.charms import (CharmBase, get_charm_config,
                                  DisplayPriorities)
 
 log = logging.getLogger('cloudinstall.charms.compute')
@@ -38,8 +38,9 @@ class CharmSwift(CharmBase):
 
     @classmethod
     def required_num_units(self):
-        if 'swift-proxy' in CHARM_CONFIG:
-            num_replicas = CHARM_CONFIG.get('replicas',
+        charm_config, _ = get_charm_config()
+        if 'swift-proxy' in charm_config:
+            num_replicas = charm_config.get('replicas',
                                             self.default_replicas)
         else:
             num_replicas = self.default_replicas
