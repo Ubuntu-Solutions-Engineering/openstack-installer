@@ -21,8 +21,9 @@ from jinja2 import Environment, FileSystemLoader
 import logging
 import os
 import unittest
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import ANY, call, MagicMock, patch
 
+from cloudinstall.charms import CharmBase
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
 
 
@@ -34,15 +35,41 @@ def source_tree_template_loader(name):
     return Environment(loader=FileSystemLoader(p)).get_template(name)
 
 
+class TestCharmBase(unittest.TestCase):
+    def setUp(self):
+        self.mock_jujuclient = MagicMock(name='jujuclient')
+        self.mock_juju_state = MagicMock(name='juju_state')
+        self.mock_ui = MagicMock(name='ui')
+
+        self.get_config_patcher = patch('cloudinstall.charms.get_charm_config')
+        self.mock_get_config = self.get_config_patcher.start()
+        self.mock_get_config.return_value = ({}, None)
+
+        self.charm = CharmBase(juju=self.mock_jujuclient,
+                               juju_state=self.mock_juju_state,
+                               ui=self.mock_ui)
+
+    def tearDown(self):
+        self.get_config_patcher.stop()
+
+    def test_subordinate_deploy_success(self):
+        self.charm.subordinate = True
+        self.charm.charm_name = 'fake'
+        self.charm.deploy('fake mspec')
+        self.mock_jujuclient.deploy.assert_called_with('fake', 'fake',
+                                                       0, ANY, None,
+                                                       None)
+
+
 class TestCharmNeutronOpenvswitch(unittest.TestCase):
     def setUp(self):
-        self.mock_juju = MagicMock(name='juju')
+        self.mock_jujuclient = MagicMock(name='jujuclient')
         self.mock_juju_state = MagicMock(name='juju_state')
         charmbase_str = "cloudinstall.charms.neutron_openvswitch.CharmBase"
         with patch(charmbase_str) as mock_charmbase:
             mock_charmbase.set_relations.return_value = False
             mock_charmbase.is_related.return_value = False
-            self.charm = CharmNeutronOpenvswitch(self.mock_juju,
+            self.charm = CharmNeutronOpenvswitch(self.mock_jujuclient,
                                                  self.mock_juju_state)
 
     def test_set_relations_ok(self):
@@ -55,4 +82,4 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
                     call.add_relation('neutron-openvswitch:neutron-plugin-api',
                                       'neutron-api:neutron-plugin-api')]
 
-        self.assertEqual(self.mock_juju.mock_calls, expected)
+        self.assertEqual(self.mock_jujuclient.mock_calls, expected)
