@@ -4,6 +4,8 @@ Developer Guide
 The document walks you through installing the necessary packages and
 environment preparations in order to build the cloud installer.
 
+There is also auto-generated :doc:`API Documentation <modules>` available.
+
 Base system
 ^^^^^^^^^^^
 
