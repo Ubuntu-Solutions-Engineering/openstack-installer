@@ -520,13 +520,14 @@ def container_create(name, userdata):
     return out['status']
 
 
-def container_start(name):
+def container_start(name, lxc_logfile):
     """ starts lxc container
 
     :param str name: name of container
     """
     out = get_command_output(
-        'sudo lxc-start -n {0} -d'.format(name))
+        'sudo lxc-start -n {0} -d -o {1}'.format(name,
+                                                 lxc_logfile))
 
     if out['status'] > 0:
         raise Exception("Unable to start container: "
@@ -562,6 +563,29 @@ def container_destroy(name):
                         "{0}".format(out['output']))
 
     return out['status']
+
+
+def container_wait_checked(name, check_logfile, interval=20):
+    """waits for container to be in RUNNING state, checking
+    'check_logfile' every 'interval' seconds for error messages.
+
+    Intended to be used with container_start, which uses 'lxc-start
+    -d', which returns 0 immediately and does not detect errors.
+
+    returns when the container 'name' is in RUNNING state.
+    raises an exception if errors are detected.
+    """
+    while True:
+        log.debug("about to call lxc-wait:")
+        out = get_command_output('sudo lxc-wait -n {} -s RUNNING '
+                                 '-t {}'.format(name, interval))
+        if out['status'] == 0:
+            return
+        log.debug("not RUNNING yet, checking log")
+        grepout = get_command_output('grep -q ERROR {}'.format(check_logfile))
+        if grepout['status'] == 0:
+            raise Exception("Error detected starting container. See {} "
+                            "for details.".format(check_logfile))
 
 
 def container_wait(name):
