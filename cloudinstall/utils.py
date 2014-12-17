@@ -576,12 +576,13 @@ def container_wait_checked(name, check_logfile, interval=20):
     raises an exception if errors are detected.
     """
     while True:
-        log.debug("about to call lxc-wait:")
         out = get_command_output('sudo lxc-wait -n {} -s RUNNING '
                                  '-t {}'.format(name, interval))
         if out['status'] == 0:
             return
-        log.debug("not RUNNING yet, checking log")
+        log.debug("{} not RUNNING after {} seconds, "
+                  "checking '{}' for errors".format(name, interval,
+                                                    check_logfile))
         grepout = get_command_output('grep -q ERROR {}'.format(check_logfile))
         if grepout['status'] == 0:
             raise Exception("Error detected starting container. See {} "
