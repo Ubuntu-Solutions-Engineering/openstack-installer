@@ -511,9 +511,13 @@ def container_cp(name, filepath, dst):
 def container_create(name, userdata):
     """ creates a container from ubuntu-cloud template
     """
+    # NOTE: the -F template arg is a workaround. it flushes the lxc
+    # ubuntu template's image cache and forces a re-download. It
+    # should be removed after https://github.com/lxc/lxc/issues/381 is
+    # resolved.
     out = get_command_output(
         'sudo lxc-create -t ubuntu-cloud '
-        '-n {0} -- -u {1}'.format(name, userdata))
+        '-n {0} -- -F -u {1}'.format(name, userdata))
     if out['status'] > 0:
         raise Exception("Unable to create container: "
                         "{0}".format(out['output']))
