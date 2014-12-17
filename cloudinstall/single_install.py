@@ -208,11 +208,9 @@ class SingleInstall(InstallBase):
         self.display_controller.info_message("Bootstrapping Juju")
         self.start_task("Bootstrapping Juju")
         utils.container_run(
-            self.container_name, "JUJU_HOME={} juju bootstrap".format(
-                self.config.cfg_path))
+            self.container_name, "JUJU_HOME=~/.cloud-install juju bootstrap")
         utils.container_run(
-            self.container_name, "JUJU_HOME={} juju status".format(
-                self.config.cfg_path))
+            self.container_name, "JUJU_HOME=~/.cloud-install juju status")
 
         if self.opts.install_only:
             log.info("Done installing, stopping here per --install-only.")
