@@ -100,8 +100,11 @@ class SingleInstall(InstallBase):
                     os.path.join(utils.install_home(), '.ssh'),
                     'home/ubuntu/.ssh'))
 
-        utils.container_start(self.container_name)
-        utils.container_wait(self.container_name)
+        lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
+
+        utils.container_start(self.container_name, lxc_logfile)
+        utils.container_wait_checked(self.container_name,
+                                     lxc_logfile)
 
         tries = 1
         while not self.cloud_init_finished():
