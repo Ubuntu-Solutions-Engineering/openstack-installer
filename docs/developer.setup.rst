@@ -113,7 +113,7 @@ If you are testing the status screen's code for deploying charms, you may need t
 Changing the log level
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The cloud-status program logs to ~/.cloud-install/commands.log. The
+The openstack-status program logs to ~/.cloud-install/commands.log. The
 default log level for that log is "DEBUG". Most of the program logs at
 the DEBUG level, which is the most verbose that is currently defined.
 If you want a different log level, you can set the UCI_LOGLEVEL
@@ -122,7 +122,7 @@ environment variable. Your choices are "DEBUG", "INFO", "WARNING",
 
 .. code::
 
-    $ UCI_LOGLEVEL=ERROR cloud-status
+    $ UCI_LOGLEVEL=ERROR openstack-status
 
 
 Building documentation
