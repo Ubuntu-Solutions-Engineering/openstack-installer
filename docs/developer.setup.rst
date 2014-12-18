@@ -36,7 +36,7 @@ There are a few dependencies for the OpenStack installer which are kept in a PPA
 
 .. code::
 
-   $ sudo add-apt-repository -y ppa:cloud-installer/ppa
+   $ sudo add-apt-repository -y ppa:cloud-installer/experimental
    $ sudo apt-get update
 
 Use the target 'install-dependencies' to install a custom binary package for the build dependencies:
