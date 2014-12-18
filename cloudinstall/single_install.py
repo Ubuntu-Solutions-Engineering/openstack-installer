@@ -19,6 +19,7 @@ import os
 import sys
 import json
 import time
+import shutil
 from cloudinstall.config import Config
 from cloudinstall.installbase import InstallBase
 from cloudinstall import utils
@@ -62,17 +63,51 @@ class SingleInstall(InstallBase):
         modified_data = original_data.render(render_parts)
         utils.spew(dst_file, modified_data)
 
+    def prep_juju(self):
+        """ preps juju environments for bootstrap
+        """
+        # configure juju environment for bootstrap
+        single_env = utils.load_template('juju-env/single.yaml')
+        single_env_modified = single_env.render(
+            openstack_password=self.config.openstack_password)
+        utils.spew(os.path.join(self.config.juju_path,
+                                'environments.yaml'),
+                   single_env_modified,
+                   owner=utils.install_user())
+
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
         self.start_task("Creating container")
         utils.container_create(self.container_name, self.userdata)
-        utils.container_start(self.container_name)
-        utils.container_wait(self.container_name)
 
         # Set autostart bit
         with open(os.path.join(self.container_abspath, 'config'), 'a+') as f:
             f.write("lxc.start.auto = 1\nlxc.start.delay = 5\n")
+
+        # Mount points
+        with open(os.path.join(self.container_abspath, 'fstab'), 'a+') as f:
+            f.write(
+                "{0} {1} none bind,create=dir\n".format(
+                    self.config.cfg_path,
+                    'home/ubuntu/.cloud-install'))
+            f.write(
+                "{0} {1} none bind,create=dir\n".format(
+                    self.config.juju_path,
+                    'home/ubuntu/.juju'))
+            f.write(
+                "{0} {1} none bind,create=dir\n".format(
+                    os.path.join(utils.install_home(), '.ssh'),
+                    'home/ubuntu/.ssh'))
+            f.write(
+                "/var/cache/lxc var/cache/lxc none bind,create=dir\n")
+
+        lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
+
+        utils.container_start(self.container_name, lxc_logfile)
+        utils.container_wait_checked(self.container_name,
+                                     lxc_logfile)
+
         tries = 1
         while not self.cloud_init_finished():
             time.sleep(1)
@@ -87,8 +122,6 @@ class SingleInstall(InstallBase):
         cmd = 'sudo cat /run/cloud-init/result.json'
         try:
             result_json = utils.container_run(self.container_name, cmd)
-            # convert from bytes for json to process
-            result_json = result_json.decode("utf-8")
             log.debug(result_json)
         except:
             log.debug("Waiting for cloud-init status result")
@@ -111,13 +144,12 @@ class SingleInstall(InstallBase):
     def _install_upstream_deb(self):
         log.debug('Found upstream deb, installing that instead')
         filename = os.path.basename(self.opts.upstream_deb)
-        utils.container_cp(self.container_name, self.opts.upstream_deb,
-                           filename)
         utils.container_run(
-            self.container_name, 'sudo dpkg -i {}'.format(filename))
+            self.container_name, 'sudo dpkg -i .cloud-install/{}'.format(
+                filename))
 
-    def copy_installdata_and_set_perms(self):
-        """ copies install data and sets permissions on files/dirs
+    def set_perms(self):
+        """ sets permissions
         """
         try:
             utils.chown(self.config.cfg_path,
@@ -131,39 +163,6 @@ class SingleInstall(InstallBase):
         except:
             raise SingleInstallException(
                 "Unable to set ownership for {}".format(self.config.cfg_path))
-
-        # Install local copy of openstack installer if provided
-        if self.opts.upstream_deb and os.path.isfile(self.opts.upstream_deb):
-            self._install_upstream_deb()
-
-        # copy over the rest of our installation data from host
-        # and setup permissions
-
-        # setup charm configurations
-        utils.render_charm_config(self.config, self.opts)
-
-        utils.container_run(
-            self.container_name, 'mkdir -p .cloud-install')
-        utils.container_run(
-            self.container_name, 'sudo mkdir -p /etc/openstack')
-
-        utils.container_cp(self.container_name,
-                           os.path.join(
-                               utils.install_home(), '.cloud-install/*'),
-                           '.cloud-install/.')
-
-        utils.container_run(
-            self.container_name, "chmod 700 .cloud-install")
-
-        utils.container_run(
-            self.container_name, "chmod 600 -R .cloud-install/*")
-
-        # our ssh keys too
-        utils.container_cp(self.container_name,
-                           os.path.join(utils.install_home(),
-                                        '.ssh/id_rsa*'),
-                           '.ssh/.')
-        utils.container_run(self.container_name, "chmod 600 .ssh/id_rsa*")
 
     def run(self):
         self.register_tasks([
@@ -187,32 +186,33 @@ class SingleInstall(InstallBase):
 
         utils.ssh_genkey()
 
-        # Prepare cloud-init file for creation
+        # Preparations
         self.prep_userdata()
+
+        # setup charm configurations
+        utils.render_charm_config(self.config, self.opts)
+
+        self.prep_juju()
+
+        # Set permissions
+        self.set_perms()
 
         # Start container
         self.create_container_and_wait()
 
-        # configure juju environment for bootstrap
-        single_env = utils.load_template('juju-env/single.yaml')
-        single_env_modified = single_env.render(
-            openstack_password=self.config.openstack_password)
-        utils.spew('/tmp/single.yaml', single_env_modified)
-        utils.container_run(self.container_name,
-                            'mkdir -p .juju')
-        utils.container_cp(self.container_name,
-                           '/tmp/single.yaml',
-                           '.juju/environments.yaml')
-
-        # Set permissions
-        self.copy_installdata_and_set_perms()
+        # Install local copy of openstack installer if provided
+        if self.opts.upstream_deb and os.path.isfile(self.opts.upstream_deb):
+            shutil.copy(self.opts.upstream_deb, self.config.cfg_path)
+            self._install_upstream_deb()
 
         # start the party
         cloud_status_bin = ['openstack-status']
         self.display_controller.info_message("Bootstrapping Juju")
         self.start_task("Bootstrapping Juju")
-        utils.container_run(self.container_name, "juju bootstrap")
-        utils.container_run(self.container_name, "juju status")
+        utils.container_run(
+            self.container_name, "JUJU_HOME=~/.cloud-install juju bootstrap")
+        utils.container_run(
+            self.container_name, "JUJU_HOME=~/.cloud-install juju status")
 
         if self.opts.install_only:
             log.info("Done installing, stopping here per --install-only.")

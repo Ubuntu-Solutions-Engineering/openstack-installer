@@ -34,7 +34,7 @@ case $WHAT in
     echo Multi install cleansing.
     echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    juju destroy-environment --yes --force maas
+    JUJU_HOME=~/.cloud-install juju destroy-environment --yes --force maas
 
     if [ "$MAAS_TYPE" == "new" ]; then
         rm -r ~/.maascli.db

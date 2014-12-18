@@ -43,7 +43,7 @@ To start the installation run the following command
 
    $ sudo openstack-install
 
-.. note::
+.. important::
 
     The installer should be run as a non-root user.
 
@@ -60,12 +60,10 @@ Optional Flags
       -h          print this message
 
 
-.. note::
+.. attention::
 
     Enabling swift storage requires at least 3 instances and another additional
     instance for swift-proxy.
-
-.. note::
 
     If you wish to deploy services to this OpenStack using juju you will need
     to enable swift storage.
@@ -106,48 +104,15 @@ The login credentials for the dashboard are:
 * username: **ubuntu**
 * password: **"password that was set during installation"**
 
-Accessing the Juju environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Accessing the OpenStack environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since the entire installation is contained within an lxc container an
-additional step is required to access the juju environment.
-
-To find out the ip address of the container housing the environment run:
-
-.. code::
-
-   $ sudo lxc-ls -f uoi-bootstrap
-
-   NAME           STATE    IPV4                      IPV6  AUTOSTART
-   -----------------------------------------------------------------
-   uoi-bootstrap  RUNNING  10.0.3.19, 192.168.122.1  -     NO       
-
-From here you can ssh into the container:
-
-.. code::
-
-   $ ssh ubuntu@10.0.3.19
-
-
-.. note::
-
-   By default the ssh key from the host system will already be available within the
-   container. If the installer generated an ssh-key that key will be passwordless,
-   however, if an existing ssh key was found it will use that instead.
-
-Once in the container simply use juju as normal:
-
-.. code::
-
-   ubuntu@uoi-bootstrap $ juju status
-   ubuntu@uoi-bootstrap $ juju deploy <service>
-
+See :doc:`Using Juju in OpenStack Guide <using-juju-in-openstack.guide>`
 
 Troubleshooting
 ^^^^^^^^^^^^^^^
 
-The installer keeps its own logs in **$HOME/.cloud-install/commands.log** within the
-container.
+The installer keeps its own logs in **$HOME/.cloud-install/commands.log**.
 
 Killing the current OpenStack deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
