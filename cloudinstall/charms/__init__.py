@@ -314,7 +314,7 @@ class CharmQueue:
 
     def watch_deploy(self):
         log.debug("Starting charm deploy watcher.")
-        while True:
+        while not self.charm_deploy_q.empty():
             try:
                 charm = self.charm_deploy_q.get()
                 err = charm.deploy()  # TODO call with machine placement
@@ -330,7 +330,7 @@ class CharmQueue:
     @utils.async
     def watch_relations(self):
         log.debug("Starting charm relations watcher.")
-        while True:
+        while not self.charm_relations_q.empty():
             try:
                 charm = self.charm_relations_q.get()
                 err = charm.set_relations()
@@ -346,7 +346,7 @@ class CharmQueue:
     @utils.async
     def watch_post_proc(self):
         log.debug("Starting charm post processing watcher.")
-        while True:
+        while not self.charm_post_proc_q.empty():
             try:
                 charm = self.charm_post_proc_q.get()
                 err = charm.post_proc()
@@ -358,3 +358,4 @@ class CharmQueue:
                 log.exception(msg)
                 self.ui.status_error_message(msg)
             time.sleep(10)
+        utils.finalize_status_out(True, 'Completed successfully.')
