@@ -213,7 +213,7 @@ class SingleInstall(InstallBase):
             self.container_name, "JUJU_HOME=~/.cloud-install juju bootstrap")
         utils.container_run(
             self.container_name, "JUJU_HOME=~/.cloud-install juju status")
-
+        self.stop_current_task()
         if self.opts.install_only:
             log.info("Done installing, stopping here per --install-only.")
             sys.exit(0)
