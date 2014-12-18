@@ -81,7 +81,7 @@ def cleanup():
     pid = os.path.join(install_home(), '.cloud-install/openstack.pid')
     if os.path.isfile(pid):
         os.remove(pid)
-    os.system('stty sane')
+    os.system('stty sane && reset')
 
 
 def write_status_file(status='', msg=''):

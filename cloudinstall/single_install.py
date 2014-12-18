@@ -46,8 +46,7 @@ class SingleInstall(InstallBase):
             self.config.cfg_path, 'userdata.yaml')
 
         # Sets install type
-        utils.spew(os.path.join(self.config.cfg_path, 'single'),
-                   'auto-generated')
+        self.config.set_install_type('single')
 
     def prep_userdata(self):
         """ preps userdata file for container install

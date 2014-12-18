@@ -32,10 +32,7 @@ class LandscapeInstall:
         self.config = Config()
         self.opts = opts
         self.display_controller = display_controller
-        # Sets install type
-        utils.spew(os.path.join(self.config.cfg_path,
-                                'landscape'),
-                   'auto-generated')
+        self.config.set_install_type('landscape')
 
         self.landscape_tasks = ["Preparing Landscape",
                                 "Deploying Landscape",
