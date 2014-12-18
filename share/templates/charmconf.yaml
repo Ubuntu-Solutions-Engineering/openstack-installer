@@ -43,12 +43,14 @@ mysql:
   max-connections: 25000
 
 neutron-api:
+  neutron-security-groups: True
 {% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
 {% endif %}
 
 nova-cloud-controller:
   network-manager: Neutron
+  quantum-security-groups: "yes"
 {% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
 {% endif %}
