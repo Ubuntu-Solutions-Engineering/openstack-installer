@@ -81,9 +81,7 @@ class MultiInstall(InstallBase):
         self.installing_new_maas = False
         # Sets install type
         if not self.config.is_landscape:
-            utils.spew(os.path.join(self.config.cfg_path,
-                                    'multi'),
-                       'auto-generated')
+            self.config.set_install_type('multi')
 
     def set_perms(self):
         # Set permissions
