@@ -155,6 +155,10 @@ if __name__ == '__main__':
                "that environment before proceeding with a new install.\n\n")
         raise SystemExit(msg)
 
+    if opts.openstack_release:
+        utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
+                   opts.openstack_release, owner=utils.install_user())
+
     install = InstallController(
         ui=PegasusGUI(header=InstallHeader()), opts=opts)
     logger.info("cloud-install starting with options: {}".format(opts))
