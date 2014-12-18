@@ -363,10 +363,10 @@ class Controller(DisplayController):
     """ Controller for Juju deployments and Maas machine init """
 
     def __init__(self, **kwds):
+        super().__init__(**kwds)
         self.charm_modules = utils.load_charms()
         self.juju_m_idmap = None  # for single, {instance_id: machine id}
         self.deployed_charm_classes = []
-        super().__init__(**kwds)
 
     @utils.async
     def wait_for_maas_async(self):

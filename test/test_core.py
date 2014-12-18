@@ -34,6 +34,12 @@ class DisplayControllerTestCase(unittest.TestCase):
         tf = NamedTemporaryFile(mode='w+')
         self.p_placementsfilename = PropertyMock(return_value=tf.name)
         self.mock_opts = MagicMock()
+        self.get_config_patcher = patch('cloudinstall.charms.get_charm_config')
+        self.mock_get_config = self.get_config_patcher.start()
+        self.mock_get_config.return_value = ({}, None)
+
+    def tearDown(self):
+        self.get_config_patcher.stop()
 
     def test_initialize_multi(self, mock_config, mock_conn_maas,
                               mock_jujuclient):

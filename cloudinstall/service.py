@@ -158,7 +158,11 @@ class Service:
         :rtype: Unit()
         """
         units_list = []
-        for unit_name, units in self.service.get('Units', {}).items():
+        units_dict = self.service.get('Units', {})
+        if units_dict is None:
+            return units_list
+
+        for unit_name, units in units_dict.items():
             units_list.append(Unit(unit_name, units))
         return units_list
 
