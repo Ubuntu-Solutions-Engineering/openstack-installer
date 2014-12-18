@@ -34,6 +34,7 @@ from functools import wraps
 import time
 from importlib import import_module
 import pkgutil
+import platform
 import sys
 import errno
 import shlex
@@ -102,6 +103,17 @@ def load_charms():
     charm_modules = [import_module('cloudinstall.charms.' + mname)
                      for (_, mname, _) in
                      pkgutil.iter_modules(cloudinstall.charms.__path__)]
+
+    release_path = os.path.join(install_home(),
+                                '.cloud-install/openstack_release')
+    if os.path.exists(release_path):
+        openstack_release = slurp(release_path)
+    else:
+        openstack_release = cloudinstall.charms.CharmBase.openstack_release_min
+
+    charm_modules = [m for m in charm_modules if
+                     (m.__charm_class__.openstack_release_min <=
+                      openstack_release[0].lower())]
     return charm_modules
 
 
@@ -117,6 +129,12 @@ def render_charm_config(config, opts):
     charm_conf = load_template('charmconf.yaml')
 
     template_args = dict(openstack_password=config.openstack_password)
+
+    if opts.openstack_release:
+        ubuntu_distname = platform.dist()[-1]
+        openstack_origin = "cloud:{}-{}".format(ubuntu_distname,
+                                                opts.openstack_release)
+        template_args['openstack_origin'] = openstack_origin
 
     if config.is_single:
         template_args['worker_multiplier'] = '1'

@@ -57,6 +57,10 @@ def parse_options(argv, cfg):
                         dest='killcloud', default=False,
                         help='Tear down existing cloud leaving userdata '
                         'in place. Useful for iterative deploys.')
+    parser.add_argument('--openstack-release', default=None,
+                        dest='openstack_release',
+                        help="Specify a specific OpenStack release by code-name, "
+                        "e.g. 'icehouse' or 'juno'")
     parser.add_argument('-a', type=str, default=None,
                         help='<arch, ..> comma-separated list of '
                         'architectures to filter available cloud '
@@ -150,6 +154,10 @@ if __name__ == '__main__':
         msg = ("\n\nExisting OpenStack environment detected. Please destroy "
                "that environment before proceeding with a new install.\n\n")
         raise SystemExit(msg)
+
+    if opts.openstack_release:
+        utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
+                   opts.openstack_release, owner=utils.install_user())
 
     install = InstallController(
         ui=PegasusGUI(header=InstallHeader()), opts=opts)

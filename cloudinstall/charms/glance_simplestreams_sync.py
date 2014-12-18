@@ -22,7 +22,7 @@ import shutil
 import subprocess
 
 from cloudinstall.charms import (CharmBase, DisplayPriorities,
-                                 CHARM_CONFIG,
+                                 get_charm_config,
                                  CHARM_CONFIG_FILENAME)
 
 CHARM_STABLE_URL = ("https://api.github.com/repos/Ubuntu-Solutions-Engineering"
@@ -102,7 +102,8 @@ class CharmGlanceSimplestreamsSync(CharmBase):
                ' --constraints {constraints}'
                ' --to {mspec}').format(**kwds)
 
-        if self.charm_name in CHARM_CONFIG:
+        charm_config, _ = get_charm_config()
+        if self.charm_name in charm_config:
             cmd += ' --config ' + CHARM_CONFIG_FILENAME
 
         try:

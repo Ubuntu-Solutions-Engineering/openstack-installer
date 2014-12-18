@@ -42,13 +42,36 @@ class TestRenderCharmConfig(unittest.TestCase):
         self.config.is_single = False
         self.config.cfg_path = 'fake_cfg_path'
         self.config.openstack_password = 'fake_pw'
-
         self.ltp = patch('cloudinstall.utils.load_template')
         self.mock_load_template = self.ltp.start()
         self.mock_load_template.side_effect = source_tree_template_loader
 
     def tearDown(self):
         self.ltp.stop()
+
+    def _do_test_osrel(self, optsvalue, expected, mockspew):
+        "check that opts.openstack_release is rendered correctly"
+        opts = MagicMock()
+        opts.openstack_release = optsvalue
+
+        render_charm_config(self.config, opts)
+        (fake_path, generated_yaml), kwargs = mockspew.call_args
+        d = yaml.load(generated_yaml)
+        for oscharmname in ['nova-cloud-controller', 'glance',
+                            'openstack-dashboard', 'keystone', 'swift-proxy']:
+            if expected is None:
+                self.assertTrue(oscharmname not in d or
+                                'openstack-origin' not in d[oscharmname])
+            else:
+                self.assertEqual(d[oscharmname]['openstack-origin'], expected)
+
+    def test_render_openstack_release_default(self, mockspew):
+        self._do_test_osrel(None, None, mockspew)
+
+    def test_render_openstack_release_given(self, mockspew):
+        with patch('cloudinstall.utils.platform.dist') as mock_dist:
+            mock_dist.return_value = ('', '', 'willing')
+            self._do_test_osrel('klaxon', 'cloud:willing-klaxon', mockspew)
 
     def _do_test_multiplier(self, is_single, mockspew, expected=None):
         self.config.is_single = is_single
@@ -57,10 +80,8 @@ class TestRenderCharmConfig(unittest.TestCase):
         d = yaml.load(generated_yaml)
         wmul = d['nova-cloud-controller'].get('worker-multiplier', None)
         self.assertEqual(wmul, expected)
-        # glance should either have the key or not be there at all:
-        gexpected = {'worker-multiplier': expected} if expected else None
-        wmul = d.get('glance', None)
-        self.assertEqual(wmul, gexpected)
+        wmul = d['glance'].get('worker-multiplier', None)
+        self.assertEqual(wmul, expected)
         wmul = d['keystone'].get('worker-multiplier', None)
         self.assertEqual(wmul, expected)
 
