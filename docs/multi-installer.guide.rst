@@ -108,6 +108,11 @@ The installer will run through a series of steps starting with making
 sure the necessary bits are available for a multi system installation
 and ending with a `juju` bootstrapped system.
 
+Accessing the OpenStack environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See :doc:`Using Juju in OpenStack Guide <using-juju-in-openstack.guide>`
+
 Tips
 ^^^^
 

@@ -327,7 +327,7 @@ class MaasState:
         :param state
 
         :returns: machines known to Maas, except for juju bootstrap
-        machine, matching state type, or all if state=None
+            machine, matching state type, or all if state=None
 
         :rtype: list of MaasMachine
 

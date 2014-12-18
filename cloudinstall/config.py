@@ -132,7 +132,7 @@ class Config:
 
     @property
     def juju_path(self):
-        return os.path.join(utils.install_home(), '.juju')
+        return os.path.join(self.cfg_path)
 
     @property
     def juju_env(self):
@@ -148,9 +148,7 @@ class Config:
             env_file = 'maas.jenv'
 
         if env_file:
-            env_path = os.path.join(utils.install_home(),
-                                    '.juju/environments',
-                                    env_file)
+            env_path = os.path.join(self.juju_path, 'environments', env_file)
         else:
             raise ConfigException('Unable to determine installer type.')
 
@@ -169,18 +167,17 @@ class Config:
 
     def update_environments_yaml(self, key, val, provider='local'):
         """ updates environments.yaml base file """
-        _env_yaml = os.path.join(utils.install_home(),
-                                 ".juju/environments.yaml")
-        if os.path.exists(_env_yaml):
-            with open(_env_yaml) as f:
+        if os.path.exists(self.juju_environments_path):
+            with open(self.juju_environments_path) as f:
                 _env_yaml_raw = f.read()
                 env_yaml = yaml.load(_env_yaml_raw)
         else:
-            raise ConfigException("~/.juju/environments.yaml unavailable, "
-                                  "is juju bootstrapped?")
+            raise ConfigException(
+                "{} unavailable, is juju bootstrapped?".format(
+                    self.juju_environments_path))
         if key in env_yaml['environments'][provider]:
             env_yaml['environments'][provider][key] = val
-        with open(_env_yaml, 'w') as f:
+        with open(self.juju_environments_path, 'w') as f:
             _env_yaml_raw = yaml.safe_dump(env_yaml, default_flow_style=False)
             f.write(_env_yaml_raw)
 

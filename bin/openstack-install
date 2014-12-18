@@ -135,6 +135,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(cfg.cfg_path):
         os.makedirs(cfg.cfg_path)
+        utils.chown(cfg.cfg_path, utils.install_user(), utils.install_user())
 
     if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
         msg = ("\n\nError:\n\n"
@@ -147,7 +148,8 @@ if __name__ == '__main__':
                "    $ sudo openstack-install -u\n\n")
         raise SystemExit(msg)
 
-    out = utils.get_command_output('juju api-endpoints')
+    out = utils.get_command_output(
+        'JUJU_HOME={} juju api-endpoints'.format(cfg.cfg_path), user_sudo=True)
     if out['status'] == 0:
         msg = ("\n\nExisting OpenStack environment detected. Please destroy "
                "that environment before proceeding with a new install.\n\n")

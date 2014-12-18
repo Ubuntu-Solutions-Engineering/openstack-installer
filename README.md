@@ -16,6 +16,7 @@ Mailing list: https://lists.ubuntu.com/mailman/listinfo/ubuntu-openstack-install
 
 * [Single Installer guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/single-installer.guide.html)
 * [Multi Installer guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/multi-installer.guide.html)
+* [Landscape OpenStack Autopilot Guide](http://www.ubuntu.com/download/cloud/install-ubuntu-openstack)
 
 # Copyright
 

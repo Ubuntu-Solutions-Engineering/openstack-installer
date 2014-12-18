@@ -470,7 +470,7 @@ def container_run(name, cmd):
     try:
         ret = check_output(wrapped_cmd, shell=True)
         log.debug(ret)
-        return ret
+        return ret.decode('utf-8')
     except CalledProcessError as e:
         raise Exception("There was a problem running ({0}) in the container "
                         "({1}:{2}) Error: {3}\n"
@@ -518,22 +518,27 @@ def container_cp(name, filepath, dst):
 def container_create(name, userdata):
     """ creates a container from ubuntu-cloud template
     """
+    # NOTE: the -F template arg is a workaround. it flushes the lxc
+    # ubuntu template's image cache and forces a re-download. It
+    # should be removed after https://github.com/lxc/lxc/issues/381 is
+    # resolved.
     out = get_command_output(
         'sudo lxc-create -t ubuntu-cloud '
-        '-n {0} -- -u {1}'.format(name, userdata))
+        '-n {0} -- -F -u {1}'.format(name, userdata))
     if out['status'] > 0:
         raise Exception("Unable to create container: "
                         "{0}".format(out['output']))
     return out['status']
 
 
-def container_start(name):
+def container_start(name, lxc_logfile):
     """ starts lxc container
 
     :param str name: name of container
     """
     out = get_command_output(
-        'sudo lxc-start -n {0} -d'.format(name))
+        'sudo lxc-start -n {0} -d -o {1}'.format(name,
+                                                 lxc_logfile))
 
     if out['status'] > 0:
         raise Exception("Unable to start container: "
@@ -571,6 +576,30 @@ def container_destroy(name):
     return out['status']
 
 
+def container_wait_checked(name, check_logfile, interval=20):
+    """waits for container to be in RUNNING state, checking
+    'check_logfile' every 'interval' seconds for error messages.
+
+    Intended to be used with container_start, which uses 'lxc-start
+    -d', which returns 0 immediately and does not detect errors.
+
+    returns when the container 'name' is in RUNNING state.
+    raises an exception if errors are detected.
+    """
+    while True:
+        out = get_command_output('sudo lxc-wait -n {} -s RUNNING '
+                                 '-t {}'.format(name, interval))
+        if out['status'] == 0:
+            return
+        log.debug("{} not RUNNING after {} seconds, "
+                  "checking '{}' for errors".format(name, interval,
+                                                    check_logfile))
+        grepout = get_command_output('grep -q ERROR {}'.format(check_logfile))
+        if grepout['status'] == 0:
+            raise Exception("Error detected starting container. See {} "
+                            "for details.".format(check_logfile))
+
+
 def container_wait(name):
     """ waits for the container to be in a RUNNING state
 
@@ -603,7 +632,7 @@ def install_user():
 def install_home():
     """ returns installer user home
     """
-    return os.path.join('/home', install_user())
+    return os.path.expanduser("~"+install_user())
 
 
 def ssh_readkey():
