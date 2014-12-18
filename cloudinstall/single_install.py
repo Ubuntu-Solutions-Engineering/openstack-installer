@@ -16,7 +16,6 @@
 
 import logging
 import os
-import sys
 import json
 import time
 import shutil
@@ -206,7 +205,8 @@ class SingleInstall(InstallBase):
 
         # Stop before we attempt to access container
         if self.opts.install_only:
-            raise SystemExit("Done installing, stopping here per --install-only.")
+            raise SystemExit(
+                "Done installing, stopping here per --install-only.")
 
         # start the party
         cloud_status_bin = ['openstack-status']

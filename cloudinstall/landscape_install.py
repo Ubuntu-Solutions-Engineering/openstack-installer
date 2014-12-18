@@ -15,12 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import os
 
 from cloudinstall.config import Config
 from cloudinstall.multi_install import (MultiInstallNewMaas,
                                         MultiInstallExistingMaas)
-from cloudinstall import utils
 
 
 log = logging.getLogger('cloudinstall.landscape_install')
