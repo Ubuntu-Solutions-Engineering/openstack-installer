@@ -100,6 +100,7 @@ class CharmBase:
     disabled = False
     menuable = False
     subordinate = False
+    openstack_release_min = 'i'
 
     def __init__(self, juju=None, juju_state=None, machine=None, ui=None):
         """ initialize

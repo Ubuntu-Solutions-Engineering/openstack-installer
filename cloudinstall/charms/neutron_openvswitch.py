@@ -27,6 +27,7 @@ class CharmNeutronOpenvswitch(CharmBase):
     display_name = 'Neutron OpenVSwitch'
     menuable = True
     subordinate = True
+    openstack_release_min = 'j'
 
     def set_relations(self):
         repoll = super().set_relations()

@@ -91,6 +91,17 @@ def load_charms():
     charm_modules = [import_module('cloudinstall.charms.' + mname)
                      for (_, mname, _) in
                      pkgutil.iter_modules(cloudinstall.charms.__path__)]
+
+    release_path = os.path.join(install_home(),
+                                '.cloud-install/openstack_release')
+    if os.path.exists(release_path):
+        openstack_release = slurp(release_path)
+    else:
+        openstack_release = cloudinstall.charms.CharmBase.openstack_release_min
+
+    charm_modules = [m for m in charm_modules if
+                     (m.__charm_class__.openstack_release_min <=
+                      openstack_release[0].lower())]
     return charm_modules
 
 
