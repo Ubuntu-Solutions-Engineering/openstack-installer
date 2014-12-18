@@ -1,3 +1,4 @@
+
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -89,8 +90,19 @@ class InstallBase:
         self.stopped = False
         if self.alarm is None:
             self.update_progress()
+        self.write_timings()
+
+    def write_timings(self):
+        readable_tasks = []
+        for n, s, e in self.tasks:
+            if e is not None and s is not None:
+                timing = e - s
+            else:
+                timing = None
+            readable_tasks.append((n, s, e, timing))
+
         utils.spew(os.path.join(self.config.cfg_path, 'timings.yaml'),
-                   yaml.dump(self.tasks),
+                   yaml.dump(readable_tasks),
                    utils.install_user())
 
     def stop_current_task(self):
@@ -105,6 +117,7 @@ class InstallBase:
         self.tasks[self.current_task_index] = (n, s, time.time())
         self.current_task_index += 1
         self.stopped = True
+        self.write_timings()
 
     def update_progress(self, loop=None, userdata=None):
         self.alarm = None

@@ -46,8 +46,7 @@ class SingleInstall(InstallBase):
             self.config.cfg_path, 'userdata.yaml')
 
         # Sets install type
-        utils.spew(os.path.join(self.config.cfg_path, 'single'),
-                   'auto-generated')
+        self.config.set_install_type('single')
 
     def prep_userdata(self):
         """ preps userdata file for container install
@@ -205,6 +204,10 @@ class SingleInstall(InstallBase):
             shutil.copy(self.opts.upstream_deb, self.config.cfg_path)
             self._install_upstream_deb()
 
+        # Stop before we attempt to access container
+        if self.opts.install_only:
+            raise SystemExit("Done installing, stopping here per --install-only.")
+
         # start the party
         cloud_status_bin = ['openstack-status']
         self.display_controller.info_message("Bootstrapping Juju")
@@ -213,10 +216,7 @@ class SingleInstall(InstallBase):
             self.container_name, "JUJU_HOME=~/.cloud-install juju bootstrap")
         utils.container_run(
             self.container_name, "JUJU_HOME=~/.cloud-install juju status")
-
-        if self.opts.install_only:
-            log.info("Done installing, stopping here per --install-only.")
-            sys.exit(0)
+        self.stop_current_task()
 
         self.display_controller.info_message("Starting cloud deployment")
         utils.container_run_status(

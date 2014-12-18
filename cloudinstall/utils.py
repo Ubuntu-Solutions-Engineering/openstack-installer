@@ -39,6 +39,7 @@ import sys
 import errno
 import shlex
 import shutil
+import json
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -49,6 +50,7 @@ blank_len = None
 def global_exchandler(type, value, tb):
     """ helper routine capturing tracebacks and printing to log file """
     tb_list = traceback.format_exception(type, value, tb)
+    write_status_file('fail', "".join(tb_list))
     log.debug("".join(tb_list))
 
 
@@ -80,7 +82,17 @@ def cleanup():
     pid = os.path.join(install_home(), '.cloud-install/openstack.pid')
     if os.path.isfile(pid):
         os.remove(pid)
-    os.system('stty sane')
+    os.system('stty sane && reset')
+
+
+def write_status_file(status='', msg=''):
+    """ Writes out a completed status file
+
+    :param str status: success or fail
+    :param str msg: any error/success output
+    """
+    status_file = os.path.join(install_home(), '.cloud-install/finished.json')
+    spew(status_file, json.dumps(dict(status=status, msg=msg)))
 
 
 def load_charms():
@@ -481,7 +493,7 @@ def container_run(name, cmd):
     try:
         ret = check_output(wrapped_cmd, shell=True)
         log.debug(ret)
-        return ret.decode('utf-8')
+        return ret.strip().decode('utf-8')
     except CalledProcessError as e:
         raise Exception("There was a problem running ({0}) in the container "
                         "({1}:{2}) Error: {3}\n"
