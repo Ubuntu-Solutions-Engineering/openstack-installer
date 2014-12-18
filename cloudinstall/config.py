@@ -130,6 +130,12 @@ class Config:
     def is_landscape(self):
         return os.path.exists(os.path.join(self.cfg_path, 'landscape'))
 
+    def set_install_type(self, install_type):
+        """ Stores installer type """
+        # Sets install type
+        utils.spew(os.path.join(self.cfg_path, 'single'),
+                   'auto-generated')
+
     @property
     def juju_path(self):
         return os.path.join(self.cfg_path)
