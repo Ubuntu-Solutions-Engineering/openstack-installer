@@ -358,4 +358,4 @@ class CharmQueue:
                 log.exception(msg)
                 self.ui.status_error_message(msg)
             time.sleep(10)
-        utils.finalize_status_out(True, 'Completed successfully.')
+        utils.write_status_file('success', 'Completed successfully.')

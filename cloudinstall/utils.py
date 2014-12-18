@@ -49,7 +49,7 @@ blank_len = None
 def global_exchandler(type, value, tb):
     """ helper routine capturing tracebacks and printing to log file """
     tb_list = traceback.format_exception(type, value, tb)
-    finalize_status_out(msg="".join(tb_list))
+    write_status_file('fail', "".join(tb_list))
     log.debug("".join(tb_list))
 
 
@@ -84,10 +84,10 @@ def cleanup():
     os.system('stty sane')
 
 
-def finalize_status_out(status=False, msg=''):
+def write_status_file(status='', msg=''):
     """ Writes out a completed status file
 
-    :param bool status: Status of exit True=SUCCESS, False=FAIL
+    :param str status: success or fail
     :param str msg: any error/success output
     """
     status_file = os.path.join(install_home(), '.cloud-install/finished.json')
