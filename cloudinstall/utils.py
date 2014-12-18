@@ -475,7 +475,7 @@ def container_run(name, cmd):
     try:
         ret = check_output(wrapped_cmd, shell=True)
         log.debug(ret)
-        return ret.decode('utf-8')
+        return ret.strip().decode('utf-8')
     except CalledProcessError as e:
         raise Exception("There was a problem running ({0}) in the container "
                         "({1}:{2}) Error: {3}\n"
