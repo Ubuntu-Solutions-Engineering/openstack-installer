@@ -546,9 +546,16 @@ def container_create(name, userdata):
     # ubuntu template's image cache and forces a re-download. It
     # should be removed after https://github.com/lxc/lxc/issues/381 is
     # resolved.
+    flushflag = "-F"
+    if os.getenv("USE_LXC_IMAGE_CACHE"):
+        log.debug("USE_LXC_IMAGE_CACHE set, so not flushing in lxc-create")
+        flushflag = ""
     out = get_command_output(
         'sudo lxc-create -t ubuntu-cloud '
-        '-n {0} -- -F -u {1}'.format(name, userdata))
+        '-n {name} -- {flushflag} '
+        '-u {userdatafilename}'.format(name=name,
+                                       flushflag=flushflag,
+                                       userdatafilename=userdata))
     if out['status'] > 0:
         raise Exception("Unable to create container: "
                         "{0}".format(out['output']))
