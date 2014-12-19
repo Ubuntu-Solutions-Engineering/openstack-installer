@@ -133,7 +133,7 @@ class Config:
     def set_install_type(self, install_type):
         """ Stores installer type """
         # Sets install type
-        utils.spew(os.path.join(self.cfg_path, 'single'),
+        utils.spew(os.path.join(self.cfg_path, install_type),
                    'auto-generated')
 
     @property

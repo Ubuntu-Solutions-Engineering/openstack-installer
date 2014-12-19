@@ -82,7 +82,8 @@ def cleanup():
     pid = os.path.join(install_home(), '.cloud-install/openstack.pid')
     if os.path.isfile(pid):
         os.remove(pid)
-    os.system('stty sane && reset')
+    sys.stderr.write("\x1b[2J\x1b[H")
+    call(['stty', 'sane'])
 
 
 def write_status_file(status='', msg=''):
@@ -655,7 +656,7 @@ def install_user():
 def install_home():
     """ returns installer user home
     """
-    return os.path.expanduser("~"+install_user())
+    return os.path.expanduser("~" + install_user())
 
 
 def ssh_readkey():
