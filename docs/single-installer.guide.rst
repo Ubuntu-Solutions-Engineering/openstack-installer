@@ -51,14 +51,46 @@ Optional Flags
 
 .. code::
 
-    Options:
-      -c <file>   POSIX shell script to be sourced by installer
-                  automating install by pre-setting menu responses.
-      -s          enable swift-storage
-      -i          install only (don't invoke openstack-status)
-      -u          uninstall the cloud
-      -h          print this message
-
+    usage: openstack-install [-h] [-i] [-u] [-k]
+                             [--openstack-release OPENSTACK_RELEASE] [-a ARCH]
+                             [-r RELEASE] [--with-maas-address IP]
+                             [--with-maas-apikey KEY] [-p]
+                             [--extra-ppa EXTRA_PPA [EXTRA_PPA ...]]
+                             [--upstream-deb UPSTREAM_DEB] [--version]
+    
+    Ubuntu Openstack Installer
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -i, --install-only    install and bootstrap MAAS/Juju/Landscape (as
+                            applicable) only. Will not deploy any OpenStack
+                            services in single or multi mode. You can invoke
+                            openstack-status manually to continue.
+      -u, --uninstall       Uninstalls the current cloud including removing of
+                            packages.
+      -k, --kill            Tear down existing cloud leaving userdata in place.
+                            Useful for iterative deploys.
+      --openstack-release OPENSTACK_RELEASE
+                            Specify a specific OpenStack release by code-name,
+                            e.g. 'icehouse' or 'juno'
+      -a ARCH               <arch, ..> comma-separated list of architectures to
+                            filter available cloud images with which to populate
+                            Glance, e.g. amd64,arm64
+      -r RELEASE            <rel, ..> comma-separated list of Ubuntu releases to
+                            filter available cloud images with which to populate
+                            Glance, e.g. precise,trusty
+      --with-maas-address IP
+                            Specify an existing MAAS ip address
+      --with-maas-apikey KEY
+                            Specify a MAAS admin user apikey
+      -p, --placement       Show machine placement UI before deploying
+      --extra-ppa EXTRA_PPA [EXTRA_PPA ...]
+                            Append additional ppas to the single installers cloud-
+                            init configuration.
+      --upstream-deb UPSTREAM_DEB
+                            Upload a local copy of openstack debian package to be
+                            used in a single install. (DEVELOPERS)
+      --version             show program's version number and exit
 
 .. attention::
 
