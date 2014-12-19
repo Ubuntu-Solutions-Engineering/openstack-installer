@@ -135,3 +135,35 @@ To uninstall and cleanup your system run the following
 .. code::
 
     $ sudo openstack-install -u
+
+Advanced Usage
+^^^^^^^^^^^^^^
+
+It is possible to stop and start the container housing OpenStack.
+To do so run the following from the container host:
+
+.. code::
+
+   $ sudo lxc-stop -n uoi-bootstrap
+   $ sudo lxc-start -n uoi-bootstrap -d
+   $ ssh ubuntu@ip-of-uoi-bootstrap-container
+   (uoi-bootstrap) $ JUJU_HOME=~/.cloud-install juju status
+
+From this point on it is a matter of waiting for all services to be restarted
+and shown as **agent-state: started** within the `juju status` output.
+
+Once the services are started again, running the following from the host
+system will bring up the status screen again:
+
+.. code::
+
+   $ openstack-status
+
+.. caution::
+
+   Depending on the host system, times vary when starting up all the services
+   to when the cloud is accessible again. Most test runs of this have taken
+   roughly 30 minutes to come back online.
+
+   Disclaimer: As the single installer is provided as a demo or proof-of-concept,
+   support for this advanced usage is very minimal.
