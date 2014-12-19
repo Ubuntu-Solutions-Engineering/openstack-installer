@@ -5,6 +5,8 @@ environments:
     type: local
     container: kvm
     lxc-clone: true
+    authorized-keys-path: ~/.ssh/id_rsa.pub
+    default-series: trusty
     admin-secret: {{openstack_password}}
 
   openstack:
