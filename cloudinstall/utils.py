@@ -376,11 +376,6 @@ def partition(pred, iterable):
     return (yes, no)
 
 
-# TODO: replace with check_output()
-def _run(cmd):
-    return Popen(cmd.split(), stdout=PIPE, stderr=STDOUT).communicate()[0]
-
-
 def reset_blanking():
     global blank_len
     if blank_len is not None:
