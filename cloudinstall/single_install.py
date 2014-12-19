@@ -133,10 +133,9 @@ class SingleInstall(InstallBase):
         if len(errors):
             log.error("Container cloud-init finished with "
                       "errors: {}".format(errors))
-            # FIXME: Log errors for now, don't be fatal as the main
-            # error is coming from a pollinate command unable
-            # to run which doesn't seem to effect the installer.
-            # raise Exception("Container cloud-init returned errors")
+            raise Exception("Top-level container OS did not initialize "
+                            "correctly. See ~/.cloud-install/commands.log "
+                            "for details.")
         return True
 
     def _install_upstream_deb(self):
