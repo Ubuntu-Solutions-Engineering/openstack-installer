@@ -69,10 +69,13 @@ options {{
 
 class MultiInstall(InstallBase):
 
-    def __init__(self, opts, display_controller, post_tasks=None):
+    def __init__(self, opts, display_controller, post_tasks=None, config=None):
         self.opts = opts
         super().__init__(display_controller)
-        self.config = Config()
+        if config is None:
+            self.config = Config()
+        else:
+            self.config = config
         self.tempdir = TemporaryDirectory(suffix="cloud-install")
         if post_tasks:
             self.post_tasks = post_tasks
@@ -205,6 +208,9 @@ class MaasInstallError(Exception):
 class MultiInstallNewMaas(MultiInstall):
 
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
+
+    def __init__(self, opts, display_controller, **kwargs):
+        super().__init__(opts, display_controller, **kwargs)
 
     def run(self):
         utils.spew(os.path.join(self.config.cfg_path,
@@ -393,7 +399,7 @@ class MultiInstallNewMaas(MultiInstall):
         return False
 
     def create_superuser(self):
-        pw = self.config.openstack_password
+        pw = shlex.quote(self.config.openstack_password)
         cmd = ("maas-region-admin createadmin "
                "--username root --password {} "
                "--email root@example.com".format(pw))
