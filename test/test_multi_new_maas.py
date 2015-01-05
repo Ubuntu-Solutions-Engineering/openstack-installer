@@ -19,7 +19,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from cloudinstall.multi_install import MultiInstallNewMaas
+from cloudinstall.multi_install import MultiInstallNewMaas, MaasInstallError
 
 
 class MultiInstallNewMaasTestCase(unittest.TestCase):
@@ -49,7 +49,8 @@ class MultiInstallNewMaasTestCase(unittest.TestCase):
         with patch('cloudinstall.multi_install.utils') as mock_utils:
             if raises:
                 mock_utils.get_command_output.return_value = {'status': -1}
-                self.assertRaises(self.installer.create_superuser)
+                self.assertRaises(MaasInstallError,
+                                  self.installer.create_superuser)
             else:
                 mock_utils.get_command_output.return_value = {'status': 0}
                 self.installer.create_superuser()
