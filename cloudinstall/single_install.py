@@ -106,24 +106,49 @@ class SingleInstall(InstallBase):
         utils.container_wait_checked(self.container_name,
                                      lxc_logfile)
 
-        tries = 1
-        while not self.cloud_init_finished():
+        tries = 0
+        while not self.cloud_init_finished(tries):
             time.sleep(1)
-            tries = tries + 1
+            tries += 1
 
-    def cloud_init_finished(self):
+    def cloud_init_finished(self, tries, maxlenient=20):
         """checks cloud-init result.json in container to find out status
+
+        For the first `maxlenient` tries, it treats a container with
+        no IP and SSH errors as non-fatal, assuming initialization is
+        still ongoing. Afterwards, will raise exceptions for those
+        errors, so as not to loop forever.
 
         returns True if cloud-init finished with no errors, False if
         it's not done yet, and raises an exception if it had errors.
+
         """
         cmd = 'sudo cat /run/cloud-init/result.json'
         try:
             result_json = utils.container_run(self.container_name, cmd)
             log.debug(result_json)
-        except:
-            log.debug("Waiting for cloud-init status result")
-            return False
+
+        except utils.NoContainerIPException as e:
+            if tries < maxlenient:
+                log.debug("Container has no IP yet. waiting.")
+                return False
+            raise e
+
+        except utils.ContainerRunException as e:
+            _, returncode = e.args
+            if returncode == 255:
+                if tries < maxlenient:
+                    log.debug("Ignoring initial SSH error.")
+                    return False
+                raise e
+            if returncode == 1:
+                # the 'cat' did not find the file.
+                log.debug("Waiting for cloud-init status result")
+                return False
+            else:
+                log.debug("Unexpected return code from reading "
+                          "cloud-init status in container.")
+                raise e
 
         if result_json == '':
             return False
