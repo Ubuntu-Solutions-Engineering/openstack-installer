@@ -39,6 +39,7 @@ import sys
 import errno
 import shlex
 import shutil
+import subprocess
 import json
 
 log = logging.getLogger('cloudinstall.utils')
@@ -457,15 +458,26 @@ def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
             yield os.path.join(path, name)
 
 
+class NoContainerIPException(Exception):
+    "Container has no IP"
+
+
 def container_ip(name):
-    """ gets container ip of named container
-    """
-    for filename in find('*.leases', '/var/lib/misc'):
-        with open(filename, 'r') as f:
-            for line in f.readlines():
-                if name in line:
-                    return line.split()[-3]
-    return None
+    try:
+        ips = check_output("lxc-info -n {} -i -H".format(name),
+                           shell=True)
+        log.debug("lxc-info returned: '{}'".format(ips))
+        ips = ips.split()
+        if len(ips) == 0:
+            raise NoContainerIPException()
+        return ips[0].decode()
+    except CalledProcessError:
+        log.exception("error calling lxc-info to get container IP")
+        raise NoContainerIPException()
+
+
+class ContainerRunException(Exception):
+    "Running cmd in container failed"
 
 
 def container_run(name, cmd):
@@ -475,8 +487,6 @@ def container_run(name, cmd):
     :param str cmd: command to run
     """
     ip = container_ip(name)
-    if ip is None:
-        raise Exception("could not find ip for container '{}'".format(name))
     quoted_cmd = shlex.quote(cmd)
     wrapped_cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
                    "-l ubuntu -o \"StrictHostKeyChecking=no\" "
@@ -486,15 +496,22 @@ def container_run(name, cmd):
                                     install_user()))
     log.debug("Running in container: {0}".format(wrapped_cmd))
 
-    try:
-        ret = check_output(wrapped_cmd, shell=True)
-        log.debug(ret)
-        return ret.strip().decode('utf-8')
-    except CalledProcessError as e:
-        raise Exception("There was a problem running ({0}) in the container "
-                        "({1}:{2}) Error: {3}\n"
-                        "Output: {4}".format(quoted_cmd, name, ip, e,
-                                             e.output))
+    subproc = subprocess.Popen(wrapped_cmd, shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+
+    outs, errs = subproc.communicate()
+
+    if subproc.returncode == 0:
+        return outs.strip().decode('utf-8')
+    else:
+        log.debug("Error running command {} in container {}:{}\n"
+                  "Output: '{}'\n"
+                  "Stderr: '{}'".format(quoted_cmd, name, ip, outs, errs))
+
+        raise ContainerRunException("Problem running {0} in container "
+                                    "{1}:{2}".format(quoted_cmd, name, ip),
+                                    subproc.returncode)
 
 
 def container_run_status(name, cmd):
