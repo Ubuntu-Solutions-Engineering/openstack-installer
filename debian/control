@@ -90,7 +90,7 @@ Description: Ubuntu Openstack Installer (multi-system) - dependency package
 Package: openstack-single
 Section: admin
 Architecture: all
-Depends: juju-local, uvtool, uvtool-libvirt, ${misc:Depends}
+Depends: juju-local, juju-local-kvm, ${misc:Depends}
 Replaces: cloud-install-single
 Conflicts: cloud-install-single
 Description: Ubuntu Openstack Installer (single-system) - dependency package
