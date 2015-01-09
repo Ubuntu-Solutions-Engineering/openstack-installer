@@ -25,11 +25,9 @@ write_files:
     path: /etc/rc.local
     permissions: '0755'
 packages:
-  - libvirt-bin
-  - uvtool
-  - uvtool-libvirt
-  - software-properties-common
   - openstack
+  - openstack-single
+  - software-properties-common
 {% if extra_pkgs %}
 {% for pkg in extra_pkgs %}
   - {{ pkg }}
