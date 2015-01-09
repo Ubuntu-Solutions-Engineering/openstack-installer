@@ -1,0 +1,6 @@
+install_type: single
+placements:
+  fake_iid:
+    constraints: 'mem=6G'
+    assignments:
+      KVM: ['nova-compute']
