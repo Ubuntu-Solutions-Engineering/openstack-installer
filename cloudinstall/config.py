@@ -176,7 +176,7 @@ class Config:
             log.error("Failed to set {} in config: {}".format(key, e))
 
     def getopt(self, key):
-        if key in self._config:
+        if self._config and key in self._config:
             return self._config[key]
         else:
             log.error("Could not find {} in config".format(key))
