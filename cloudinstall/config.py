@@ -17,6 +17,7 @@
 import os
 import yaml
 import json
+import uuid
 from cloudinstall import utils
 import logging
 
@@ -73,13 +74,49 @@ class Config:
          'white', 'dark gray')
     ]
 
-    def __init__(self):
+    def __init__(self, cfg_file=None):
         if os.getenv("FAKE_API_DATA"):
             self._juju_env = {"bootstrap-config": {'name': "fake",
                                                    'maas-server': "FAKE"}}
         else:
             self._juju_env = None
         self.node_install_wait_interval = 0.2
+
+        if cfg_file is None:
+            self._config_file = os.path.join(self.cfg_path, 'config.yaml')
+        else:
+            self._config_file = cfg_file
+
+    def init(self):
+        """ Create a new config file
+        """
+        if not os.path.exists(self._config_file):
+            try:
+                utils.spew(self._config_file, 'identifier: {}'.format(
+                    uuid.uuid1()))
+            except Exception as e:
+                raise ConfigException("Unable to write configuration "
+                                      "file: {}".format(e))
+        else:
+            raise ConfigException("Attempted to overwrite "
+                                  "existing configuration file.")
+        self.load()
+
+    def save(self):
+        """ Saves configuration """
+        try:
+            utils.spew(self._config_file,
+                       yaml.safe_dump(self._config, default_flow_style=False))
+            self.load()
+        except IOError:
+            raise ConfigException("Unable to save configuration.")
+
+    def load(self):
+        """ Loads configuration or refreshes config dict if exists """
+        if os.path.exists(self._config_file):
+            self._config = yaml.load(utils.slurp(self._config_file))
+        else:
+            raise ConfigException("Unable to load configuration.")
 
     @property
     def install_types(self):
@@ -129,6 +166,21 @@ class Config:
     @property
     def is_landscape(self):
         return os.path.exists(os.path.join(self.cfg_path, 'landscape'))
+
+    def setopt(self, key, val):
+        """ sets config option """
+        try:
+            self._config[key] = val
+            self.save()
+        except Exception as e:
+            log.error("Failed to set {} in config: {}".format(key, e))
+
+    def getopt(self, key):
+        if key in self._config:
+            return self._config[key]
+        else:
+            log.error("Could not find {} in config".format(key))
+            return str()
 
     def set_install_type(self, install_type):
         """ Stores installer type """
