@@ -310,3 +310,15 @@ class Config:
             log.exception("exception loading lanscape creds")
             raise ConfigException("cannot load landscape creds")
         return _creds
+
+    def __getattr__(self, attr):
+        """ Protect us from invalid attribute lookup
+
+        TODO: Re-evaluate once config class is fully migrated
+        to getopt/setopt config scheme.
+        """
+        try:
+            getattr(Config, attr)
+        except AttributeError:
+            log.error("Unknown attribute: {}".format(attr))
+            return False
