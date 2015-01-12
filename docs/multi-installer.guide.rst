@@ -89,7 +89,7 @@ To start the installation run the following command
 
 .. note::
 
-   The installer should be run as a non-root user.
+   The installer should be run with sudo.
 
 An initial dialog box will appear asking you to select which type of
 install, choose **Multi-system**.
