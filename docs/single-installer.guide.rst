@@ -45,7 +45,7 @@ To start the installation run the following command
 
 .. important::
 
-    The installer should be run as a non-root user.
+    The installer should be run with sudo.
 
 Optional Flags
 
