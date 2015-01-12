@@ -13,7 +13,7 @@ tarball: $(NAME)_$(VERSION).orig.tar.gz
 
 .PHONY: install-dependencies
 install-dependencies:
-	sudo apt-get -yy install devscripts equivs
+	sudo apt-get -yy install devscripts equivs pandoc
 	sudo mk-build-deps -i -t "apt-get --no-install-recommends -y" debian/control
 
 .PHONY: uninstall-dependencies
@@ -36,8 +36,13 @@ clean:
 deb-src: clean update_version tarball
 	@debuild -S -us -uc
 
-deb: clean update_version tarball
+deb: clean update_version man-pages tarball
 	@debuild -us -uc -i
+
+man-pages:
+	@pandoc -s docs/openstack-juju.rst -t man -o man/en/openstack-juju.1
+	@pandoc -s docs/openstack-status.rst -t man -o man/en/openstack-status.1
+	@pandoc -s docs/openstack-install.rst -t man -o man/en/openstack-install.1
 
 # TODO: Disable for now, will be removed in a later release.
 # sbuild: clean update_version tarball
@@ -71,9 +76,6 @@ test: $(HOME)/.cloud-install
 
 travis-test: $(HOME)/.cloud-install
 	nosetests $(NOSE_ARGS)
-
-gooview:
-	PYTHONPATH=$(shell pwd):$(PYTHONPATH) tools/gooview.py
 
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/openstack-status
