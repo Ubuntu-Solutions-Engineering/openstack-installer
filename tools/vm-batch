@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -16,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-sys.path.insert(0, '/usr/share/openstack')
+BASE_PATH = '/usr/share/openstack'
+sys.path.insert(0, BASE_PATH)
 
 import uuid
 import os
@@ -28,6 +30,8 @@ from cloudinstall.config import Config
 
 from subprocess import call
 
+VM_DIR = os.path.join(os.path.expanduser('~'), 'VMS')
+
 
 def parse_options(argv, cfg):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
@@ -38,7 +42,8 @@ def parse_options(argv, cfg):
                         dest='vm_prefix', metavar="NAME",
                         help='Specify a vm prefix', default='uoi-bootstrap')
     parser.add_argument('--vm-config', type=str, dest='vm_config',
-                        help='Location of vm configuration')
+                        help='Location of vm configuration',
+                        default="virt-uoi-bootstrap.xml")
     parser.add_argument('--bridge-iface', type=str, dest='bridge_interface',
                         help='Network bridge for VMs to utilize during '
                         'MAAS deployments (e.g. "br0")',
@@ -55,8 +60,11 @@ if __name__ == '__main__':
     if os.geteuid() != 0:
         sys.exit('Please run with sudo.')
 
+    if not os.path.exists(VM_DIR):
+        os.makedirs(VM_DIR)
+
     if not opts.vm_config and not opts.destroy:
-        raise SystemExit('A libvirt vm definition file is required.')
+        raise SystemExit('A valid libvirt vm definition file is required.')
 
     if opts.destroy:
         msg = ("Warning:\n\nThis will tear down and remove all vms "
@@ -74,16 +82,15 @@ if __name__ == '__main__':
 
     # create image disks
     print("Creating virtual machines...")
-    dst_file = os.path.join('virt-uoi-bootstrap.xml')
-    original_data = utils.load_template('virt-uoi-bootstrap.xml')
+    original_data = utils.load_template(opts.vm_config)
 
     for vm in range(opts.num_vms):
-        if os.path.isfile('{0}-{1}.img'.format(opts.vm_prefix, vm)):
-            raise SystemExit('Disk image already exists, will not overwrite.')
-
         # image name
         img_name = "{0}-{1}".format(opts.vm_prefix, vm)
         img = ".".join((img_name, 'img'))
+        img_path = os.path.join(VM_DIR, img)
+        if os.path.isfile(img_path):
+            raise SystemExit('Disk image already exists, will not overwrite.')
 
         # populate proper xml
         uuid_str = uuid.uuid1()
@@ -92,16 +99,23 @@ if __name__ == '__main__':
                  uuid=str(uuid_str),
                  macaddr=utils.macgen(),
                  bridge=opts.bridge_interface,
-                 image_path=os.path.join(utils.install_home(), img)))
+                 image_path=img_path))
         vm_conf = ".".join((img_name, 'xml'))
-        utils.spew(vm_conf, modified_data)
+        vm_conf_path = os.path.join(VM_DIR, vm_conf)
+        utils.spew(vm_conf_path, modified_data)
 
-        cmd = 'qemu-img create {0} 15G'.format(img)
+        cmd = 'qemu-img create {0} 15G'.format(img_path)
         print(cmd)
         call(shlex.split(cmd))
 
         time.sleep(1)
-        cmd = 'virsh define {0}'.format(vm_conf)
+
+        # Undefine current domain
+        cmd = 'virsh undefine {0}'.format(img_name)
+        print(cmd)
+        call(shlex.split(cmd))
+
+        cmd = 'virsh define {0}'.format(vm_conf_path)
         print(cmd)
         call(shlex.split(cmd))
 
@@ -109,3 +123,6 @@ if __name__ == '__main__':
         cmd = 'virsh start {0}'.format(img_name)
         print(cmd)
         call(shlex.split(cmd))
+
+    # Update permissions
+    utils.chown(VM_DIR, utils.install_user(), utils.install_user(), True)
