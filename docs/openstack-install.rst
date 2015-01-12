@@ -1,13 +1,17 @@
+NAME
+====
+
+openstack-install - Ubuntu OpenStack Installer Documentation
+
+SYNOPSIS
+========
+
+usage: sudo openstack-install [-h] [-s] [-i] [-u] [-k] [-a ARCH] [-r RELEASE] [-p]
+
+optional arguments:
 
 .. code::
 
-    usage: sudo openstack-install [-h] [-s] [-i] [-u] [-k] [-a ARCH] [-r RELEASE]
-                                  [--with-maas-address IP]
-                                  [--with-maas-apikey KEY] [-p]
-    
-    Ubuntu OpenStack Installer
-    
-    optional arguments:
       -h, --help            show this help message and exit
       -s, --enable-swift    Enable swift storage
       -i, --install-only    install and bootstrap MAAS/Juju/Landscape (as
@@ -24,10 +28,6 @@
       -r RELEASE            <rel, ..> comma-separated list of Ubuntu releases to
                             filter available cloud images with which to populate
                             Glance, e.g. precise,trusty
-      --with-maas-address IP
-                            Specify an existing MAAS ip address
-      --with-maas-apikey KEY
-                            Specify a MAAS admin user apikey
       -p, --placement       Show machine placement UI before deploying
 
 
@@ -38,3 +38,13 @@ Ubuntu OpenStack Installer provides an extremely simple way to
 install, deploy and scale an OpenStack cloud on top of Ubuntu server
 and Juju. Deploy onto a single physical system using virtual machines
 for testing, or use MAAS to deploy onto a cluster of any size.
+
+ENVIRONMENT VARIABLES
+=====================
+
+**JUJU_BOOTSTRAP_TO**
+define a specific MAAS host to be used for the initial juju bootstrap.
+
+.. code::
+
+   $ JUJU_BOOTSTRAP_TO=machine-a.maas sudo -E openstack-install

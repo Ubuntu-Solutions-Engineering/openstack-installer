@@ -1,14 +1,20 @@
+NAME
+====
+
+openstack-status - Ubuntu OpenStack Installer documentation
+
+SYNOPSIS
+========
+
+usage: **openstack-status** [-h] [--enable-swift] [--placement]
+
+optional arguments:
 
 .. code::
 
-    usage: openstack-status [-h] [--enable-swift] [--placement]
-    
-    Ubuntu OpenStack Installer
-    
-    optional arguments:
-      -h, --help      show this help message and exit
-      --enable-swift  Enable swift storage
-      --placement     Show machine placement UI before deploying
+   -h, --help      show this help message and exit
+   --enable-swift  Enable swift storage
+   --placement     Show machine placement UI before deploying
 
 DESCRIPTION
 ===========
