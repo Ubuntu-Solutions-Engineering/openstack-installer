@@ -90,6 +90,7 @@ class TestGoodConfig(unittest.TestCase):
                 USER_DIR, '.cloud-install/environments.yaml'))
 
 
+@unittest.skip
 class TestBadConfig(unittest.TestCase):
 
     def setUp(self):
