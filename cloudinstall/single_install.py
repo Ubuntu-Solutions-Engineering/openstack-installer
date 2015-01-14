@@ -129,10 +129,9 @@ class SingleInstall(InstallBase):
             log.debug(result_json)
 
         except utils.NoContainerIPException as e:
-            if tries < maxlenient:
-                log.debug("Container has no IP yet. waiting.")
-                return False
-            raise e
+            log.debug("Container has no IPs according to lxc-info. "
+                      "Will retry.")
+            return False
 
         except utils.ContainerRunException as e:
             _, returncode = e.args
