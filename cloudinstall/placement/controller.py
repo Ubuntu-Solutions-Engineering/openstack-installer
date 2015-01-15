@@ -19,7 +19,7 @@ import logging
 from multiprocessing import cpu_count
 import yaml
 
-from cloudinstall.maas import satisfies
+from cloudinstall.maas import (satisfies, MaasMachineStatus)
 from cloudinstall.utils import load_charms
 
 log = logging.getLogger('cloudinstall.placement')
@@ -70,6 +70,10 @@ class PlaceholderMachine:
 
     def __repr__(self):
         return "<Placeholder Machine: {}>".format(self.display_name)
+
+
+class PlacementError(Exception):
+    "Generic exception class for placement related errors"
 
 
 class PlacementController:
@@ -337,14 +341,18 @@ class PlacementController:
         Use set_all_assignments(gen_defaults()) to clear and reset the
         controller's state to these defaults.
 
+        Should not be used for single installs, see gen_single.
         """
+        if self.maas_state is None:
+            raise PlacementError("Can't call gen_defaults with no maas_state")
+
         if charm_classes is None:
             charm_classes = self.charm_classes()
 
         assignments = defaultdict(lambda: defaultdict(list))
 
         if maas_machines is None:
-            maas_machines = self.maas_state.machines()
+            maas_machines = self.maas_state.machines(MaasMachineStatus.READY)
 
         def satisfying_machine(constraints):
             for machine in maas_machines:
