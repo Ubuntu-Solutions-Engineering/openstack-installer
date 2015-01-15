@@ -7,7 +7,7 @@ nova flavor-delete m1.tiny
 nova flavor-create m1.tiny 1 512 8 1
 
 # configure external network
-neutron net-create --router:external=True --shared ext-net
+neutron net-create --router:external=True ext-net
 neutron subnet-create --name ext-subnet --gateway 10.0.3.1 --allocation-pool start=10.0.3.200,end=10.0.3.254 --disable-dhcp ext-net 10.0.3.0/24
 
 # create ubuntu user
