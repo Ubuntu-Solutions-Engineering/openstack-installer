@@ -29,9 +29,11 @@ from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
 from cloudinstall.charms.swift import CharmSwift
 from cloudinstall.charms.swift_proxy import CharmSwiftProxy
+from cloudinstall.maas import MaasMachineStatus
 
 from cloudinstall.placement.controller import (AssignmentType,
-                                               PlacementController)
+                                               PlacementController,
+                                               PlacementError)
 
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'maas-output')
@@ -329,3 +331,15 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.clear_assignments(self.mock_machine)
         self.pc.clear_assignments(self.mock_machine)
         self.pc.clear_assignments(self.mock_machine_2)
+
+    def test_gen_defaults_raises_with_no_maas_state(self):
+        pc = PlacementController()
+        self.assertRaises(PlacementError, pc.gen_defaults)
+
+    def test_gen_defaults_uses_only_ready(self):
+        """gen_defaults should only use ready machines"""
+        mock_maas_state = MagicMock()
+        mock_maas_state.machines.return_value = []
+        pc = PlacementController(maas_state=mock_maas_state)
+        pc.gen_defaults()
+        mock_maas_state.machines.assert_called_with(MaasMachineStatus.READY)
