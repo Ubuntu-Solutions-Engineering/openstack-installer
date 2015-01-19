@@ -38,7 +38,7 @@ for sig in (signal.SIGTERM, signal.SIGQUIT, signal.SIGINT, signal.SIGHUP):
     signal.signal(sig, sig_handler)
 
 
-def parse_options(argv, cfg):
+def parse_options(argv):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
                                      prog='openstack-install')
     parser.add_argument('-i', '--install-only', action='store_true',
@@ -53,6 +53,8 @@ def parse_options(argv, cfg):
                         dest='uninstall', default=False,
                         help='Uninstalls the current cloud including removing '
                         'of packages.')
+    parser.add_argument('-c', '--config', type=str, dest='config_file',
+                        help="Custom configuration for OpenStack installer.")
     parser.add_argument('-k', '--kill', action='store_true',
                         dest='killcloud', default=False,
                         help='Tear down existing cloud leaving userdata '
@@ -91,6 +93,8 @@ def parse_options(argv, cfg):
 
 
 if __name__ == '__main__':
+    opts = parse_options(sys.argv[1:])
+
     try:
         setup_logger()
     except PermissionError:
@@ -102,9 +106,19 @@ if __name__ == '__main__':
               " for reporting a bug.)")
         sys.exit()
 
-    logger = logging.getLogger('cloudinstall')
-    cfg = Config()
-    opts = parse_options(sys.argv[1:], cfg)
+    logger = logging.getLogger('openstack-install')
+
+    if opts.config_file and os.path.exists(opts.config_file):
+        _cfg = yaml.load(utils.slurp(opts.config_file))
+    else:
+        _cfg = {}
+    # Update config object with command line options
+    _cfg.update(vars(opts))
+    cfg = Config(cfg_obj=_cfg)
+
+    if not os.path.exists(cfg.cfg_path):
+        os.makedirs(cfg.cfg_path)
+        utils.chown(cfg.cfg_path, utils.install_user(), utils.install_user())
 
     if os.geteuid() != 0:
         sys.exit(
@@ -132,10 +146,6 @@ if __name__ == '__main__':
             raise SystemExit
         else:
             raise SystemExit('Only supports killing a single install for now.')
-
-    if not os.path.exists(cfg.cfg_path):
-        os.makedirs(cfg.cfg_path)
-        utils.chown(cfg.cfg_path, utils.install_user(), utils.install_user())
 
     if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
         msg = ("\n\nError:\n\n"
