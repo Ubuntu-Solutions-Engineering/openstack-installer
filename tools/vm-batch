@@ -44,6 +44,8 @@ def parse_options(argv, cfg):
     parser.add_argument('--vm-config', type=str, dest='vm_config',
                         help='Location of vm configuration',
                         default="virt-uoi-bootstrap.xml")
+    parser.add_argument('--vm-image-size', type=str, dest='vm_image_size',
+                        help='Size of vm in gigabyte(s)', default='15G')
     parser.add_argument('--bridge-iface', type=str, dest='bridge_interface',
                         help='Network bridge for VMs to utilize during '
                         'MAAS deployments (e.g. "br0")',
@@ -104,7 +106,7 @@ if __name__ == '__main__':
         vm_conf_path = os.path.join(VM_DIR, vm_conf)
         utils.spew(vm_conf_path, modified_data)
 
-        cmd = 'qemu-img create {0} 15G'.format(img_path)
+        cmd = 'qemu-img create {0} {1}'.format(img_path, opts.vm_image_size)
         print(cmd)
         call(shlex.split(cmd))
 
