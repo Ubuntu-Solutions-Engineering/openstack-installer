@@ -48,12 +48,15 @@ def parse_options(*args, **kwds):
     parser.add_argument('--placement', action='store_true',
                         dest='edit_placement', default=False,
                         help='Show machine placement UI before deploying')
+    parser.add_argument('-c', '--config', type=str, dest='config_file',
+                        help="Custom configuration for OpenStack installer.")
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args()
 
 if __name__ == '__main__':
-    config = Config()
+    opts = parse_options(sys.argv)
+
     try:
         log.setup_logger()
     except PermissionError:
@@ -65,8 +68,16 @@ if __name__ == '__main__':
               " for reporting a bug.)")
         sys.exit()
 
-    logger = logging.getLogger('cloudinstall')
+    logger = logging.getLogger('openstack-status')
     logger.info("openstack-status starting")
+
+    if opts.config_file and os.path.exists(opts.config_file):
+        _cfg = yaml.load(utils.slurp(opts.config_file))
+    else:
+        _cfg = {}
+    # Update cfg dict with command line opts
+    _cfg.update(vars(opts))
+    config = Config(cfg_obj=_cfg)
 
     if os.path.isfile(config.pidfile):
         print("Another instance of openstack-status is running. If you're "
@@ -74,7 +85,6 @@ if __name__ == '__main__':
               "~/.cloud-install/openstack.pid")
         sys.exit()
 
-    opts = parse_options(sys.argv)
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
     hostname = out['output'].rstrip()
