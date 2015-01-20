@@ -17,30 +17,28 @@
 
 import logging
 import unittest
+import yaml
 import os.path as path
 from tempfile import NamedTemporaryFile
 
 from cloudinstall.config import Config
+import cloudinstall.utils as utils
 
 log = logging.getLogger('cloudinstall.test_config')
 
 USER_DIR = path.expanduser('~')
 DATA_DIR = path.join(path.dirname(__file__), 'files')
-GOOD_CONFIG = path.join(DATA_DIR, 'good_config.yaml')
-BAD_CONFIG = path.join(DATA_DIR, 'bad_config.yaml')
+GOOD_CONFIG = yaml.load(utils.slurp(path.join(DATA_DIR, 'good_config.yaml')))
+BAD_CONFIG = yaml.load(utils.slurp(path.join(DATA_DIR, 'bad_config.yaml')))
 
 
 class TestGoodConfig(unittest.TestCase):
 
     def setUp(self):
         self._temp_conf = Config(GOOD_CONFIG)
-        self._temp_conf.load()
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
-            self._temp_conf._config_file = tempf.name
-            self._temp_conf.save()
-            self.conf = Config(tempf.name)
-            self.conf.load()
+            self.conf = Config(self._temp_conf._config, tempf.name)
 
     def test_save_openstack_password(self):
         """ Save openstack password to config """
@@ -95,23 +93,17 @@ class TestBadConfig(unittest.TestCase):
 
     def setUp(self):
         self._temp_conf = Config(BAD_CONFIG)
-        self._temp_conf.load()
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
-            self._temp_conf._config_file = tempf.name
-            self._temp_conf.save()
-            self.conf = Config(tempf.name)
-            self.conf.load()
+            self.conf = Config(self._temp_conf._config, tempf.name)
 
     def test_no_openstack_password(self):
         """ No openstack password defined """
-        with self.assertRaises(Exception):
-            self.conf.openstack_password
+        self.assertFalse(self.conf.getopt('openstack_password'))
 
     def test_no_landscape_creds(self):
         """ No landscape creds defined """
-        with self.assertRaises(Exception):
-            self.conf.landscape_creds
+        self.assertFalse(self.conf.getopt('landscapecreds'))
 
     def test_no_installer_type(self):
         """ No installer type defined """
