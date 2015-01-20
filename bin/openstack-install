@@ -171,7 +171,7 @@ if __name__ == '__main__':
                    opts.openstack_release, owner=utils.install_user())
 
     install = InstallController(
-        ui=PegasusGUI(header=InstallHeader()), opts=opts)
+        ui=PegasusGUI(header=InstallHeader()), opts=opts, config=cfg)
     logger.info("cloud-install starting with options: {}".format(opts))
 
     install.start()

@@ -26,8 +26,8 @@ log = logging.getLogger('cloudinstall.landscape_install')
 
 class LandscapeInstall:
 
-    def __init__(self, opts, display_controller):
-        self.config = Config()
+    def __init__(self, opts, display_controller, config):
+        self.config = config
         self.opts = opts
         self.display_controller = display_controller
         self.config.set_install_type('landscape')

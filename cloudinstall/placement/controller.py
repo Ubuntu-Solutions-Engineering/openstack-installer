@@ -80,7 +80,8 @@ class PlacementController:
     """Keeps state of current machines and their assigned services.
     """
 
-    def __init__(self, maas_state=None, opts=None):
+    def __init__(self, maas_state=None, opts=None, config=None):
+        self.config = config
         self.maas_state = maas_state
         self._machines = []
         # id -> {atype: [charm class]}
