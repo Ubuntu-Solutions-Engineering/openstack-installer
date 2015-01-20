@@ -19,7 +19,6 @@ import os
 import json
 import time
 import shutil
-from cloudinstall.config import Config
 from cloudinstall.installbase import InstallBase
 from cloudinstall import utils
 
@@ -33,10 +32,10 @@ class SingleInstallException(Exception):
 
 class SingleInstall(InstallBase):
 
-    def __init__(self, opts, display_controller):
+    def __init__(self, opts, display_controller, config):
         self.opts = opts
         super().__init__(display_controller)
-        self.config = Config()
+        self.config = config
         self.container_name = 'uoi-bootstrap'
         self.container_path = '/var/lib/lxc'
         self.container_abspath = os.path.join(self.container_path,

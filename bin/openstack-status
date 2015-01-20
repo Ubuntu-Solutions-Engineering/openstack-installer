@@ -92,7 +92,7 @@ if __name__ == '__main__':
         logger.info("Running status within container")
         utils.container_run_status('uoi-bootstrap', 'openstack-status')
     gui = PegasusGUI()
-    core = Controller(ui=gui, opts=opts)
+    core = Controller(ui=gui, opts=opts, config=config)
     try:
         # Create pidfile
         utils.spew(config.pidfile, str(os.getppid()), utils.install_user())

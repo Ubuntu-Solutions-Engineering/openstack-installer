@@ -28,7 +28,6 @@ from os import path, getenv
 from operator import attrgetter
 
 from cloudinstall import utils
-from cloudinstall.config import Config
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
                                MaasMachineStatus)
@@ -99,10 +98,10 @@ class DisplayController:
 
     """ Controller for displaying juju and maas state."""
 
-    def __init__(self, ui=None, opts=None):
+    def __init__(self, ui=None, opts=None, config=None):
         self.ui = ui
         self.opts = opts
-        self.config = Config()
+        self.config = config
         self.juju_state = None
         self.juju = None
         self.maas = None

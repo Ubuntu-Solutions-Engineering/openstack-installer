@@ -27,7 +27,6 @@ import time
 from subprocess import check_output
 from tempfile import TemporaryDirectory
 
-from cloudinstall.config import Config
 from cloudinstall.installbase import InstallBase
 from cloudinstall.installstate import InstallState
 from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
@@ -72,10 +71,7 @@ class MultiInstall(InstallBase):
     def __init__(self, opts, display_controller, post_tasks=None, config=None):
         self.opts = opts
         super().__init__(display_controller)
-        if config is None:
-            self.config = Config()
-        else:
-            self.config = config
+        self.config = config
         self.tempdir = TemporaryDirectory(suffix="cloud-install")
         if post_tasks:
             self.post_tasks = post_tasks
@@ -209,8 +205,8 @@ class MultiInstallNewMaas(MultiInstall):
 
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
-    def __init__(self, opts, display_controller, **kwargs):
-        super().__init__(opts, display_controller, **kwargs)
+    def __init__(self, opts, display_controller, config, **kwargs):
+        super().__init__(opts, display_controller, config=config, **kwargs)
 
     def run(self):
         utils.spew(os.path.join(self.config.cfg_path,
@@ -668,10 +664,7 @@ class LandscapeInstallFinal:
     """
 
     def __init__(self, multi_installer, display_controller, config=None):
-        if config is None:
-            self.config = Config()
-        else:
-            self.config = config
+        self.config = config
         self.multi_installer = multi_installer
         self.display_controller = display_controller
         self.maas = None
