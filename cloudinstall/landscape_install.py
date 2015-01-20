@@ -16,7 +16,6 @@
 
 import logging
 
-from cloudinstall.config import Config
 from cloudinstall.multi_install import (MultiInstallNewMaas,
                                         MultiInstallExistingMaas)
 
