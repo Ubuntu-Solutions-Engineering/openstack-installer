@@ -17,7 +17,6 @@
 import os
 import yaml
 import json
-import uuid
 from cloudinstall import utils
 import logging
 
@@ -74,49 +73,26 @@ class Config:
          'white', 'dark gray')
     ]
 
-    def __init__(self, cfg_file=None):
+    def __init__(self, cfg_obj=None, cfg_file=None):
         if os.getenv("FAKE_API_DATA"):
             self._juju_env = {"bootstrap-config": {'name': "fake",
                                                    'maas-server': "FAKE"}}
         else:
             self._juju_env = None
         self.node_install_wait_interval = 0.2
-
-        if cfg_file is None:
-            self._config_file = os.path.join(self.cfg_path, 'config.yaml')
+        if cfg_obj is None:
+            self._config = {}
         else:
-            self._config_file = cfg_file
-
-    def init(self):
-        """ Create a new config file
-        """
-        if not os.path.exists(self._config_file):
-            try:
-                utils.spew(self._config_file, 'identifier: {}'.format(
-                    uuid.uuid1()))
-            except Exception as e:
-                raise ConfigException("Unable to write configuration "
-                                      "file: {}".format(e))
-        else:
-            raise ConfigException("Attempted to overwrite "
-                                  "existing configuration file.")
-        self.load()
+            self._config = cfg_obj
+        self._cfg_file = cfg_file
 
     def save(self):
         """ Saves configuration """
         try:
-            utils.spew(self._config_file,
+            utils.spew(self.cfg_file,
                        yaml.safe_dump(self._config, default_flow_style=False))
-            self.load()
         except IOError:
             raise ConfigException("Unable to save configuration.")
-
-    def load(self):
-        """ Loads configuration or refreshes config dict if exists """
-        if os.path.exists(self._config_file):
-            self._config = yaml.load(utils.slurp(self._config_file))
-        else:
-            raise ConfigException("Unable to load configuration.")
 
     @property
     def install_types(self):
@@ -147,6 +123,13 @@ class Config:
         return os.path.join(utils.install_home(), '.cloud-install')
 
     @property
+    def cfg_file(self):
+        if self._cfg_file is None:
+            return os.path.join(self.cfg_path, 'config.yaml')
+        else:
+            return self._cfg_file
+
+    @property
     def bin_path(self):
         """ scripts located in non-default system path """
         return os.path.join(self.share_path, "bin")
@@ -157,14 +140,26 @@ class Config:
 
     @property
     def is_single(self):
+        if self.getopt('install_type') and \
+           'Single' in self.getopt('install_type'):
+            return True
+        # TODO: Deprecate.
         return os.path.exists(os.path.join(self.cfg_path, 'single'))
 
     @property
     def is_multi(self):
+        if self.getopt('install_type') and \
+           'Multi' in self.getopt('install_type'):
+            return True
+        # TODO: Deprecate.
         return os.path.exists(os.path.join(self.cfg_path, 'multi'))
 
     @property
     def is_landscape(self):
+        if self.getopt('install_type') and \
+           'Landscape OpenStack Autopilot' in self.getopt('install_type'):
+            return True
+        # TODO: Deprecate
         return os.path.exists(os.path.join(self.cfg_path, 'landscape'))
 
     def setopt(self, key, val):
@@ -176,21 +171,24 @@ class Config:
             log.error("Failed to set {} in config: {}".format(key, e))
 
     def getopt(self, key):
-        if self._config and key in self._config:
+        if key in self._config:
             return self._config[key]
         else:
             log.error("Could not find {} in config".format(key))
-            return str()
+            return False
 
     def set_install_type(self, install_type):
         """ Stores installer type """
         # Sets install type
+        self.setopt('install_type', install_type)
+
+        # TODO: Deprecate
         utils.spew(os.path.join(self.cfg_path, install_type),
                    'auto-generated')
 
     @property
     def juju_path(self):
-        return os.path.join(self.cfg_path)
+        return self.cfg_path
 
     @property
     def juju_env(self):
@@ -245,6 +243,10 @@ class Config:
 
     @property
     def openstack_password(self):
+        if self.getopt('openstack_password'):
+            return self.getopt('openstack_password')
+
+        # TODO: Deprecate.
         PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
         try:
             _password = utils.slurp(PASSWORD_FILE)
@@ -254,6 +256,9 @@ class Config:
         return _password
 
     def save_password(self, password):
+        self.setopt('openstack_password', password)
+
+        # TODO: Deprecate
         PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
         utils.spew(PASSWORD_FILE, password)
 
@@ -265,6 +270,9 @@ class Config:
         """
         if api_host.startswith("http://"):
             raise ConfigException("save_maas_creds expects an ip, not a url")
+        self.setopt('maascreds', dict(api_host=api_host,
+                                      api_key=api_key))
+        # TODO: Deprecate
         MAAS_CREDS_FILE = os.path.join(self.cfg_path, 'maascreds')
         utils.spew(MAAS_CREDS_FILE, json.dumps(dict(api_host=api_host,
                                                     api_key=api_key)))
@@ -273,6 +281,14 @@ class Config:
     def maas_creds(self):
         """ reads maascreds file
         """
+        maas_creds = self.getopt('maascreds')
+        if maas_creds:
+            if 'api_key' not in maas_creds:
+                raise ConfigException("Unable to read api_key")
+            if 'api_host' not in maas_creds:
+                raise ConfigException("Unable to read api_host")
+            return maas_creds
+
         MAAS_CREDS_FILE = os.path.join(self.cfg_path, 'maascreds')
         try:
             _maascreds = json.loads(utils.slurp(MAAS_CREDS_FILE))
@@ -291,6 +307,12 @@ class Config:
         :param str maas_server: ip of maas server
         :param str maas_apikey: api key of maas admin user
         """
+        self.setopt('landscapecreds', dict(admin_name=admin_name,
+                                           admin_email=admin_email,
+                                           system_email=system_email,
+                                           maas_server=maas_server,
+                                           maas_apikey=maas_apikey))
+        # TODO: Deprecate
         LANDSCAPE_CREDS_FILE = os.path.join(self.cfg_path, 'landscapecreds')
         utils.spew(LANDSCAPE_CREDS_FILE,
                    json.dumps(dict(admin_name=admin_name,
@@ -303,6 +325,10 @@ class Config:
     def landscape_creds(self):
         """ reads landscape creds file
         """
+        if self.getopt('landscapecreds'):
+            return self.getopt('landscapecreds')
+
+        # TODO: Deprecate
         LANDSCAPE_CREDS_FILE = os.path.join(self.cfg_path, 'landscapecreds')
         try:
             _creds = json.loads(utils.slurp(LANDSCAPE_CREDS_FILE))
