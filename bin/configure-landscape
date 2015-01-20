@@ -24,7 +24,6 @@ import sys
 lib_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, lib_dir)
 
-from subprocess import check_output
 import argparse
 import requests
 from requests.exceptions import ConnectionError
@@ -37,13 +36,13 @@ from base64 import b64encode
 from cloudinstall.config import Config
 import cloudinstall.utils as utils
 import logging
+import os.path as path
 
 MAGIC_OK_STRING = 'New user - Landscape'
 LATEST_VERSION = "2011-08-01"
 
-cfg = Config()
-
-
+cfg_yaml = path.join(utils.install_home(), '.cloud-install/config.yaml')
+cfg = Config(yaml.load(utils.slurp(cfg_yaml)))
 log = logging.getLogger('configure-landscape')
 
 
