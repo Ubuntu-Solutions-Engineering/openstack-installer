@@ -1,5 +1,7 @@
 # Ubuntu OpenStack Installer
 [![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer)
+[![Coverage
+Status](https://coveralls.io/repos/Ubuntu-Solutions-Engineering/openstack-installer/badge.svg)](https://coveralls.io/r/Ubuntu-Solutions-Engineering/openstack-installer)
 [![Documentation Status](https://readthedocs.org/projects/ubuntu-cloud-installer/badge/?version=latest)](https://readthedocs.org/projects/ubuntu-cloud-installer/?badge=latest)
 
 ## Support
