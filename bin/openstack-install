@@ -23,6 +23,7 @@ import sys
 import os
 import logging
 import signal
+import yaml
 from cloudinstall.log import setup_logger
 import cloudinstall.utils as utils
 from cloudinstall.gui import PegasusGUI, InstallHeader

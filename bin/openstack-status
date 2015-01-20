@@ -21,7 +21,7 @@ import logging
 import os
 import signal
 import sys
-
+import yaml
 # Handle imports where the path is not automatically updated during install.
 # This really only happens when a binary is not in the usual /usr/bin location
 lib_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
