@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import urwid
 import time
 import random
 import sys
@@ -48,7 +47,7 @@ sys.excepthook = utils.global_exchandler
 def dialog_context(view):
     view.ui.hide_widget_on_top()
     yield
-    view.redraw_screen()
+    view.loop.redraw_screen()
 
 
 @contextmanager
@@ -63,13 +62,13 @@ def status_context(view, level='debug', msg=None):
         log.warning("Unexpected log level in "
                     "status_context: '{}'".format(level))
     yield
-    view.redraw_screen()
+    view.loop.redraw_screen()
 
 
 @contextmanager
 def view_context(view):
     yield
-    view.redraw_screen()
+    view.loop.redraw_screen()
 
 
 class FakeJujuState:
@@ -89,10 +88,12 @@ class DisplayController:
 
     """ Controller for displaying juju and maas state."""
 
-    def __init__(self, ui=None, opts=None, config=None):
+    def __init__(self, ui, opts, config, loop):
+        self.opts = opts
         self.ui = ui
         self.opts = opts
         self.config = config
+        self.loop = loop
         self.juju_state = None
         self.juju = None
         self.maas = None
@@ -195,7 +196,7 @@ class DisplayController:
 
     def show_exception_message(self, ex):
         def handle_done(*args, **kwargs):
-            raise urwid.ExitMainLoop()
+            self.loop.exit(1)
         with dialog_context(self):
             logpath = path.join(self.config.cfg_path,
                                 "commands.log")
@@ -250,29 +251,11 @@ class DisplayController:
     def render_placement_view(self):
         self.ui.render_placement_view(self,
                                       self.placement_controller)
-        self.redraw_screen()
-
-    def redraw_screen(self):
-        if hasattr(self, "loop"):
-            try:
-                self.loop.draw_screen()
-            except AssertionError as message:
-                logging.critical(message)
-
-    def exit(self):
-        urwid.ExitMainLoop()
-        return sys.exit(0)
+        self.loop.redraw_screen()
 
     def main_loop(self):
-        if not hasattr(self, 'loop'):
-            screen = utils.get_hicolor_screen(self.config.STYLES)
-            self.loop = urwid.MainLoop(self.ui,
-                                       handle_mouse=True,
-                                       screen=screen,
-                                       unhandled_input=self.header_hotkeys)
-            self.info_message("Welcome")
-            self.initialize()
-
+        self.info_message("Welcome")
+        self.initialize()
         self.update()
         self.loop.run()
 
