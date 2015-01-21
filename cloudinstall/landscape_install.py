@@ -25,9 +25,10 @@ log = logging.getLogger('cloudinstall.landscape_install')
 
 class LandscapeInstall:
 
-    def __init__(self, opts, display_controller, config):
+    def __init__(self, opts, display_controller, config, loop):
         self.config = config
         self.opts = opts
+        self.loop = loop
         self.display_controller = display_controller
         self.config.set_install_type('landscape')
 
@@ -39,14 +40,14 @@ class LandscapeInstall:
         """ Performs the landscape deployment with existing MAAS
         """
         MultiInstallExistingMaas(
-            self.opts, self.display_controller,
+            self.opts, self.loop, self.display_controller,
             post_tasks=self.landscape_tasks,
             config=self.config).run()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
-        MultiInstallNewMaas(self.opts, self.display_controller,
+        MultiInstallNewMaas(self.opts, self.loop, self.display_controller,
                             post_tasks=self.landscape_tasks,
                             config=self.config).run()
 

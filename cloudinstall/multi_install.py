@@ -68,10 +68,13 @@ options {{
 
 class MultiInstall(InstallBase):
 
-    def __init__(self, opts, display_controller, post_tasks=None, config=None):
-        self.opts = opts
+    def __init__(self, opts, loop, display_controller,
+                 config, post_tasks=None):
         super().__init__(display_controller)
+        self.opts = opts
+        self.loop = loop
         self.config = config
+        self.display_controller = display_controller
         self.tempdir = TemporaryDirectory(suffix="cloud-install")
         if post_tasks:
             self.post_tasks = post_tasks
@@ -170,7 +173,9 @@ class MultiInstall(InstallBase):
             log.debug("Finished MAAS step, now deploying Landscape.")
             return LandscapeInstallFinal(self,
                                          self.display_controller,
-                                         config=self.config).run()
+                                         config=self.config,
+                                         loop=self.loop,
+                                         opts=self.opts).run()
 
     def drop_privileges(self):
         if os.geteuid() != 0:
@@ -206,8 +211,8 @@ class MultiInstallNewMaas(MultiInstall):
 
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
-    def __init__(self, opts, display_controller, config, **kwargs):
-        super().__init__(opts, display_controller, config=config, **kwargs)
+    def __init__(self, opts, loop, display_controller, config, **kwargs):
+        super().__init__(opts, loop, display_controller, config, **kwargs)
 
     def run(self):
         utils.spew(os.path.join(self.config.cfg_path,
@@ -664,8 +669,11 @@ class LandscapeInstallFinal:
     """ Final phase of landscape install
     """
 
-    def __init__(self, multi_installer, display_controller, config=None):
+    def __init__(self, multi_installer, display_controller,
+                 config, opts, loop):
         self.config = config
+        self.opts = opts
+        self.loop = loop
         self.multi_installer = multi_installer
         self.display_controller = display_controller
         self.maas = None

@@ -32,6 +32,8 @@ class LandscapeInstallFinalTestCase(unittest.TestCase):
     def setUp(self):
         self.mock_multi_installer = MagicMock()
         self.mock_display_controller = MagicMock()
+        self.opts = MagicMock()
+        self.loop = MagicMock()
 
     def make_installer_with_config(self, landscape_creds=None,
                                    maas_creds=None):
@@ -55,7 +57,9 @@ class LandscapeInstallFinalTestCase(unittest.TestCase):
 
         lif = LandscapeInstallFinal(self.mock_multi_installer,
                                     self.mock_display_controller,
-                                    config=c)
+                                    config=c,
+                                    opts=self.opts,
+                                    loop=self.loop)
         self.installer = lif
 
     def test_run_configure_not_sudo_user(self, mock_utils):

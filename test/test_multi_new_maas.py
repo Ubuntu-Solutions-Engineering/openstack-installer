@@ -27,15 +27,18 @@ class MultiInstallNewMaasTestCase(unittest.TestCase):
     def setUp(self):
         pass
 
-    def make_installer(self, opts=None, dc=None, config=None):
+    def make_installer(self, opts=None, loop=None, dc=None, config=None):
         if opts is None:
             opts = MagicMock(name="opts")
         if dc is None:
             dc = MagicMock(name="display_controller")
         if config is None:
             config = MagicMock(name="config")
+        if loop is None:
+            loop = MagicMock(name="loop")
 
-        self.installer = MultiInstallNewMaas(opts, dc, config=config)
+        self.installer = MultiInstallNewMaas(
+            opts, loop, dc, config=config)
 
     def _create_superuser(self, raises):
         c = MagicMock(name="config")
