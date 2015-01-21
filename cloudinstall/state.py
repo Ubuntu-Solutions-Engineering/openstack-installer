@@ -14,9 +14,21 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from enum import Enum
+from enum import IntEnum, unique
+import logging
+
+log = logging.getLogger('cloudinstall.state')
 
 
-class InstallState(Enum):
+class InstallState(IntEnum):
     RUNNING = 0
     NODE_WAIT = 1
+
+
+@unique
+class ControllerState(IntEnum):
+
+    """Names for current screen state"""
+    INSTALL_WAIT = 0
+    PLACEMENT = 1
+    SERVICES = 2

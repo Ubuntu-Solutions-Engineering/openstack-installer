@@ -22,7 +22,7 @@ from cloudinstall.config import (INSTALL_TYPE_SINGLE,
                                  INSTALL_TYPE_MULTI,
                                  INSTALL_TYPE_LANDSCAPE)
 from cloudinstall.core import DisplayController
-from cloudinstall.installstate import InstallState
+from cloudinstall.state import InstallState
 from cloudinstall.single_install import SingleInstall
 from cloudinstall.landscape_install import LandscapeInstall
 from cloudinstall.multi_install import (MultiInstallNewMaas,
@@ -121,9 +121,9 @@ class InstallController(DisplayController):
 
     def update(self, *args, **kwargs):
         "periodically check for display changes"
-        if self.current_state == InstallState.RUNNING:
+        if self.config.getopt('current_state') == InstallState.RUNNING:
             pass
-        elif self.current_state == InstallState.NODE_WAIT:
+        elif self.config.getopt('current_state') == InstallState.NODE_WAIT:
             self.render_machine_wait_view()
 
         self.loop.set_alarm_in(1, self.update)
