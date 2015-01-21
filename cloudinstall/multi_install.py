@@ -28,7 +28,7 @@ from subprocess import check_output
 from tempfile import TemporaryDirectory
 
 from cloudinstall.installbase import InstallBase
-from cloudinstall.installstate import InstallState
+from cloudinstall.state import InstallState
 from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_default_gateway, get_netmask,
                                    get_network_interfaces,
@@ -98,7 +98,7 @@ class MultiInstall(InstallBase):
 
     def do_install(self):
         self.start_task("Bootstrapping Juju")
-        self.display_controller.current_state = InstallState.RUNNING
+        self.config.setopt('current_state', InstallState.RUNNING.value)
 
         maas_creds = self.config.maas_creds
         maas_env = utils.load_template('juju-env/maas.yaml')
@@ -191,7 +191,7 @@ class MultiInstallExistingMaas(MultiInstall):
         msg = "Waiting for sufficient resources in MAAS"
         self.display_controller.info_message(msg)
         self.display_controller.current_installer = self
-        self.display_controller.current_state = InstallState.NODE_WAIT
+        self.config.setopt('current_state', InstallState.NODE_WAIT.value)
         # return here and end thread. machine_wait_view will call
         # do_install back on new async thread
 
@@ -324,7 +324,7 @@ class MultiInstallNewMaas(MultiInstall):
         msg = "Waiting for sufficient resources in MAAS"
         self.display_controller.info_message(msg)
         self.display_controller.current_installer = self
-        self.display_controller.current_state = InstallState.NODE_WAIT
+        self.config.setopt('current_state', InstallState.NODE_WAIT.value)
         # return here and end thread. machine_wait_view will call
         # do_install back on new async thread
 

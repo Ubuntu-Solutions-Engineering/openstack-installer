@@ -16,7 +16,6 @@
 
 import logging
 import urwid
-from enum import Enum, unique
 import time
 import random
 import sys
@@ -28,6 +27,7 @@ from os import path, getenv
 from operator import attrgetter
 
 from cloudinstall import utils
+from cloudinstall.state import ControllerState
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
                                MaasMachineStatus)
@@ -42,15 +42,6 @@ from macumba import Jobs as JujuJobs
 
 log = logging.getLogger('cloudinstall.core')
 sys.excepthook = utils.global_exchandler
-
-
-@unique
-class ControllerState(Enum):
-
-    """Names for current screen state"""
-    INSTALL_WAIT = 0
-    PLACEMENT = 1
-    SERVICES = 2
 
 
 @contextmanager
@@ -108,7 +99,7 @@ class DisplayController:
         self.maas_state = None
         self.nodes = None
         self.placement_controller = None
-        self.current_state = ControllerState.INSTALL_WAIT
+        self.config.setopt('current_state', ControllerState.INSTALL_WAIT.value)
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -159,7 +150,8 @@ class DisplayController:
 
         if self.opts.edit_placement or \
            not self.placement_controller.can_deploy():
-            self.current_state = ControllerState.PLACEMENT
+            self.config.setopt(
+                'current_state', ControllerState.PLACEMENT.value)
         else:
             self.begin_deployment_async()
 
@@ -292,10 +284,11 @@ class DisplayController:
         """Render UI according to current state and reset timer"""
         interval = 1
 
-        if self.current_state == ControllerState.PLACEMENT:
+        if self.config.getopt('current_state') == ControllerState.PLACEMENT:
             self.render_placement_view()
 
-        elif self.current_state == ControllerState.INSTALL_WAIT:
+        elif self.config.getopt('current_state') == \
+                ControllerState.INSTALL_WAIT:
             self.render_node_install_wait()
             interval = self.config.node_install_wait_interval
 
@@ -343,7 +336,7 @@ class DisplayController:
         if key in ['h', 'H', '?']:
             self.ui.show_help_info()
         if key in ['a', 'A', 'f6']:
-            if self.current_state != ControllerState.SERVICES:
+            if self.config.getopt('current_state') != ControllerState.SERVICES:
                 return
             charm_modules = utils.load_charms()
             charm_classes = [m.__charm_class__ for m in charm_modules
@@ -399,7 +392,7 @@ class Controller(DisplayController):
         self.initialize()
 
     def commit_placement(self):
-        self.current_state = ControllerState.SERVICES
+        self.config.setopt('current_state', ControllerState.SERVICES.value)
         self.render_nodes(self.nodes, self.juju_state, self.maas_state)
         self.begin_deployment_async()
 
@@ -434,7 +427,7 @@ class Controller(DisplayController):
                               "start: {}".format(summary))
             time.sleep(3)
 
-        self.current_state = ControllerState.SERVICES
+        self.config.setopt('current_state', ControllerState.SERVICES.value)
         if self.config.is_single:
             controller_machine = self.juju_m_idmap['controller']
             self.configure_lxc_network(controller_machine)
