@@ -32,10 +32,11 @@ class SingleInstallException(Exception):
 
 class SingleInstall(InstallBase):
 
-    def __init__(self, opts, display_controller, config):
+    def __init__(self, opts, display_controller, config, loop):
         self.opts = opts
         super().__init__(display_controller)
         self.config = config
+        self.loop = loop
         self.container_name = 'uoi-bootstrap'
         self.container_path = '/var/lib/lxc'
         self.container_abspath = os.path.join(self.container_path,
