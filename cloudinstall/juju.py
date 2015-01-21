@@ -1,6 +1,4 @@
 #
-# __init__.py - Juju state
-#
 # Copyright 2014 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,7 +20,6 @@ from collections import Counter
 import logging
 import time
 
-from cloudinstall.config import Config
 from cloudinstall.machine import Machine
 from cloudinstall.service import Service
 
@@ -30,6 +27,7 @@ log = logging.getLogger('cloudinstall.juju')
 
 
 class JujuState:
+
     """ Represents a global Juju state """
 
     def __init__(self, juju):
@@ -37,7 +35,6 @@ class JujuState:
 
         :param juju: Juju API connection
         """
-        self.config = Config()
         self.juju = juju
         self.start_time = time.time()
         self._juju_status = None
