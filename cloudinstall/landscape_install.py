@@ -40,13 +40,15 @@ class LandscapeInstall:
         """
         MultiInstallExistingMaas(
             self.opts, self.display_controller,
-            post_tasks=self.landscape_tasks).run()
+            post_tasks=self.landscape_tasks,
+            config=self.config).run()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
         MultiInstallNewMaas(self.opts, self.display_controller,
-                            post_tasks=self.landscape_tasks).run()
+                            post_tasks=self.landscape_tasks,
+                            config=self.config).run()
 
     def _save_lds_creds(self, creds):
         admin_name = creds['admin_name'].value
