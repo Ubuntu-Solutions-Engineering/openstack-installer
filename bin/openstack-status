@@ -92,9 +92,9 @@ if __name__ == '__main__':
     if config.is_single and 'uoi-bootstrap' not in hostname:
         logger.info("Running status within container")
         utils.container_run_status('uoi-bootstrap', 'openstack-status')
-    gui = PegasusGUI()
+    ui = PegasusGUI()
     ev = EventLoop(ui, opts, config, logger)
-    core = Controller(ui=gui, opts=opts, config=config, loop=ev)
+    core = Controller(ui=ui, opts=opts, config=config, loop=ev)
     try:
         # Create pidfile
         utils.spew(config.pidfile, str(os.getppid()), utils.install_user())
