@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import urwid
 import os
 
 from cloudinstall.config import (INSTALL_TYPE_SINGLE,
@@ -102,15 +101,6 @@ class InstallController(DisplayController):
             self.exit()
 
     def main_loop(self):
-        if not hasattr(self, 'loop'):
-            self.loop = urwid.MainLoop(self.ui,
-                                       self.config.STYLES,
-                                       handle_mouse=True,
-                                       unhandled_input=self.header_hotkeys)
-            utils.make_screen_hicolor(self.loop.screen)
-            self.loop.screen.register_palette(self.config.STYLES)
-            log.debug("loop's screen is {}".format(self.loop.screen))
-
         self.info_message("Get started by entering an OpenStack password "
                           "for your cloud")
 
@@ -130,7 +120,7 @@ class InstallController(DisplayController):
 
     def render_machine_wait_view(self):
         self.ui.render_machine_wait_view(self, self.current_installer)
-        self.redraw_screen()
+        self.loop.redraw_screen()
 
     def do_install(self, install_type):
         """ Callback for install type selector
