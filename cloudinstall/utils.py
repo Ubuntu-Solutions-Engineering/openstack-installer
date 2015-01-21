@@ -787,7 +787,7 @@ def spew(path, data, owner=None):
         f.write(data)
     if owner:
         try:
-            chown(path, owner, owner)
+            chown(path, owner)
         except:
             raise UtilsException("Unable to set ownership of {}".format(path))
 
