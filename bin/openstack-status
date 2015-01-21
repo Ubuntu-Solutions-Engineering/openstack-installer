@@ -29,6 +29,7 @@ sys.path.insert(0, lib_dir)
 
 from cloudinstall.gui import PegasusGUI
 from cloudinstall.core import Controller
+from cloudinstall.ev import EventLoop
 from cloudinstall import utils
 from cloudinstall import log
 from cloudinstall.config import Config
@@ -92,7 +93,8 @@ if __name__ == '__main__':
         logger.info("Running status within container")
         utils.container_run_status('uoi-bootstrap', 'openstack-status')
     gui = PegasusGUI()
-    core = Controller(ui=gui, opts=opts, config=config)
+    ev = EventLoop(ui, opts, config, logger)
+    core = Controller(ui=gui, opts=opts, config=config, loop=ev)
     try:
         # Create pidfile
         utils.spew(config.pidfile, str(os.getppid()), utils.install_user())
