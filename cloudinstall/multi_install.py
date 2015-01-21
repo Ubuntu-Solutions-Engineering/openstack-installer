@@ -169,7 +169,8 @@ class MultiInstall(InstallBase):
         else:
             log.debug("Finished MAAS step, now deploying Landscape.")
             return LandscapeInstallFinal(self,
-                                         self.display_controller).run()
+                                         self.display_controller,
+                                         config=self.config).run()
 
     def drop_privileges(self):
         if os.geteuid() != 0:
