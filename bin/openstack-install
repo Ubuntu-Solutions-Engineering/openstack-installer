@@ -29,6 +29,7 @@ import cloudinstall.utils as utils
 from cloudinstall.gui import PegasusGUI, InstallHeader
 from cloudinstall.install import InstallController
 from cloudinstall.config import Config
+from cloudinstall.ev import EventLoop
 from cloudinstall import __version__ as version
 
 
@@ -164,8 +165,13 @@ if __name__ == '__main__':
         utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
                    opts.openstack_release, owner=utils.install_user())
 
+    # Choose event loop
+    ui = PegasusGUI(header=InstallHeader())
+    ev = EventLoop(ui, opts, cfg, logger)
+
     install = InstallController(
-        ui=PegasusGUI(header=InstallHeader()), opts=opts, config=cfg)
-    logger.info("cloud-install starting with options: {}".format(opts))
+        ui=ui, opts=opts, config=cfg, loop=ev)
+    logger.info("OpenStack install using eventloop {} "
+                "with options: {}".format(ev, opts))
 
     install.start()
