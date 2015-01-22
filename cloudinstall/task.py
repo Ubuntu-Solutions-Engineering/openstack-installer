@@ -1,4 +1,3 @@
-
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -23,13 +22,12 @@ import yaml
 from cloudinstall import utils
 from cloudinstall.config import Config
 
-log = logging.getLogger('cloudinstall.installbase')
+log = logging.getLogger('cloudinstall.task')
 
 
-class InstallBase:
+class Tasker:
 
-    """Parent class of single/multi install classes, provides progress
-    updates and task tracking.
+    """ Provides progress updates and task tracking.
 
     To use: register a list of task names using register_tasks:
     self.register_tasks(["A", "B", "C"])
@@ -46,10 +44,12 @@ class InstallBase:
 
     """
 
-    def __init__(self, display_controller):
+    def __init__(self, display_controller, loop, config):
+        self.config = config
         self.display_controller = display_controller
-        cb = self.display_controller.show_exception_message
-        utils.register_async_exception_callback(cb)
+        self.loop = loop
+        # cb = self.display_controller.show_exception_message
+        # utils.register_async_exception_callback(cb)
 
         self.tasks = []  # (name, starttime, endtime=None)
         self.tasks_started_debug = []
@@ -145,29 +145,52 @@ class InstallBase:
 
         self.display_controller.render_node_install_wait(m)
         f = self.update_progress
-        self.alarm = self.display_controller.loop.set_alarm_in(0.3, f)
+        self.alarm = self.loop.set_alarm_in(0.3, f)
 
 
-class FakeInstall(InstallBase):
+class TaskerConsole:
+
+    """ Console tasker """
+
+    def __init__(self, display_controller, loop, config):
+        self.loop = loop
+        self.config = config
+        self.display_controller = display_controller
+        self.tasks = []
+
+    def start_task(self, taskname):
+        log.info("[TASK] {}".format(taskname))
+
+    def stop_current_task(self):
+        pass
+
+    def register_tasks(self, tasks):
+        log.info("[TASKLIST] {}".format(tasks))
+        self.tasks.extend(tasks)
+
+
+class FakeInstall:
+
     """For testing only, use as a replacement for MultiInstall*"""
 
-    def __init__(self, opts, display_controller):
-        super().__init__(display_controller)
+    def __init__(self, loop, display_controller):
+        super().__init__(display_controller, loop)
         self.config = Config()
+        self.tasker = Tasker(display_controller, loop)
         self.display_controller = display_controller
-        cb = self.display_controller.show_exception_message
-        utils.register_async_exception_callback(cb)
+        # cb = self.display_controller.show_exception_message
+        # utils.register_async_exception_callback(cb)
 
     def run(self):
         self.tl = ['a', 'b', 'c']
-        self.register_tasks(self.tl)
+        self.tasker.register_tasks(self.tl)
         self.update_progress()
         self.async_go()
 
     @utils.async
     def async_go(self):
         for t in self.tl:
-            self.start_task(t)
+            self.tasker.start_task(t)
             time.sleep(1.2)
         raise Exception("ERROR IN ASYNC GO")
-        self.stop_current_task()
+        self.tasker.stop_current_task()
