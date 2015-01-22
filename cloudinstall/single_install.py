@@ -301,12 +301,14 @@ class SingleInstall:
 
         # start the party
         cloud_status_bin = ['openstack-status']
-        self.display_controller.status_info_message("Bootstrapping Juju")
+        self.display_controller.info_message("Bootstrapping Juju")
         self.tasker.start_task("Bootstrapping Juju")
+        utils.container_run(self.container_name,
+                            "JUJU_HOME=~/.cloud-install juju bootstrap",
+                            use_ssh=True)
         utils.container_run(
-            self.container_name, "JUJU_HOME=~/.cloud-install juju bootstrap")
-        utils.container_run(
-            self.container_name, "JUJU_HOME=~/.cloud-install juju status")
+            self.container_name, "JUJU_HOME=~/.cloud-install juju status",
+            use_ssh=True)
         self.tasker.stop_current_task()
 
         self.display_controller.status_info_message(

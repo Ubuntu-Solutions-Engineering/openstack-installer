@@ -489,20 +489,29 @@ class ContainerRunException(Exception):
     "Running cmd in container failed"
 
 
-def container_run(name, cmd):
+def container_run(name, cmd, use_ssh=False):
     """ run command in container
 
     :param str name: name of container
     :param str cmd: command to run
     """
-    ip = container_ip(name)
-    quoted_cmd = shlex.quote(cmd)
-    wrapped_cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
-                   "-l ubuntu -o \"StrictHostKeyChecking=no\" "
-                   "-o \"UserKnownHostsFile=/dev/null\" "
-                   "-i {2} "
-                   "{0} {1}".format(ip, quoted_cmd, ssh_privkey(),
-                                    install_user()))
+
+    if use_ssh:
+        ip = container_ip(name)
+        quoted_cmd = shlex.quote(cmd)
+        wrapped_cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
+                       "-l ubuntu -o \"StrictHostKeyChecking=no\" "
+                       "-o \"UserKnownHostsFile=/dev/null\" "
+                       "-i {2} "
+                       "{0} {1}".format(ip, quoted_cmd, ssh_privkey(),
+                                        install_user()))
+    else:
+        ip = "-"
+        quoted_cmd = cmd
+        wrapped_cmd = ("lxc-attach -n {container_name} -- "
+                       "{cmd}".format(container_name=name,
+                                      cmd=cmd))
+
     log.debug("Running in container: {0}".format(wrapped_cmd))
 
     subproc = subprocess.Popen(wrapped_cmd, shell=True,
