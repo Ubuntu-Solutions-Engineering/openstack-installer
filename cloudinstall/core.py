@@ -88,10 +88,8 @@ class DisplayController:
 
     """ Controller for displaying juju and maas state."""
 
-    def __init__(self, ui, opts, config, loop):
-        self.opts = opts
+    def __init__(self, ui, config, loop):
         self.ui = ui
-        self.opts = opts
         self.config = config
         self.loop = loop
         self.juju_state = None
@@ -301,7 +299,7 @@ class DisplayController:
                 if u.is_horizon and u.agent_state == "started":
                     self.set_dashboard_url(
                         u.public_address, 'ubuntu',
-                        self.config.openstack_password)
+                        self.config.getopt('openstack_password'))
                 if u.is_jujugui and u.agent_state == "started":
                     self.set_jujugui_url(u.public_address)
         if len(self.nodes) == 0:
@@ -387,7 +385,7 @@ class Controller(DisplayController):
 
     def begin_deployment(self):
         log.debug("begin_deployment")
-        if self.config.is_multi:
+        if self.config.is_multi():
 
             # now all machines are added
             self.maas.tag_fpi(self.maas.nodes)
@@ -399,7 +397,7 @@ class Controller(DisplayController):
 
             self.add_machines_to_juju_multi()
 
-        elif self.config.is_single:
+        elif self.config.is_single():
             self.add_machines_to_juju_single()
 
         while not self.all_juju_machines_started():
@@ -411,7 +409,7 @@ class Controller(DisplayController):
             time.sleep(3)
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
-        if self.config.is_single:
+        if self.config.is_single():
             controller_machine = self.juju_m_idmap['controller']
             self.configure_lxc_network(controller_machine)
 
@@ -593,7 +591,8 @@ class Controller(DisplayController):
 
         charm = charm_class(juju=self.juju,
                             juju_state=self.juju_state,
-                            ui=self.ui)
+                            ui=self.ui,
+                            config=self.config)
 
         placements = self.placement_controller.machines_for_charm(charm_class)
         errs = []
@@ -663,10 +662,10 @@ class Controller(DisplayController):
                   " post-processing enqueueing {}".format(
                       [c.charm_name for c in self.deployed_charm_classes]))
 
-        charm_q = CharmQueue(ui=self.ui)
+        charm_q = CharmQueue(ui=self.ui, config=self.config)
         for charm_class in self.deployed_charm_classes:
             charm = charm_class(juju=self.juju, juju_state=self.juju_state,
-                                ui=self.ui)
+                                ui=self.ui, config=self.config)
             charm_q.add_relation(charm)
             charm_q.add_post_proc(charm)
 
@@ -690,11 +689,12 @@ class Controller(DisplayController):
                 n=count, charm=charm))
             self.juju.add_unit(charm, num_units=int(count))
         else:
-            charm_q = CharmQueue(ui=self.ui)
+            charm_q = CharmQueue(ui=self.ui, config=self.config)
             charm_sel = get_charm(charm,
                                   self.juju,
                                   self.juju_state,
-                                  self.ui)
+                                  self.ui,
+                                  config=self.config)
             log.debug("Add charm: {}".format(charm_sel))
             if not charm_sel.isolate:
                 charm_sel.machine_id = 'lxc:{mid}'.format(mid="1")
@@ -715,7 +715,8 @@ class Controller(DisplayController):
                         charm_dep = get_charm(c,
                                               self.juju,
                                               self.juju_state,
-                                              self.ui)
+                                              self.ui,
+                                              config=self.config)
                         if not charm_dep.isolate:
                             charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
                         charm_q.add_deploy(charm_dep)

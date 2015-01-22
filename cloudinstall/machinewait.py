@@ -20,7 +20,6 @@ import random
 from urwid import (AttrMap, Button, Divider, Filler, Padding, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
-from cloudinstall.config import Config
 from cloudinstall.maas import connect_to_maas, FakeMaasState, MaasMachineStatus
 from cloudinstall import utils
 
@@ -28,11 +27,12 @@ log = logging.getLogger('cloudinstall.install')
 
 
 class MachineWaitView(WidgetWrap):
-    def __init__(self, display_controller, installer):
+
+    def __init__(self, display_controller, installer, config):
         self.display_controller = display_controller
         self.installer = installer
-        self.config = Config()
-        creds = self.config.maas_creds
+        self.config = config
+        creds = self.config.getopt('maascreds')
         if os.getenv("FAKE_API_DATA"):
             self.maas_client = None
             self.maas_state = FakeMaasState()

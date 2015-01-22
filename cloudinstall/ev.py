@@ -28,9 +28,8 @@ class EventLoop:
     becomes available.
     """
 
-    def __init__(self, ui, opts, config, log):
+    def __init__(self, ui, config, log):
         self.ui = ui
-        self.opts = opts
         self.config = config
         self.loop = self._build_loop()
         self.log = log
@@ -58,7 +57,7 @@ class EventLoop:
             if key in ['h', 'H', '?']:
                 self.ui.show_help_info()
             if key in ['a', 'A', 'f6']:
-                if self.config.getopt('controller_state') != \
+                if self.config.getopt('current_state') != \
                    ControllerState.SERVICES:
                     return
                 charm_modules = utils.load_charms()

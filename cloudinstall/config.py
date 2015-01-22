@@ -16,7 +16,6 @@
 
 import os
 import yaml
-import json
 from cloudinstall import utils
 import logging
 
@@ -94,7 +93,6 @@ class Config:
         except IOError:
             raise ConfigException("Unable to save configuration.")
 
-    @property
     def install_types(self):
         """ Installer types
         """
@@ -134,33 +132,23 @@ class Config:
         """ scripts located in non-default system path """
         return os.path.join(self.share_path, "bin")
 
-    @property
-    def placements_filename(self):
-        return os.path.join(self.cfg_path, 'placements.yaml')
-
-    @property
     def is_single(self):
         if self.getopt('install_type') and \
            'Single' in self.getopt('install_type'):
             return True
-        # TODO: Deprecate.
-        return os.path.exists(os.path.join(self.cfg_path, 'single'))
+        return False
 
-    @property
     def is_multi(self):
         if self.getopt('install_type') and \
            'Multi' in self.getopt('install_type'):
             return True
-        # TODO: Deprecate.
-        return os.path.exists(os.path.join(self.cfg_path, 'multi'))
+        return False
 
-    @property
     def is_landscape(self):
         if self.getopt('install_type') and \
            'Landscape OpenStack Autopilot' in self.getopt('install_type'):
             return True
-        # TODO: Deprecate
-        return os.path.exists(os.path.join(self.cfg_path, 'landscape'))
+        return False
 
     def setopt(self, key, val):
         """ sets config option """
@@ -176,15 +164,6 @@ class Config:
         else:
             log.error("Could not find {} in config".format(key))
             return False
-
-    def set_install_type(self, install_type):
-        """ Stores installer type """
-        # Sets install type
-        self.setopt('install_type', install_type)
-
-        # TODO: Deprecate
-        utils.spew(os.path.join(self.cfg_path, install_type),
-                   'auto-generated')
 
     @property
     def juju_path(self):
@@ -240,102 +219,6 @@ class Config:
     @property
     def juju_api_password(self):
         return self.juju_env['password']
-
-    @property
-    def openstack_password(self):
-        if self.getopt('openstack_password'):
-            return self.getopt('openstack_password')
-
-        # TODO: Deprecate.
-        PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
-        try:
-            _password = utils.slurp(PASSWORD_FILE)
-        except IOError:
-            log.exception('exception loading openstack password')
-            raise ConfigException('cannot load saved openstack password')
-        return _password
-
-    def save_password(self, password):
-        self.setopt('openstack_password', password)
-
-        # TODO: Deprecate
-        PASSWORD_FILE = os.path.join(self.cfg_path, 'openstack.passwd')
-        utils.spew(PASSWORD_FILE, password)
-
-    def save_maas_creds(self, api_host, api_key):
-        """ Saves maas credentials for re-use
-
-        :param str api_host: ip of maas server
-        :param str api_key: api key of maas admin user
-        """
-        if api_host.startswith("http://"):
-            raise ConfigException("save_maas_creds expects an ip, not a url")
-        self.setopt('maascreds', dict(api_host=api_host,
-                                      api_key=api_key))
-        # TODO: Deprecate
-        MAAS_CREDS_FILE = os.path.join(self.cfg_path, 'maascreds')
-        utils.spew(MAAS_CREDS_FILE, json.dumps(dict(api_host=api_host,
-                                                    api_key=api_key)))
-
-    @property
-    def maas_creds(self):
-        """ reads maascreds file
-        """
-        maas_creds = self.getopt('maascreds')
-        if maas_creds:
-            if 'api_key' not in maas_creds:
-                raise ConfigException("Unable to read api_key")
-            if 'api_host' not in maas_creds:
-                raise ConfigException("Unable to read api_host")
-            return maas_creds
-
-        MAAS_CREDS_FILE = os.path.join(self.cfg_path, 'maascreds')
-        try:
-            _maascreds = json.loads(utils.slurp(MAAS_CREDS_FILE))
-        except IOError:
-            log.exception('exception loading maas creds')
-            raise ConfigException("cannot load saved maas creds")
-        return _maascreds
-
-    def save_landscape_creds(self, admin_name, admin_email,
-                             system_email, maas_server, maas_apikey):
-        """ Saves landscape credentials for re-use
-
-        :param str admin_name: admin name
-        :param str admin_email: admin email
-        :param str system_email: system_email
-        :param str maas_server: ip of maas server
-        :param str maas_apikey: api key of maas admin user
-        """
-        self.setopt('landscapecreds', dict(admin_name=admin_name,
-                                           admin_email=admin_email,
-                                           system_email=system_email,
-                                           maas_server=maas_server,
-                                           maas_apikey=maas_apikey))
-        # TODO: Deprecate
-        LANDSCAPE_CREDS_FILE = os.path.join(self.cfg_path, 'landscapecreds')
-        utils.spew(LANDSCAPE_CREDS_FILE,
-                   json.dumps(dict(admin_name=admin_name,
-                                   admin_email=admin_email,
-                                   system_email=system_email,
-                                   maas_server=maas_server,
-                                   maas_apikey=maas_apikey)))
-
-    @property
-    def landscape_creds(self):
-        """ reads landscape creds file
-        """
-        if self.getopt('landscapecreds'):
-            return self.getopt('landscapecreds')
-
-        # TODO: Deprecate
-        LANDSCAPE_CREDS_FILE = os.path.join(self.cfg_path, 'landscapecreds')
-        try:
-            _creds = json.loads(utils.slurp(LANDSCAPE_CREDS_FILE))
-        except IOError:
-            log.exception("exception loading lanscape creds")
-            raise ConfigException("cannot load landscape creds")
-        return _creds
 
     def __getattr__(self, attr):
         """ Protect us from invalid attribute lookup

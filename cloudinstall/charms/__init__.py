@@ -26,7 +26,6 @@ import requests
 
 from macumba import MacumbaError
 from cloudinstall import utils
-from cloudinstall.config import Config
 from cloudinstall.placement.controller import AssignmentType
 
 log = logging.getLogger('cloudinstall.charms')
@@ -69,7 +68,7 @@ class DisplayPriorities:
     Other = 30
 
 
-def get_charm(charm_name, juju, juju_state, ui):
+def get_charm(charm_name, juju, juju_state, ui, config):
     """ returns single charm class
 
     :param str charm_name: name of charm to query
@@ -78,7 +77,10 @@ def get_charm(charm_name, juju, juju_state, ui):
     :returns: charm class
     """
     for charm in utils.load_charms():
-        c = charm.__charm_class__(juju=juju, juju_state=juju_state, ui=ui)
+        c = charm.__charm_class__(juju=juju,
+                                  juju_state=juju_state,
+                                  ui=ui,
+                                  config=config)
         if charm_name == c.name():
             return c
 
@@ -102,19 +104,20 @@ class CharmBase:
     subordinate = False
     openstack_release_min = 'i'
 
-    def __init__(self, juju=None, juju_state=None, machine=None, ui=None):
+    def __init__(self, config, ui, juju, juju_state,
+                 machine=None):
         """ initialize
 
         :param state: :class:JujuState
         :param machine: :class:Machine
         """
-        self.config = Config()
         self.charm_path = None
         self.exposed = False
         self.machine = machine
         self.juju = juju
         self.juju_state = juju_state
         self.ui = ui
+        self.config = config
 
     def _openstack_env(self, user, password, tenant, auth_url):
         """ setup openstack environment vars """
@@ -317,12 +320,14 @@ export OS_REGION_NAME=RegionOne
 class CharmQueue:
     """ charm queue for handling relations in the background
     """
-    def __init__(self, ui):
+
+    def __init__(self, ui, config):
         self.charm_relations_q = Queue()
         self.charm_deploy_q = Queue()
         self.charm_post_proc_q = Queue()
         self.is_running = False
         self.ui = ui
+        self.config = config
 
     def add_relation(self, charm):
         self.charm_relations_q.put(charm)
@@ -379,4 +384,4 @@ class CharmQueue:
                 log.exception(msg)
                 self.ui.status_error_message(msg)
             time.sleep(10)
-        utils.write_status_file('success', 'Completed successfully.')
+        self.config.setopt('deploy_complete', True)

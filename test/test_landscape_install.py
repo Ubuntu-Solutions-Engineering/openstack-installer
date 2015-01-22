@@ -22,6 +22,8 @@ import unittest
 from unittest.mock import ANY, MagicMock, patch, PropertyMock
 
 from cloudinstall.multi_install import LandscapeInstallFinal
+from cloudinstall.config import Config
+from tempfile import NamedTemporaryFile
 
 log = logging.getLogger('cloudinstall.test_landscape_install')
 
@@ -32,34 +34,32 @@ class LandscapeInstallFinalTestCase(unittest.TestCase):
     def setUp(self):
         self.mock_multi_installer = MagicMock()
         self.mock_display_controller = MagicMock()
-        self.opts = MagicMock()
         self.loop = MagicMock()
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            # Override config file to save to
+            self.conf = Config({}, tempf.name)
 
     def make_installer_with_config(self, landscape_creds=None,
                                    maas_creds=None):
 
-        c = MagicMock(name='mock config')
         if landscape_creds is None:
             landscape_creds = dict(admin_name="fakeadminname",
                                    admin_email="fake@email.fake",
-                                   system_email="fake@email.system.fake")
-        pmcreds = PropertyMock(return_value=landscape_creds)
-        type(c).landscape_creds = pmcreds
-        if maas_creds is None:
-            maas_creds = dict(api_host="fake.host")
-        pmcreds = PropertyMock(return_value=maas_creds)
-        type(c).maas_creds = pmcreds
-
+                                   system_email="fake@email.system.fake",
+                                   maas_server='fake.host',
+                                   maas_apikey='fake:keyz:yo')
+        self.conf.setopt('maascreds', dict(api_host='fake.host',
+                                           api_key='fake:keyz:yo'))
+        self.conf.setopt('landscapecreds', landscape_creds)
         pm_binpath = PropertyMock(return_value='mockbinpath')
-        type(c).bin_path = pm_binpath
+        type(self.conf).bin_path = pm_binpath
         pm_cfgpath = PropertyMock(return_value='mockcfgpath')
-        type(c).cfg_path = pm_cfgpath
+        type(self.conf).cfg_path = pm_cfgpath
 
         lif = LandscapeInstallFinal(self.mock_multi_installer,
                                     self.mock_display_controller,
-                                    config=c,
-                                    opts=self.opts,
-                                    loop=self.loop)
+                                    self.conf,
+                                    self.loop)
         self.installer = lif
 
     def test_run_configure_not_sudo_user(self, mock_utils):

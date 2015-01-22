@@ -68,10 +68,9 @@ options {{
 
 class MultiInstall(InstallBase):
 
-    def __init__(self, opts, loop, display_controller,
+    def __init__(self, loop, display_controller,
                  config, post_tasks=None):
         super().__init__(display_controller)
-        self.opts = opts
         self.loop = loop
         self.config = config
         self.display_controller = display_controller
@@ -82,8 +81,8 @@ class MultiInstall(InstallBase):
             self.post_tasks = []
         self.installing_new_maas = False
         # Sets install type
-        if not self.config.is_landscape:
-            self.config.set_install_type('multi')
+        if not self.config.is_landscape():
+            self.config.setopt('install_type', 'Multi')
 
     def set_perms(self):
         # Set permissions
@@ -103,17 +102,17 @@ class MultiInstall(InstallBase):
         self.start_task("Bootstrapping Juju")
         self.config.setopt('current_state', InstallState.RUNNING.value)
 
-        maas_creds = self.config.maas_creds
+        maas_creds = self.config.getopt('maascreds')
         maas_env = utils.load_template('juju-env/maas.yaml')
         maas_env_modified = maas_env.render(
             maas_server=maas_creds['api_host'],
             maas_apikey=maas_creds['api_key'],
-            openstack_password=self.config.openstack_password)
+            openstack_password=self.config.getopt('openstack_password'))
         check_output(['mkdir', '-p', self.config.juju_path])
         utils.spew(self.config.juju_environments_path,
                    maas_env_modified)
 
-        utils.render_charm_config(self.config, self.opts)
+        utils.render_charm_config(self.config)
 
         utils.ssh_genkey()
 
@@ -158,13 +157,15 @@ class MultiInstall(InstallBase):
 
         self.stop_current_task()
 
-        if self.opts.install_only:
-            return
+        if self.config.getopt('install_only'):
+            log.info("Done installing, stopping here per --install-only.")
+            self.config.setopt('install_only', True)
+            self.loop.exit(0)
 
         # Return control back to landscape_install if need be
-        if not self.config.is_landscape:
+        if not self.config.is_landscape():
             args = ['openstack-status']
-            if self.opts.edit_placement:
+            if self.config.getopt('edit_placement'):
                 args.append('--placement')
 
             self.drop_privileges()
@@ -173,9 +174,8 @@ class MultiInstall(InstallBase):
             log.debug("Finished MAAS step, now deploying Landscape.")
             return LandscapeInstallFinal(self,
                                          self.display_controller,
-                                         config=self.config,
-                                         loop=self.loop,
-                                         opts=self.opts).run()
+                                         self.config,
+                                         self.loop).run()
 
     def drop_privileges(self):
         if os.geteuid() != 0:
@@ -211,8 +211,8 @@ class MultiInstallNewMaas(MultiInstall):
 
     LOCAL_MAAS_URL = 'http://localhost/MAAS/api/1.0'
 
-    def __init__(self, opts, loop, display_controller, config, **kwargs):
-        super().__init__(opts, loop, display_controller, config, **kwargs)
+    def __init__(self, loop, display_controller, config, **kwargs):
+        super().__init__(loop, display_controller, config, **kwargs)
 
     def run(self):
         utils.spew(os.path.join(self.config.cfg_path,
@@ -295,8 +295,8 @@ class MultiInstallNewMaas(MultiInstall):
 
         self.configure_dns()
 
-        self.config.save_maas_creds(self.gateway,
-                                    self.apikey)
+        self.config.setopt('maascreds', dict(api_host=self.gateway,
+                                             api_key=self.apikey))
 
         if "MAAS_HTTP_PROXY" in os.environ:
             pv = os.environ['MAAS_HTTP_PROXY']
@@ -401,7 +401,7 @@ class MultiInstallNewMaas(MultiInstall):
         return False
 
     def create_superuser(self):
-        pw = shlex.quote(self.config.openstack_password)
+        pw = shlex.quote(self.config.getopt('openstack_password'))
         cmd = ("maas-region-admin createadmin "
                "--username root --password {} "
                "--email root@example.com".format(pw))
@@ -670,10 +670,10 @@ class LandscapeInstallFinal:
     """
 
     def __init__(self, multi_installer, display_controller,
-                 config, opts, loop):
+                 config, loop):
         self.config = config
-        self.opts = opts
         self.loop = loop
+        self.config.save()
         self.multi_installer = multi_installer
         self.display_controller = display_controller
         self.maas = None
@@ -728,9 +728,10 @@ class LandscapeInstallFinal:
         msg.append("http://{0}/account/standalone/openstack ".format(hostname))
         msg.append("\n\nLandscape Login Credentials:\n")
         msg.append(" Email: {}\n".format(
-            self.config.landscape_creds['admin_email']))
-        msg.append(" Password: {}".format(self.config.openstack_password))
-        return self.display_controller.step_info(msg)
+            self.config.getopt('landscapecreds')['admin_email']))
+        msg.append(
+            " Password: {}".format(self.config.getopt('openstack_password')))
+        self.display_controller.show_step_info(msg)
 
     def run_deployer(self):
         # Prep deployer template for landscape
@@ -755,12 +756,13 @@ class LandscapeInstallFinal:
     def run_configure_script(self):
         "runs configure-landscape, returns output (LDS hostname)"
 
-        ldscreds = self.config.landscape_creds
+        ldscreds = self.config.getopt('landscapecreds')
         args = {"bin": self.lscape_configure_bin,
                 "admin_email": shlex.quote(ldscreds['admin_email']),
                 "admin_name": shlex.quote(ldscreds['admin_name']),
                 "sys_email": shlex.quote(ldscreds['system_email']),
-                "maas_host": shlex.quote(self.config.maas_creds['api_host'])}
+                "maas_host": shlex.quote(
+                    self.config.getopt('maascreds')['api_host'])}
 
         cmd = ("{bin} --admin-email {admin_email} "
                "--admin-name {admin_name} "

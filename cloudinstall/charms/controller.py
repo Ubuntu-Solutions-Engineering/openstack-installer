@@ -39,12 +39,14 @@ class CharmNovaCloudController(CharmBase):
         unit = svc.unit(self.charm_name)
         k_svc = self.juju_state.service('keystone')
         keystone = k_svc.unit('keystone')
+        openstack_password = self.config.getopt('openstack_password')
 
         if unit.machine_id == '-1':
             return True
 
         for u in ['admin', 'ubuntu']:
-            env = self._openstack_env(u, self.config.openstack_password,
+            env = self._openstack_env(u,
+                                      openstack_password,
                                       u, keystone.public_address)
             self._openstack_env_save(u, env)
             utils.remote_cp(unit.machine_id,
@@ -61,8 +63,7 @@ class CharmNovaCloudController(CharmBase):
             dst="/tmp/id_rsa.pub")
         err = utils.remote_run(unit.machine_id,
                                cmds="/tmp/nova-controller-setup.sh "
-                                    "{p}".format(
-                                        p=self.config.openstack_password))
+                                    "{p}".format(p=openstack_password))
         if err['status'] != 0:
             # something happened during nova setup, re-run
             return True

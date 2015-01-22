@@ -20,35 +20,34 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from cloudinstall.multi_install import MultiInstallNewMaas, MaasInstallError
+from cloudinstall.config import Config
+from tempfile import NamedTemporaryFile
 
 
 class MultiInstallNewMaasTestCase(unittest.TestCase):
 
     def setUp(self):
-        pass
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            # Override config file to save to
+            self.conf = Config({}, tempf.name)
+        self.conf.setopt('openstack_password', 'ampersand&')
 
-    def make_installer(self, opts=None, loop=None, dc=None, config=None):
-        if opts is None:
-            opts = MagicMock(name="opts")
+    def make_installer(self, loop=None, dc=None):
+
         if dc is None:
             dc = MagicMock(name="display_controller")
-        if config is None:
-            config = MagicMock(name="config")
         if loop is None:
             loop = MagicMock(name="loop")
 
         self.installer = MultiInstallNewMaas(
-            opts, loop, dc, config=config)
+            loop, dc, self.conf)
 
     def _create_superuser(self, raises):
-        c = MagicMock(name="config")
-        c.openstack_password = "ampersand&"
-
         expected = ("maas-region-admin createadmin --username root "
                     "--password 'ampersand&' "
                     "--email root@example.com")
 
-        self.make_installer(config=c)
+        self.make_installer()
         with patch('cloudinstall.multi_install.utils') as mock_utils:
             if raises:
                 mock_utils.get_command_output.return_value = {'status': -1}

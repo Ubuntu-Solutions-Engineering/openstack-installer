@@ -127,18 +127,19 @@ def load_charm_byname(name):
     return import_module('cloudinstall.charms.{}'.format(name))
 
 
-def render_charm_config(config, opts):
+def render_charm_config(config):
     charm_conf = load_template('charmconf.yaml')
 
-    template_args = dict(openstack_password=config.openstack_password)
+    template_args = dict(
+        openstack_password=config.getopt('openstack_password'))
 
-    if opts.openstack_release:
+    if config.getopt('openstack_release'):
         ubuntu_distname = platform.dist()[-1]
-        openstack_origin = "cloud:{}-{}".format(ubuntu_distname,
-                                                opts.openstack_release)
+        openstack_origin = "cloud:{}-{}".format(
+            ubuntu_distname, config.getopt('openstack_release'))
         template_args['openstack_origin'] = openstack_origin
 
-    if config.is_single:
+    if config.is_single():
         template_args['worker_multiplier'] = '1'
 
     charm_conf_modified = charm_conf.render(**template_args)
@@ -514,7 +515,7 @@ def container_run(name, cmd):
                                     subproc.returncode)
 
 
-def container_run_status(name, cmd):
+def container_run_status(name, cmd, config):
     """ Runs cloud-status in container
     """
     ip = container_ip(name)

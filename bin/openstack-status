@@ -55,6 +55,24 @@ def parse_options(*args, **kwds):
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args()
 
+
+def populate_config(opts):
+    presaved_config = os.path.join(
+        utils.install_home(), '.cloud-install/config.yaml')
+
+    # Always override presaved config if defined in cli switch
+    if opts.config_file and os.path.exists(opts.config_file):
+        _cfg = yaml.load(utils.slurp(opts.config_file))
+    # Pull from ~/.cloud-install/config.yaml if exists
+    elif os.path.exists(presaved_config):
+        _cfg = yaml.load(utils.slurp(presaved_config))
+    else:
+        _cfg = {}
+    # Update cfg dict with command line opts
+    _cfg.update(vars(opts))
+    return Config(cfg_obj=_cfg)
+
+
 if __name__ == '__main__':
     opts = parse_options(sys.argv)
 
@@ -72,14 +90,7 @@ if __name__ == '__main__':
     logger = logging.getLogger('openstack-status')
     logger.info("openstack-status starting")
 
-    if opts.config_file and os.path.exists(opts.config_file):
-        _cfg = yaml.load(utils.slurp(opts.config_file))
-    else:
-        _cfg = {}
-    # Update cfg dict with command line opts
-    _cfg.update(vars(opts))
-    config = Config(cfg_obj=_cfg)
-
+    config = populate_config(opts)
     if os.path.isfile(config.pidfile):
         print("Another instance of openstack-status is running. If you're "
               "sure there are no other instances, please remove "
@@ -89,12 +100,12 @@ if __name__ == '__main__':
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
     hostname = out['output'].rstrip()
-    if config.is_single and 'uoi-bootstrap' not in hostname:
+    if config.is_single() and 'uoi-bootstrap' not in hostname:
         logger.info("Running status within container")
         utils.container_run_status('uoi-bootstrap', 'openstack-status')
     ui = PegasusGUI()
-    ev = EventLoop(ui, opts, config, logger)
-    core = Controller(ui=ui, opts=opts, config=config, loop=ev)
+    ev = EventLoop(ui, config, logger)
+    core = Controller(ui=ui, config=config, loop=ev)
     try:
         # Create pidfile
         utils.spew(config.pidfile, str(os.getppid()), utils.install_user())
