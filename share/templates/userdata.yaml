@@ -1,21 +1,6 @@
 #cloud-config
 
-{% if not network_interface %}
-{% set network_interface = 'eth0' %}
-{% endif %}
-
-{% if not bridge_network_interface %}
-{% set bridge_network_interface = 'lxcbr0' %}
-{% endif %}
-
 write_files:
-  - content: |
-      auto {{ network_interface }}
-      iface {{ network_interface }} inet manual
-      auto {{ bridge_network_interface }}
-      iface {{ bridge_network_interface }} inet dhcp
-          bridge_ports {{ network_interface }}
-    path: /etc/network/interfaces.d/bridge.cfg
   - content: |
       #!/bin/sh
       mkdir -p /dev/net || true
@@ -25,8 +10,6 @@ write_files:
     path: /etc/rc.local
     permissions: '0755'
 packages:
-  - openstack
-  - openstack-single
   - software-properties-common
 {% if extra_pkgs %}
 {% for pkg in extra_pkgs %}
@@ -57,10 +40,6 @@ chpasswd: { expire: False }
 ssh_pwauth: True
 manage_etc_hosts: localhost
 
-bootcmd:
-  - rm /etc/network/interfaces.d/{{ network_interface }}.cfg
-  - ifdown {{ network_interface }}
-  - ifup {{ bridge_network_interface }} {{ network_interface }}
 
 # Make sure we load our modules on first creation
 runcmd:
