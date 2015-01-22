@@ -95,10 +95,10 @@ class SingleInstall:
             # FIXME: causing some issues with authorized_keys
             # having its permission changed and not allowing
             # ssh into the container without password.
-            f.write(
-                "{0} {1} none bind,create=dir\n".format(
-                    os.path.join(utils.install_home(), '.ssh'),
-                    'home/ubuntu/.ssh'))
+            # f.write(
+            #     "{0} {1} none bind,create=dir\n".format(
+            #         os.path.join(utils.install_home(), '.ssh'),
+            #         'home/ubuntu/.ssh'))
             f.write(
                 "/var/cache/lxc var/cache/lxc none bind,create=dir\n")
 
