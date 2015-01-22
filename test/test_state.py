@@ -85,13 +85,12 @@ class MultiInstallStateTestCase(unittest.TestCase):
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
             self.conf = Config({}, tempf.name)
-        self.mock_opts = MagicMock(name='opts')
         self.mock_ui = MagicMock(name='ui')
 
     @patch('cloudinstall.multi_install.MultiInstall')
     def test_do_install_sets_state(self, MultiInstall):
         """ Validate installstate in multi install """
-        mi = MultiInstall(self.mock_opts, self.mock_ui, config=self.conf)
+        mi = MultiInstall(self.mock_ui, config=self.conf)
         mi.do_install()
         self.assertEqual(
             self.conf.getopt('current_state'), InstallState.RUNNING)
@@ -107,12 +106,11 @@ class CoreStateTestCase(unittest.TestCase):
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
             self.conf = Config({}, tempf.name)
-        self.mock_opts = MagicMock(name='opts')
         self.mock_ui = MagicMock(name='ui')
 
-    @patch('cloudinstall.core.DisplayController')
-    def test_controller_state_init(self, DisplayController):
+    @patch('cloudinstall.core.Controller')
+    def test_controller_state_init(self, Controller):
         """ Validate controller state in core during class init """
-        DisplayController(self.mock_ui, self.mock_opts, self.conf)
+        Controller(self.mock_ui, self.conf)
         self.assertEqual(
             self.conf.getopt('current_state'), ControllerState.INSTALL_WAIT)

@@ -36,6 +36,7 @@ log = logging.getLogger(__name__)
 
 
 class CharmGlanceSimplestreamsSync(CharmBase):
+
     """ Charm directives for glance-simplestreams-sync  """
 
     charm_name = 'glance-simplestreams-sync'
@@ -97,7 +98,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
                     mspec=mspec)
 
         # TODO: See if this is supported by juju api
-        cmd = ('juju deploy --repository={repodir}'
+        cmd = ('JUJU_HOME=~/.cloud-install juju deploy --repository={repodir}'
                ' local:{distro}/glance-simplestreams-sync'
                ' --constraints {constraints}'
                ' --to {mspec}').format(**kwds)

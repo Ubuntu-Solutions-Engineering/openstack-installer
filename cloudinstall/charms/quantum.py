@@ -72,7 +72,7 @@ class CharmQuantum(CharmBase):
         if unit.machine_id == '-1':
             return True
 
-        self.ui.status_info_message("Updating network parameters "
+        self.ui.status_info_message("Validating network parameters "
                                     "for Neutron")
         utils.remote_cp(
             unit.machine_id,
@@ -83,7 +83,7 @@ class CharmQuantum(CharmBase):
         utils.remote_run(unit.machine_id,
                          cmds="sudo /tmp/quantum-network.sh")
         self.ui.status_info_message(
-            "Neutron deployed and configured")
+            "All systems go!")
         return False
 
 

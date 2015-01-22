@@ -60,6 +60,7 @@ def query_cs(charm, series='trusty'):
 
 
 class DisplayPriorities:
+
     """A fake enum"""
     Core = 0
     Error = 1
@@ -86,6 +87,7 @@ def get_charm(charm_name, juju, juju_state, ui, config):
 
 
 class CharmBase:
+
     """ Base charm class """
 
     charm_name = None
@@ -318,6 +320,7 @@ export OS_REGION_NAME=RegionOne
 
 
 class CharmQueue:
+
     """ charm queue for handling relations in the background
     """
 

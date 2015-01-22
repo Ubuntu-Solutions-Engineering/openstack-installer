@@ -19,7 +19,6 @@ import os
 import json
 import time
 import shutil
-from cloudinstall.installbase import InstallBase
 from cloudinstall import utils
 
 
@@ -30,13 +29,13 @@ class SingleInstallException(Exception):
     pass
 
 
-class SingleInstall(InstallBase):
+class SingleInstall:
 
-    def __init__(self, opts, display_controller, config, loop):
-        self.opts = opts
-        super().__init__(display_controller)
+    def __init__(self, loop, display_controller, config):
+        self.display_controller = display_controller
         self.config = config
         self.loop = loop
+        self.tasker = self.display_controller.tasker(loop, config)
         self.container_name = 'uoi-bootstrap'
         self.container_path = '/var/lib/lxc'
         self.container_abspath = os.path.join(self.container_path,
@@ -76,7 +75,7 @@ class SingleInstall(InstallBase):
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
-        self.start_task("Creating container")
+        self.tasker.start_task("Creating container")
         utils.container_create(self.container_name, self.userdata)
 
         # Set autostart bit
@@ -93,6 +92,9 @@ class SingleInstall(InstallBase):
                 "{0} {1} none bind,create=dir\n".format(
                     self.config.juju_path,
                     'home/ubuntu/.juju'))
+            # FIXME: causing some issues with authorized_keys
+            # having its permission changed and not allowing
+            # ssh into the container without password.
             f.write(
                 "{0} {1} none bind,create=dir\n".format(
                     os.path.join(utils.install_home(), '.ssh'),
@@ -102,9 +104,18 @@ class SingleInstall(InstallBase):
 
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 
-        utils.container_start(self.container_name, lxc_logfile)
-        utils.container_wait_checked(self.container_name,
-                                     lxc_logfile)
+        try:
+            utils.container_start(self.container_name, lxc_logfile)
+        except Exception as e:
+            log.error(e)
+            self.loop.exit(1)
+
+        try:
+            utils.container_wait_checked(self.container_name,
+                                         lxc_logfile)
+        except Exception as e:
+            log.error(e)
+            self.loop.exit(1)
 
         tries = 0
         while not self.cloud_init_finished(tries):
@@ -157,14 +168,15 @@ class SingleInstall(InstallBase):
         if len(errors):
             log.error("Container cloud-init finished with "
                       "errors: {}".format(errors))
-            raise Exception("Top-level container OS did not initialize "
-                            "correctly. See ~/.cloud-install/commands.log "
-                            "for details.")
+            log.error("Top-level container OS did not initialize "
+                      "correctly. See ~/.cloud-install/commands.log "
+                      "for details.")
+            self.loop.exit(1)
         return True
 
     def _install_upstream_deb(self):
         log.debug('Found upstream deb, installing that instead')
-        filename = os.path.basename(self.opts.upstream_deb)
+        filename = os.path.basename(self.config.getopt('upstream_deb'))
         utils.container_run(
             self.container_name, 'sudo dpkg -i .cloud-install/{}'.format(
                 filename))
@@ -173,6 +185,8 @@ class SingleInstall(InstallBase):
         """ sets permissions
         """
         try:
+            log.info("Setting permissions for user {}".format(
+                utils.install_user()))
             utils.chown(self.config.cfg_path,
                         utils.install_user(),
                         utils.install_user(),
@@ -182,36 +196,44 @@ class SingleInstall(InstallBase):
             utils.get_command_output("sudo chmod 600 -R {}/*".format(
                 self.config.cfg_path))
         except:
-            raise SingleInstallException(
+            log.error(
                 "Unable to set ownership for {}".format(self.config.cfg_path))
+            self.loop.exit(1)
 
     def run(self):
-        self.register_tasks([
+        self.tasker.register_tasks([
             "Initializing Environment",
             "Creating container",
             "Bootstrapping Juju"])
 
-        self.start_task("Initializing Environment")
-        self.do_install_async()
+        self.tasker.start_task("Initializing Environment")
+        if self.config.getopt('headless'):
+            self.do_install()
+        else:
+            self.do_install_async()
 
     @utils.async
     def do_install_async(self):
         self.do_install()
 
     def do_install(self):
-        self.display_controller.info_message("Building environment")
+        self.display_controller.status_info_message("Building environment")
         if os.path.exists(self.container_abspath):
             # Container exists, handle return code in installer
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 
-        utils.ssh_genkey()
+        try:
+            utils.ssh_genkey()
+        except Exception as e:
+            log.error(e)
+            self.loop.exit(1)
 
         # Preparations
         self.prep_userdata()
 
         # setup charm configurations
-        utils.render_charm_config(self.config, self.opts)
+        utils.render_charm_config(self.config)
 
         self.prep_juju()
 
@@ -235,14 +257,15 @@ class SingleInstall(InstallBase):
 
         # start the party
         cloud_status_bin = ['openstack-status']
-        self.display_controller.info_message("Bootstrapping Juju")
-        self.start_task("Bootstrapping Juju")
+        self.display_controller.status_info_message("Bootstrapping Juju")
+        self.tasker.start_task("Bootstrapping Juju")
         utils.container_run(
             self.container_name, "JUJU_HOME=~/.cloud-install juju bootstrap")
         utils.container_run(
             self.container_name, "JUJU_HOME=~/.cloud-install juju status")
-        self.stop_current_task()
+        self.tasker.stop_current_task()
 
-        self.display_controller.info_message("Starting cloud deployment")
+        self.display_controller.status_info_message(
+            "Starting cloud deployment")
         utils.container_run_status(
-            self.container_name, " ".join(cloud_status_bin))
+            self.container_name, " ".join(cloud_status_bin), self.config)

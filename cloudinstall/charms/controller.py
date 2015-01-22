@@ -22,6 +22,7 @@ log = logging.getLogger('cloudinstall.charms.controller')
 
 
 class CharmNovaCloudController(CharmBase):
+
     """ Openstack Nova Cloud Controller directives """
 
     charm_name = 'nova-cloud-controller'

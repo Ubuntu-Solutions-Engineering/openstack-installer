@@ -20,7 +20,6 @@ import random
 import sys
 import requests
 
-from contextlib import contextmanager
 from os import path, getenv
 
 from operator import attrgetter
@@ -43,34 +42,6 @@ log = logging.getLogger('cloudinstall.core')
 sys.excepthook = utils.global_exchandler
 
 
-@contextmanager
-def dialog_context(view):
-    view.ui.hide_widget_on_top()
-    yield
-    view.loop.redraw_screen()
-
-
-@contextmanager
-def status_context(view, level='debug', msg=None):
-    if msg and level == 'error':
-        log.error(msg)
-    elif msg and level == 'debug':
-        log.debug(msg)
-    elif msg and level == 'info':
-        log.info(msg)
-    elif msg:
-        log.warning("Unexpected log level in "
-                    "status_context: '{}'".format(level))
-    yield
-    view.loop.redraw_screen()
-
-
-@contextmanager
-def view_context(view):
-    yield
-    view.loop.redraw_screen()
-
-
 class FakeJujuState:
 
     @property
@@ -84,9 +55,9 @@ class FakeJujuState:
         "does nothing"
 
 
-class DisplayController:
+class Controller:
 
-    """ Controller for displaying juju and maas state."""
+    """ Controller for Juju deployments and Maas machine init """
 
     def __init__(self, ui, config, loop):
         self.ui = ui
@@ -97,8 +68,64 @@ class DisplayController:
         self.maas = None
         self.maas_state = None
         self.nodes = None
+        self.charm_modules = utils.load_charms()
+        self.juju_m_idmap = None  # for single, {instance_id: machine id}
+        self.deployed_charm_classes = []
         self.placement_controller = None
         self.config.setopt('current_state', ControllerState.INSTALL_WAIT.value)
+
+    def update(self, *args, **kwargs):
+        """Render UI according to current state and reset timer
+
+        PegasusGUI only.
+        """
+        interval = 1
+
+        if self.config.getopt('current_state') == ControllerState.PLACEMENT:
+            self.ui.render_placement_view(self.placement_controller,
+                                          self.loop,
+                                          self.config,
+                                          self.commit_placement)
+        elif self.config.getopt('current_state') == \
+                ControllerState.INSTALL_WAIT:
+            self.ui.render_node_install_wait(message="Waiting...")
+            interval = self.config.node_install_wait_interval
+        else:
+            self.update_node_states()
+
+        self.loop.redraw_screen()
+        self.loop.set_alarm_in(interval, self.update)
+
+    def update_node_states(self):
+        """ Updating node states
+
+        PegasusGUI only
+        """
+        if not self.juju_state:
+            return
+        deployed_services = sorted(self.juju_state.services,
+                                   key=attrgetter('service_name'))
+        deployed_service_names = [s.service_name for s in deployed_services]
+
+        charm_classes = sorted([m.__charm_class__ for m in utils.load_charms()
+                                if m.__charm_class__.charm_name in
+                                deployed_service_names],
+                               key=attrgetter('charm_name'))
+
+        self.nodes = list(zip(charm_classes, deployed_services))
+
+        for n in deployed_services:
+            for u in n.units:
+                if u.is_horizon and u.agent_state == "started":
+                    self.ui.set_dashboard_url(
+                        u.public_address, 'ubuntu',
+                        self.config.getopt('openstack_password'))
+                if u.is_jujugui and u.agent_state == "started":
+                    self.ui.set_jujugui_url(u.public_address)
+        if len(self.nodes) == 0:
+            return
+        else:
+            self.ui.render_nodes(self.nodes, self.juju_state, self.maas_state)
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -119,227 +146,43 @@ class DisplayController:
             self.maas_state = FakeMaasState()
         else:
             self.authenticate_juju()
-            if self.config.is_multi:
-                creds = self.config.maas_creds
+            if self.config.is_multi():
+                creds = self.config.getopt('maascreds')
                 self.maas, self.maas_state = connect_to_maas(creds)
 
         self.placement_controller = PlacementController(
-            self.maas_state, self.opts)
+            self.maas_state, self.config)
 
-        if path.exists(self.config.placements_filename):
-            with open(self.config.placements_filename, 'r') as pf:
-                self.placement_controller.load(pf)
-            self.info_message("Loaded placements from file.")
+        if self.config.getopt('placements'):
+            self.placement_controller.load()
+            self.ui.status_info_message("Loaded placements from file.")
 
         else:
-            if self.config.is_multi:
+            if self.config.is_multi():
                 def_assignments = self.placement_controller.gen_defaults()
             else:
                 def_assignments = self.placement_controller.gen_single()
 
             self.placement_controller.set_all_assignments(def_assignments)
 
-        pfn = self.config.placements_filename
-        self.placement_controller.set_autosave_filename(pfn)
-        self.placement_controller.do_autosave()
+        self.placement_controller.save()
 
-        if self.config.is_single:
-            self.begin_deployment_async()
+        if self.config.is_single():
+            if self.config.getopt('headless'):
+                self.begin_deployment()
+            else:
+                self.begin_deployment_async()
             return
 
-        if self.opts.edit_placement or \
+        if self.config.getopt('edit_placement') or \
            not self.placement_controller.can_deploy():
             self.config.setopt(
                 'current_state', ControllerState.PLACEMENT.value)
         else:
-            self.begin_deployment_async()
-
-    def begin_deployment_async(self):
-        """To be overridden in subclasses."""
-        pass
-
-    def begin_deployment(self):
-        """To be overridden in subclasses."""
-        pass
-
-    # overlays
-
-    def step_info(self, message):
-        with dialog_context(self):
-            self.ui.show_step_info(message)
-
-    def show_password_input(self, title, cb):
-        with dialog_context(self):
-            self.ui.show_password_input(title, cb)
-
-    def show_maas_input(self, title, cb):
-        with dialog_context(self):
-            self.ui.show_maas_input(title, cb)
-
-    def show_landscape_input(self, title, cb):
-        with dialog_context(self):
-            self.ui.show_landscape_input(title, cb)
-
-    def show_selector_info(self, title, opts, cb):
-        with dialog_context(self):
-            self.ui.show_selector_info(title, opts, cb)
-
-    def show_selector_with_desc(self, title, install_types, cb):
-        with dialog_context(self):
-            self.ui.show_selector_with_desc(title, install_types, cb)
-
-    def show_dhcp_range(self, range_low, range_high, title, cb):
-        with dialog_context(self):
-            self.ui.show_dhcp_range(range_low, range_high, title, cb)
-
-    def show_exception_message(self, ex):
-        def handle_done(*args, **kwargs):
-            self.loop.exit(1)
-        with dialog_context(self):
-            logpath = path.join(self.config.cfg_path,
-                                "commands.log")
-            msg = ("A fatal error has occurred: {}\n"
-                   "See {} for further info.".format(ex.args[0],
-                                                     logpath))
-            self.ui.show_fatal_error_message(msg, handle_done)
-
-    # - Body
-    def flash(self, text):
-        with view_context(self):
-            self.ui.flash(text)
-
-    def flash_reset(self):
-        with view_context(self):
-            self.ui.flash_reset()
-
-    # - Footer
-    def clear_status(self):
-        self.ui.clear_status()
-
-    def info_message(self, message):
-        with status_context(self, 'info', message):
-            self.ui.status_info_message(
-                "{}\N{HORIZONTAL ELLIPSIS}".format(message))
-
-    def error_message(self, message):
-        with status_context(self, 'error', message):
-            self.ui.status_error_message(message)
-
-    def set_dashboard_url(self, ip, user, password):
-        with status_context(self):
-            self.ui.status_dashboard_url(ip, user, password)
-
-    def set_jujugui_url(self, ip):
-        with status_context(self):
-            self.ui.status_jujugui_url(ip)
-
-    def set_openstack_rel(self, text):
-        with status_context(self):
-            self.ui.status_openstack_rel(text)
-
-    # - Render
-    def render_nodes(self, nodes, juju_state, maas_state):
-        with view_context(self):
-            self.ui.render_nodes(nodes, juju_state, maas_state)
-
-    def render_node_install_wait(self, message="Waiting..."):
-        with view_context(self):
-            self.ui.render_node_install_wait(message=message)
-
-    def render_placement_view(self):
-        self.ui.render_placement_view(self,
-                                      self.placement_controller)
-        self.loop.redraw_screen()
-
-    def main_loop(self):
-        self.info_message("Welcome")
-        self.initialize()
-        self.update()
-        self.loop.run()
-
-    def start(self):
-        """ Starts controller processing """
-        self.main_loop()
-
-    def update(self, *args, **kwargs):
-        """Render UI according to current state and reset timer"""
-        interval = 1
-
-        if self.config.getopt('current_state') == ControllerState.PLACEMENT:
-            self.render_placement_view()
-
-        elif self.config.getopt('current_state') == \
-                ControllerState.INSTALL_WAIT:
-            self.render_node_install_wait()
-            interval = self.config.node_install_wait_interval
-
-        else:
-            self.update_node_states()
-
-        self.loop.set_alarm_in(interval, self.update)
-
-    def update_node_states(self):
-        """ Updating node states
-        """
-        if not self.juju_state:
-            return
-        deployed_services = sorted(self.juju_state.services,
-                                   key=attrgetter('service_name'))
-        deployed_service_names = [s.service_name for s in deployed_services]
-
-        charm_classes = sorted([m.__charm_class__ for m in utils.load_charms()
-                                if m.__charm_class__.charm_name in
-                                deployed_service_names],
-                               key=attrgetter('charm_name'))
-
-        self.nodes = list(zip(charm_classes, deployed_services))
-
-        for n in deployed_services:
-            for u in n.units:
-                if u.is_horizon and u.agent_state == "started":
-                    self.set_dashboard_url(
-                        u.public_address, 'ubuntu',
-                        self.config.getopt('openstack_password'))
-                if u.is_jujugui and u.agent_state == "started":
-                    self.set_jujugui_url(u.public_address)
-        if len(self.nodes) == 0:
-            return
-        else:
-            self.render_nodes(self.nodes, self.juju_state, self.maas_state)
-
-    def header_hotkeys(self, key):
-        if key in ['j', 'down']:
-            self.ui.focus_next()
-        if key in ['k', 'up']:
-            self.ui.focus_previous()
-        if key == 'esc':
-            self.ui.hide_widget_on_top()
-        if key in ['h', 'H', '?']:
-            self.ui.show_help_info()
-        if key in ['a', 'A', 'f6']:
-            if self.config.getopt('current_state') != ControllerState.SERVICES:
-                return
-            charm_modules = utils.load_charms()
-            charm_classes = [m.__charm_class__ for m in charm_modules
-                             if m.__charm_class__.allow_multi_units and
-                             not m.__charm_class__.disabled]
-            self.ui.show_add_charm_info(charm_classes, self.add_charm)
-        if key in ['q', 'Q']:
-            self.exit()
-        if key in ['r', 'R', 'f5']:
-            self.info_message("View was refreshed")
-            self.update()
-
-
-class Controller(DisplayController):
-
-    """ Controller for Juju deployments and Maas machine init """
-
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
-        self.charm_modules = utils.load_charms()
-        self.juju_m_idmap = None  # for single, {instance_id: machine id}
-        self.deployed_charm_classes = []
+            if self.config.getopt('headless'):
+                self.begin_deployment()
+            else:
+                self.begin_deployment_async()
 
     @utils.async
     def wait_for_maas_async(self):
@@ -355,18 +198,19 @@ class Controller(DisplayController):
         is_connected = False
         count = 0
         while not is_connected:
-            self.render_node_install_wait()
-            self.info_message(
+            self.ui.render_node_install_wait(message="Waiting...")
+            self.ui.status_info_message(
                 random_status[random.randrange(len(random_status))])
             count = count + 1
-            self.info_message("Waiting for MAAS (tries {0})".format(count))
+            self.ui.status_info_message(
+                "Waiting for MAAS (tries {0})".format(count))
             uri = path.join('http://', utils.container_ip('maas'), 'MAAS')
             log.debug("Checking MAAS availability ({0})".format(uri))
             try:
                 res = requests.get(uri)
                 is_connected = res.ok
             except:
-                self.info_message("Waiting for MAAS to be installed")
+                self.ui.status_info_message("Waiting for MAAS to be installed")
             time.sleep(10)
 
         # Render nodeview, even though nothing is there yet.
@@ -374,8 +218,12 @@ class Controller(DisplayController):
 
     def commit_placement(self):
         self.config.setopt('current_state', ControllerState.SERVICES.value)
-        self.render_nodes(self.nodes, self.juju_state, self.maas_state)
-        self.begin_deployment_async()
+        self.ui.render_nodes(self.nodes, self.juju_state, self.maas_state)
+        self.loop.redraw_screen()
+        if self.config.getopt('headless'):
+            self.begin_deployment()
+        else:
+            self.begin_deployment_async()
 
     @utils.async
     def begin_deployment_async(self):
@@ -404,8 +252,8 @@ class Controller(DisplayController):
             sd = self.juju_state.machines_summary()
             summary = ", ".join(["{} {}".format(v, k) for k, v
                                  in sd.items()])
-            self.info_message("Waiting for machines to "
-                              "start: {}".format(summary))
+            self.ui.status_info_message("Waiting for machines to "
+                                        "start: {}".format(summary))
             time.sleep(3)
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
@@ -433,9 +281,9 @@ class Controller(DisplayController):
 
         summary = ", ".join(["{} {}".format(v, k) for k, v in
                              self.maas_state.machines_summary().items()])
-        self.info_message("Waiting for {} maas machines to be ready."
-                          " Machines Summary: {}".format(len(needed),
-                                                         summary))
+        self.ui.status_info_message("Waiting for {} maas machines to be ready."
+                                    " Machines Summary: {}".format(len(needed),
+                                                                   summary))
         if not needed.issubset(ready.union(allocated)):
             return False
         return True
@@ -533,7 +381,7 @@ class Controller(DisplayController):
         further processing and return.
         """
 
-        self.info_message("Verifying service deployments")
+        self.ui.status_info_message("Verifying service deployments")
         placed_charm_classes = self.placement_controller.placed_charm_classes()
         charm_classes = sorted(placed_charm_classes,
                                key=attrgetter('deploy_priority'))
@@ -551,24 +399,26 @@ class Controller(DisplayController):
             update_pending_display()
 
             for charm_class in undeployed_charm_classes():
-                self.info_message("Checking if {c} is deployed".format(
-                    c=charm_class.display_name))
+                self.ui.status_info_message(
+                    "Checking if {c} is deployed".format(
+                        c=charm_class.display_name))
 
                 service_names = [s.service_name for s in
                                  self.juju_state.services]
 
                 if charm_class.charm_name in service_names:
-                    self.info_message("{c} is already deployed, "
-                                      "skipping".format(
-                                          c=charm_class.display_name))
+                    self.ui.status_info_message(
+                        "{c} is already deployed, skipping".format(
+                            c=charm_class.display_name))
                     self.deployed_charm_classes.append(charm_class)
                     continue
 
                 err = self.try_deploy(charm_class)
                 name = charm_class.display_name
                 if err:
-                    self.info_message("{} is waiting for another service, will"
-                                      " re-try in a few seconds".format(name))
+                    self.ui.status_info_message(
+                        "{} is waiting for another service, will"
+                        " re-try in a few seconds".format(name))
                     break
                 else:
                     log.debug("Issued deploy for {}".format(name))
@@ -605,10 +455,10 @@ class Controller(DisplayController):
                     errs.append(machine)
                     continue
                 if first_deploy:
-                    self.info_message("Deploying {c} "
-                                      "to machine {mspec}".format(
-                                          c=charm_class.display_name,
-                                          mspec=mspec))
+                    self.ui.status_info_message("Deploying {c} "
+                                                "to machine {mspec}".format(
+                                                    c=charm_class.display_name,
+                                                    mspec=mspec))
                     deploy_err = charm.deploy(mspec)
                     if deploy_err:
                         errs.append(machine)
@@ -616,10 +466,10 @@ class Controller(DisplayController):
                         first_deploy = False
                 else:
                     # service already deployed, need to add-unit
-                    self.info_message("Adding one unit of {c} "
-                                      "to machine {mspec}".format(
-                                          c=charm_class.display_name,
-                                          mspec=mspec))
+                    self.ui.status_info_message("Adding one unit of {c} "
+                                                "to machine {mspec}".format(
+                                                    c=charm_class.display_name,
+                                                    mspec=mspec))
                     deploy_err = charm.add_unit(machine_spec=mspec)
                     if deploy_err:
                         errs.append(machine)
@@ -673,11 +523,21 @@ class Controller(DisplayController):
         charm_q.watch_post_proc()
         charm_q.is_running = True
 
-        self.info_message(
+        # Exit cleanly if we've finished all deploys, relations,
+        # post processing, and running in headless mode.
+        if self.config.getopt('headless'):
+            while not self.config.getopt('deploy_complete'):
+                log.info("Waiting for services to be started.")
+                time.sleep(10)
+            log.info("All services deployed, relations set, and started")
+            self.loop.exit(0)
+
+        self.ui.status_info_message(
             "Services deployed, relationships may still be"
             " pending. Please wait for all services to be checked before"
             " deploying compute nodes")
-        self.render_nodes(self.nodes, self.juju_state, self.maas_state)
+        self.ui.render_nodes(self.nodes, self.juju_state, self.maas_state)
+        self.loop.redraw_screen()
 
     def add_charm(self, count=0, charm=None):
         if not charm:
@@ -685,7 +545,7 @@ class Controller(DisplayController):
             return
         svc = self.juju_state.service(charm)
         if svc.service:
-            self.info_message("Adding {n} units of {charm}".format(
+            self.ui.status_info_message("Adding {n} units of {charm}".format(
                 n=count, charm=charm))
             self.juju.add_unit(charm, num_units=int(count))
         else:
@@ -699,7 +559,7 @@ class Controller(DisplayController):
             if not charm_sel.isolate:
                 charm_sel.machine_id = 'lxc:{mid}'.format(mid="1")
 
-            self.info_message("Adding {} to environment".format(
+            self.ui.status_info_message("Adding {} to environment".format(
                 charm_sel))
             charm_q.add_deploy(charm_sel)
             charm_q.add_relation(charm_sel)
@@ -710,8 +570,8 @@ class Controller(DisplayController):
                 for c in charm_sel.related:
                     svc = self.juju_state.service(charm_sel)
                     if not svc.service:
-                        self.info_message("Adding dependent "
-                                          "charm {c}".format(c=c))
+                        self.ui.status_info_message("Adding dependent "
+                                                    "charm {c}".format(c=c))
                         charm_dep = get_charm(c,
                                               self.juju,
                                               self.juju_state,
@@ -728,5 +588,20 @@ class Controller(DisplayController):
                 charm_q.watch_relations()
                 charm_q.watch_post_proc()
                 charm_q.is_running = True
+
         self.ui.hide_add_charm_info()
         return
+
+    def start(self):
+        """ Starts UI loop
+        """
+        if self.config.getopt('headless'):
+            log.info("Running openstack-status in headless mode.")
+            self.initialize()
+        else:
+            self.ui.status_info_message("Welcome")
+            self.initialize()
+            self.loop.register_callback('add_charm', self.add_charm)
+            self.update()
+            self.loop.run()
+            self.loop.close()

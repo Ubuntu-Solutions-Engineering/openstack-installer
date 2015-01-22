@@ -34,6 +34,16 @@ class EventLoop:
         self.loop = self._build_loop()
         self.log = log
         self.error_code = 0
+        self._callback_map = {}
+
+    def register_callback(self, key, val):
+        """ Registers some additional callbacks that didn't make sense
+        to be added as part of its initial creation
+
+        TODO: Doubt this is the best way as its more of a band-aid
+        to core.py/add_charm and hotkeys in the gui.
+        """
+        self._callback_map[key] = val
 
     def _build_loop(self):
         """ Returns event loop depending on output stream """
@@ -64,7 +74,9 @@ class EventLoop:
                 charm_classes = [m.__charm_class__ for m in charm_modules
                                  if m.__charm_class__.allow_multi_units and
                                  not m.__charm_class__.disabled]
-                self.ui.show_add_charm_info(charm_classes, self.add_charm)
+                # FIXME: Add unecessary confusion
+                self.ui.show_add_charm_info(charm_classes,
+                                            self._callback_map['add_charm'])
             if key in ['q', 'Q']:
                 self.exit(0)
             if key in ['r', 'R', 'f5']:

@@ -17,7 +17,6 @@ from collections import defaultdict, Counter
 from enum import Enum
 import logging
 from multiprocessing import cpu_count
-import yaml
 
 from cloudinstall.maas import (satisfies, MaasMachineStatus)
 from cloudinstall.utils import load_charms
@@ -34,6 +33,7 @@ DEFAULT_SHARED_ASSIGNMENT_TYPE = AssignmentType.LXC
 
 
 class PlaceholderMachine:
+
     """A dummy machine that doesn't map to an existing maas machine, to be
     used for single installs only."""
 
@@ -73,10 +73,12 @@ class PlaceholderMachine:
 
 
 class PlacementError(Exception):
+
     "Generic exception class for placement related errors"
 
 
 class PlacementController:
+
     """Keeps state of current machines and their assigned services.
     """
 
@@ -297,7 +299,6 @@ class PlacementController:
         return sum([len(al) for al in self.machines_for_charm(cc).values()])
 
     def autoplace_unplaced_services(self):
-
         """Attempt to find machines for all unplaced services using only empty
         machines.
 

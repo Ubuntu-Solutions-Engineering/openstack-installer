@@ -24,9 +24,11 @@ import os
 import logging
 import signal
 import yaml
+from functools import partial
 from cloudinstall.log import setup_logger
 import cloudinstall.utils as utils
 from cloudinstall.gui import PegasusGUI, InstallHeader
+from cloudinstall.consoleui import ConsoleUI
 from cloudinstall.install import InstallController
 from cloudinstall.config import Config
 from cloudinstall.ev import EventLoop
@@ -83,6 +85,9 @@ def parse_options(argv):
     parser.add_argument('--upstream-deb', dest='upstream_deb',
                         help='Upload a local copy of openstack debian package '
                         'to be used in a single install. (DEVELOPERS)')
+    parser.add_argument('--headless', action='store_true', default=False,
+                        help="Run deployment without prompts/gui",
+                        dest='headless')
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)
@@ -92,7 +97,7 @@ if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
 
     try:
-        setup_logger()
+        setup_logger(headless=opts.headless)
     except PermissionError:
         print("Permission error accessing log file.\n"
               "This probably indicates a broken partial install.\n"
@@ -100,7 +105,7 @@ if __name__ == '__main__':
               "and try again.\n"
               "(You may want to save a copy of ~/.cloud-install/commands.log"
               " for reporting a bug.)")
-        sys.exit()
+        sys.exit(1)
 
     logger = logging.getLogger('openstack-install')
 
@@ -165,8 +170,12 @@ if __name__ == '__main__':
         utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
                    cfg.getopt('openstack_release'), owner=utils.install_user())
 
+    if cfg.getopt('headless'):
+        ui = ConsoleUI()
+    else:
+        ui = PegasusGUI(header=InstallHeader())
+
     # Choose event loop
-    ui = PegasusGUI(header=InstallHeader())
     ev = EventLoop(ui, cfg, logger)
 
     install = InstallController(
@@ -174,4 +183,7 @@ if __name__ == '__main__':
     logger.info("OpenStack install using eventloop {} "
                 "with options: {}".format(ev, opts))
 
+    import atexit
+    atexit.register(partial(utils.cleanup, cfg))
     install.start()
+    sys.exit(ev.error_code)

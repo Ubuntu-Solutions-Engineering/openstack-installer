@@ -14,7 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import yaml
 from cloudinstall.charms import CharmBase
+from cloudinstall.utils import slurp
 
 log = logging.getLogger('cloudinstall.charms.keystone')
 
@@ -38,7 +40,22 @@ class CharmKeystone(CharmBase):
         log.debug("mysql is available, deploying keystone")
         return super().deploy(m)
 
+    def _is_auth_url_valid(self):
+        existing_yaml = yaml.load(slurp(self.config.juju_environments_path))
+        existing_yaml = existing_yaml['environments']
+        if 'openstack' in existing_yaml:
+            if 'http://keystoneurl' in existing_yaml['openstack']['auth-url']:
+                return False
+            else:
+                log.debug("Found an existing keystone auth-url, skipping.")
+                return True
+        return False
+
     def post_proc(self):
+        # Dont bother updating auth-url if its already set
+        if self._is_auth_url_valid():
+            return False
+
         keystone = self.wait_for_agent()
         if not keystone:
             return True
@@ -51,5 +68,6 @@ class CharmKeystone(CharmBase):
             provider='openstack'
         )
         log.debug("Updated keystone auth-url in openstack provider.")
+        return False
 
 __charm_class__ = CharmKeystone

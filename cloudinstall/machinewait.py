@@ -143,7 +143,7 @@ class Spinner:
         self.h = h
         self.cur = [random.randint(0, self.h)
                     for i in range(h)]
-        self.vel = [random.randint(1, len(self.chars)-1)
+        self.vel = [random.randint(1, len(self.chars) - 1)
                     for i in range(h)]
 
     def next_frame(self):

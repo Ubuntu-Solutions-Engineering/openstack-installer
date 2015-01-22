@@ -22,6 +22,8 @@ import os
 import signal
 import sys
 import yaml
+from functools import partial
+
 # Handle imports where the path is not automatically updated during install.
 # This really only happens when a binary is not in the usual /usr/bin location
 lib_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -29,6 +31,7 @@ sys.path.insert(0, lib_dir)
 
 from cloudinstall.gui import PegasusGUI
 from cloudinstall.core import Controller
+from cloudinstall.consoleui import ConsoleUI
 from cloudinstall.ev import EventLoop
 from cloudinstall import utils
 from cloudinstall import log
@@ -51,6 +54,9 @@ def parse_options(*args, **kwds):
                         help='Show machine placement UI before deploying')
     parser.add_argument('-c', '--config', type=str, dest='config_file',
                         help="Custom configuration for OpenStack installer.")
+    parser.add_argument('--headless', action='store_true', default=False,
+                        help="Run deployment without prompts/gui",
+                        dest='headless')
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args()
@@ -77,7 +83,7 @@ if __name__ == '__main__':
     opts = parse_options(sys.argv)
 
     try:
-        log.setup_logger()
+        log.setup_logger(headless=opts.headless)
     except PermissionError:
         print("Permission error accessing log file.\n"
               "This probably indicates a broken partial install.\n"
@@ -85,7 +91,7 @@ if __name__ == '__main__':
               "and try again.\n"
               "(You may want to save a copy of ~/.cloud-install/commands.log"
               " for reporting a bug.)")
-        sys.exit()
+        sys.exit(1)
 
     logger = logging.getLogger('openstack-status')
     logger.info("openstack-status starting")
@@ -95,27 +101,27 @@ if __name__ == '__main__':
         print("Another instance of openstack-status is running. If you're "
               "sure there are no other instances, please remove "
               "~/.cloud-install/openstack.pid")
-        sys.exit()
+        sys.exit(1)
 
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
     hostname = out['output'].rstrip()
     if config.is_single() and 'uoi-bootstrap' not in hostname:
         logger.info("Running status within container")
-        utils.container_run_status('uoi-bootstrap', 'openstack-status')
-    ui = PegasusGUI()
-    ev = EventLoop(ui, config, logger)
-    core = Controller(ui=ui, config=config, loop=ev)
-    try:
-        # Create pidfile
-        utils.spew(config.pidfile, str(os.getppid()), utils.install_user())
+        utils.container_run_status('uoi-bootstrap', 'openstack-status', config)
 
-        import atexit
-        atexit.register(utils.cleanup)
-        sys.exit(core.start())
-    except Exception as e:
-        logger.exception("core.start() raised exception")
-        print("There was a problem running the status screen.")
-        print("Please check ~/.cloud-install/commands.log")
-        print("Error: {}".format(e))
-        sys.exit(1)
+    if config.getopt('headless'):
+        ui = ConsoleUI()
+    else:
+        ui = PegasusGUI()
+
+    ev = EventLoop(ui, config, logger)
+
+    core = Controller(ui=ui, config=config, loop=ev)
+    # Create pidfile
+    utils.spew(config.pidfile, str(os.getppid()), utils.install_user())
+
+    import atexit
+    atexit.register(partial(utils.cleanup, config))
+    core.start()
+    sys.exit(ev.error_code)
