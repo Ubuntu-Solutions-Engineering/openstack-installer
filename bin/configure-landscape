@@ -167,7 +167,7 @@ def register_new_user(host, **kwargs):
     """ Register a new user. Takes kwargs admin_email admin_name, and
     system_email. """
     kwargs['root_url'] = 'https://%s/' % host
-    kwargs['admin_password'] = cfg.openstack_password
+    kwargs['admin_password'] = cfg.getopt('openstack_password')
 
     res = run_query('anonymous', 'anonymous', 'BootstrapLDS', kwargs,
                     'https://%s/api/' % host)
@@ -178,7 +178,7 @@ def register_new_user(host, **kwargs):
 def register_maas(host, key, secret, maas_host):
     data = {
         'endpoint': 'http://%s/MAAS' % maas_host,
-        'credentials': cfg.maas_creds['api_key'],
+        'credentials': cfg.getopt('maascreds')['api_key'],
     }
 
     run_query(key, secret, 'RegisterMAASRegionController', data,
