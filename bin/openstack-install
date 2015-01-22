@@ -59,14 +59,19 @@ def parse_options(argv):
                         'of packages.')
     parser.add_argument('-c', '--config', type=str, dest='config_file',
                         help="Custom configuration for OpenStack installer.")
-    parser.add_argument('-k', '--kill', action='store_true',
+    parser.add_argument('-k', '--killcloud', action='store_true',
                         dest='killcloud', default=False,
                         help='Tear down existing cloud leaving userdata '
                         'in place. Useful for iterative deploys.')
+    parser.add_argument('--killcloud-noprompt', action='store_true',
+                        dest='killcloud_noprompt', default=False,
+                        help='Tear down existing cloud leaving userdata '
+                        'in place. CAUTION: Does not confirm teardown, '
+                        'Use with care!')
     parser.add_argument('--openstack-release', default=None,
                         dest='openstack_release',
-                        help="Specify a specific OpenStack release by code-name, "
-                        "e.g. 'icehouse' or 'juno'")
+                        help="Specify a specific OpenStack release by "
+                        "code-name, e.g. 'icehouse' or 'juno'")
     parser.add_argument('-a', type=str, default=None,
                         help='<arch, ..> comma-separated list of '
                         'architectures to filter available cloud '
@@ -149,13 +154,16 @@ if __name__ == '__main__':
             print("Uninstall cancelled.")
             sys.exit(1)
 
-    if cfg.getopt('killcloud'):
+    if cfg.getopt('killcloud') or cfg.getopt('killcloud_noprompt'):
         if cfg.is_single():
             msg = ("Warning:\n\nThis will destroy the host Container "
                    "housing the OpenStack private cloud. This is a permanent "
                    "operation.")
             print(msg)
-            yn = input("Proceed? [y/N] ")
+            if cfg.getopt('killcloud_noprompt'):
+                yn = "Y"
+            else:
+                yn = input("Proceed? [y/N] ")
             if "y" in yn or "Y" in yn:
                 print("Removing host container...")
                 utils.container_stop('uoi-bootstrap')
