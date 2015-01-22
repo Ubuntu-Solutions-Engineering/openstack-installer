@@ -49,7 +49,7 @@ class SingleInstall:
     def prep_userdata(self):
         """ preps userdata file for container install
         """
-        render_parts = {'extra_sshkeys': [utils.ssh_readkey()],
+        render_parts = {'extra_sshkeys': [utils.ssh_readkey()]}
 
         if self.config.getopt('extra_ppa'):
             render_parts['extra_ppa'] = self.config.getopt('extra_ppa')
@@ -137,11 +137,12 @@ class SingleInstall:
 
         log.debug("Editing lxc-net config to not manage lxcbr0 bridge inside "
                   "container")
-        # write an empty lxc-net default so that the packaging does not write its own when we install lxc
+        # write an empty lxc-net default so that the packaging does
+        # not write its own when we install lxc
         utils.container_run(self.container_name, 'touch /etc/default/lxc-net')
 
-        log.debug("Installing openstack, openstack-single directly and juju-local, "
-                  " libvirt-bin and lxc via deps")
+        log.debug("Installing openstack & openstack-single directly, "
+                  "and juju-local, libvirt-bin and lxc via deps")
         utils.container_run(self.container_name,
                             "env DEBIAN_FRONTEND=noninteractive apt-get -qy "
                             "-o Dpkg::Options::=--force-confdef "
