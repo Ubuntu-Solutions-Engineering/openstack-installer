@@ -45,15 +45,15 @@ class SingleInstall(InstallBase):
             self.config.cfg_path, 'userdata.yaml')
 
         # Sets install type
-        self.config.set_install_type('single')
+        self.config.setopt('install_type', 'Single')
 
     def prep_userdata(self):
         """ preps userdata file for container install
         """
         render_parts = {'extra_sshkeys': [utils.ssh_readkey()],
                         'extra_pkgs': ['juju-local']}
-        if self.opts.extra_ppa:
-            render_parts['extra_ppa'] = self.opts.extra_ppa
+        if self.config.getopt('extra_ppa'):
+            render_parts['extra_ppa'] = self.config.getopt('extra_ppa')
         dst_file = os.path.join(self.config.cfg_path,
                                 'userdata.yaml')
         original_data = utils.load_template('userdata.yaml')
@@ -67,7 +67,7 @@ class SingleInstall(InstallBase):
         # configure juju environment for bootstrap
         single_env = utils.load_template('juju-env/single.yaml')
         single_env_modified = single_env.render(
-            openstack_password=self.config.openstack_password)
+            openstack_password=self.config.getopt('openstack_password'))
         utils.spew(os.path.join(self.config.juju_path,
                                 'environments.yaml'),
                    single_env_modified,
@@ -222,14 +222,16 @@ class SingleInstall(InstallBase):
         self.create_container_and_wait()
 
         # Install local copy of openstack installer if provided
-        if self.opts.upstream_deb and os.path.isfile(self.opts.upstream_deb):
-            shutil.copy(self.opts.upstream_deb, self.config.cfg_path)
+        upstream_deb = self.config.getopt('upstream_deb')
+        if upstream_deb and os.path.isfile(upstream_deb):
+            shutil.copy(upstream_deb, self.config.cfg_path)
             self._install_upstream_deb()
 
         # Stop before we attempt to access container
-        if self.opts.install_only:
-            raise SystemExit(
-                "Done installing, stopping here per --install-only.")
+        if self.config.getopt('install_only'):
+            log.info("Done installing, stopping here per --install-only.")
+            self.config.setopt('install_only', True)
+            self.loop.exit(0)
 
         # start the party
         cloud_status_bin = ['openstack-status']

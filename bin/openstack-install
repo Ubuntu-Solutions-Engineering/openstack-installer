@@ -120,7 +120,7 @@ if __name__ == '__main__':
         sys.exit(
             "Installing a cloud requires root privileges. Rerun with sudo")
 
-    if opts.uninstall:
+    if cfg.getopt('uninstall'):
         msg = ("Warning:\n\nThis will uninstall OpenStack and "
                "make a best effort to return the system back "
                "to its original state.")
@@ -132,8 +132,8 @@ if __name__ == '__main__':
         else:
             raise SystemExit("Uninstall canceled.")
 
-    if opts.killcloud:
-        if cfg.is_single:
+    if cfg.getopt('killcloud'):
+        if cfg.is_single():
             logger.info("Removing existing single installation.")
             utils.container_stop('uoi-bootstrap')
             utils.container_destroy('uoi-bootstrap')
@@ -161,16 +161,16 @@ if __name__ == '__main__':
                "that environment before proceeding with a new install.\n\n")
         raise SystemExit(msg)
 
-    if opts.openstack_release:
+    if cfg.getopt('openstack_release'):
         utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
-                   opts.openstack_release, owner=utils.install_user())
+                   cfg.getopt('openstack_release'), owner=utils.install_user())
 
     # Choose event loop
     ui = PegasusGUI(header=InstallHeader())
-    ev = EventLoop(ui, opts, cfg, logger)
+    ev = EventLoop(ui, cfg, logger)
 
     install = InstallController(
-        ui=ui, opts=opts, config=cfg, loop=ev)
+        ui=ui, config=cfg, loop=ev)
     logger.info("OpenStack install using eventloop {} "
                 "with options: {}".format(ev, opts))
 

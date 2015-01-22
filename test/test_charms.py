@@ -40,6 +40,7 @@ class TestCharmBase(unittest.TestCase):
         self.mock_jujuclient = MagicMock(name='jujuclient')
         self.mock_juju_state = MagicMock(name='juju_state')
         self.mock_ui = MagicMock(name='ui')
+        self.mock_config = MagicMock(name='config')
 
         self.get_config_patcher = patch('cloudinstall.charms.get_charm_config')
         self.mock_get_config = self.get_config_patcher.start()
@@ -47,7 +48,8 @@ class TestCharmBase(unittest.TestCase):
 
         self.charm = CharmBase(juju=self.mock_jujuclient,
                                juju_state=self.mock_juju_state,
-                               ui=self.mock_ui)
+                               ui=self.mock_ui,
+                               config=self.mock_config)
 
     def tearDown(self):
         self.get_config_patcher.stop()
@@ -65,12 +67,18 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
     def setUp(self):
         self.mock_jujuclient = MagicMock(name='jujuclient')
         self.mock_juju_state = MagicMock(name='juju_state')
+        self.mock_ui = MagicMock(name='ui')
+        self.mock_config = MagicMock(name='config')
+
         charmbase_str = "cloudinstall.charms.neutron_openvswitch.CharmBase"
         with patch(charmbase_str) as mock_charmbase:
             mock_charmbase.set_relations.return_value = False
             mock_charmbase.is_related.return_value = False
-            self.charm = CharmNeutronOpenvswitch(self.mock_jujuclient,
-                                                 self.mock_juju_state)
+            self.charm = CharmNeutronOpenvswitch(
+                juju=self.mock_jujuclient,
+                juju_state=self.mock_juju_state,
+                ui=self.mock_ui,
+                config=self.mock_config)
 
     def test_set_relations_ok(self):
         self.charm.set_relations()

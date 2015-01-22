@@ -25,12 +25,11 @@ log = logging.getLogger('cloudinstall.landscape_install')
 
 class LandscapeInstall:
 
-    def __init__(self, opts, display_controller, config, loop):
+    def __init__(self, loop, display_controller, config):
         self.config = config
-        self.opts = opts
-        self.loop = loop
         self.display_controller = display_controller
-        self.config.set_install_type('landscape')
+        self.loop = loop
+        self.config.setopt('install_type', 'Landscape OpenStack AutoPilot')
 
         self.landscape_tasks = ["Preparing Landscape",
                                 "Deploying Landscape",
@@ -57,11 +56,12 @@ class LandscapeInstall:
         system_email = creds['admin_email'].value
         maas_server = creds['maas_server'].value
         maas_apikey = creds['maas_apikey'].value
-        self.config.save_landscape_creds(
-            admin_name, admin_email, system_email,
-            maas_server, maas_apikey)
-
-        self.display_controller.ui.hide_widget_on_top()
+        self.config.setopt('landscapecreds', dict(admin_name=admin_name,
+                                                  admin_email=admin_email,
+                                                  system_email=system_email,
+                                                  maas_server=maas_server,
+                                                  maas_apikey=maas_apikey))
+        self.display_controller.hide_widget_on_top()
 
         # Validate
         if not maas_server:
@@ -77,8 +77,9 @@ class LandscapeInstall:
         # self.display_controller.flash_reset()
         log.debug("Existing MAAS defined, doing a LDS "
                   "installation with existing MAAS.")
-        self.config.save_maas_creds(maas_server,
-                                    maas_apikey)
+        self.config.setopt('maascreds', dict(api_host=maas_server,
+                                             api_key=maas_apikey))
+
         self._do_install_existing_maas()
 
     def run(self):

@@ -64,11 +64,14 @@ class InstallController(DisplayController):
         maas_apikey = creds['maas_apikey'].value
 
         if maas_server and maas_apikey:
-            self.config.save_maas_creds(maas_server,
-                                        maas_apikey)
-            self.MultiInstallExistingMaas(opts=self.opts, ui=self,
-                                          config=self.config,
-                                          loop=self.loop).run()
+            if maas_server.startswith("http://"):
+                self.ui.flash('MAAS Server expects and IP not a URL')
+                return self.ui.select_maas_type(self._save_maas_creds)
+            self.config.setopt('maascreds', dict(api_host=maas_server,
+                                                 api_key=maas_apikey))
+            log.info("Performing a Multi Install with existing MAAS")
+            return self.MultiInstallExistingMaas(
+                self.loop, self.ui, self.config).run()
         else:
             self.MultiInstallNewMaas(opts=self.opts, ui=self,
                                      config=self.config, loop=self.loop).run()
@@ -135,14 +138,14 @@ class InstallController(DisplayController):
         if install_type == INSTALL_TYPE_SINGLE[0]:
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.SingleInstall(
-                self.opts, self, self.config, loop=self.loop).run()
+                self.loop, self.ui, self.config).run()
         elif install_type == INSTALL_TYPE_MULTI[0]:
             self.set_openstack_rel("Icehouse (2014.1.3)")
             self.select_maas_type()
         elif install_type == INSTALL_TYPE_LANDSCAPE[0]:
             self.set_openstack_rel("")
             self.LandscapeInstall(
-                self.opts, self, self.config, loop=self.loop).run()
+                self.loop, self.ui, self.config).run()
         else:
             os.remove(os.path.join(self.config.cfg_path, 'installed'))
             raise ValueError("Unknown install type: {}".format(install_type))

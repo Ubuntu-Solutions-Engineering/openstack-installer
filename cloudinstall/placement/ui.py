@@ -861,7 +861,6 @@ class MachinesColumn(WidgetWrap):
         self.display_controller = display_controller
         self.placement_controller = placement_controller
         self.placement_view = placement_view
-        self.config = Config()
         w = self.build_widgets()
         super().__init__(w)
         self.update()
@@ -885,10 +884,10 @@ class MachinesColumn(WidgetWrap):
                                         'button_secondary',
                                         'button_secondary focus')
 
-        bc = self.config.juju_env['bootstrap-config']
+        bc = self.placement_view.config.juju_env['bootstrap-config']
         maasname = "'{}' <{}>".format(bc['name'], bc['maas-server'])
         maastitle = "Connected to MAAS {} l:root p:{}".format(
-            maasname, self.config.openstack_password)
+            maasname, self.placement_view.config.getopt('openstack_password'))
         tw = Columns([Text(maastitle),
                       Padding(self.open_maas_button, align='right',
                               width=BUTTON_SIZE, right=2)])
@@ -921,7 +920,7 @@ class MachinesColumn(WidgetWrap):
     def update(self):
         self.machines_list.update()
 
-        bc = self.config.juju_env['bootstrap-config']
+        bc = self.placement_view.config.juju_env['bootstrap-config']
         empty_maas_msg = ("There are no available machines.\n"
                           "Open {} to add machines to "
                           "'{}':".format(bc['maas-server'], bc['name']))
@@ -943,7 +942,7 @@ class MachinesColumn(WidgetWrap):
 
     def browse_maas(self, sender):
 
-        bc = self.config.juju_env['bootstrap-config']
+        bc = self.placement_view.config.juju_env['bootstrap-config']
         try:
             p = Popen(["sensible-browser", bc['maas-server']],
                       stdout=PIPE, stderr=PIPE)

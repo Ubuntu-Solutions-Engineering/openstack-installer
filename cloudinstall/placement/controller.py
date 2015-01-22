@@ -80,27 +80,16 @@ class PlacementController:
     """Keeps state of current machines and their assigned services.
     """
 
-    def __init__(self, maas_state=None, opts=None, config=None):
+    def __init__(self, maas_state=None, config=None):
         self.config = config
         self.maas_state = maas_state
         self._machines = []
         # id -> {atype: [charm class]}
         self.assignments = defaultdict(lambda: defaultdict(list))
-        self.opts = opts
         self.unplaced_services = set()
-        self.autosave_filename = None
 
-    def set_autosave_filename(self, filename):
-        self.autosave_filename = filename
-
-    def do_autosave(self):
-        if not self.autosave_filename:
-            return
-        with open(self.autosave_filename, 'w') as af:
-            self.save(af)
-
-    def save(self, f):
-        """f is a file-like object to save state to, to be re-read by
+    def save(self):
+        """ Save placement state, to be re-read by
         load(). No guarantees made about the contents of the file.
         """
         flat_assignments = {}
@@ -119,11 +108,12 @@ class PlacementController:
 
             flat_assignments[iid] = dict(constraints=constraints,
                                          assignments=flat_ad)
-        yaml.dump(flat_assignments, f)
+        self.config.setopt('placements', flat_assignments)
 
-    def load(self, f):
-        """Load assignments from file object written to by save().
-        replaces current assignments.
+    def load(self):
+        """
+        Load assignments from config placements replaces current
+        assignments.
         """
         def find_charm_class(name):
             for cc in self.charm_classes():
@@ -133,7 +123,7 @@ class PlacementController:
                         "matching saved charm name {}".format(name))
             return None
 
-        file_assignments = yaml.load(f)
+        file_assignments = self.config.getopt('placements')
         new_assignments = defaultdict(lambda: defaultdict(list))
         for iid, d in file_assignments.items():
             if self.maas_state is None:
@@ -154,7 +144,7 @@ class PlacementController:
 
     def update_and_save(self):
         self.reset_unplaced()
-        self.do_autosave()
+        self.save()
 
     def machines(self):
         if self.maas_state:

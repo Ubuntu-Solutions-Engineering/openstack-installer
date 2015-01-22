@@ -22,7 +22,7 @@ from unittest.mock import MagicMock, ANY
 
 from cloudinstall.ev import EventLoop
 from cloudinstall.config import Config
-from cloudinstall.core import DisplayController
+from cloudinstall.core import Controller
 
 log = logging.getLogger('cloudinstall.test_ev')
 
@@ -31,38 +31,49 @@ class EventLoopCoreTestCase(unittest.TestCase):
 
     def setUp(self):
         self.conf = Config({})
-        self.mock_opts = MagicMock(name='opts')
         self.mock_ui = MagicMock(name='ui')
         self.mock_log = MagicMock(name='log')
         self.mock_loop = MagicMock(name='loop')
 
     def make_ev(self, headless=False):
         self.conf.setopt('headless', headless)
-        return EventLoop(self.mock_ui, self.mock_opts, self.conf,
+        return EventLoop(self.mock_ui, self.conf,
                          self.mock_log)
 
     def test_validate_loop(self):
         """ Validate eventloop runs """
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+        self.conf.setopt('headless', False)
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=self.mock_loop)
         dc.initialize = MagicMock()
         dc.start()
         self.mock_loop.run.assert_called_once_with()
 
-    def test_validate_redraw_screen(self):
-        """ Validate redraw_screen called with eventloop """
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+    def test_validate_redraw_screen_commit_placement(self):
+        """ Validate redraw_screen on commit_placement """
+        self.conf.setopt('headless', False)
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=self.mock_loop)
         dc.initialize = MagicMock()
-        dc.render_placement_view()
+        dc.commit_placement()
+        self.mock_loop.redraw_screen.assert_called_once_with()
+
+    def test_validate_redraw_screen_enqueue(self):
+        """ Validate redraw_screen on enqueue_deployed_charms """
+        self.conf.setopt('headless', False)
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
+            loop=self.mock_loop)
+        dc.initialize = MagicMock()
+        dc.enqueue_deployed_charms()
         self.mock_loop.redraw_screen.assert_called_once_with()
 
     def test_validate_set_alarm_in(self):
         """ Validate set_alarm_in called with eventloop """
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=self.mock_loop)
         dc.initialize = MagicMock()
         self.conf.node_install_wait_interval = 1
@@ -72,8 +83,8 @@ class EventLoopCoreTestCase(unittest.TestCase):
     def test_validate_exit(self):
         """ Validate error code set with eventloop """
         ev = self.make_ev()
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=ev)
         dc.initialize = MagicMock()
         with self.assertRaises(urwid.ExitMainLoop):
@@ -82,8 +93,8 @@ class EventLoopCoreTestCase(unittest.TestCase):
 
     def test_hotkey_exit(self):
         ev = self.make_ev()
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=ev)
         dc.initialize = MagicMock()
         with self.assertRaises(urwid.ExitMainLoop):
@@ -93,17 +104,17 @@ class EventLoopCoreTestCase(unittest.TestCase):
     def test_repr_ev(self):
         """ Prints appropriate class string for eventloop """
         ev = self.make_ev()
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=ev)
         dc.initialize = MagicMock()
         self.assertEqual(str(ev), '<eventloop urwid based on select()>')
 
     def test_repr_no_ev(self):
-        """ Prints appropriate class string for eventloop """
+        """ Prints appropriate class string for no eventloop """
         ev = self.make_ev(True)
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=ev)
         dc.initialize = MagicMock()
         self.assertEqual(str(ev), '<eventloop disabled>')
@@ -111,8 +122,8 @@ class EventLoopCoreTestCase(unittest.TestCase):
     def test_validate_exit_no_ev(self):
         """ Validate SystemExit with no eventloop """
         ev = self.make_ev(True)
-        dc = DisplayController(
-            ui=self.mock_ui, opts=self.mock_opts, config=self.conf,
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
             loop=ev)
         dc.initialize = MagicMock()
         with self.assertRaises(SystemExit) as cm:

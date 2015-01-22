@@ -21,10 +21,12 @@ from jinja2 import Environment, FileSystemLoader
 import logging
 import os
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch, PropertyMock
 import yaml
 
 from cloudinstall.utils import render_charm_config
+from cloudinstall.config import Config
+from tempfile import NamedTemporaryFile
 
 
 log = logging.getLogger('cloudinstall.test_utils')
@@ -38,10 +40,12 @@ def source_tree_template_loader(name):
 @patch('cloudinstall.utils.spew')
 class TestRenderCharmConfig(unittest.TestCase):
     def setUp(self):
-        self.config = MagicMock()
-        self.config.is_single = False
-        self.config.cfg_path = 'fake_cfg_path'
-        self.config.openstack_password = 'fake_pw'
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            # Override config file to save to
+            self.config = Config({}, tempf.name)
+
+        type(self.config).cfg_path = PropertyMock(return_value='fake_cfg_path')
+        self.config.setopt('openstack_password', 'fake_pw')
         self.ltp = patch('cloudinstall.utils.load_template')
         self.mock_load_template = self.ltp.start()
         self.mock_load_template.side_effect = source_tree_template_loader
@@ -51,10 +55,9 @@ class TestRenderCharmConfig(unittest.TestCase):
 
     def _do_test_osrel(self, optsvalue, expected, mockspew):
         "check that opts.openstack_release is rendered correctly"
-        opts = MagicMock()
-        opts.openstack_release = optsvalue
+        self.config.setopt('openstack_release', optsvalue)
 
-        render_charm_config(self.config, opts)
+        render_charm_config(self.config)
         (fake_path, generated_yaml), kwargs = mockspew.call_args
         d = yaml.load(generated_yaml)
         for oscharmname in ['nova-cloud-controller', 'glance',
@@ -74,8 +77,12 @@ class TestRenderCharmConfig(unittest.TestCase):
             self._do_test_osrel('klaxon', 'cloud:willing-klaxon', mockspew)
 
     def _do_test_multiplier(self, is_single, mockspew, expected=None):
-        self.config.is_single = is_single
-        render_charm_config(self.config, MagicMock(openstack_release='klaxon'))
+        if is_single:
+            self.config.setopt('install_type', 'Single')
+        else:
+            self.config.setopt('install_type', 'Multi')
+        self.config.setopt('openstack_release', 'klaxon')
+        render_charm_config(self.config)
         (fake_path, generated_yaml), kwargs = mockspew.call_args
         d = yaml.load(generated_yaml)
         wmul = d['nova-cloud-controller'].get('worker-multiplier', None)
