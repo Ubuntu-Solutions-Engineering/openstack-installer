@@ -16,7 +16,7 @@
 
 import os
 import yaml
-from cloudinstall import utils
+import cloudinstall.utils as utils
 import logging
 
 
