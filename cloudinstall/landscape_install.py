@@ -30,7 +30,7 @@ class LandscapeInstall:
         self.config = config
         self.display_controller = display_controller
         self.loop = loop
-        self.config.setopt('install_type', 'Landscape OpenStack AutoPilot')
+        self.config.setopt('install_type', 'Landscape OpenStack Autopilot')
 
         self.landscape_tasks = ["Preparing Landscape",
                                 "Deploying Landscape",
