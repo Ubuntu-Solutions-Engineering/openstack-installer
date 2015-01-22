@@ -81,9 +81,10 @@ def populate_config(opts):
 
 if __name__ == '__main__':
     opts = parse_options(sys.argv)
+    config = populate_config(opts)
 
     try:
-        log.setup_logger(headless=opts.headless)
+        log.setup_logger(headless=config.getopt('headless'))
     except PermissionError:
         print("Permission error accessing log file.\n"
               "This probably indicates a broken partial install.\n"
@@ -96,7 +97,6 @@ if __name__ == '__main__':
     logger = logging.getLogger('openstack-status')
     logger.info("openstack-status starting")
 
-    config = populate_config(opts)
     if os.path.isfile(config.pidfile):
         print("Another instance of openstack-status is running. If you're "
               "sure there are no other instances, please remove "

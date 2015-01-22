@@ -112,9 +112,10 @@ def populate_config(opts):
 
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
+    cfg = populate_config(opts)
 
     try:
-        setup_logger(headless=opts.headless)
+        setup_logger(headless=cfg.getopt('headless'))
     except PermissionError:
         print("Permission error accessing log file.\n"
               "This probably indicates a broken partial install.\n"
@@ -126,8 +127,6 @@ if __name__ == '__main__':
 
     logger = logging.getLogger('openstack-install')
     logger.info('openstack-install starting')
-
-    cfg = populate_config(opts)
 
     if not os.path.exists(cfg.cfg_path):
         os.makedirs(cfg.cfg_path)
@@ -144,21 +143,33 @@ if __name__ == '__main__':
         print(msg)
         yn = input("Proceed? [y/N] ")
         if "y" in yn or "Y" in yn:
-            logger.info("Restoring system to last known state.")
+            print("Restoring system to last known state.")
             os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
         else:
-            raise SystemExit("Uninstall canceled.")
+            print("Uninstall cancelled.")
+            sys.exit(1)
 
     if cfg.getopt('killcloud'):
         if cfg.is_single():
-            logger.info("Removing existing single installation.")
-            utils.container_stop('uoi-bootstrap')
-            utils.container_destroy('uoi-bootstrap')
-            if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
-                os.remove(os.path.join(cfg.cfg_path, 'installed'))
-            raise SystemExit
+            msg = ("Warning:\n\nThis will destroy the host Container "
+                   "housing the OpenStack private cloud. This is a permanent "
+                   "operation.")
+            print(msg)
+            yn = input("Proceed? [y/N] ")
+            if "y" in yn or "Y" in yn:
+                print("Removing host container...")
+                utils.container_stop('uoi-bootstrap')
+                utils.container_destroy('uoi-bootstrap')
+                if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
+                    os.remove(os.path.join(cfg.cfg_path, 'installed'))
+                print("Container is removed.")
+                sys.exit(0)
+            else:
+                print("Destroying container cancelled.")
+                sys.exit(1)
         else:
-            raise SystemExit('Only supports killing a single install for now.')
+            print('Only supports killing a single install for now.')
+            sys.exit(1)
 
     if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
         msg = ("\n\nError:\n\n"
@@ -169,14 +180,16 @@ if __name__ == '__main__':
                "directory name (eg ~/cloud-install-old). "
                "Otherwise you may wish to uninstall with:\n\n"
                "    $ sudo openstack-install -u\n\n")
-        raise SystemExit(msg)
+        print(msg)
+        sys.exit(1)
 
     out = utils.get_command_output(
         'JUJU_HOME={} juju api-endpoints'.format(cfg.cfg_path), user_sudo=True)
     if out['status'] == 0:
         msg = ("\n\nExisting OpenStack environment detected. Please destroy "
                "that environment before proceeding with a new install.\n\n")
-        raise SystemExit(msg)
+        print(msg)
+        sys.exit(1)
 
     if cfg.getopt('openstack_release'):
         utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
