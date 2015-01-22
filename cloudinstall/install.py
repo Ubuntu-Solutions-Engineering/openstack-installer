@@ -20,7 +20,6 @@ import os
 from cloudinstall.config import (INSTALL_TYPE_SINGLE,
                                  INSTALL_TYPE_MULTI,
                                  INSTALL_TYPE_LANDSCAPE)
-from cloudinstall.core import DisplayController
 from cloudinstall.state import InstallState
 from cloudinstall.single_install import SingleInstall
 from cloudinstall.landscape_install import LandscapeInstall
@@ -32,7 +31,7 @@ import cloudinstall.utils as utils
 log = logging.getLogger('cloudinstall.install')
 
 
-class InstallController(DisplayController):
+class InstallController:
 
     """ Install controller """
 
@@ -42,6 +41,12 @@ class InstallController(DisplayController):
     MultiInstallNewMaas = MultiInstallNewMaas
     LandscapeInstall = LandscapeInstall
 
+    def __init__(self, ui, config, loop):
+        self.ui = ui
+        self.config = config
+        self.loop = loop
+        self.config.setopt('current_state', InstallState.RUNNING.value)
+
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
         """
@@ -49,13 +54,16 @@ class InstallController(DisplayController):
         if 'confirm_password' in creds:
             confirm_password = creds['confirm_password'].value
         if password and password == confirm_password:
-            self.flash_reset()
-            self.config.save_password(password)
+            self.ui.flash_reset()
+            self.loop.redraw_screen()
+            self.config.setopt('openstack_password', password)
             self.ui.hide_show_password_input()
-            self.select_install_type()
+            self.ui.select_install_type(
+                self.config.install_types(), self.do_install)
         else:
-            self.flash('Passwords did not match')
-            return self.show_password_input(
+            self.ui.flash('Passwords did not match')
+            self.loop.redraw_screen()
+            return self.ui.show_password_input(
                 'Create a new Openstack Password', self._save_password)
 
     def _save_maas_creds(self, creds):
@@ -73,79 +81,74 @@ class InstallController(DisplayController):
             return self.MultiInstallExistingMaas(
                 self.loop, self.ui, self.config).run()
         else:
-            self.MultiInstallNewMaas(opts=self.opts, ui=self,
-                                     config=self.config, loop=self.loop).run()
-
-    def select_install_type(self):
-        """ Dialog for selecting installation type
-        """
-        self.info_message("Choose your installation path")
-        self.show_selector_with_desc('Install Type',
-                                     self.config.install_types,
-                                     self.do_install)
-
-    def select_maas_type(self):
-        """ Perform multi install based on existing
-        MAAS or if a new MAAS will be installed
-        """
-        self.info_message(
-            "If a MAAS exists please enter the Server IP and your "
-            "administrator's API Key. Otherwise leave blank and a new "
-            "MAAS will be created for you")
-        self.show_maas_input("MAAS Setup",
-                             self._save_maas_creds)
-
-    def header_hotkeys(self, key):
-        if key in ['q', 'Q']:
-            # If triggered during install usually means an incomplete
-            # installation. Cleanup installed placeholder file
-            try:
-                os.remove(os.path.join(self.config.cfg_path, 'installed'))
-            except OSError:
-                log.debug("Failed to remove the installed file.")
-            self.exit()
-
-    def main_loop(self):
-        self.info_message("Get started by entering an OpenStack password "
-                          "for your cloud")
-
-        self.ui.show_password_input(
-            'Create a new Openstack Password', self._save_password)
-        self.update()
-        self.loop.run()
+            log.info("Performing a Multi Install with new MAAS")
+            return self.MultiInstallNewMaas(
+                self.loop, self.ui, self.config).run()
 
     def update(self, *args, **kwargs):
         "periodically check for display changes"
         if self.config.getopt('current_state') == InstallState.RUNNING:
             pass
         elif self.config.getopt('current_state') == InstallState.NODE_WAIT:
-            self.render_machine_wait_view()
+            self.ui.render_machine_wait_view(self.config)
+            self.loop.redraw_screen()
 
         self.loop.set_alarm_in(1, self.update)
-
-    def render_machine_wait_view(self):
-        self.ui.render_machine_wait_view(self, self.current_installer)
-        self.loop.redraw_screen()
 
     def do_install(self, install_type):
         """ Callback for install type selector
         """
-        self.ui.hide_selector_info()
+
+        if not self.config.getopt('headless'):
+            self.ui.hide_selector_info()
 
         # Set installed placeholder
         utils.spew(os.path.join(
             self.config.cfg_path, 'installed'), 'auto-generated')
         if install_type == INSTALL_TYPE_SINGLE[0]:
-            self.set_openstack_rel("Icehouse (2014.1.3)")
+            # self.ui.set_openstack_rel("Icehouse (2014.1.3)")
+            log.info("Performing a Single Install")
             self.SingleInstall(
                 self.loop, self.ui, self.config).run()
         elif install_type == INSTALL_TYPE_MULTI[0]:
-            self.set_openstack_rel("Icehouse (2014.1.3)")
-            self.select_maas_type()
+            # TODO: Clean this up a bit more I dont like relying on
+            # opts.headless but in a few places
+            if self.config.getopt('headless'):
+                if self.config.getopt('maascreds'):
+                    log.info("Performing a Multi install with existing MAAS")
+                    self.MultiInstallExistingMaas(
+                        self.loop, self.ui, self.config).run()
+                else:
+                    self.MultiInstallNewMaas(
+                        self.loop, self.ui, self.config).run()
+            else:
+                self.ui.set_openstack_rel("Icehouse (2014.1.3)")
+                self.ui.select_maas_type(self._save_maas_creds)
         elif install_type == INSTALL_TYPE_LANDSCAPE[0]:
-            self.set_openstack_rel("")
+            # self.ui.set_openstack_rel("")
+            log.info("Performing a Landscape OpenStack Autopilot install")
             self.LandscapeInstall(
                 self.loop, self.ui, self.config).run()
         else:
             os.remove(os.path.join(self.config.cfg_path, 'installed'))
             raise ValueError("Unknown install type: {}".format(install_type))
+
+    def start(self):
+        """ Start installer eventloop
+        """
+        if self.config.getopt('headless'):
+            log.info("Running in headless mode.")
+            install_type = self.config.getopt('install_type')
+            if install_type:
+                self.do_install(install_type)
+            else:
+                raise Exception(
+                    'Unable to read install type from configuration.')
+        else:
+            self.ui.status_info_message("Get started by entering an OpenStack "
+                                        "password for your cloud")
+
+            self.ui.show_password_input(
+                'Create a new Openstack Password', self._save_password)
+        self.update()
+        self.loop.run()

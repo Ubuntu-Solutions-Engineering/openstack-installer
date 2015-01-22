@@ -36,6 +36,7 @@ def source_tree_template_loader(name):
 
 
 class TestCharmBase(unittest.TestCase):
+
     def setUp(self):
         self.mock_jujuclient = MagicMock(name='jujuclient')
         self.mock_juju_state = MagicMock(name='juju_state')
@@ -64,6 +65,7 @@ class TestCharmBase(unittest.TestCase):
 
 
 class TestCharmNeutronOpenvswitch(unittest.TestCase):
+
     def setUp(self):
         self.mock_jujuclient = MagicMock(name='jujuclient')
         self.mock_juju_state = MagicMock(name='juju_state')

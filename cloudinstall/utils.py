@@ -51,7 +51,6 @@ blank_len = None
 def global_exchandler(type, value, tb):
     """ helper routine capturing tracebacks and printing to log file """
     tb_list = traceback.format_exception(type, value, tb)
-    write_status_file('fail', "".join(tb_list))
     log.debug("".join(tb_list))
 
 
@@ -78,17 +77,22 @@ class UtilsException(Exception):
     pass
 
 
-def cleanup():
-    log.debug('Attempting to reset the terminal')
+def cleanup(cfg):
+    # Save latest config object
+    log.info("Cleanup, saving latest config object.")
+    cfg.save()
     pid = os.path.join(install_home(), '.cloud-install/openstack.pid')
     if os.path.isfile(pid):
         os.remove(pid)
-    sys.stderr.write("\x1b[2J\x1b[H")
-    call(['stty', 'sane'])
+    if not cfg.getopt('headless'):
+        log.debug('Attempting to reset the terminal')
+        sys.stderr.write("\x1b[2J\x1b[H")
+        call(['stty', 'sane'])
+    return
 
 
 def write_status_file(status='', msg=''):
-    """ Writes out a completed status file
+    """ Writes out a status file
 
     :param str status: success or fail
     :param str msg: any error/success output
@@ -293,7 +297,8 @@ def remote_cp(machine_id, src, dst):
         dst=dst,
         m=machine_id))
     ret = get_command_output(
-        "juju scp {src} {m}:{dst}".format(src=src, dst=dst, m=machine_id))
+        "JUJU_HOME=~/.cloud-install juju scp {src} {m}:{dst}".format(
+            src=src, dst=dst, m=machine_id))
     log.debug("Remote copy result: {r}".format(r=ret))
 
 
@@ -303,8 +308,9 @@ def remote_run(machine_id, cmds):
     log.debug("Remote running ({cmds}) on machine {m}".format(
         m=machine_id, cmds=cmds))
     ret = get_command_output(
-        "juju run --machine {m} '{cmds}'".format(m=machine_id,
-                                                 cmds=cmds))
+        "JUJU_HOME=~/.cloud-install juju run "
+        "--machine {m} '{cmds}'".format(m=machine_id,
+                                        cmds=cmds))
     log.debug("Remote run result: {r}".format(r=ret))
     return ret
 
@@ -460,6 +466,7 @@ def find(file_pattern, top_dir, max_depth=None, path_pattern=None):
 
 
 class NoContainerIPException(Exception):
+
     "Container has no IP"
 
 
@@ -478,6 +485,7 @@ def container_ip(name):
 
 
 class ContainerRunException(Exception):
+
     "Running cmd in container failed"
 
 
@@ -526,6 +534,9 @@ def container_run_status(name, cmd, config):
            "{0} {3}".format(ip, ssh_privkey(), install_user(), cmd))
     log.debug("Running command without waiting for response.")
     args = deque(shlex.split(cmd))
+    if config.getopt('headless'):
+        args.append('--headless')
+        args.append('-c {}'.format(config.getopt('config_file')))
     os.execlp(args.popleft(), *args)
 
 
@@ -694,18 +705,14 @@ def ssh_genkey():
         cmd = "ssh-keygen -N '' -f {0}".format(user_sshkey_path)
         out = get_command_output(cmd, user_sudo=True)
         if out['status'] != 0:
-            print("Unable to generate key: {0}".format(out['output']))
-            sys.exit(out['status'])
+            raise Exception(
+                "Unable to generate key: {0}".format(out['output']))
         get_command_output('sudo chown -R {0}:{0} {1}'.format(
             install_user(), os.path.join(install_home(), '.ssh')))
         get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
                            user_sudo=True)
     else:
-        log.debug(
-            'ssh keys exist for this user, they will be used instead. '
-            'If the current ssh keys are not passwordless you\'ll be '
-            'required to enter your ssh key password during container '
-            'creation.')
+        log.debug('ssh keys exist for this user, they will be used instead.')
 
 
 def ssh_pubkey():

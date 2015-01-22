@@ -20,7 +20,6 @@ from urwid import (AttrMap, Button, Columns, connect_signal, Divider,
                    Edit, Filler, GridFlow, LineBox, Overlay, Padding,
                    Pile, SelectableIcon, Text, WidgetWrap)
 
-from cloudinstall.config import Config
 from cloudinstall.maas import satisfies
 from cloudinstall.placement.controller import AssignmentType
 from cloudinstall.ui import InfoDialog
@@ -806,9 +805,12 @@ class DeployView(WidgetWrap):
         self.deploy_ok_msg = ("\u2713 All the required OpenStack services are "
                               "placed on a machine, and you can now deploy.")
 
-        self.deploy_button = AttrMap(Button("Deploy",
-                                            on_press=self.do_deploy),
-                                     'button_primary', 'button_primary focus')
+        # Save a new placements configuration once all required services are
+        # placed.
+        self.placement_controller.save()
+        self.deploy_button = AttrMap(
+            Button("Deploy", on_press=self.do_deploy),
+            'button_primary', 'button_primary focus')
         self.deploy_grid = GridFlow([self.deploy_button], 10, 1, 0, 'center')
 
         self.unplaced_msg = "Some required services are still unplaced."
@@ -826,7 +828,7 @@ class DeployView(WidgetWrap):
             self.main_pile.contents[0] = (Divider(),
                                           self.main_pile.options())
             if changed:
-                self.display_controller.error_message(self.unplaced_msg)
+                self.display_controller.status_error_message(self.unplaced_msg)
 
         self.prev_status = self.placement_controller.can_deploy()
 
@@ -835,21 +837,21 @@ class DeployView(WidgetWrap):
                                               'deploy_highlight_start'),
                                       self.main_pile.options())
 
-        def fade_timeout(loop, step):
-            if step == 1:
-                self.display_controller.loop.set_alarm_in(5, fade_timeout, 2)
-                new_attr = 'deploy_highlight_end'
-            else:
-                new_attr = ''
-            self.main_pile.contents[0] = (AttrMap(self.deploy_grid,
-                                                  new_attr),
-                                          self.main_pile.options())
-
-        self.display_controller.loop.set_alarm_in(4, fade_timeout, 1)
-        self.display_controller.info_message(self.deploy_ok_msg)
+        # XXX: What was this for?
+        # def fade_timeout(loop, step):
+        #     if step == 1:
+        #         self.loop.set_alarm_in(5, 2)
+        #         new_attr = 'deploy_highlight_end'
+        #     else:
+        #         new_attr = ''
+        #     self.main_pile.contents[0] = (AttrMap(self.deploy_grid,
+        #                                           new_attr),
+        #                                   self.main_pile.options())
+        # self.loop.set_alarm_in(4, 1)
+        self.display_controller.status_info_message(self.deploy_ok_msg)
 
     def do_deploy(self, sender):
-        self.display_controller.commit_placement()
+        self.placement_view.do_deploy_cb()
 
 
 class MachinesColumn(WidgetWrap):
@@ -961,16 +963,22 @@ class MachinesColumn(WidgetWrap):
 
 class PlacementView(WidgetWrap):
 
-    """Handles display of machines and services.
+    """
+    Handles display of machines and services.
 
     displays nothing if self.controller is not set.
     set it to a PlacementController.
+
+    :param do_deploy_cb: deploy callback from controller
     """
 
-    def __init__(self, display_controller, placement_controller):
+    def __init__(self, display_controller, placement_controller,
+                 loop, config, do_deploy_cb):
         self.display_controller = display_controller
         self.placement_controller = placement_controller
-        self.config = Config()
+        self.loop = loop
+        self.config = config
+        self.do_deploy_cb = do_deploy_cb
         w = self.build_widgets()
         super().__init__(w)
         self.update()

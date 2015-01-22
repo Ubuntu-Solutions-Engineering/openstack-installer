@@ -20,8 +20,12 @@
 import logging
 import re
 import unittest
+import yaml
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
+import cloudinstall.utils as utils
+from cloudinstall.config import Config
 from cloudinstall.charms.jujugui import CharmJujuGui
 from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
@@ -69,10 +73,13 @@ class ServiceWidgetTestCase(unittest.TestCase):
 
     def setUp(self):
         self.mock_maas_state = MagicMock()
-        self.mock_opts = MagicMock()
+
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            utils.spew(tempf.name, yaml.dump(dict()))
+            self.conf = Config({}, tempf.name)
 
         self.pc = PlacementController(self.mock_maas_state,
-                                      self.mock_opts)
+                                      self.conf)
 
         self.mock_machine = make_fake_machine('machine1')
         self.mock_machine_2 = make_fake_machine('machine2')
@@ -162,10 +169,12 @@ class MachineWidgetTestCase(unittest.TestCase):
 
     def setUp(self):
         self.mock_maas_state = MagicMock()
-        self.mock_opts = MagicMock()
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            utils.spew(tempf.name, yaml.dump(dict()))
+            self.conf = Config({}, tempf.name)
 
         self.pc = PlacementController(self.mock_maas_state,
-                                      self.mock_opts)
+                                      self.conf)
         self.mock_machine = make_fake_machine('machine1')
 
         self.mock_machines = [self.mock_machine]
@@ -235,12 +244,15 @@ class MachineWidgetTestCase(unittest.TestCase):
 
 @patch('cloudinstall.placement.ui.MachineWidget')
 class MachinesListTestCase(unittest.TestCase):
+
     def setUp(self):
         self.mock_maas_state = MagicMock()
-        self.mock_opts = MagicMock()
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            utils.spew(tempf.name, yaml.dump(dict()))
+            self.conf = Config({}, tempf.name)
 
         self.pc = PlacementController(self.mock_maas_state,
-                                      self.mock_opts)
+                                      self.conf)
         self.mock_machine = make_fake_machine('machine1', {'cpu_count': 3})
         self.mock_machine2 = make_fake_machine('machine2')
         self.mock_machine3 = make_fake_machine('machine3')
@@ -303,10 +315,12 @@ class ServicesListTestCase(unittest.TestCase):
 
     def setUp(self):
         self.mock_maas_state = MagicMock()
-        self.mock_opts = MagicMock()
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            utils.spew(tempf.name, yaml.dump(dict()))
+            self.conf = Config({}, tempf.name)
 
         self.pc = PlacementController(self.mock_maas_state,
-                                      self.mock_opts)
+                                      self.conf)
         self.mock_machine = make_fake_machine('machine1', {'cpu_count': 3})
         self.mock_machine2 = make_fake_machine('machine2')
         self.mock_machine3 = make_fake_machine('machine3')

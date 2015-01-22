@@ -16,7 +16,8 @@
 
 import logging
 
-from cloudinstall.multi_install import (MultiInstallNewMaas,
+from cloudinstall.multi_install import (MultiInstall,
+                                        MultiInstallNewMaas,
                                         MultiInstallExistingMaas)
 
 
@@ -38,17 +39,19 @@ class LandscapeInstall:
     def _do_install_existing_maas(self):
         """ Performs the landscape deployment with existing MAAS
         """
-        MultiInstallExistingMaas(
-            self.opts, self.loop, self.display_controller,
-            post_tasks=self.landscape_tasks,
-            config=self.config).run()
+        if self.config.getopt('headless'):
+            MultiInstall(self.loop, self.display_controller,
+                         self.config, self.landscape_tasks).do_install()
+        else:
+            MultiInstallExistingMaas(
+                self.loop, self.display_controller,
+                self.config, post_tasks=self.landscape_tasks).run()
 
     def _do_install_new_maas(self):
         """ Prepare new maas environment for landscape
         """
-        MultiInstallNewMaas(self.opts, self.loop, self.display_controller,
-                            post_tasks=self.landscape_tasks,
-                            config=self.config).run()
+        MultiInstallNewMaas(self.loop, self.display_controller,
+                            self.config, post_tasks=self.landscape_tasks).run()
 
     def _save_lds_creds(self, creds):
         admin_name = creds['admin_name'].value
@@ -83,10 +86,16 @@ class LandscapeInstall:
         self._do_install_existing_maas()
 
     def run(self):
-        self.display_controller.info_message(
-            "Please enter your Landscape information and "
-            "MAAS Server IP and API Key. Use the MAAS web UI or 'maas list' "
-            "to find your API Key")
-        self.display_controller.show_landscape_input(
-            "Landscape OpenStack Autopilot Setup",
-            self._save_lds_creds)
+        if self.config.getopt('headless'):
+            if self.config.getopt('landscapecreds'):
+                self._do_install_existing_maas()
+            else:
+                self._do_install_new_maas()
+        else:
+            self.display_controller.status_info_message(
+                "Please enter your Landscape information and "
+                "MAAS Server IP and API Key. Use the MAAS web UI or "
+                "'maas list' to find your API Key")
+            self.display_controller.show_landscape_input(
+                "Landscape OpenStack Autopilot Setup",
+                self._save_lds_creds)

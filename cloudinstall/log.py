@@ -28,6 +28,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 
 class PrettyLog():
+
     def __init__(self, obj):
         self.obj = obj
 
@@ -35,7 +36,7 @@ class PrettyLog():
         return pprint.pformat(self.obj)
 
 
-def setup_logger(name=__name__):
+def setup_logger(name=__name__, headless=False):
     """setup logging
 
     Overridding the default log level(**debug**) can be done via an
@@ -77,20 +78,35 @@ def setup_logger(name=__name__):
                                            when='D',
                                            interval=1,
                                            backupCount=7)
+    env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
+
+    commandslog.setLevel(env)
     commandslog.setFormatter(logging.Formatter(
-        '%(levelname)s \N{BULLET} %(asctime)s '
-        '[LINE:%(lineno)d, FUNC:%(funcName)s] '
-        '\N{BULLET} %(name)s \N{BULLET} '
-        '%(message)s',
+        "[%(levelname)-5s \N{BULLET} %(asctime)s] "
+        "\N{BULLET} %(name)s \N{BULLET} "
+        "(%(filename)s, %(funcName)s, %(lineno)d)]\n"
+        "   %(message)s",
         datefmt='%m-%d %H:%M:%S'))
 
+    if headless:
+        consolelog = logging.StreamHandler()
+        consolelog.setLevel(logging.INFO)
+        consolelog.setFormatter(logging.Formatter(
+            '[%(levelname)-5s \N{BULLET} %(asctime)s \N{BULLET} %(name)-16s] '
+            '%(message)s',
+            datefmt='%m-%d %H:%M:%S'))
+
     logger = logging.getLogger('')
-    env = os.environ.get('UCI_LOGLEVEL', 'DEBUG')
+    logger.setLevel(env)
+
     no_filter = os.environ.get('UCI_NOFILTER', None)
-    if not no_filter:
+    if no_filter is None:
         f = logging.Filter(name='cloudinstall')
         commandslog.addFilter(f)
-    logger.setLevel(env)
+        if headless:
+            consolelog.addFilter(f)
     logger.addHandler(commandslog)
+    if headless:
+        logger.addHandler(consolelog)
 
     return logger

@@ -33,6 +33,7 @@ from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
                    SimpleListWalker, Divider, Button,
 
                    signals, emit_signal, connect_signal)
+from cloudinstall.task import Tasker
 from cloudinstall import utils
 from cloudinstall.status import get_sync_status
 from cloudinstall.ui import (ScrollableWidgetWrap,
@@ -720,15 +721,16 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer.error_message(message)
 
     def status_info_message(self, message):
-        self.frame.footer.info_message(message)
+        self.frame.footer.info_message(
+            "{}\N{HORIZONTAL ELLIPSIS}".format(message))
 
-    def status_dashboard_url(self, ip, user, password):
+    def set_dashboard_url(self, ip, user, password):
         self.frame.footer.set_dashboard_url(ip, user, password)
 
-    def status_jujugui_url(self, ip):
+    def set_jujugui_url(self, ip):
         self.frame.footer.set_jujugui_url(ip)
 
-    def status_openstack_rel(self, text):
+    def set_openstack_rel(self, text):
         self.frame.footer.set_openstack_rel(text)
 
     def clear_status(self):
@@ -740,22 +742,72 @@ class PegasusGUI(WidgetWrap):
         self.frame.set_body(self.frame.body)
         self.header.set_show_add_units_hotkey(True)
 
-    def render_node_install_wait(self, **kwargs):
-        self.frame.body = NodeInstallWaitMode(**kwargs)
+    def render_node_install_wait(self, message=None, **kwargs):
+        self.frame.body = NodeInstallWaitMode(message, **kwargs)
         self.frame.set_body(self.frame.body)
 
-    def render_placement_view(self, display_controller,
-                              placement_controller):
+    def render_placement_view(self, placement_controller, loop, config, cb):
+        """ render placement view
+
+        :param cb: deploy callback trigger
+        """
         if self.placement_view is None:
-            self.placement_view = PlacementView(display_controller,
-                                                placement_controller)
+            self.placement_view = PlacementView(self,
+                                                placement_controller,
+                                                loop,
+                                                config,
+                                                cb)
         self.placement_view.update()
         self.frame.body = self.placement_view
 
-    def render_machine_wait_view(self, display_controller,
-                                 installer):
+    def render_machine_wait_view(self, config):
         if self.machine_wait_view is None:
-            self.machine_wait_view = MachineWaitView(display_controller,
-                                                     installer)
+            self.machine_wait_view = MachineWaitView(
+                self, self.current_installer, config)
         self.machine_wait_view.update()
         self.frame.body = self.machine_wait_view
+
+    def show_exception_message(self, ex, logpath="~/.cloud-install/commands"):
+        def handle_done(*args, **kwargs):
+            raise urwid.ExitMainLoop()
+        self.hide_widget_on_top()
+        msg = ("A fatal error has occurred: {}\n"
+               "See {} for further info.".format(ex.args[0],
+                                                 logpath))
+        self.show_fatal_error_message(msg, handle_done)
+
+    def select_install_type(self, install_types, cb):
+        """ Dialog for selecting installation type
+        """
+        self.status_info_message("Choose your installation path")
+        self.show_selector_with_desc('Install Type',
+                                     install_types,
+                                     cb)
+
+    def select_maas_type(self, cb):
+        """ Perform multi install based on existing
+        MAAS or if a new MAAS will be installed
+        """
+        self.status_info_message(
+            "If a MAAS exists please enter the Server IP and your "
+            "administrator's API Key. Otherwise leave blank and a new "
+            "MAAS will be created for you")
+        self.show_maas_input("MAAS Setup", cb)
+
+    def __repr__(self):
+        return "<Ubuntu OpenStack Installer GUI Interface>"
+
+    def tasker(self, loop, config):
+        """ Interface with Tasker class
+
+        :param loop: urwid.Mainloop
+        :param dict config: config object
+        """
+        return Tasker(self, loop, config)
+
+    def exit(self, loop=None):
+        """ Provide exit loop helper
+
+        :param loop: Just a placeholder, exit with urwid.
+        """
+        urwid.ExitMainLoop()

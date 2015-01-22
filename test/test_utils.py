@@ -39,6 +39,7 @@ def source_tree_template_loader(name):
 
 @patch('cloudinstall.utils.spew')
 class TestRenderCharmConfig(unittest.TestCase):
+
     def setUp(self):
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
@@ -60,6 +61,7 @@ class TestRenderCharmConfig(unittest.TestCase):
         render_charm_config(self.config)
         (fake_path, generated_yaml), kwargs = mockspew.call_args
         d = yaml.load(generated_yaml)
+        print(d)
         for oscharmname in ['nova-cloud-controller', 'glance',
                             'openstack-dashboard', 'keystone', 'swift-proxy']:
             if expected is None:
