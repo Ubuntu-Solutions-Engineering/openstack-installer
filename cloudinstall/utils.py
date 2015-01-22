@@ -563,7 +563,7 @@ def container_cp(name, filepath, dst):
                             filepath, name, ip, ret['output']))
 
 
-def container_create(name, userdata):
+def container_create(name, configfile, userdata):
     """ creates a container from ubuntu-cloud template
     """
     # NOTE: the -F template arg is a workaround. it flushes the lxc
@@ -575,9 +575,10 @@ def container_create(name, userdata):
         log.debug("USE_LXC_IMAGE_CACHE set, so not flushing in lxc-create")
         flushflag = ""
     out = get_command_output(
-        'sudo lxc-create -t ubuntu-cloud '
+        'sudo lxc-create -t ubuntu-cloud -f {configfile} '
         '-n {name} -- {flushflag} '
         '-u {userdatafilename}'.format(name=name,
+                                       configfile=configfile,
                                        flushflag=flushflag,
                                        userdatafilename=userdata))
     if out['status'] > 0:
