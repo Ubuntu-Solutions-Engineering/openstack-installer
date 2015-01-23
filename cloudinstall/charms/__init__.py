@@ -313,7 +313,8 @@ export OS_REGION_NAME=RegionOne
 
     def _pubkey(self):
         """ return ssh pub key """
-        return path.expanduser('~/.ssh/id_rsa.pub')
+        key_path = path.join(self.config.juju_home(), 'ssh/juju_id_rsa.pub')
+        return key_path
 
     def __repr__(self):
         return self.name()
