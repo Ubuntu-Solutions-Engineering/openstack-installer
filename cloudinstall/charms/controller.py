@@ -52,7 +52,8 @@ class CharmNovaCloudController(CharmBase):
             self._openstack_env_save(u, env)
             utils.remote_cp(unit.machine_id,
                             src=self._openstack_env_path(u),
-                            dst='/tmp/openstack-{u}-rc'.format(u=u))
+                            dst='/tmp/openstack-{u}-rc'.format(u=u),
+                            juju_home=self.config.juju_home(True))
         utils.remote_cp(
             unit.machine_id,
             src=os.path.join(self.config.tmpl_path,
