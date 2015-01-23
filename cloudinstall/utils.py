@@ -472,7 +472,7 @@ class NoContainerIPException(Exception):
 
 def container_ip(name):
     try:
-        ips = check_output("lxc-info -n {} -i -H".format(name),
+        ips = check_output("sudo lxc-info -n {} -i -H".format(name),
                            shell=True)
         ips = ips.split()
         log.debug("lxc-info found: '{}'".format(ips))
