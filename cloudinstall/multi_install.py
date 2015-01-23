@@ -107,7 +107,7 @@ class MultiInstall:
             maas_server=maas_creds['api_host'],
             maas_apikey=maas_creds['api_key'],
             openstack_password=self.config.getopt('openstack_password'))
-        check_output(['mkdir', '-p', self.config.juju_path])
+        check_output(['mkdir', '-p', self.config.juju_path()])
         utils.spew(self.config.juju_environments_path,
                    maas_env_modified)
 
@@ -131,8 +131,8 @@ class MultiInstall:
         if bstarget:
             bsflags += " --to {}".format(bstarget)
 
-        cmd = ("JUJU_HOME={0} juju {1} bootstrap {2}".format(
-            self.config.cfg_path, dbgflags, bsflags))
+        cmd = ("{0} juju {1} bootstrap {2}".format(
+            self.config.juju_home(), dbgflags, bsflags))
 
         log.debug("Bootstrapping Juju: {}".format(cmd))
 
@@ -146,8 +146,8 @@ class MultiInstall:
         # workaround to avoid connection failure at beginning of
         # openstack-status
         out = utils.get_command_output(
-            "JUJU_HOME={} juju status".format(
-                self.config.cfg_path),
+            "{0} juju status".format(
+                self.config.juju_home()),
             timeout=None,
             user_sudo=True)
         if out['status'] != 0:
@@ -750,9 +750,9 @@ class LandscapeInstallFinal:
                    lscape_env_modified)
 
         out = utils.get_command_output(
-            "JUJU_HOME={0} juju-deployer -WdvL -w 180 -c {1} "
+            "{0} juju-deployer -WdvL -w 180 -c {1} "
             "landscape-dense-maas".format(
-                self.config.cfg_path,
+                self.config.juju_home(),
                 self.lscape_yaml_path),
             timeout=None,
             user_sudo=True)
