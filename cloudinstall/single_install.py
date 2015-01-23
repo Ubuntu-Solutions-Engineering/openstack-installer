@@ -68,7 +68,7 @@ class SingleInstall:
         single_env = utils.load_template('juju-env/single.yaml')
         single_env_modified = single_env.render(
             openstack_password=self.config.getopt('openstack_password'))
-        utils.spew(os.path.join(self.config.juju_path,
+        utils.spew(os.path.join(self.config.juju_path(),
                                 'environments.yaml'),
                    single_env_modified,
                    owner=utils.install_user())
@@ -97,10 +97,12 @@ class SingleInstall:
                 "{0} {1} none bind,create=dir\n".format(
                     self.config.cfg_path,
                     'home/ubuntu/.cloud-install'))
-            f.write(
-                "{0} {1} none bind,create=dir\n".format(
-                    self.config.juju_path,
-                    'home/ubuntu/.juju'))
+            # TODO: Remove as its not needed since juju
+            # resides in ~/.cloud-install
+            # f.write(
+            #     "{0} {1} none bind,create=dir\n".format(
+            #         self.config.juju_path(),
+            #         'home/ubuntu/.juju'))
             # FIXME: causing some issues with authorized_keys
             # having its permission changed and not allowing
             # ssh into the container without password.
@@ -239,7 +241,7 @@ class SingleInstall:
                         recursive=True)
             utils.get_command_output("sudo chmod 700 {}".format(
                 self.config.cfg_path))
-            utils.get_command_output("sudo chmod 600 -R {}/*".format(
+            utils.get_command_output("sudo chmod 700 -R {}/*".format(
                 self.config.cfg_path))
         except:
             log.error(
@@ -306,10 +308,13 @@ class SingleInstall:
         self.display_controller.status_info_message("Bootstrapping Juju")
         self.tasker.start_task("Bootstrapping Juju")
         utils.container_run(self.container_name,
-                            "JUJU_HOME=~/.cloud-install juju bootstrap",
+                            "{0} juju bootstrap".format(
+                                self.config.juju_home(use_expansion=True)),
                             use_ssh=True)
         utils.container_run(
-            self.container_name, "JUJU_HOME=~/.cloud-install juju status",
+            self.container_name,
+            "{0} juju status".format(
+                self.config.juju_home(use_expansion=True)),
             use_ssh=True)
         self.tasker.stop_current_task()
 

@@ -179,7 +179,7 @@ To do so run the following from the container host:
    $ sudo lxc-stop -n uoi-bootstrap
    $ sudo lxc-start -n uoi-bootstrap -d
    $ ssh ubuntu@ip-of-uoi-bootstrap-container
-   (uoi-bootstrap) $ JUJU_HOME=~/.cloud-install juju status
+   (uoi-bootstrap) $ JUJU_HOME=~/.cloud-install/juju juju status
 
 From this point on it is a matter of waiting for all services to be restarted
 and shown as **agent-state: started** within the `juju status` output.

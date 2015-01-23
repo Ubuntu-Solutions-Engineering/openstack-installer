@@ -291,25 +291,26 @@ def poll_until_true(cmd, predicate, frequency, timeout=600,
             return False
 
 
-def remote_cp(machine_id, src, dst):
+def remote_cp(machine_id, src, dst, juju_home):
     log.debug("Remote copying {src} to {dst} on machine {m}".format(
         src=src,
         dst=dst,
         m=machine_id))
     ret = get_command_output(
-        "JUJU_HOME=~/.cloud-install juju scp {src} {m}:{dst}".format(
-            src=src, dst=dst, m=machine_id))
+        "{juju_home} juju scp {src} {m}:{dst}".format(
+            juju_home=juju_home, src=src, dst=dst, m=machine_id))
     log.debug("Remote copy result: {r}".format(r=ret))
 
 
-def remote_run(machine_id, cmds):
+def remote_run(machine_id, cmds, juju_home):
     if type(cmds) is list:
         cmds = " && ".join(cmds)
     log.debug("Remote running ({cmds}) on machine {m}".format(
         m=machine_id, cmds=cmds))
     ret = get_command_output(
-        "JUJU_HOME=~/.cloud-install juju run "
-        "--machine {m} '{cmds}'".format(m=machine_id,
+        "{juju_home} juju run "
+        "--machine {m} '{cmds}'".format(juju_home=juju_home,
+                                        m=machine_id,
                                         cmds=cmds))
     log.debug("Remote run result: {r}".format(r=ret))
     return ret
