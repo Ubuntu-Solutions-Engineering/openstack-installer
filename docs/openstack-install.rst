@@ -6,14 +6,13 @@ openstack-install - Ubuntu OpenStack Installer Documentation
 SYNOPSIS
 ========
 
-usage: sudo openstack-install [-h] [-s] [-i] [-u] [-k] [-a ARCH] [-r RELEASE] [-p]
+usage: sudo openstack-install [-h] [-i] [-u] [-k] [-a ARCH] [-r RELEASE] [-p]
 
 optional arguments:
 
 .. code::
 
       -h, --help            show this help message and exit
-      -s, --enable-swift    Enable swift storage
       -i, --install-only    install and bootstrap MAAS/Juju/Landscape (as
                             applicable) only. Will not deploy any OpenStack
                             services in single or multi mode. You can invoke

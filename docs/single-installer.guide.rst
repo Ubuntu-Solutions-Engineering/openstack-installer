@@ -53,8 +53,7 @@ Optional Flags
 
     usage: openstack-install [-h] [-i] [-u] [-k]
                              [--openstack-release OPENSTACK_RELEASE] [-a ARCH]
-                             [-r RELEASE] [--with-maas-address IP]
-                             [--with-maas-apikey KEY] [-p]
+                             [-r RELEASE]
                              [--extra-ppa EXTRA_PPA [EXTRA_PPA ...]]
                              [--upstream-deb UPSTREAM_DEB] [--version]
     
@@ -79,10 +78,6 @@ Optional Flags
       -r RELEASE            <rel, ..> comma-separated list of Ubuntu releases to
                             filter available cloud images with which to populate
                             Glance, e.g. precise,trusty
-      --with-maas-address IP
-                            Specify an existing MAAS ip address
-      --with-maas-apikey KEY
-                            Specify a MAAS admin user apikey
       -p, --placement       Show machine placement UI before deploying
       --extra-ppa EXTRA_PPA [EXTRA_PPA ...]
                             Append additional ppas to the single installers cloud-
@@ -95,10 +90,8 @@ Optional Flags
 .. attention::
 
     Enabling swift storage requires at least 3 instances and another additional
-    instance for swift-proxy.
-
-    If you wish to deploy services to this OpenStack using juju you will need
-    to enable swift storage.
+    instance for swift-proxy. They are automatically deployed but stated here
+    for reference.
 
 An initial dialog box will appear asking you to select which type of
 install, choose **Single system**.
