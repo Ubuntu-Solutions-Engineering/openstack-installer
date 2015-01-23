@@ -124,27 +124,27 @@ if __name__ == '__main__':
             raise SystemExit('Disk image already exists, will not overwrite.')
 
         if cfg.getopt('for_lds'):
-            img_name_secondary = "uoi-container-{1}".format(vm)
+            img_name_secondary = "uoi-container-{0}".format(vm)
             img_secondary = ".".join((img_name_secondary, 'img'))
             img_path_secondary = os.path.join(VM_DIR, img_secondary)
 
         # populate proper xml
         uuid_str = uuid.uuid1()
-        modified_data = original_data.render(
-            dict(vm_name=img_name,
-                 uuid=str(uuid_str),
-                 macaddr=utils.macgen(),
-                 bridge=opts.bridge_interface,
-                 image_path=img_path))
+        template_vars = dict(vm_name=img_name,
+                             uuid=str(uuid_str),
+                             macaddr=utils.macgen(),
+                             bridge=opts.bridge_interface,
+                             image_path=img_path)
 
         if cfg.getopt('for_lds'):
-            modified_data['image_path_secondary'] = img_path_secondary
-            modified_data['macaddr_secondary'] = utils.macgen()
+            template_vars['image_path_secondary'] = img_path_secondary
+            template_vars['macaddr_secondary'] = utils.macgen()
             vm_conf = ".".join((img_name_secondary, 'xml'))
         else:
             vm_conf = ".".join((img_name, 'xml'))
 
         vm_conf_path = os.path.join(VM_DIR, vm_conf)
+        modified_data = original_data.render(template_vars)
         utils.spew(vm_conf_path, modified_data)
 
         cmd = 'qemu-img create {0} {1}G'.format(
