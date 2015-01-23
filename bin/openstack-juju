@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ -f ~/.cloud-install/environments.yaml ]; then
-  JUJU_HOME=~/.cloud-install juju switch openstack >>/dev/null
-  JUJU_HOME=~/.cloud-install exec juju $@
+# FIXME: Convert to python so we can pull from config object.
+if [ -f ~/.cloud-install/juju/environments.yaml ]; then
+  JUJU_HOME=~/.cloud-install/juju juju switch openstack >>/dev/null
+  JUJU_HOME=~/.cloud-install/juju exec juju $@
 else
   echo -e "Unable to find a proper OpenStack Juju environment.\n\nPlease run 'sudo openstack-install' to begin."
   exit 1
