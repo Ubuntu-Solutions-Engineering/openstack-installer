@@ -524,8 +524,12 @@ class Controller:
             charm_q.add_relation(charm)
             charm_q.add_post_proc(charm)
 
-        charm_q.watch_relations()
-        charm_q.watch_post_proc()
+        if self.config.getopt('headless'):
+            charm_q.watch_relations()
+            charm_q.watch_post_proc()
+        else:
+            charm_q.watch_relations_async()
+            charm_q.watch_post_proc_async()
         charm_q.is_running = True
 
         # Exit cleanly if we've finished all deploys, relations,
@@ -590,8 +594,12 @@ class Controller:
 
             if not charm_q.is_running:
                 charm_q.watch_deploy()
-                charm_q.watch_relations()
-                charm_q.watch_post_proc()
+                if self.config.getopt('headless'):
+                    charm_q.watch_relations()
+                    charm_q.watch_post_proc()
+                else:
+                    charm_q.watch_relations_async()
+                    charm_q.watch_post_proc_async()
                 charm_q.is_running = True
 
         self.ui.hide_add_charm_info()

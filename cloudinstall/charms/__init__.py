@@ -357,6 +357,9 @@ class CharmQueue:
             time.sleep(10)
 
     @utils.async
+    def watch_relations_async(self):
+        self.watch_relations()
+
     def watch_relations(self):
         log.debug("Starting charm relations watcher.")
         while not self.charm_relations_q.empty():
@@ -373,6 +376,9 @@ class CharmQueue:
             time.sleep(10)
 
     @utils.async
+    def watch_post_proc_async(self):
+        self.watch_post_proc()
+
     def watch_post_proc(self):
         log.debug("Starting charm post processing watcher.")
         while not self.charm_post_proc_q.empty():
