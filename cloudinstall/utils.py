@@ -474,10 +474,11 @@ def container_ip(name):
     try:
         ips = check_output("lxc-info -n {} -i -H".format(name),
                            shell=True)
-        log.debug("lxc-info returned: '{}'".format(ips))
         ips = ips.split()
+        log.debug("lxc-info found: '{}'".format(ips))
         if len(ips) == 0:
             raise NoContainerIPException()
+        log.debug("using {} as the container ip".format(ips[0].decode()))
         return ips[0].decode()
     except CalledProcessError:
         log.exception("error calling lxc-info to get container IP")
