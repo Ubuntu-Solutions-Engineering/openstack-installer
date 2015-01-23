@@ -607,6 +607,7 @@ class Controller:
             self.ui.status_info_message("Welcome")
             self.initialize()
             self.loop.register_callback('add_charm', self.add_charm)
+            self.loop.register_callback('refresh_display', self.update)
             self.update()
             self.loop.run()
             self.loop.close()
