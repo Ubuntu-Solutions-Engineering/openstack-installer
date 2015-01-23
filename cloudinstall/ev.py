@@ -81,7 +81,7 @@ class EventLoop:
                 self.exit(0)
             if key in ['r', 'R', 'f5']:
                 self.ui.status_info_message("View was refreshed")
-                self.update()
+                self._callback_map['refresh_display']()
 
     def exit(self, err=0):
         self.error_code = err
