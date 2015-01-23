@@ -365,10 +365,10 @@ class Controller:
                         src=path.join(self.config.share_path,
                                       "tools/apt-go-fast"),
                         dst="/tmp/apt-go-fast",
-                        juju_home=self.config.juju_home(True))
+                        juju_home=self.config.juju_home(use_expansion=True))
         utils.remote_run(machine_id,
                          cmds="sudo sh /tmp/apt-go-fast",
-                         juju_home=self.config.juju_home(True))
+                         juju_home=self.config.juju_home(use_expansion=True))
 
     def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
@@ -376,14 +376,14 @@ class Controller:
         srcpath = path.join(self.config.tmpl_path, 'lxc-host-only')
         destpath = "/tmp/lxc-host-only"
         utils.remote_cp(machine_id, src=srcpath, dst=destpath,
-                        juju_home=self.config.juju_home(True))
+                        juju_home=self.config.juju_home(use_expansion=True))
         log.debug('Updating network configuration for machine')
         utils.remote_run(machine_id,
                          cmds="sudo chmod +x /tmp/lxc-host-only",
-                         juju_home=self.config.juju_home(True))
+                         juju_home=self.config.juju_home(use_expansion=True))
         utils.remote_run(machine_id,
                          cmds="sudo /tmp/lxc-host-only",
-                         juju_home=self.config.juju_home(True))
+                         juju_home=self.config.juju_home(use_expansionTrue))
 
     def deploy_using_placement(self):
         """Deploy charms using machine placement from placement controller,

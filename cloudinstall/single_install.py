@@ -309,11 +309,12 @@ class SingleInstall:
         self.tasker.start_task("Bootstrapping Juju")
         utils.container_run(self.container_name,
                             "{0} juju bootstrap".format(
-                                self.config.juju_home(True)),
+                                self.config.juju_home(use_expansion=True)),
                             use_ssh=True)
         utils.container_run(
             self.container_name,
-            "{0} juju status".format(self.config.juju_home(True)),
+            "{0} juju status".format(
+                self.config.juju_home(use_expansion=True)),
             use_ssh=True)
         self.tasker.stop_current_task()
 

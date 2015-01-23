@@ -100,9 +100,9 @@ class CharmGlanceSimplestreamsSync(CharmBase):
         # TODO: See if this is supported by juju api
         cmd = ('{juju_home} juju deploy --repository={repodir}'
                ' local:{distro}/glance-simplestreams-sync'
-               ' --constraints {constraints}'
-               ' --to {mspec}').format(juju_home=self.config.juju_home(True),
-                                       **kwds)
+               ' --constraints {constraints} -- {mspec}').format(
+                   juju_home=self.config.juju_home(use_expansion=True),
+                   **kwds)
 
         charm_config, _ = get_charm_config()
         if self.charm_name in charm_config:
