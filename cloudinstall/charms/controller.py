@@ -57,11 +57,13 @@ class CharmNovaCloudController(CharmBase):
             unit.machine_id,
             src=os.path.join(self.config.tmpl_path,
                              "nova-controller-setup.sh"),
-            dst="/tmp/nova-controller-setup.sh")
+            dst="/tmp/nova-controller-setup.sh",
+            juju_home=self.config.juju_home(True))
         utils.remote_cp(
             unit.machine_id,
             src=self._pubkey(),
-            dst="/tmp/id_rsa.pub")
+            dst="/tmp/id_rsa.pub",
+            juju_home=self.config.juju_home(True))
         err = utils.remote_run(unit.machine_id,
                                cmds="/tmp/nova-controller-setup.sh "
                                     "{p}".format(p=openstack_password))
