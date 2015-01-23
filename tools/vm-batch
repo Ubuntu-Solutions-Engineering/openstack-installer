@@ -147,15 +147,22 @@ if __name__ == '__main__':
         modified_data = original_data.render(template_vars)
         utils.spew(vm_conf_path, modified_data)
 
-        cmd = 'qemu-img create {0} {1}G'.format(
-            img_path, cfg.getopt('vm_image_size'))
+        if cfg.getopt('for_lds'):
+            cmd = 'qemu-img create {0} {1}G'.format(
+                img_path_secondary, cfg.getopt('vm_image_size'))
+        else:
+            cmd = 'qemu-img create {0} {1}G'.format(
+                img_path, cfg.getopt('vm_image_size'))
         print(cmd)
         call(shlex.split(cmd))
 
         time.sleep(1)
 
         # Undefine current domain
-        cmd = 'virsh undefine {0}'.format(img_name)
+        if cfg.getopt('for_lds'):
+            cmd = 'virsh undefine {0}'.format(img_name_secondary)
+        else:
+            cmd = 'virsh undefine {0}'.format(img_name)
         print(cmd)
         call(shlex.split(cmd))
 
@@ -164,7 +171,11 @@ if __name__ == '__main__':
         call(shlex.split(cmd))
 
         time.sleep(1)
-        cmd = 'virsh start {0}'.format(img_name)
+
+        if cfg.getopt('for_lds'):
+            cmd = 'virsh start {0}'.format(img_name_secondary)
+        else:
+            cmd = 'virsh start {0}'.format(img_name)
         print(cmd)
         call(shlex.split(cmd))
 
