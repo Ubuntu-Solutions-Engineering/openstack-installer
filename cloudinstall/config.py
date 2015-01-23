@@ -165,9 +165,18 @@ class Config:
             log.error("Could not find {} in config".format(key))
             return False
 
-    @property
     def juju_path(self):
-        return self.cfg_path
+        """ Returns path where juju environments reside """
+        return os.path.join(self.cfg_path, 'juju')
+
+    def juju_home(self, use_expansion=False):
+        """ A string representing JUJU_HOME """
+        if use_expansion:
+            cfg_base = os.path.basename(self.cfg_path)
+            home_path = "~/{0}/juju".format(cfg_base)
+        else:
+            home_path = self.juju_path()
+        return "JUJU_HOME={}".format(home_path)
 
     @property
     def juju_env(self):
@@ -183,7 +192,7 @@ class Config:
             env_file = 'maas.jenv'
 
         if env_file:
-            env_path = os.path.join(self.juju_path, 'environments', env_file)
+            env_path = os.path.join(self.juju_path(), 'environments', env_file)
         else:
             raise ConfigException('Unable to determine installer type.')
 
@@ -199,7 +208,7 @@ class Config:
     @property
     def juju_environments_path(self):
         """ returns absolute path of juju environments.yaml """
-        return os.path.join(self.juju_path, 'environments.yaml')
+        return os.path.join(self.juju_path(), 'environments.yaml')
 
     def update_environments_yaml(self, key, val, provider='local'):
         """ updates environments.yaml base file """

@@ -133,13 +133,19 @@ if __name__ == '__main__':
     logger = logging.getLogger('openstack-install')
     logger.info('openstack-install starting')
 
+    if os.geteuid() != 0:
+        sys.exit(
+            "Installing a cloud requires root privileges. Rerun with sudo")
+
     if not os.path.exists(cfg.cfg_path):
         os.makedirs(cfg.cfg_path)
         utils.chown(cfg.cfg_path, utils.install_user(), utils.install_user())
 
-    if os.geteuid() != 0:
-        sys.exit(
-            "Installing a cloud requires root privileges. Rerun with sudo")
+    if not os.path.exists(cfg.juju_path()):
+        logger.info("Creating juju directories: {}".format(cfg.juju_path()))
+        os.makedirs(cfg.juju_path())
+        utils.chown(
+            cfg.juju_path(), utils.install_user(), utils.install_user())
 
     if cfg.getopt('uninstall'):
         msg = ("Warning:\n\nThis will uninstall OpenStack and "
@@ -192,7 +198,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     out = utils.get_command_output(
-        'JUJU_HOME={} juju api-endpoints'.format(cfg.cfg_path), user_sudo=True)
+        '{} juju api-endpoints'.format(cfg.juju_home()), user_sudo=True)
     if out['status'] == 0:
         msg = ("\n\nExisting OpenStack environment detected. Please destroy "
                "that environment before proceeding with a new install.\n\n")

@@ -85,7 +85,7 @@ class TestGoodConfig(unittest.TestCase):
         """ Validate juju environments path in user dir """
         self.assertTrue(
             self.conf.juju_environments_path == path.join(
-                USER_DIR, '.cloud-install/environments.yaml'))
+                USER_DIR, '.cloud-install/juju/environments.yaml'))
 
 
 @unittest.skip
