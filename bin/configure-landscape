@@ -132,7 +132,7 @@ def get_landscape_host():
     """ Assuming landscape has been deployed in landscape-dense-maas form,
     find the "dns-name" of the landscape web server. """
     out = utils.get_command_output(
-        'JUJU_HOME={} juju status'.format(cfg.cfg_path))
+        '{} juju status'.format(cfg.juju_home()))
     juju = yaml.load(out['output'])
 
     try:
