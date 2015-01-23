@@ -63,7 +63,7 @@ class CharmNovaCloudController(CharmBase):
             juju_home=self.config.juju_home(use_expansion=True))
         utils.remote_cp(
             unit.machine_id,
-            src=self._pubkey(),
+            src=utils.ssh_pubkey(),
             dst="/tmp/id_rsa.pub",
             juju_home=self.config.juju_home(use_expansion=True))
         err = utils.remote_run(
