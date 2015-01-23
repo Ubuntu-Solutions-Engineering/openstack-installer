@@ -383,7 +383,7 @@ class Controller:
                          juju_home=self.config.juju_home(use_expansion=True))
         utils.remote_run(machine_id,
                          cmds="sudo /tmp/lxc-host-only",
-                         juju_home=self.config.juju_home(use_expansionTrue))
+                         juju_home=self.config.juju_home(use_expansion=True))
 
     def deploy_using_placement(self):
         """Deploy charms using machine placement from placement controller,
