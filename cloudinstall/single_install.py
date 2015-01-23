@@ -78,6 +78,23 @@ class SingleInstall:
         """
         self.tasker.start_task("Creating container")
 
+        # Mount points
+        mount_points = []
+
+        # .cloud-install in container
+        mount_points.append("{0} {1} none bind,create=dir\n".format(
+            self.config.cfg_path,
+            'home/ubuntu/.cloud-install'))
+
+        # .ssh in container
+        mount_points.append("{0} {1} none bind,ro,create=dir".format(
+            os.path.join(utils.install_home(), '.ssh'),
+            'home/ubuntu/.ssh'))
+
+        # cache dir in container
+        mount_points.append(
+            "/var/cache/lxc var/cache/lxc none bind,create=dir")
+
         lxc_config_filename = os.path.join(self.config.cfg_path, 'lxc.config')
         with open(lxc_config_filename, 'w') as f:
             f.write("lxc.network.type = veth\n"
@@ -86,32 +103,12 @@ class SingleInstall:
                     # we will bring up the network later
                     "lxc.mount.auto = cgroup:mixed\n"
                     "lxc.start.auto = 1\n"
-                    "lxc.start.delay = 5")
+                    "lxc.start.delay = 5\n")
+            for m in mount_points:
+                f.write("lxc.mount.entry={}\n".format(m))
 
         utils.container_create(self.container_name, lxc_config_filename,
                                self.userdata)
-
-        # Mount points
-        with open(os.path.join(self.container_abspath, 'fstab'), 'a+') as f:
-            f.write(
-                "{0} {1} none bind,create=dir\n".format(
-                    self.config.cfg_path,
-                    'home/ubuntu/.cloud-install'))
-            # TODO: Remove as its not needed since juju
-            # resides in ~/.cloud-install
-            # f.write(
-            #     "{0} {1} none bind,create=dir\n".format(
-            #         self.config.juju_path(),
-            #         'home/ubuntu/.juju'))
-            # FIXME: causing some issues with authorized_keys
-            # having its permission changed and not allowing
-            # ssh into the container without password.
-            # f.write(
-            #     "{0} {1} none bind,create=dir\n".format(
-            #         os.path.join(utils.install_home(), '.ssh'),
-            #         'home/ubuntu/.ssh'))
-            f.write(
-                "/var/cache/lxc var/cache/lxc none bind,create=dir\n")
 
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 

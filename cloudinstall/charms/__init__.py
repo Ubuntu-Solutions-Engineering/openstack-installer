@@ -311,11 +311,6 @@ export OS_REGION_NAME=RegionOne
                 status_res.append(False)
         return all(status_res)
 
-    def _pubkey(self):
-        """ return ssh pub key """
-        key_path = path.join(self.config.juju_home(), 'ssh/juju_id_rsa.pub')
-        return key_path
-
     def __repr__(self):
         return self.name()
 
