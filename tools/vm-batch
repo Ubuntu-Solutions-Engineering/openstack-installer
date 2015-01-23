@@ -21,6 +21,7 @@ BASE_PATH = '/usr/share/openstack'
 sys.path.insert(0, BASE_PATH)
 
 import uuid
+import yaml
 import os
 import argparse
 import cloudinstall.utils as utils
@@ -33,9 +34,11 @@ from subprocess import call
 VM_DIR = os.path.join(os.path.expanduser('~'), 'VMS')
 
 
-def parse_options(argv, cfg):
+def parse_options(argv):
     parser = argparse.ArgumentParser(description='Ubuntu Openstack Installer',
                                      prog='openstack-install')
+    parser.add_argument('-d', type=str, help='Where to store VMS',
+                        dest='vm_storage_dir')
     parser.add_argument('--num-vms', type=int, default=1,
                         help='Number of VMs to spin up', dest='num_vms')
     parser.add_argument('--prefix', type=str,
@@ -55,20 +58,38 @@ def parse_options(argv, cfg):
                         help='Destroy all machines (destructive)')
     return parser.parse_args(argv)
 
+
+def populate_config(opts):
+    presaved_config = os.path.join(
+        utils.install_home(), '.vm-batch.config.yaml')
+
+    # Always override presaved config if defined in cli switch
+    if os.path.exists(presaved_config):
+        _cfg = yaml.load(utils.slurp(presaved_config))
+    else:
+        _cfg = {}
+    # Update cfg dict with command line opts
+    _cfg.update(vars(opts))
+    return Config(cfg_obj=_cfg, cfg_file=presaved_config)
+
 if __name__ == '__main__':
-    cfg = Config()
-    opts = parse_options(sys.argv[1:], cfg)
+    opts = parse_options(sys.argv[1:])
+    cfg = populate_config(opts)
 
     if os.geteuid() != 0:
         sys.exit('Please run with sudo.')
 
+    # Where to store VMS
+    if cfg.getopt('vm_storage_dir'):
+        VM_DIR = cfg.getopt('vm_storage_dir')
+
     if not os.path.exists(VM_DIR):
         os.makedirs(VM_DIR)
 
-    if not opts.vm_config and not opts.destroy:
+    if not cfg.getopt('vm_config') and not cfg.getopt('destroy'):
         raise SystemExit('A valid libvirt vm definition file is required.')
 
-    if opts.destroy:
+    if cfg.getopt('destroy'):
         msg = ("Warning:\n\nThis will tear down and remove all vms "
                "created with this script.")
         print(msg)
@@ -84,11 +105,11 @@ if __name__ == '__main__':
 
     # create image disks
     print("Creating virtual machines...")
-    original_data = utils.load_template(opts.vm_config)
+    original_data = utils.load_template(cfg.getopt('vm_config'))
 
-    for vm in range(opts.num_vms):
+    for vm in range(cfg.getopt('num_vms')):
         # image name
-        img_name = "{0}-{1}".format(opts.vm_prefix, vm)
+        img_name = "{0}-{1}".format(cfg.getopt('vm_prefix'), vm)
         img = ".".join((img_name, 'img'))
         img_path = os.path.join(VM_DIR, img)
         if os.path.isfile(img_path):
@@ -106,7 +127,8 @@ if __name__ == '__main__':
         vm_conf_path = os.path.join(VM_DIR, vm_conf)
         utils.spew(vm_conf_path, modified_data)
 
-        cmd = 'qemu-img create {0} {1}'.format(img_path, opts.vm_image_size)
+        cmd = 'qemu-img create {0} {1}G'.format(
+            img_path, cfg.getopt('vm_image_size'))
         print(cmd)
         call(shlex.split(cmd))
 
