@@ -90,6 +90,9 @@ if __name__ == '__main__':
     if not os.path.exists(VM_DIR):
         os.makedirs(VM_DIR)
 
+    print("Switching to directory: {}".format(VM_DIR))
+    os.chdir(VM_DIR)
+
     if not cfg.getopt('vm_config') and not cfg.getopt('destroy'):
         raise SystemExit('A valid libvirt vm definition file is required.')
 
@@ -148,11 +151,13 @@ if __name__ == '__main__':
         utils.spew(vm_conf_path, modified_data)
 
         if cfg.getopt('for_lds'):
-            cmd = 'qemu-img create {0} {1}G'.format(
+            cmd = 'qemu-img create {0} {1}'.format(
                 img_path_secondary, cfg.getopt('vm_image_size'))
-        else:
-            cmd = 'qemu-img create {0} {1}G'.format(
-                img_path, cfg.getopt('vm_image_size'))
+            print(cmd)
+            call(shlex.split(cmd))
+
+        cmd = 'qemu-img create {0} {1}'.format(
+            img_path, cfg.getopt('vm_image_size'))
         print(cmd)
         call(shlex.split(cmd))
 
