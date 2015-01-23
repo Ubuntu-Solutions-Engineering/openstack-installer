@@ -248,12 +248,17 @@ class Controller:
         elif self.config.is_single():
             self.add_machines_to_juju_single()
 
+        # Quiet out some of the logging
+        _previous_summary = None
         while not self.all_juju_machines_started():
             sd = self.juju_state.machines_summary()
             summary = ", ".join(["{} {}".format(v, k) for k, v
                                  in sd.items()])
-            self.ui.status_info_message("Waiting for machines to "
-                                        "start: {}".format(summary))
+            if summary != _previous_summary:
+                self.ui.status_info_message("Waiting for machines to "
+                                            "start: {}".format(summary))
+                _previous_summary = summary
+
             time.sleep(3)
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
