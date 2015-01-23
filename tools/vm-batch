@@ -56,6 +56,10 @@ def parse_options(argv):
     parser.add_argument('--destroy-all', dest='destroy', action='store_true',
                         default=False,
                         help='Destroy all machines (destructive)')
+    parser.add_argument('--for-lds', action='store_true',
+                        default=False, dest='for_lds',
+                        help='Creates VMs with required hardware for '
+                        'Landscape OpenStack Autopilot.')
     return parser.parse_args(argv)
 
 
@@ -105,7 +109,11 @@ if __name__ == '__main__':
 
     # create image disks
     print("Creating virtual machines...")
-    original_data = utils.load_template(cfg.getopt('vm_config'))
+    if cfg.getopt('for_lds'):
+        original_data = utils.load_template('virt-uoi-container-2HDD-2NIC.xml')
+        cfg.setopt('num_vms', 7)
+    else:
+        original_data = utils.load_template(cfg.getopt('vm_config'))
 
     for vm in range(cfg.getopt('num_vms')):
         # image name
@@ -115,6 +123,11 @@ if __name__ == '__main__':
         if os.path.isfile(img_path):
             raise SystemExit('Disk image already exists, will not overwrite.')
 
+        if cfg.getopt('for_lds'):
+            img_name_secondary = "uoi-container-{1}".format(vm)
+            img_secondary = ".".join((img_name_secondary, 'img'))
+            img_path_secondary = os.path.join(VM_DIR, img_secondary)
+
         # populate proper xml
         uuid_str = uuid.uuid1()
         modified_data = original_data.render(
@@ -123,7 +136,14 @@ if __name__ == '__main__':
                  macaddr=utils.macgen(),
                  bridge=opts.bridge_interface,
                  image_path=img_path))
-        vm_conf = ".".join((img_name, 'xml'))
+
+        if cfg.getopt('for_lds'):
+            modified_data['image_path_secondary'] = img_path_secondary
+            modified_data['macaddr_secondary'] = utils.macgen()
+            vm_conf = ".".join((img_name_secondary, 'xml'))
+        else:
+            vm_conf = ".".join((img_name, 'xml'))
+
         vm_conf_path = os.path.join(VM_DIR, vm_conf)
         utils.spew(vm_conf_path, modified_data)
 
