@@ -66,9 +66,11 @@ class CharmNovaCloudController(CharmBase):
             src=self._pubkey(),
             dst="/tmp/id_rsa.pub",
             juju_home=self.config.juju_home(use_expansion=True))
-        err = utils.remote_run(unit.machine_id,
-                               cmds="/tmp/nova-controller-setup.sh "
-                                    "{p}".format(p=openstack_password))
+        err = utils.remote_run(
+            unit.machine_id,
+            cmds="/tmp/nova-controller-setup.sh "
+            "{p}".format(p=openstack_password),
+            juju_home=self.config.juju_home(use_expansion=True))
         if err['status'] != 0:
             # something happened during nova setup, re-run
             return True
