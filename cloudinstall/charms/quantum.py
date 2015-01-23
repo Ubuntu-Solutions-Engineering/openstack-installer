@@ -77,11 +77,14 @@ class CharmQuantum(CharmBase):
         utils.remote_cp(
             unit.machine_id,
             src=os.path.join(self.config.tmpl_path, "quantum-network.sh"),
-            dst="/tmp/quantum-network.sh")
+            dst="/tmp/quantum-network.sh",
+            juju_home=self.config.juju_home(True))
         utils.remote_run(unit.machine_id,
-                         cmds="sudo chmod +x /tmp/quantum-network.sh")
+                         cmds="sudo chmod +x /tmp/quantum-network.sh",
+                         juju_home=self.config.juju_home(True))
         utils.remote_run(unit.machine_id,
-                         cmds="sudo /tmp/quantum-network.sh")
+                         cmds="sudo /tmp/quantum-network.sh",
+                         juju_home=self.config.juju_home(True))
         self.ui.status_info_message(
             "All systems go!")
         return False
