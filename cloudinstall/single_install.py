@@ -223,7 +223,8 @@ class SingleInstall:
         log.debug('Found upstream deb, installing that instead')
         filename = os.path.basename(self.config.getopt('upstream_deb'))
         utils.container_run(
-            self.container_name, 'sudo dpkg -i .cloud-install/{}'.format(
+            self.container_name,
+            'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
                 filename))
 
     def set_perms(self):
