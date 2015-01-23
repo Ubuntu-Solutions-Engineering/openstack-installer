@@ -176,10 +176,10 @@ class Config:
             return self._juju_env
 
         env_file = None
-        if self.is_single:
+        if self.is_single():
             env_file = 'local.jenv'
 
-        if self.is_multi:
+        if self.is_multi():
             env_file = 'maas.jenv'
 
         if env_file:
@@ -187,6 +187,7 @@ class Config:
         else:
             raise ConfigException('Unable to determine installer type.')
 
+        log.debug("Querying juju env in {}".format(env_path))
         if os.path.exists(env_path):
             with open(env_path) as f:
                 self._juju_env = yaml.load(f.read().strip())
