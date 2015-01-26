@@ -52,7 +52,9 @@ nova-cloud-controller:
   network-manager: Neutron
   quantum-security-groups: "yes"
 {% if openstack_origin is defined %}
+  {% if openstack_release[0] >= 'j' %}
   console-access-protocol: novnc
+  {% endif %}
   openstack-origin: {{openstack_origin}}
 {% endif %}
 {% if worker_multiplier is defined %}

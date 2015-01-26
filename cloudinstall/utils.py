@@ -138,6 +138,8 @@ def render_charm_config(config):
         openstack_password=config.getopt('openstack_password'))
 
     if config.getopt('openstack_release'):
+        template_args['openstack_release'] = config.getopt(
+            'openstack_release')
         ubuntu_distname = platform.dist()[-1]
         openstack_origin = "cloud:{}-{}".format(
             ubuntu_distname, config.getopt('openstack_release'))
