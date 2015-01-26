@@ -77,6 +77,9 @@ test: $(HOME)/.cloud-install
 travis-test: $(HOME)/.cloud-install
 	nosetests $(NOSE_ARGS)
 
+tox: $(HOME)/.cloud-install
+	tox
+
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/openstack-status
 
