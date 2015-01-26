@@ -54,6 +54,9 @@ class SingleInstall:
         if self.config.getopt('extra_ppa'):
             render_parts['extra_ppa'] = self.config.getopt('extra_ppa')
 
+        if self.config.getopt('apt_mirror'):
+            render_parts['apt_mirror'] = self.config.getopt('apt_mirror')
+
         dst_file = os.path.join(self.config.cfg_path,
                                 'userdata.yaml')
         original_data = utils.load_template('userdata.yaml')
