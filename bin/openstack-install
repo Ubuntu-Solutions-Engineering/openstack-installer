@@ -90,6 +90,10 @@ def parse_options(argv):
     parser.add_argument('--upstream-deb', dest='upstream_deb',
                         help='Upload a local copy of openstack debian package '
                         'to be used in a single install. (DEVELOPERS)')
+    parser.add_argument('--http-proxy', dest='http_proxy',
+                        help='Specify HTTP proxy')
+    parser.add_argument('--https-proxy', dest='https_proxy',
+                        help='Specify HTTPS proxy')
     parser.add_argument('--headless', action='store_true', default=False,
                         help="Run deployment without prompts/gui",
                         dest='headless')

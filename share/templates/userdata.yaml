@@ -33,7 +33,8 @@ ssh_authorized_keys:
   - {{ ssh }}
 {% endfor %}
 {% endif %}
-
+random_seed:
+  command: {{seed_command}}
 {% if apt_mirror %}
 apt_mirror: {{apt_mirror}}
 {% endif %}

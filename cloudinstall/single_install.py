@@ -46,6 +46,20 @@ class SingleInstall:
         # Sets install type
         self.config.setopt('install_type', 'Single')
 
+    def _proxy_pollinate(self):
+        """ Proxy pollinate if http/s proxy is set """
+        # pass proxy through to pollinate
+        http_proxy = self.config.getopt('http_proxy')
+        https_proxy = self.config.getopt('https_proxy')
+        log.debug('Found proxy info: {}/{}'.format(http_proxy, https_proxy))
+        pollinate = ['env']
+        if http_proxy:
+            pollinate.append('http_proxy={}'.format(http_proxy))
+        if https_proxy:
+            pollinate.append('https_proxy={}'.format(https_proxy))
+        pollinate.extend(['pollinate', '-q'])
+        return pollinate
+
     def prep_userdata(self):
         """ preps userdata file for container install
         """
@@ -53,6 +67,10 @@ class SingleInstall:
 
         if self.config.getopt('extra_ppa'):
             render_parts['extra_ppa'] = self.config.getopt('extra_ppa')
+
+        if self.config.getopt('http_proxy') or \
+           self.config.getopt('https_proxy'):
+            render_parts['seed_command'] = self._proxy_pollinate()
 
         if self.config.getopt('apt_mirror'):
             render_parts['apt_mirror'] = self.config.getopt('apt_mirror')
@@ -67,10 +85,18 @@ class SingleInstall:
     def prep_juju(self):
         """ preps juju environments for bootstrap
         """
+        render_parts = {'openstack_password':
+                        self.config.getopt('openstack_password')}
+
+        if self.config.getopt('http_proxy'):
+            render_parts['http_proxy'] = self.config.getopt('http_proxy')
+
+        if self.config.getopt('https_proxy'):
+            render_parts['https_proxy'] = self.config.getopt('https_proxy')
+
         # configure juju environment for bootstrap
         single_env = utils.load_template('juju-env/single.yaml')
-        single_env_modified = single_env.render(
-            openstack_password=self.config.getopt('openstack_password'))
+        single_env_modified = single_env.render(render_parts)
         utils.spew(os.path.join(self.config.juju_path(),
                                 'environments.yaml'),
                    single_env_modified,

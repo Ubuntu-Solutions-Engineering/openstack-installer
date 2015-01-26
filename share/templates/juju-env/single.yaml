@@ -8,6 +8,15 @@ environments:
     authorized-keys-path: ~/.ssh/id_rsa.pub
     default-series: trusty
     admin-secret: {{openstack_password}}
+{% if http_proxy %}
+    http-proxy: {{http_proxy}}
+{% endif %}
+{% if https_proxy %}
+    https-proxy: {{https_proxy}}
+{% endif %}
+{% if http_proxy or https_proxy %}
+    no-proxy: localhost
+{% endif %}
 
   openstack:
     type: openstack
@@ -20,4 +29,13 @@ environments:
     auth-mode: userpass
     username: ubuntu
     password: {{openstack_password}}
+{% if http_proxy %}
+    http-proxy: {{http_proxy}}
+{% endif %}
+{% if https_proxy %}
+    https-proxy: {{https_proxy}}
+{% endif %}
+{% if http_proxy or https_proxy %}
+    no-proxy: localhost
+{% endif %}
 
