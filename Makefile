@@ -32,6 +32,8 @@ clean:
 	@rm -rf docs/_build/*
 	@rm -rf ../openstack_*.deb ../cloud-*.deb ../openstack_*.tar.gz ../openstack_*.dsc ../openstack_*.changes \
 		../openstack_*.build ../openstack-*.deb
+	@rm -rf .tox
+	@rm -rf cover
 
 deb-src: clean update_version tarball
 	@debuild -S -us -uc
