@@ -297,6 +297,12 @@ class SingleInstall:
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 
+        try:
+            utils.ssh_genkey()
+        except Exception as e:
+            log.error(e)
+            self.loop.exit(1)
+
         # Preparations
         self.prep_userdata()
 
@@ -311,16 +317,10 @@ class SingleInstall:
         # Start container
         self.create_container_and_wait()
 
-        try:
-            log.info("Generating ssh keys in the container")
-            utils.container_run(self.container_name,
-                                ("ssh-keygen "
-                                 "-N '' -f .ssh/id_rsa"),
-                                use_ssh=True)
-        except Exception as e:
-            log.error(e)
-            self.loop.exit(1)
-
+        # Copy over host ssh keys
+        utils.container_cp(self.container_name,
+                           os.path.join(utils.install_home(), '.ssh/id_rsa*'),
+                           '.ssh/.')
         # Install local copy of openstack installer if provided
         upstream_deb = self.config.getopt('upstream_deb')
         if upstream_deb and os.path.isfile(upstream_deb):
