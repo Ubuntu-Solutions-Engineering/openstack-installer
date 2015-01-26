@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(cfg.cfg_path):
         os.makedirs(cfg.cfg_path)
-        utils.chown(cfg.cfg_path, utils.install_user(), utils.install_user())
+        utils.chown(cfg.cfg_path, utils.install_user())
 
     if not os.path.exists(cfg.juju_path()):
         logger.info("Creating juju directories: {}".format(cfg.juju_path()))

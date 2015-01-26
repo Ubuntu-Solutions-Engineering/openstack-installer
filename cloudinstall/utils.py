@@ -153,7 +153,7 @@ def render_charm_config(config):
     spew(dest_yaml_path, charm_conf_modified)
 
 
-def chown(path, user, group, recursive=False):
+def chown(path, user, group=None, recursive=False):
     """
     Change user/group ownership of file
 
@@ -557,7 +557,7 @@ def container_cp(name, filepath, dst):
     """ copy file to container
 
     :param str name: name of container
-    :param str filepath: file to copy to cintainer
+    :param str filepath: file to copy to container
     :param str dst: destination of remote path
     """
     ip = container_ip(name)
@@ -715,15 +715,17 @@ def ssh_genkey():
     """ Generates sshkey
     """
     if not os.path.exists(ssh_privkey()):
-        user_sshkey_path = os.path.join(install_home(), '.ssh/id_rsa')
+        user_sshkey_path = os.path.join(install_home(),
+                                        '.ssh/id_rsa')
         cmd = "ssh-keygen -N '' -f {0}".format(user_sshkey_path)
         out = get_command_output(cmd, user_sudo=True)
         if out['status'] != 0:
             raise Exception(
                 "Unable to generate key: {0}".format(out['output']))
         get_command_output('sudo chown -R {0} {1}'.format(
-            install_user(), os.path.join(install_home(), '.ssh')))
-        get_command_output('chmod 600 {0}.pub'.format(user_sshkey_path),
+            install_user(),
+            os.path.join(install_home(), '.ssh')))
+        get_command_output('chmod 0644 {0}.pub'.format(user_sshkey_path),
                            user_sudo=True)
     else:
         log.debug('ssh keys exist for this user, they will be used instead.')

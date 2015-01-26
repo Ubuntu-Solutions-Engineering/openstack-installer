@@ -78,7 +78,7 @@ class SingleInstall:
         dst_file = os.path.join(self.config.cfg_path,
                                 'userdata.yaml')
         original_data = utils.load_template('userdata.yaml')
-        log.debug("Userdata options: {}".format(render_parts))
+        log.info("Prepared userdata: {}".format(render_parts))
         modified_data = original_data.render(render_parts)
         utils.spew(dst_file, modified_data)
 
@@ -116,9 +116,9 @@ class SingleInstall:
             'home/ubuntu/.cloud-install'))
 
         # .ssh in container
-        mount_points.append("{0} {1} none bind,ro,create=dir".format(
-            os.path.join(utils.install_home(), '.ssh'),
-            'home/ubuntu/.ssh'))
+        # mount_points.append("{0} {1} none bind,ro,create=dir".format(
+        #     os.path.join(utils.install_home(), '.ssh'),
+        #    'home/ubuntu/.ssh'))
 
         # cache dir in container
         mount_points.append(
@@ -248,7 +248,7 @@ class SingleInstall:
         return True
 
     def _install_upstream_deb(self):
-        log.debug('Found upstream deb, installing that instead')
+        log.info('Found upstream deb, installing that instead')
         filename = os.path.basename(self.config.getopt('upstream_deb'))
         utils.container_run(
             self.container_name,
@@ -265,9 +265,9 @@ class SingleInstall:
                         utils.install_user(),
                         utils.install_user(),
                         recursive=True)
-            utils.get_command_output("sudo chmod 700 {}".format(
+            utils.get_command_output("sudo chmod 777 {}".format(
                 self.config.cfg_path))
-            utils.get_command_output("sudo chmod 700 -R {}/*".format(
+            utils.get_command_output("sudo chmod 777 -R {}/*".format(
                 self.config.cfg_path))
         except:
             log.error(
@@ -297,12 +297,6 @@ class SingleInstall:
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 
-        try:
-            utils.ssh_genkey()
-        except Exception as e:
-            log.error(e)
-            self.loop.exit(1)
-
         # Preparations
         self.prep_userdata()
 
@@ -316,6 +310,16 @@ class SingleInstall:
 
         # Start container
         self.create_container_and_wait()
+
+        try:
+            log.info("Generating ssh keys in the container")
+            utils.container_run(self.container_name,
+                                ("ssh-keygen "
+                                 "-N '' -f .ssh/id_rsa"),
+                                use_ssh=True)
+        except Exception as e:
+            log.error(e)
+            self.loop.exit(1)
 
         # Install local copy of openstack installer if provided
         upstream_deb = self.config.getopt('upstream_deb')
