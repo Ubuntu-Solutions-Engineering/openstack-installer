@@ -162,7 +162,7 @@ class Config:
         if key in self._config:
             return self._config[key]
         else:
-            log.error("Could not find {} in config".format(key))
+            log.debug("Could not find {} in config".format(key))
             return False
 
     def juju_path(self):
