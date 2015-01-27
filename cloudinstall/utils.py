@@ -114,7 +114,7 @@ def populate_config(opts):
     def sanitize_config_items(_cfg):
         """ remove false and null items """
         return {k: v for (k, v) in _cfg.items()
-                if v is not None and v is not False}
+                if v is not None}
 
     if 'config_file' not in cfg_cli_opts:
         # Check for a pre-existing install config
