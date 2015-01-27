@@ -100,7 +100,6 @@ class CharmBase:
     display_priority = DisplayPriorities.Core
     allow_multi_units = False
     allowed_assignment_types = list(AssignmentType)
-    optional = False
     disabled = False
     menuable = False
     subordinate = False
