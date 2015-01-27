@@ -151,7 +151,6 @@ class TestGoodConfig(unittest.TestCase):
             parse_opts(['--http-proxy',
                         'http://localhost:2222',
                         '--config', cfg_file]))
-        print(cfg)
         self.assertEqual(cfg['https_proxy'], GOOD_CONFIG['https_proxy'])
 
     def test_default_opts_not_override_config(self):
@@ -173,7 +172,6 @@ class TestGoodConfig(unittest.TestCase):
         in the config object
         """
         cfg = utils.populate_config(parse_opts([]))
-        print(cfg)
         self.assertEqual(True, not cfg)
 
 
