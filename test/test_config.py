@@ -34,27 +34,27 @@ BAD_CONFIG = yaml.load(utils.slurp(path.join(DATA_DIR, 'bad_config.yaml')))
 
 
 def parse_opts(argv):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
     parser.add_argument('-i', '--install-only', action='store_true',
-                        dest='install_only', default=False)
+                        dest='install_only')
     parser.add_argument('-u', '--uninstall', action='store_true',
-                        dest='uninstall', default=False)
+                        dest='uninstall')
     parser.add_argument('-c', '--config', type=str, dest='config_file')
     parser.add_argument('-k', '--killcloud', action='store_true',
-                        dest='killcloud', default=False)
+                        dest='killcloud')
     parser.add_argument('--killcloud-noprompt', action='store_true',
-                        dest='killcloud_noprompt', default=False)
+                        dest='killcloud_noprompt')
     parser.add_argument('--openstack-release', default=None,
                         dest='openstack_release')
     parser.add_argument('-a', type=str, default=None)
     parser.add_argument('-r', type=str, default=None, dest='release')
     parser.add_argument('-p', '--placement', action='store_true',
-                        dest='edit_placement', default=False)
+                        dest='edit_placement')
     parser.add_argument('--extra-ppa', nargs='+', dest='extra_ppa')
     parser.add_argument('--upstream-deb', dest='upstream_deb')
     parser.add_argument('--http-proxy', dest='http_proxy')
     parser.add_argument('--https-proxy', dest='https_proxy')
-    parser.add_argument('--headless', action='store_true', default=False,
+    parser.add_argument('--headless', action='store_true',
                         dest='headless')
     return parser.parse_args(argv)
 
@@ -161,7 +161,7 @@ class TestGoodConfig(unittest.TestCase):
         cfg_file = path.join(DATA_DIR, 'good_config.yaml')
         cfg_opts_raw = parse_opts(['--config', cfg_file])
         cfg_opts_raw = vars(cfg_opts_raw)
-        self.assertEqual(cfg_opts_raw['headless'], False)
+        self.assertEqual(True, 'headless' not in cfg_opts_raw)
 
         cfg = utils.populate_config(parse_opts(['--config', cfg_file]))
         self.assertEqual(True, cfg['headless'])
@@ -172,7 +172,7 @@ class TestGoodConfig(unittest.TestCase):
         in the config object
         """
         cfg = utils.populate_config(parse_opts([]))
-        self.assertEqual(True, not cfg)
+        self.assertEqual(True, 'headless' not in cfg)
 
 
 @unittest.skip
