@@ -581,11 +581,8 @@ def container_run_status(name, cmd, config):
            "-o \"UserKnownHostsFile=/dev/null\" "
            "-i {1} "
            "{0} {3}".format(ip, ssh_privkey(), install_user(), cmd))
-    log.debug("Running command without waiting for response.")
+    log.debug("Running command without waiting for response.: {}".format(cmd))
     args = deque(shlex.split(cmd))
-    if config.getopt('headless'):
-        args.append('--headless')
-        args.append('-c {}'.format(config.getopt('config_file')))
     os.execlp(args.popleft(), *args)
 
 
