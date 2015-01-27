@@ -53,6 +53,8 @@ From here you can build the entire package set by running:
    $ make sbuild
    # or, if you prefer not to use sbuild:
    $ make deb
+   # or a source only package
+   $ make deb-src
 
 Once finished your packages will be stored in the top level directory
 where your OpenStack project is kept.
@@ -138,8 +140,10 @@ Documentation will be built in **docs/_build/html**, and requires **Sphinx** to 
 Running Tests
 ^^^^^^^^^^^^^
 
-A unit test suite is in tests/ and is run using Nose_.
-Unit tests do not require a live Juju or MAAS connection.
+A unit test suite is in tests/ and is run using Nose_ and tox_.
+Tox will cover both pep8 and flakes automatically and unit tests
+do not require a live Juju or MAAS connection.
+
 Run it as follows:
 
 .. code::
@@ -147,12 +151,5 @@ Run it as follows:
    $ make test
 
 .. _Nose: https://nose.readthedocs.org/en/latest/
-
-For the python code, using pep8 and pyflakes is encouraged:
-
-.. code::
-
-   $ make pyflakes
-   $ make pep8
-
+.. _tox: https://testrun.org/tox/latest/
 

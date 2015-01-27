@@ -7,7 +7,7 @@ GIT_REV     := $(shell git log --oneline -n1| cut -d" " -f1)
 VERSION     := $(shell ./tools/version)
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
-	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude=debian
+	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude=debian --exclude='.tox*'
 
 tarball: $(NAME)_$(VERSION).orig.tar.gz
 
@@ -32,23 +32,20 @@ clean:
 	@rm -rf docs/_build/*
 	@rm -rf ../openstack_*.deb ../cloud-*.deb ../openstack_*.tar.gz ../openstack_*.dsc ../openstack_*.changes \
 		../openstack_*.build ../openstack-*.deb
-	@rm -rf .tox
 	@rm -rf cover
+	@rm -rf .coverage
 
+DPKGBUILDARGS = -us -uc -i'.git.*|.tox|.bzr.*|.editorconfig|.travis-yaml'
 deb-src: clean update_version tarball
-	@debuild -S -us -uc
+	@dpkg-buildpackage -S $(DPKGBUILDARGS)
 
 deb: clean update_version man-pages tarball
-	@debuild -us -uc -i
+	@dpkg-buildpackage -b $(DPKGBUILDARGS)
 
 man-pages:
 	@pandoc -s docs/openstack-juju.rst -t man -o man/en/openstack-juju.1
 	@pandoc -s docs/openstack-status.rst -t man -o man/en/openstack-status.1
 	@pandoc -s docs/openstack-install.rst -t man -o man/en/openstack-install.1
-
-# TODO: Disable for now, will be removed in a later release.
-# sbuild: clean update_version tarball
-#	@sbuild -d trusty-amd64 -j4
 
 current_version:
 	@echo $(VERSION)
@@ -64,23 +61,22 @@ update_version:
 ci-test: pyflakes pep8 travis-test
 
 pyflakes:
-	python3 `which pyflakes` cloudinstall test
+	python3 `which pyflakes` cloudinstall test bin
 
 pep8:
-	pep8 cloudinstall test
+	pep8 cloudinstall test bin
 
 $(HOME)/.cloud-install:
 	mkdir -p $(HOME)/.cloud-install
 
 NOSE_ARGS = -v --with-cover --cover-package=cloudinstall --cover-html test --cover-inclusive cloudinstall
-test: $(HOME)/.cloud-install
-	nosetests3 $(NOSE_ARGS)
+test: $(HOME)/.cloud-install tox
 
 travis-test: $(HOME)/.cloud-install
 	nosetests $(NOSE_ARGS)
 
 tox: $(HOME)/.cloud-install
-	tox
+	@tox
 
 status:
 	PYTHONPATH=$(shell pwd):$(PYTHONPATH) bin/openstack-status
