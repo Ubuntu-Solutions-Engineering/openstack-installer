@@ -34,7 +34,6 @@ class CharmQuantum(CharmBase):
     deploy_priority = 99
     related = ['mysql', 'nova-cloud-controller']
     isolate = True
-    optional = False
     menuable = True
     constraints = {'mem': 2048,
                    'root-disk': 20480}

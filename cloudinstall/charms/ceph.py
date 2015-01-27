@@ -33,7 +33,6 @@ class CharmCeph(CharmBase):
     related = ['glance', 'mysql', 'rabbitmq-server']
     deploy_priority = 5
     default_instances = 3
-    optional = True
     disabled = True
     allow_multi_units = True
 
