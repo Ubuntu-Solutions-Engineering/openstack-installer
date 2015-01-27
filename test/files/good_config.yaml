@@ -1,4 +1,7 @@
 install_type: single
+config_file: chittybang.yaml
+https_proxy: http://localhost:2222
+headless: true
 placements:
   fake_iid:
     constraints: 'mem=6G'

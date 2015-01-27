@@ -23,7 +23,6 @@ import sys
 import os
 import logging
 import signal
-import yaml
 from functools import partial
 from cloudinstall.log import setup_logger
 import cloudinstall.utils as utils
@@ -102,26 +101,9 @@ def parse_options(argv):
     return parser.parse_args(argv)
 
 
-def populate_config(opts):
-    presaved_config = os.path.join(
-        utils.install_home(), '.cloud-install/config.yaml')
-
-    # Always override presaved config if defined in cli switch
-    if opts.config_file and os.path.exists(opts.config_file):
-        _cfg = yaml.load(utils.slurp(opts.config_file))
-    # Pull from ~/.cloud-install/config.yaml if exists
-    elif os.path.exists(presaved_config):
-        _cfg = yaml.load(utils.slurp(presaved_config))
-    else:
-        _cfg = {}
-    # Update cfg dict with command line opts
-    _cfg.update(vars(opts))
-    return Config(cfg_obj=_cfg)
-
-
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
-    cfg = populate_config(opts)
+    cfg = Config(utils.populate_config(opts))
 
     try:
         setup_logger(headless=cfg.getopt('headless'))

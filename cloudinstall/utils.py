@@ -41,6 +41,7 @@ import shlex
 import shutil
 import subprocess
 import json
+import yaml
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -99,6 +100,41 @@ def write_status_file(status='', msg=''):
     """
     status_file = os.path.join(install_home(), '.cloud-install/finished.json')
     spew(status_file, json.dumps(dict(status=status, msg=msg)))
+
+
+def populate_config(opts):
+    """ populate configuration suitable for loading in the config
+    object merging in cli options.
+
+    :param opts: argparse Namespace class of options
+    """
+    cfg_cli_opts = vars(opts)
+    cfg = {}
+
+    def sanitize_config_items(_cfg):
+        """ remove false and null items """
+        return {k: v for (k, v) in _cfg.items()
+                if v is not None and v is not False}
+
+    if 'config_file' not in cfg_cli_opts:
+        # Check for a pre-existing install config
+        presaved_config = os.path.join(
+            install_home(), '.cloud-install/config.yaml')
+        if os.path.exists(presaved_config):
+            cfg.update(yaml.load(slurp(presaved_config)))
+        scrub = sanitize_config_items(cfg_cli_opts)
+        cfg.update(scrub)
+        return cfg
+
+    # Always override presaved config if defined in cli switch
+    elif 'config_file' in cfg_cli_opts and \
+            cfg_cli_opts['config_file'] is not None:
+        cfg.update(yaml.load(slurp(cfg_cli_opts['config_file'])))
+        scrub = sanitize_config_items(cfg_cli_opts)
+        cfg.update(scrub)
+        return cfg
+    else:
+        return sanitize_config_items(cfg_cli_opts)
 
 
 def load_charms():
