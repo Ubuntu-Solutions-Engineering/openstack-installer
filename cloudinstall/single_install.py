@@ -270,7 +270,7 @@ class SingleInstall:
             utils.get_command_output("sudo chmod 777 -R {}/*".format(
                 self.config.cfg_path))
         except:
-            log.error(
+            log.exception(
                 "Unable to set ownership for {}".format(self.config.cfg_path))
             self.loop.exit(1)
 
