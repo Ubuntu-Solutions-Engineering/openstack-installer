@@ -187,7 +187,7 @@ class Config:
         if self.is_single():
             env_file = 'local.jenv'
 
-        if self.is_multi():
+        if self.is_multi() or self.is_landscape():
             env_file = 'maas.jenv'
 
         if env_file:
