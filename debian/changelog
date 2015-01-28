@@ -1,6 +1,6 @@
-openstack (0.22-0ubuntu1) vivid; urgency=medium
+openstack (0.23-0ubuntu1) vivid; urgency=medium
 
-  * Tag 0.22 upstream version
+  * Tag 0.23 upstream version
 
  -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 28 Jan 2015 02:55:15 -0500
 
