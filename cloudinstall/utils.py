@@ -168,8 +168,13 @@ def load_charm_byname(name):
 
 
 def render_charm_config(config):
-    charm_conf = load_template('charmconf.yaml')
+    """ Render a config for setting charm config options
 
+    If a custom charm config is passed on the cli it will
+    attempt to merge those additional settings without losing
+    any pre-existing charm options.
+    """
+    charm_conf = load_template('charmconf.yaml')
     template_args = dict(
         openstack_password=config.getopt('openstack_password'))
 
@@ -187,6 +192,17 @@ def render_charm_config(config):
     charm_conf_modified = charm_conf.render(**template_args)
     dest_yaml_path = os.path.join(config.cfg_path, 'charmconf.yaml')
     spew(dest_yaml_path, charm_conf_modified)
+
+    # Check for custom charm options
+    charm_conf_custom_file = config.getopt('charm_config_file')
+    if charm_conf_custom_file and os.path.exists(charm_conf_custom_file):
+        log.debug("Found custom charm config, updating charm settings.")
+        charm_conf = yaml.load(slurp(dest_yaml_path))
+        charm_conf_custom = yaml.load(
+            slurp(config.getopt('charm_config_file')))
+        charm_conf.update(charm_conf_custom)
+        spew(dest_yaml_path, yaml.safe_dump(
+            charm_conf, default_flow_style=False))
 
 
 def chown(path, user, group=None, recursive=False):
