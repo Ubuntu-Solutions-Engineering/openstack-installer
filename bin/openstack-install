@@ -59,6 +59,8 @@ def parse_options(argv):
                         'of packages.')
     parser.add_argument('-c', '--config', type=str, dest='config_file',
                         help="Custom configuration for OpenStack installer.")
+    parser.add_argument('--charm-config', type=str, dest='charm_config_file',
+                        help="Additional charm settings")
     parser.add_argument('-k', '--killcloud', action='store_true',
                         dest='killcloud',
                         help='Tear down existing cloud leaving userdata '
