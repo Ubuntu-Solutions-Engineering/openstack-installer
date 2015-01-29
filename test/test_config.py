@@ -175,7 +175,8 @@ class TestGoodConfig(unittest.TestCase):
         in the config object
         """
         cfg = utils.populate_config(parse_opts([]))
-        self.assertEqual(True, cfg is None)
+        print(cfg)
+        self.assertEqual(True, 'headless' not in cfg)
 
 
 @unittest.skip
