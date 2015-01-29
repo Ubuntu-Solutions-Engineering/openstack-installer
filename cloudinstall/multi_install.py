@@ -166,9 +166,6 @@ class MultiInstall:
             args = ['openstack-status']
             if self.config.getopt('edit_placement'):
                 args.append('--placement')
-            if self.config.getopt('headless'):
-                args.append('-c {}'.format(self.config.getopt('config_file')))
-                args.append('--headless')
 
             self.drop_privileges()
             os.execvp('openstack-status', args)
