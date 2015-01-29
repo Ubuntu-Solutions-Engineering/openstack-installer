@@ -20,9 +20,17 @@ Add the OpenStack installer ppa to your system.
    Adding the ppa is only necessary until an official release to the
    archives has been announced.
 
-For a proper installation the system must have an available network interface that can be managed by MAAS
-and respond to DNS/DHCP requests. The private network can then be configured to forward traffic out via public
-network interface.
+There are 2 paths that can be taken when doing a Multi install. The first path is letting the installer
+download and configure MAAS for you automatically.
+
+The second path is to point the installer to an existing MAAS. An example of a network configuration
+for use with an existing MAAS is seen below:
+
+.. attention::
+
+   For a proper installation the system must have an available network interface that can be managed by MAAS
+   and respond to DNS/DHCP requests. The private network can then be configured to forward traffic out via public
+   network interface.
 
 An example of a system with 2 network interfaces **eth0 (public)** and **eth1 (private, bridged)**
 
