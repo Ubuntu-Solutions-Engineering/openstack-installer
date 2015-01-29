@@ -139,8 +139,10 @@ class TestGoodConfig(unittest.TestCase):
         cfg_file = path.join(DATA_DIR, 'good_config.yaml')
         cfg = utils.populate_config(
             parse_opts(['--config', cfg_file,
-                        '--install-only']))
+                        '--install-only',
+                        '--killcloud-noprompt']))
         self.assertEqual(True, cfg['install_only'])
+        self.assertEqual(True, cfg['killcloud_noprompt'])
 
     def test_config_overrides_from_cli(self):
         """ Config object item is not overridden
@@ -150,6 +152,7 @@ class TestGoodConfig(unittest.TestCase):
         cfg = utils.populate_config(
             parse_opts(['--http-proxy',
                         'http://localhost:2222',
+                        '--killcloud-noprompt',
                         '--config', cfg_file]))
         self.assertEqual(cfg['https_proxy'], GOOD_CONFIG['https_proxy'])
 
