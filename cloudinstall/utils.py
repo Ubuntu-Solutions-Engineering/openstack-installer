@@ -126,13 +126,13 @@ def populate_config(opts):
         presaved_config = os.path.join(
             install_home(), '.cloud-install/config.yaml')
         if os.path.exists(presaved_config):
-            cfg.update(
-                sanitize_config_items(
-                    yaml.load(slurp(presaved_config))))
+            cfg.update(yaml.load(slurp(presaved_config)))
+        scrub = sanitize_config_items(cfg_cli_opts)
+        cfg.update(scrub)
+        return cfg
 
     # Always override presaved config if defined in cli switch
-    elif 'config_file' in cfg_cli_opts and \
-            cfg_cli_opts['config_file'] is not None:
+    elif 'config_file' in cfg_cli_opts:
         _cfg_copy = merge_dicts(cfg,
                                 yaml.load(
                                     slurp(cfg_cli_opts['config_file'])))
