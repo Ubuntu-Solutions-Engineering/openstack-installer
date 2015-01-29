@@ -68,9 +68,7 @@ class SingleInstall:
         if self.config.getopt('extra_ppa'):
             render_parts['extra_ppa'] = self.config.getopt('extra_ppa')
 
-        if self.config.getopt('http_proxy') or \
-           self.config.getopt('https_proxy'):
-            render_parts['seed_command'] = self._proxy_pollinate()
+        render_parts['seed_command'] = self._proxy_pollinate()
 
         if self.config.getopt('apt_mirror'):
             render_parts['apt_mirror'] = self.config.getopt('apt_mirror')
