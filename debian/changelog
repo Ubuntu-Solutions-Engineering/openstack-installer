@@ -1,4 +1,4 @@
-openstack (0.22-0ubuntu1~alpha1) UNRELEASED; urgency=medium
+openstack (0.22-0~alpha1~ubuntu15.04.1) vivid; urgency=medium
 
   * Tag v0.22-alpha1
 
