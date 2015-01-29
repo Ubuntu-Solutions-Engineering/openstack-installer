@@ -29,6 +29,7 @@ from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
 from cloudinstall.charms.swift import CharmSwift
 from cloudinstall.charms.swift_proxy import CharmSwiftProxy
+from cloudinstall.charms.ceph import CharmCeph
 from cloudinstall.maas import MaasMachineStatus
 from cloudinstall.config import Config
 import cloudinstall.utils as utils
@@ -50,7 +51,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             utils.spew(tempf.name, yaml.dump(dict()))
             self.conf = Config({}, tempf.name)
-        self.conf.setopt('enable_swift', True)
+
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)
         self.mock_machine = MagicMock(name='machine1')
@@ -235,7 +236,7 @@ class PlacementControllerTestCase(unittest.TestCase):
 
     def test_swift_unrequired_then_required(self):
         "Swift and swift-proxy are both optional until you add swift"
-
+        self.conf.setopt('storage_backend', 'swift')
         self.assertFalse(self.pc.service_is_required(CharmSwift))
         self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
         self.pc.assign(self.mock_machine, CharmSwift, AssignmentType.LXC)
@@ -243,6 +244,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
 
     def test_swift_proxy_unrequired_then_required(self):
+        self.conf.setopt('storage_backend', 'swift')
         "Swift and swift-proxy are both optional until you add swift-proxy"
         self.assertFalse(self.pc.service_is_required(CharmSwift))
         self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
@@ -349,3 +351,34 @@ class PlacementControllerTestCase(unittest.TestCase):
         pc = PlacementController(maas_state=mock_maas_state)
         pc.gen_defaults()
         mock_maas_state.machines.assert_called_with(MaasMachineStatus.READY)
+
+    def test_gen_single_backends(self):
+        "gen_single has no storage backend by default"
+
+        def find_charm(cn, defs):
+            allcharms = []
+            for mname, ad in defs.items():
+                for atype, charmclasses in ad.items():
+                    allcharms += charmclasses
+            return cn in allcharms
+
+        c = Config()
+        pc = PlacementController(config=c)
+        # default is None
+        c.setopt('storage_backend', None)
+        defaults = pc.gen_single()
+        self.assertFalse(find_charm(CharmSwiftProxy, defaults))
+        self.assertFalse(find_charm(CharmSwift, defaults))
+        self.assertFalse(find_charm(CharmCeph, defaults))
+
+        c.setopt('storage_backend', 'swift')
+        defaults = pc.gen_single()
+        self.assertTrue(find_charm(CharmSwiftProxy, defaults))
+        self.assertTrue(find_charm(CharmSwift, defaults))
+        self.assertFalse(find_charm(CharmCeph, defaults))
+
+        c.setopt('storage_backend', 'ceph')
+        defaults = pc.gen_single()
+        self.assertFalse(find_charm(CharmSwiftProxy, defaults))
+        self.assertFalse(find_charm(CharmSwift, defaults))
+        self.assertTrue(find_charm(CharmCeph, defaults))
