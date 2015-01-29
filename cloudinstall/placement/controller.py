@@ -380,6 +380,22 @@ class PlacementController:
         log.debug(pprint.pformat(assignments))
         return assignments
 
+    def filter_storage_backends(self, charm_classes):
+        "return list of charm classes with only selected backends"
+        all_backend_charms = ['swift-proxy', 'swift-storage', 'ceph']
+
+        selected_backend = self.config.getopt('storage_backend')
+        to_remove = all_backend_charms
+
+        if selected_backend:
+            to_remove = [n for n in to_remove if
+                         selected_backend not in n]
+
+        log.debug("in filter_storage_backends, to_remove is {}".format(to_remove))
+
+        return [cc for cc in charm_classes
+                if cc.charm_name not in to_remove]
+
     def gen_single(self):
         """Generates an assignment for the single installer."""
         assignments = defaultdict(lambda: defaultdict(list))
@@ -408,7 +424,7 @@ class PlacementController:
             return PlaceholderMachine(instance_id, m_name,
                                       charm_class.constraints)
 
-        for charm_class in self.charm_classes():
+        for charm_class in self.filter_storage_backends(self.charm_classes()):
             if charm_class.isolate:
                 for n in range(charm_class.required_num_units()):
                     pm = placeholder_for_charm(charm_class)
