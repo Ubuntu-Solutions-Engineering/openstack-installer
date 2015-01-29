@@ -1,8 +1,8 @@
-openstack (0.22-0ubuntu1~alpha1) vivid; urgency=medium
+openstack (0.22-0ubuntu1~alpha1) UNRELEASED; urgency=medium
 
-  * Tag upstream bugfix/feature release
+  * Tag v0.22-alpha1
 
- -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 28 Jan 2015 02:46:44 -0500
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 28 Jan 2015 02:55:15 -0500
 
 openstack (0.21-0ubuntu1) utopic; urgency=medium
 
