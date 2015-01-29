@@ -24,12 +24,14 @@ import unittest
 from unittest.mock import patch, PropertyMock
 import yaml
 
-from cloudinstall.utils import render_charm_config
+from cloudinstall.utils import render_charm_config, merge_dicts, slurp
 from cloudinstall.config import Config
 from tempfile import NamedTemporaryFile
 
 
 log = logging.getLogger('cloudinstall.test_utils')
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), 'files')
 
 
 def source_tree_template_loader(name):
@@ -99,3 +101,16 @@ class TestRenderCharmConfig(unittest.TestCase):
 
     def test_render_worker_multiplier_single(self, mockspew):
         self._do_test_multiplier(True, mockspew, expected=1)
+
+    def test_charmconfig_custom_merge(self, mockspew):
+        """ Verify rightmost custom charm config dictionary
+        does not overwrite untouched items in rendered
+        charmconfig
+        """
+        charm_custom = {'swift-proxy': {'replicas': 15},
+                        'mysql': {'dataset-size': '2048M'}}
+        charm_conf = yaml.load(slurp(os.path.join(DATA_DIR, 'charmconf.yaml')))
+        merged_dicts = merge_dicts(charm_conf, charm_custom)
+        self.assertEqual(merged_dicts['mysql']['max-connections'], 25000)
+        self.assertEqual(merged_dicts['swift-proxy']['zone-assignment'],
+                         'auto')
