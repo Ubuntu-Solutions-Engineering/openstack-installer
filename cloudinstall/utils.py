@@ -20,6 +20,11 @@ from subprocess import (Popen, PIPE, call, STDOUT, check_output,
                         check_call, DEVNULL, CalledProcessError)
 from contextlib import contextmanager
 from collections import deque
+try:
+    from collections import Mapping
+except ImportError:
+    Mapping = dict
+
 from jinja2 import Environment, FileSystemLoader
 import os
 import re
@@ -121,18 +126,19 @@ def populate_config(opts):
         presaved_config = os.path.join(
             install_home(), '.cloud-install/config.yaml')
         if os.path.exists(presaved_config):
-            cfg.update(yaml.load(slurp(presaved_config)))
-        scrub = sanitize_config_items(cfg_cli_opts)
-        cfg.update(scrub)
-        return cfg
+            cfg.update(
+                sanitize_config_items(
+                    yaml.load(slurp(presaved_config))))
 
     # Always override presaved config if defined in cli switch
     elif 'config_file' in cfg_cli_opts and \
             cfg_cli_opts['config_file'] is not None:
-        cfg.update(yaml.load(slurp(cfg_cli_opts['config_file'])))
+        _cfg_copy = merge_dicts(cfg,
+                                yaml.load(
+                                    slurp(cfg_cli_opts['config_file'])))
         scrub = sanitize_config_items(cfg_cli_opts)
-        cfg.update(scrub)
-        return cfg
+        _cfg_copy.update(scrub)
+        return _cfg_copy
     else:
         return sanitize_config_items(cfg_cli_opts)
 
@@ -165,6 +171,35 @@ def load_charm_byname(name):
     :param str name: name of charm
     """
     return import_module('cloudinstall.charms.{}'.format(name))
+
+
+def merge_dicts(*dicts):
+    """
+    Return a new dictionary that is the result of merging the arguments
+    together.
+    In case of conflicts, later arguments take precedence over earlier
+    arguments.
+
+    Shamelessly copied from: http://stackoverflow.com/a/8795331/3170835
+    """
+    updated = {}
+    # grab all keys
+    keys = set()
+    for d in dicts:
+        keys = keys.union(set(d))
+
+    for key in keys:
+        values = [d[key] for d in dicts if key in d]
+        # which ones are mapping types? (aka dict)
+        maps = [value for value in values if isinstance(value, Mapping)]
+        if maps:
+            # if we have any mapping types, call recursively to merge them
+            updated[key] = merge_dicts(*maps)
+        else:
+            # otherwise, just grab the last value we have, since later
+            # arguments take precedence over earlier arguments
+            updated[key] = values[-1]
+    return updated
 
 
 def render_charm_config(config):
@@ -200,9 +235,10 @@ def render_charm_config(config):
         charm_conf = yaml.load(slurp(dest_yaml_path))
         charm_conf_custom = yaml.load(
             slurp(config.getopt('charm_config_file')))
-        charm_conf.update(charm_conf_custom)
+        charm_conf_merged = merge_dicts(charm_conf,
+                                        charm_conf_custom)
         spew(dest_yaml_path, yaml.safe_dump(
-            charm_conf, default_flow_style=False))
+            charm_conf_merged, default_flow_style=False))
 
 
 def chown(path, user, group=None, recursive=False):

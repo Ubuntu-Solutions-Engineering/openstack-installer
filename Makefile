@@ -31,7 +31,7 @@ clean:
 	@rm -rf debian/cloud-install
 	@rm -rf docs/_build/*
 	@rm -rf ../openstack_*.deb ../cloud-*.deb ../openstack_*.tar.gz ../openstack_*.dsc ../openstack_*.changes \
-		../openstack_*.build ../openstack-*.deb
+		../openstack_*.build ../openstack-*.deb ../openstack_*.upload
 	@rm -rf cover
 	@rm -rf .coverage
 
