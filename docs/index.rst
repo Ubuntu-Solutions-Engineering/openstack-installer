@@ -27,6 +27,12 @@ Getting Help
 * Issue Tracker: `Openstack-installer on Github <https://github.com/Ubuntu-Solutions-Engineering/openstack-installer>`_
 
 
+Testing Deployments
+-------------------
+
+* :doc:`Deployment Test Guide <tester.guide>` - Interested in helping us test the deployment of private clouds with the installer? We'd love that!
+
+
 Developer Details
 -----------------
 
