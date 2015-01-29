@@ -20,6 +20,11 @@ from subprocess import (Popen, PIPE, call, STDOUT, check_output,
                         check_call, DEVNULL, CalledProcessError)
 from contextlib import contextmanager
 from collections import deque
+try:
+    from collections import Mapping
+except ImportError:
+    Mapping = dict
+
 from jinja2 import Environment, FileSystemLoader
 import os
 import re
@@ -167,6 +172,35 @@ def load_charm_byname(name):
     return import_module('cloudinstall.charms.{}'.format(name))
 
 
+def merge_dicts(*dicts):
+    """
+    Return a new dictionary that is the result of merging the arguments
+    together.
+    In case of conflicts, later arguments take precedence over earlier
+    arguments.
+
+    Shamelessly copied from: http://stackoverflow.com/a/8795331/3170835
+    """
+    updated = {}
+    # grab all keys
+    keys = set()
+    for d in dicts:
+        keys = keys.union(set(d))
+
+    for key in keys:
+        values = [d[key] for d in dicts if key in d]
+        # which ones are mapping types? (aka dict)
+        maps = [value for value in values if isinstance(value, Mapping)]
+        if maps:
+            # if we have any mapping types, call recursively to merge them
+            updated[key] = merge_dicts(*maps)
+        else:
+            # otherwise, just grab the last value we have, since later
+            # arguments take precedence over earlier arguments
+            updated[key] = values[-1]
+    return updated
+
+
 def render_charm_config(config):
     """ Render a config for setting charm config options
 
@@ -200,9 +234,10 @@ def render_charm_config(config):
         charm_conf = yaml.load(slurp(dest_yaml_path))
         charm_conf_custom = yaml.load(
             slurp(config.getopt('charm_config_file')))
-        charm_conf.update(charm_conf_custom)
+        charm_conf_merged = merge_dicts(charm_conf,
+                                        charm_conf_custom)
         spew(dest_yaml_path, yaml.safe_dump(
-            charm_conf, default_flow_style=False))
+            charm_conf_merged, default_flow_style=False))
 
 
 def chown(path, user, group=None, recursive=False):

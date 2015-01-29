@@ -1,0 +1,27 @@
+glance:
+  worker-multiplier: 1
+glance-simplestreams-sync:
+  use_swift: false
+juju-gui:
+  password: pass
+keystone:
+  admin-password: pass
+  admin-user: admin
+  worker-multiplier: 1
+mysql:
+  dataset-size: 1024M
+  max-connections: 25000
+neutron-api:
+  neutron-security-groups: true
+nova-cloud-controller:
+  network-manager: Neutron
+  quantum-security-groups: 'yes'
+  worker-multiplier: 1
+quantum-gateway:
+  instance-mtu: 1400
+swift-proxy:
+  replicas: 3
+  zone-assignment: auto
+swift-storage:
+  block-device: /etc/swift/storage.img|4G
+  zone: 2
