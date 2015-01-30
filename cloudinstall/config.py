@@ -162,6 +162,10 @@ class Config:
         if key in self._config:
             return self._config[key]
         else:
+            if hasattr(self, key):
+                attr = getattr(self, key)
+                return attr() if callable(attr) else attr
+            log.error("Could not find {} in config".format(key))
             return False
 
     def juju_path(self):
@@ -228,15 +232,3 @@ class Config:
     @property
     def juju_api_password(self):
         return self.juju_env['password']
-
-    def __getattr__(self, attr):
-        """ Protect us from invalid attribute lookup
-
-        TODO: Re-evaluate once config class is fully migrated
-        to getopt/setopt config scheme.
-        """
-        try:
-            getattr(Config, attr)
-        except AttributeError:
-            log.error("Unknown attribute: {}".format(attr))
-            return False

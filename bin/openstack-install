@@ -61,6 +61,10 @@ def parse_options(argv):
                         help="Custom configuration for OpenStack installer.")
     parser.add_argument('--charm-config', type=str, dest='charm_config_file',
                         help="Additional charm settings")
+    parser.add_argument('-g', '--get-config', type=str, dest='get_config',
+                        default=None,
+                        help="with arg <key>, prints config value for 'key' "
+                        "to stdout and exits.")
     parser.add_argument('-k', '--killcloud', action='store_true',
                         dest='killcloud',
                         help='Tear down existing cloud leaving userdata '
@@ -107,6 +111,12 @@ def parse_options(argv):
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
     cfg = Config(utils.populate_config(opts))
+
+    if opts.get_config:
+        val = cfg.getopt(opts.get_config)
+        if val:
+            sys.stdout.write(val)
+        sys.exit(0)
 
     try:
         setup_logger(headless=cfg.getopt('headless'))
