@@ -30,6 +30,7 @@ from cloudinstall.charms.compute import CharmNovaCompute
 from cloudinstall.charms.swift import CharmSwift
 from cloudinstall.charms.swift_proxy import CharmSwiftProxy
 from cloudinstall.charms.ceph import CharmCeph
+from cloudinstall.charms.ceph_osd import CharmCephOSD
 from cloudinstall.maas import MaasMachineStatus
 from cloudinstall.config import Config
 import cloudinstall.utils as utils
@@ -234,18 +235,27 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
         self.assertFalse(self.pc.service_is_required(CharmNovaCompute))
 
-    def test_swift_unrequired_then_required(self):
+    def test_swift_unrequired_then_required_default(self):
         "Swift and swift-proxy are both optional until you add swift"
-        self.conf.setopt('storage_backend', 'swift')
+        self.conf.setopt('storage_backend', None)
         self.assertFalse(self.pc.service_is_required(CharmSwift))
         self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
         self.pc.assign(self.mock_machine, CharmSwift, AssignmentType.LXC)
         self.assertTrue(self.pc.service_is_required(CharmSwift))
         self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
 
-    def test_swift_proxy_unrequired_then_required(self):
+    def test_swift_unrequired_then_required_swift_backend(self):
+        "Swift and swift-proxy are not optional with swift as the backend."
         self.conf.setopt('storage_backend', 'swift')
+        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+        self.pc.assign(self.mock_machine, CharmSwift, AssignmentType.LXC)
+        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+
+    def test_swift_proxy_unrequired_then_required_default(self):
         "Swift and swift-proxy are both optional until you add swift-proxy"
+        self.conf.setopt('storage_backend', None)
         self.assertFalse(self.pc.service_is_required(CharmSwift))
         self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
         self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
@@ -253,6 +263,47 @@ class PlacementControllerTestCase(unittest.TestCase):
         # Only one swift-proxy is required, so now that we've added
         # it, it is still not required:
         self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+
+    def test_swift_proxy_unrequired_then_required_swift_backend(self):
+        "Swift and swift-proxy are not optional with swift as the backend"
+        self.conf.setopt('storage_backend', 'swift')
+        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+        self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
+        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        # Only one swift-proxy is required, so now that we've added
+        # it, it is still not required:
+        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+
+    def test_storage_backends_in_is_required(self):
+        # default is None
+        self.conf.setopt('storage_backend', None)
+        self.assertFalse(self.pc.service_is_required(CharmCeph))
+        self.assertFalse(self.pc.service_is_required(CharmCephOSD))
+        self.assertFalse(self.pc.service_is_required(CharmSwift))
+        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+
+        self.conf.setopt('storage_backend', 'swift')
+        self.assertFalse(self.pc.service_is_required(CharmCeph))
+        self.assertFalse(self.pc.service_is_required(CharmCephOSD))
+        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+
+        self.conf.setopt('storage_backend', 'ceph')
+        self.assertTrue(self.pc.service_is_required(CharmCeph))
+        self.assertFalse(self.pc.service_is_required(CharmCephOSD))
+        self.assertFalse(self.pc.service_is_required(CharmSwift))
+        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+
+    def test_ceph_num_required(self):
+        "3 units of ceph should be required after having been placed"
+        self.conf.setopt('storage_backend', None)
+        self.assertFalse(self.pc.service_is_required(CharmCeph))
+        self.pc.assign(self.mock_machine, CharmCeph, AssignmentType.KVM)
+        self.assertTrue(self.pc.service_is_required(CharmCeph))
+        self.pc.assign(self.mock_machine, CharmCeph, AssignmentType.KVM)
+        self.pc.assign(self.mock_machine, CharmCeph, AssignmentType.KVM)
+        self.assertFalse(self.pc.service_is_required(CharmCeph))
 
     def test_persistence(self):
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
@@ -348,7 +399,8 @@ class PlacementControllerTestCase(unittest.TestCase):
         """gen_defaults should only use ready machines"""
         mock_maas_state = MagicMock()
         mock_maas_state.machines.return_value = []
-        pc = PlacementController(maas_state=mock_maas_state)
+        c = Config()
+        pc = PlacementController(config=c, maas_state=mock_maas_state)
         pc.gen_defaults()
         mock_maas_state.machines.assert_called_with(MaasMachineStatus.READY)
 
@@ -370,15 +422,18 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.assertFalse(find_charm(CharmSwiftProxy, defaults))
         self.assertFalse(find_charm(CharmSwift, defaults))
         self.assertFalse(find_charm(CharmCeph, defaults))
+        self.assertFalse(find_charm(CharmCephOSD, defaults))
 
         c.setopt('storage_backend', 'swift')
         defaults = pc.gen_single()
         self.assertTrue(find_charm(CharmSwiftProxy, defaults))
         self.assertTrue(find_charm(CharmSwift, defaults))
         self.assertFalse(find_charm(CharmCeph, defaults))
+        self.assertFalse(find_charm(CharmCephOSD, defaults))
 
         c.setopt('storage_backend', 'ceph')
         defaults = pc.gen_single()
         self.assertFalse(find_charm(CharmSwiftProxy, defaults))
         self.assertFalse(find_charm(CharmSwift, defaults))
         self.assertTrue(find_charm(CharmCeph, defaults))
+        self.assertFalse(find_charm(CharmCephOSD, defaults))

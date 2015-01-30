@@ -11,6 +11,15 @@ openstack_origin is defined.
 ceph:
   fsid: 4df47d30-cbf3-45d9-a485-27996ab6998e
   monitor-secret: AQBilclUKG9RIRAAlFP9bohec06c+e7lfCRGrw==
+  osd-devices: /dev/sdb
+  osd-reformat: "yes"
+{% if openstack_origin is defined %}
+  openstack-origin: {{openstack_origin}}
+{% endif %}
+
+ceph-osd:
+  osd-devices: /dev/sdb
+  osd-reformat: "yes"
 {% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
 {% endif %}

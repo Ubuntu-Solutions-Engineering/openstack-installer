@@ -264,15 +264,29 @@ class PlacementController:
         unrequired_services = ['nova-compute',
                                'juju-gui']
 
+        storage_backend = self.config.getopt('storage_backend')
+
         # if we place one of swift-proxy or swift-storage, we must
         # place the others.
         unplaced_services_names = [c.name() for c in
                                    self.unplaced_services]
         swift_charmnames = ['swift-storage', 'swift-proxy']
+        ceph_charmnames = ['ceph', 'ceph-osd']
 
         # if both swift charms are unplaced, then they are unrequired.
-        if set(swift_charmnames).issubset(unplaced_services_names):
+        if set(swift_charmnames).issubset(unplaced_services_names) \
+           and storage_backend != 'swift':
             unrequired_services += swift_charmnames
+
+        if not storage_backend or storage_backend == 'swift':
+            # ceph is required if ceph-osd is placed, but not vice versa.
+            if set(ceph_charmnames).issubset(unplaced_services_names):
+                unrequired_services += ['ceph', 'ceph-osd']
+            else:
+                unrequired_services += ['ceph-osd']
+        else:
+            # ceph was chosen, and is required, but ceph-osd is not required.
+            unrequired_services += ['ceph-osd']
 
         if cc.name() in unrequired_services:
             return False
@@ -356,7 +370,7 @@ class PlacementController:
 
         isolated_charms, controller_charms = [], []
 
-        for charm_class in charm_classes:
+        for charm_class in self.filter_storage_backends(charm_classes):
             if charm_class.isolate:
                 isolated_charms.append(charm_class)
             else:
@@ -382,7 +396,8 @@ class PlacementController:
 
     def filter_storage_backends(self, charm_classes):
         "return list of charm classes with only selected backends"
-        all_backend_charms = ['swift-proxy', 'swift-storage', 'ceph']
+        all_backend_charms = ['swift-proxy', 'swift-storage',
+                              'ceph']
 
         selected_backend = self.config.getopt('storage_backend')
         to_remove = all_backend_charms
@@ -391,7 +406,10 @@ class PlacementController:
             to_remove = [n for n in to_remove if
                          selected_backend not in n]
 
-        log.debug("in filter_storage_backends, to_remove is {}".format(to_remove))
+        # ceph-osd is never required, only included for scale-out:
+        to_remove.append('ceph-osd')
+
+        log.debug("to_remove is {}".format(to_remove))
 
         return [cc for cc in charm_classes
                 if cc.charm_name not in to_remove]
