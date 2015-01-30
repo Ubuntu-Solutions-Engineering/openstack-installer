@@ -165,7 +165,6 @@ class Config:
             if hasattr(self, key):
                 attr = getattr(self, key)
                 return attr() if callable(attr) else attr
-            log.error("Could not find {} in config".format(key))
             return False
 
     def juju_path(self):
