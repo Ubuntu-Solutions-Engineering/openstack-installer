@@ -121,10 +121,10 @@ A sample Landscape OpenStack Autopilot config, save this as **config-landscape.y
     install_type: Landscape OpenStack Autopilot
     landscapecreds:
       admin_email: foo@bar.com
-      admin_name: stfu
+      admin_name: foo ey bar
       maas_apikey: y55mPM2zBzE5wsR9CF:pk7PQ563tZ6AupgZ2y:vMk3qFLuANBJ8dZ6yqHnU8yuMF883HXW
       maas_server: 172.16.0.1
-      system_email: stfu@foo.bar.com
+      system_email: ayo@foo.bar.com
     maascreds:
       api_host: 172.16.0.1
       api_key: y55mPM2zBzE5wsR9CF:pk7PQ563tZ6AupgZ2y:vMk3qFLuANBJ8dZ6yqHnU8yuMF883HXW
