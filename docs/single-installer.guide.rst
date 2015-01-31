@@ -129,6 +129,58 @@ The login credentials for the dashboard are:
 * username: **ubuntu**
 * password: **"password that was set during installation"**
 
+.. attention::
+
+   If you are attempting to login to the dashboard from a machine other than
+   the one used to perform the installation it may be required to add an `iptables`
+   rule to enable port forwarding to your Horizon server.
+
+   An example, if the openstack-dashboard service was deployed in this way:
+
+   .. code::
+
+        environment: local
+        machines:
+          "1":
+            agent-state: started
+            agent-version: 1.20.11.1
+            dns-name: 10.0.4.84
+            instance-id: ubuntu-local-machine-1
+            series: trusty
+            containers:
+              1/lxc/7:
+                agent-state: started
+                agent-version: 1.20.11.1
+                dns-name: 10.0.4.159
+                instance-id: ubuntu-local-machine-1-lxc-7
+                series: trusty
+                hardware: arch=amd64
+            hardware: arch=amd64 cpu-cores=2 mem=6144M root-disk=20480M
+        services:
+          openstack-dashboard:
+            charm: cs:trusty/openstack-dashboard-8
+            exposed: false
+            relations:
+              cluster:
+              - openstack-dashboard
+              identity-service:
+              - keystone
+            units:
+              openstack-dashboard/0:
+                agent-state: started
+                agent-version: 1.20.11.1
+                machine: 1/lxc/7
+
+   Then an iptables rule to accessing the dashboard from port **9000** would look like this:
+
+   .. code::
+
+      $ sudo iptables -t nat -A PREROUTING -p tcp -d 192.168.0.98 --dport 9000 -j DNAT --to-destination 10.0.4.159:80
+
+   Where **192.168.0.98** is the IP of the system the install was performed on and **10.0.4.159** is the public-address
+   of the openstack-dashboard. The final URL should like like **http://192.168.0.98:9000/horizon** to bring up the
+   OpenStack Dashboard.
+
 Accessing the OpenStack environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
