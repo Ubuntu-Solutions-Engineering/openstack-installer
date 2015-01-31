@@ -839,6 +839,16 @@ def ssh_privkey():
     return os.path.join(install_home(), '.ssh/id_rsa')
 
 
+def read_ini(path):
+    """ Reads a basic INI like file without sections headers.
+    Prepends a default section header for querying.
+    """
+    ini = open(path)
+    config = configparser.ConfigParser()
+    config.read_file(itertools.chain(['[DEFAULT]'], ini))
+    return config
+
+
 def spew(path, data, owner=None):
     """ Writes data to path
 

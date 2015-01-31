@@ -160,6 +160,14 @@ if __name__ == '__main__':
             else:
                 yn = input("Proceed? [y/N] ")
             if "y" in yn or "Y" in yn:
+                try:
+                    print("Removing static route")
+                    ip = utils.container_ip('uoi-bootstrap')
+                    out = utils.get_command_output(
+                        'ip route del 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
+                    logger.debug("Removed route: {}".format(out['output']))
+                except:
+                    print("No static route defined.")
                 print("Removing host container...")
                 utils.container_stop('uoi-bootstrap')
                 utils.container_destroy('uoi-bootstrap')

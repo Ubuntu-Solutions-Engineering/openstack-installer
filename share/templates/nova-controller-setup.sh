@@ -17,7 +17,7 @@ nova flavor-create m1.tiny 1 512 8 1
 
 # configure external network
 neutron net-create --router:external=True ext-net
-neutron subnet-create --name ext-subnet --gateway 10.0.3.1 --allocation-pool start=10.0.3.200,end=10.0.3.254 --disable-dhcp ext-net 10.0.3.0/24
+neutron subnet-create --name ext-subnet --gateway 10.0.4.1 --allocation-pool start=10.0.4.200,end=10.0.4.254 --disable-dhcp ext-net 10.0.4.0/24
 
 # create ubuntu user
 keystone tenant-create --name ubuntu --description "Created by Juju"
@@ -28,7 +28,7 @@ keystone user-role-add --user ubuntu --role Member --tenant ubuntu
 
 # create vm network
 neutron net-create ubuntu-net
-neutron subnet-create --name ubuntu-subnet --gateway 10.0.4.1 --dns-nameserver 10.0.3.1 ubuntu-net 10.0.4.0/24
+neutron subnet-create --name ubuntu-subnet --gateway 10.0.4.1 --dns-nameserver 10.0.4.1 ubuntu-net 10.0.4.0/24
 neutron router-create ubuntu-router
 neutron router-interface-add ubuntu-router ubuntu-subnet
 neutron router-gateway-set ubuntu-router ext-net

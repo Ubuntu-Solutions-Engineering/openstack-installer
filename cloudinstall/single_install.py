@@ -100,6 +100,35 @@ class SingleInstall:
                    single_env_modified,
                    owner=utils.install_user())
 
+    def set_dhcp_range(self):
+        """ defines a new dhcp range within host container
+        to leave the other IPS open for Neutron to use as floating.
+
+        By default the single installer uses a range of x.x.x.200-x.x.x.254
+        """
+        lxc_net_file = os.path.join(self.config.tmpl_path, 'lxc-net')
+        lxc_net_container_file = os.path.join(self.container_abspath,
+                                              'rootfs/etc/default/lxc-net')
+        lxc_net = utils.slurp(lxc_net_file)
+        log.info("Setting DHCP properties for host container.")
+        utils.spew(lxc_net_container_file, lxc_net)
+
+    def add_static_route(self):
+        """ Adds static route to host system
+        """
+        # Store container IP in config
+        ip = utils.container_ip(self.container_name)
+        self.config.setopt('container_ip', ip)
+
+        log.info("Adding static route for 10.0.4.0/24 via {}".format(ip))
+
+        out = utils.get_command_output(
+            'ip route add 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
+        if out['status'] != 0:
+            log.error("Could not add static route for "
+                      "10.0.4.0/24 network: {}".format(out['output']))
+            self.loop.exit(1)
+
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
@@ -137,6 +166,12 @@ class SingleInstall:
         # we do this here instead of using cloud-init, for greater
         # control over ordering
         log.debug("Container started, cloud-init done.")
+
+        # Set dhcp range for host container
+        self.set_dhcp_range()
+        # Add static route
+        self.add_static_route()
+
         log.debug("Installing openstack & openstack-single directly, "
                   "and juju-local, libvirt-bin and lxc via deps")
         utils.container_run(self.container_name,
