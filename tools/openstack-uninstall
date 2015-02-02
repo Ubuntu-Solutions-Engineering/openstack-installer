@@ -1,22 +1,8 @@
 #!/bin/bash
 
-echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-echo Ubuntu Openstack Installer Uninstalling ...
-echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+echo -n Ubuntu Openstack Installer Uninstalling ...
 
-if [ "$#" -eq 1 ] && [ $1 != '-u' ]; then
-  WHAT=$1
-elif [ "$#" -eq 2 ]; then
-  WHAT=$2
-elif [ -f ~/.cloud-install/multi ]; then
-  WHAT=multi-system
-elif [ -f ~/.cloud-install/single ]; then
-  WHAT=single-system
-elif [ -f ~/.cloud-install/landscape ]; then
-  WHAT=multi-system
-else
-  echo "could not determine install type"
-fi
+WHAT=$(openstack-install -g install_type)
 
 if [ -f ~/.cloud-install/new-maas ]; then
   MAAS_TYPE=new
@@ -28,15 +14,15 @@ apt_purge() {
   DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
 }
 
+JUJU_HOME=$(sudo openstack-install -g juju_home)
 case $WHAT in
-  multi-system)
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    echo Multi install cleansing.
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  Multi)
+    echo Multi install environment
 
     # FIXME: probably need to convert this to a python script to pull
     # same data from config object
-    JUJU_HOME=~/.cloud-install/juju juju destroy-environment --yes --force maas
+    $JUJU_HOME juju destroy-environment --yes --force maas
+    rm -rf ~/.cloud-install || true
 
     if [ "$MAAS_TYPE" == "new" ]; then
         rm -r ~/.maascli.db
@@ -77,24 +63,20 @@ case $WHAT in
         fi
         ifdown lo && ifup lo
     fi
+
+    # Multi places backup network settings here.
+    rm -rf /etc/openstack || true
+
     ;;
-  single-system)
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    echo Single install cleansing.
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  Single)
+    echo Single install path.
     lxc-stop -n uoi-bootstrap
     lxc-destroy -n uoi-bootstrap
+    rm -rf ~/.cloud-install/juju
     ;;
   *)
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    echo Please run with either single-system or multi-system as an argument.
-    echo Example:
-    echo   sudo openstack-install -u single-system
-    echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    echo Could not determine install type, was ~/.cloud-install removed prior to running the uninstallation?
     exit 1
     ;;
   esac
 
-
-rm -rf ~/.cloud-install || true
-rm -rf /etc/openstack || true
