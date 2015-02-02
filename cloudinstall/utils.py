@@ -34,6 +34,8 @@ import fnmatch
 import logging
 import traceback
 import urwid
+import itertools
+import configparser
 from threading import Thread
 from functools import wraps
 import time
@@ -814,6 +816,16 @@ def ssh_genkey():
                            user_sudo=True)
     else:
         log.debug('ssh keys exist for this user, they will be used instead.')
+
+
+def read_ini(path):
+    """ Reads a basic INI like file without sections headers.
+    Prepends a default section header for querying.
+    """
+    ini = open(path)
+    config = configparser.ConfigParser()
+    config.read_file(itertools.chain(['[DEFAULT]'], ini))
+    return config
 
 
 def ssh_pubkey():
