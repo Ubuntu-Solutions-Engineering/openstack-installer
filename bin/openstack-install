@@ -167,6 +167,7 @@ if __name__ == '__main__':
                         'ip route del 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
                     logger.debug("Removed route: {}".format(out['output']))
                 except:
+                    log.exception("No static route defined.")
                     print("No static route defined.")
                 print("Removing host container...")
                 utils.container_stop('uoi-bootstrap')
