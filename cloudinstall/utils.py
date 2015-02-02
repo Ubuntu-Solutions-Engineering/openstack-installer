@@ -34,8 +34,6 @@ import fnmatch
 import logging
 import traceback
 import urwid
-import itertools
-import configparser
 from threading import Thread
 from functools import wraps
 import time
@@ -837,16 +835,6 @@ def ssh_privkey():
     """ returns path of private key
     """
     return os.path.join(install_home(), '.ssh/id_rsa')
-
-
-def read_ini(path):
-    """ Reads a basic INI like file without sections headers.
-    Prepends a default section header for querying.
-    """
-    ini = open(path)
-    config = configparser.ConfigParser()
-    config.read_file(itertools.chain(['[DEFAULT]'], ini))
-    return config
 
 
 def spew(path, data, owner=None):
