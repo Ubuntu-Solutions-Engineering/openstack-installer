@@ -21,9 +21,7 @@ groups:
   - sudo: [ubuntu]
 apt_sources:
   - source: "ppa:cloud-installer/testing"
-# FIXME: Once http://pad.lv/1416134 regression is fixed keep
-# this commented out.
-#  - source: "ppa:juju/stable"
+  - source: "ppa:juju/stable"
 {% if extra_ppa %}
 {% for ppa in extra_ppa %}
   - source: "{{ ppa }}"
