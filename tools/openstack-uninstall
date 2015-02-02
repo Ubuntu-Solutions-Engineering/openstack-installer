@@ -72,6 +72,8 @@ case $WHAT in
     echo Single install path.
     lxc-stop -n uoi-bootstrap
     lxc-destroy -n uoi-bootstrap
+    container_ip=$(openstack-install -g container_ip)
+    ip route del 10.0.4.0/24 via $container_ip dev lxcbr0
     rm -rf ~/.cloud-install/juju
     ;;
   *)
