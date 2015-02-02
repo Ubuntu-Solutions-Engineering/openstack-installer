@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 . /tmp/openstack-admin-rc
 
@@ -26,19 +26,21 @@ keystone user-role-add --user ubuntu --role Member --tenant ubuntu
 
 . /tmp/openstack-ubuntu-rc
 
-# create vm network
-neutron net-create ubuntu-net
-neutron subnet-create --name ubuntu-subnet --gateway 10.0.5.1 --dns-nameserver 10.0.4.1 ubuntu-net 10.0.5.0/24
-neutron router-create ubuntu-router
-neutron router-interface-add ubuntu-router ubuntu-subnet
-neutron router-gateway-set ubuntu-router ext-net
+# create vm network on Single only
+if [ "$2" == "Single" ]; then
+  neutron net-create ubuntu-net
+  neutron subnet-create --name ubuntu-subnet --gateway 10.0.5.1 --dns-nameserver 10.0.4.1 ubuntu-net 10.0.5.0/24
+  neutron router-create ubuntu-router
+  neutron router-interface-add ubuntu-router ubuntu-subnet
+  neutron router-gateway-set ubuntu-router ext-net
 
-# create pool of floating ips
-i=0
-while [ $i -ne 5 ]; do
-	neutron floatingip-create ext-net
-	i=$((i + 1))
-done
+  # create pool of floating ips
+  i=0
+  while [ $i -ne 5 ]; do
+    neutron floatingip-create ext-net
+    i=$((i + 1))
+  done
+fi
 
 # configure security groups
 nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
