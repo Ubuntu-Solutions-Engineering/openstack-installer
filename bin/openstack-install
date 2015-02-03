@@ -193,6 +193,15 @@ if __name__ == '__main__':
             print('Only supports killing a single install for now.')
             sys.exit(1)
 
+    if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
+        msg = ("\n\nError:\n\n"
+               "Previous installation detected. Did you mean to run "
+               "openstack-status instead? \n"
+               "If attempting to re-install please run "
+               "    $ sudo openstack-install -u\n\n")
+        print(msg)
+        sys.exit(1)
+
     out = utils.get_command_output(
         '{} juju api-endpoints'.format(cfg.juju_home()), user_sudo=True)
     if out['status'] == 0:

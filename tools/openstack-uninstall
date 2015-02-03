@@ -22,7 +22,6 @@ case $WHAT in
     # FIXME: probably need to convert this to a python script to pull
     # same data from config object
     $JUJU_HOME juju destroy-environment --yes --force maas
-    rm -rf ~/.cloud-install || true
 
     if [ "$MAAS_TYPE" == "new" ]; then
         rm -r ~/.maascli.db
@@ -74,7 +73,6 @@ case $WHAT in
     lxc-destroy -n uoi-bootstrap
     container_ip=$(openstack-install -g container_ip)
     ip route del 10.0.4.0/24 via $container_ip dev lxcbr0
-    rm -rf ~/.cloud-install/juju
     ;;
   *)
     echo Could not determine install type, was ~/.cloud-install removed prior to running the uninstallation?
@@ -82,3 +80,5 @@ case $WHAT in
     ;;
   esac
 
+rm -rf ~/.cloud-install/juju || true
+rm -f ~/.cloud-install/installed || true

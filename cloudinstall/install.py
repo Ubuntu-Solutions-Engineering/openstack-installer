@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import os
 
 from cloudinstall.config import (INSTALL_TYPE_SINGLE,
                                  INSTALL_TYPE_MULTI,
@@ -24,6 +25,7 @@ from cloudinstall.single_install import SingleInstall
 from cloudinstall.landscape_install import LandscapeInstall
 from cloudinstall.multi_install import (MultiInstallNewMaas,
                                         MultiInstallExistingMaas)
+import cloudinstall.utils as utils
 
 
 log = logging.getLogger('cloudinstall.install')
@@ -100,6 +102,9 @@ class InstallController:
         if not self.config.getopt('headless'):
             self.ui.hide_selector_info()
 
+        # Set installed placeholder
+        utils.spew(os.path.join(
+            self.config.cfg_path, 'installed'), 'auto-generated')
         if install_type == INSTALL_TYPE_SINGLE[0]:
             # self.ui.set_openstack_rel("Icehouse (2014.1.3)")
             log.info("Performing a Single Install")
@@ -125,6 +130,7 @@ class InstallController:
             self.LandscapeInstall(
                 self.loop, self.ui, self.config).run()
         else:
+            os.remove(os.path.join(self.config.cfg_path, 'installed'))
             raise ValueError("Unknown install type: {}".format(install_type))
 
     def start(self):
