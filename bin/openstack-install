@@ -107,10 +107,18 @@ def parse_options(argv):
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)
 
-
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
     cfg = Config(utils.populate_config(opts))
+
+    if sys.getdefaultencoding() != 'utf-8':
+        print("Ubuntu OpenStack Installer requires unicode support. "
+              "Please enable this on the system running the installer.\n\n")
+        print("Example:\n")
+        print("  export LC_ALL=en_US.UTF-8")
+        print("  export LANG=en_US.UTF-8")
+        print("  export LANGUAGE=en_US.UTF-8")
+        sys.exit(1)
 
     if opts.get_config:
         val = cfg.getopt(opts.get_config)
