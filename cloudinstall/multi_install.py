@@ -354,7 +354,6 @@ class MultiInstallNewMaas(MultiInstall):
             self.static_range = (ranges['static_low'].value,
                                  ranges['static_high'].value)
 
-            self.update_progress()
             self.continue_with_interface()
         nw = ip_network(self.iface_network, strict=False)
         excludes = list(map(ip_address, [self.iface_ip]))

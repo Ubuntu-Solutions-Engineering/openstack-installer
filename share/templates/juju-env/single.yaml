@@ -6,6 +6,7 @@ environments:
     container: kvm
     lxc-clone: true
     authorized-keys-path: ~/.ssh/id_rsa.pub
+    network-bridge: lxcbr0
     default-series: trusty
     admin-secret: {{openstack_password}}
 {% if http_proxy %}

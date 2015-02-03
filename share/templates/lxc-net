@@ -1,0 +1,10 @@
+# Custom lxc-net for Single Installer
+USE_LXC_BRIDGE="true"
+LXC_BRIDGE="lxcbr0"
+LXC_ADDR="10.0.4.1"
+LXC_NETMASK="255.255.255.0"
+LXC_NETWORK="10.0.4.0/24"
+LXC_DHCP_RANGE="10.0.4.2,10.0.4.199"
+LXC_DHCP_MAX="196"
+#LXC_DHCP_CONFILE=/etc/lxc/dnsmasq.conf
+#LXC_DOMAIN="lxc"

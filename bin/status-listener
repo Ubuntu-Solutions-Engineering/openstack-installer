@@ -18,7 +18,7 @@
 import kombu
 import logging
 import os
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, check_output
 import time
 import yaml
 
@@ -31,9 +31,14 @@ STATUS_FILE_NAME = os.path.join(CLOUD_INSTALL_DIR, "sync-status")
 def get_info():
     "Read rabbitmq config from remote unit's relation data"
 
+    juju_path = check_output('openstack-install -g juju_path',
+                             shell=True)
+    new_env = os.environ
+    new_env['JUJU_HOME'] = juju_path
     read_id_proc = Popen(['juju', 'run', '--unit',
                           'glance-simplestreams-sync/0',
                           'cat /etc/glance-simplestreams-sync/identity.yaml'],
+                         env=new_env,
                          stdout=PIPE, stderr=PIPE)
 
     (id_stdout, id_stderr) = read_id_proc.communicate()
