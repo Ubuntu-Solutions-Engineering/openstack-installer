@@ -1,8 +1,6 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
-if [ -f /etc/network/interfaces.d/bridge.cfg ]; then
-	echo "Bridge already configured" && exit 0
-fi
+[ ! -e /etc/network/interfaces.d/bridge.cfg ] || { echo "Bridge already configured"; exit 0; }
 
 apt-get update
 

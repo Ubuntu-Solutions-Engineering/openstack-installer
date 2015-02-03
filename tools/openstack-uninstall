@@ -14,14 +14,14 @@ apt_purge() {
   DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
 }
 
-JUJU_HOME=$(openstack-install -g juju_home)
+CFG_HOME=$(openstack-install -g cfg_path)
 case $WHAT in
   Multi)
     echo Multi install environment
 
     # FIXME: probably need to convert this to a python script to pull
     # same data from config object
-    $JUJU_HOME juju destroy-environment --yes --force maas
+    JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || exit 1
 
     if [ "$MAAS_TYPE" == "new" ]; then
         rm -r ~/.maascli.db
@@ -79,6 +79,7 @@ case $WHAT in
     exit 1
     ;;
   esac
+
 
 rm -rf ~/.cloud-install/juju || true
 rm -f ~/.cloud-install/installed || true
