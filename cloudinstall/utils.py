@@ -34,6 +34,8 @@ import fnmatch
 import logging
 import traceback
 import urwid
+import itertools
+import configparser
 from threading import Thread
 from functools import wraps
 import time
@@ -661,7 +663,7 @@ def container_cp(name, filepath, dst):
                             filepath, name, ip, ret['output']))
 
 
-def container_create(name, configfile, userdata):
+def container_create(name, userdata):
     """ creates a container from ubuntu-cloud template
     """
     # NOTE: the -F template arg is a workaround. it flushes the lxc
@@ -673,10 +675,9 @@ def container_create(name, configfile, userdata):
         log.debug("USE_LXC_IMAGE_CACHE set, so not flushing in lxc-create")
         flushflag = ""
     out = get_command_output(
-        'sudo lxc-create -t ubuntu-cloud -f {configfile} '
+        'sudo lxc-create -t ubuntu-cloud '
         '-n {name} -- {flushflag} '
         '-u {userdatafilename}'.format(name=name,
-                                       configfile=configfile,
                                        flushflag=flushflag,
                                        userdatafilename=userdata))
     if out['status'] > 0:
@@ -814,6 +815,16 @@ def ssh_genkey():
                            user_sudo=True)
     else:
         log.debug('ssh keys exist for this user, they will be used instead.')
+
+
+def read_ini(path):
+    """ Reads a basic INI like file without sections headers.
+    Prepends a default section header for querying.
+    """
+    ini = open(path)
+    config = configparser.ConfigParser()
+    config.read_file(itertools.chain(['[DEFAULT]'], ini))
+    return config
 
 
 def ssh_pubkey():

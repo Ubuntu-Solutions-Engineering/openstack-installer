@@ -100,42 +100,48 @@ class SingleInstall:
                    single_env_modified,
                    owner=utils.install_user())
 
+    def set_dhcp_range(self):
+        """ defines a new dhcp range within host container
+        to leave the other IPS open for Neutron to use as floating.
+
+        By default the single installer uses a range of x.x.x.200-x.x.x.254
+        """
+        lxc_net_file = os.path.join(self.config.tmpl_path, 'lxc-net')
+        lxc_net_container_file = os.path.join(self.container_abspath,
+                                              'rootfs/etc/default/lxc-net')
+        lxc_net = utils.slurp(lxc_net_file)
+        log.info("Setting DHCP properties for host container.")
+        utils.spew(lxc_net_container_file, lxc_net)
+
+    def add_static_route(self):
+        """ Adds static route to host system
+        """
+        # Store container IP in config
+        ip = utils.container_ip(self.container_name)
+        self.config.setopt('container_ip', ip)
+
+        log.info("Adding static route for 10.0.4.0/24 via {}".format(ip))
+
+        out = utils.get_command_output(
+            'ip route add 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
+        if out['status'] != 0:
+            log.error("Could not add static route for "
+                      "10.0.4.0/24 network: {}".format(out['output']))
+            self.loop.exit(1)
+
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
         self.tasker.start_task("Creating container")
 
-        # Mount points
-        mount_points = []
-
-        # .cloud-install in container
-        mount_points.append("{0} {1} none bind,create=dir\n".format(
-            self.config.cfg_path,
-            'home/ubuntu/.cloud-install'))
-
-        # .ssh in container
-        # mount_points.append("{0} {1} none bind,ro,create=dir".format(
-        #     os.path.join(utils.install_home(), '.ssh'),
-        #    'home/ubuntu/.ssh'))
+        utils.container_create(self.container_name, self.userdata)
 
         # cache dir in container
-        mount_points.append(
-            "/var/cache/lxc var/cache/lxc none bind,create=dir")
-
-        lxc_config_filename = os.path.join(self.config.cfg_path, 'lxc.config')
-        with open(lxc_config_filename, 'w') as f:
-            f.write("lxc.network.type = veth\n"
-                    "lxc.network.link = lxcbr0\n"
-                    # note we do not do "lxc.network.flags = up" on purpose.
-                    # we will bring up the network later
-                    "lxc.mount.auto = cgroup:mixed\n"
-                    "lxc.start.auto = 1\n"
-                    "lxc.start.delay = 5\n")
-            for m in mount_points:
-                f.write("lxc.mount.entry={}\n".format(m))
-
-        utils.container_create(self.container_name, lxc_config_filename,
-                               self.userdata)
+        with open(os.path.join(self.container_abspath, 'fstab'), 'w') as f:
+            f.write("{0} {1} none bind,create=dir\n".format(
+                self.config.cfg_path,
+                'home/ubuntu/.cloud-install'))
+            f.write("/var/cache/lxc var/cache/lxc none bind,create=dir\n")
 
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 
@@ -161,11 +167,10 @@ class SingleInstall:
         # control over ordering
         log.debug("Container started, cloud-init done.")
 
-        log.debug("Editing lxc-net config to not manage lxcbr0 bridge inside "
-                  "container")
-        # write an empty lxc-net default so that the packaging does
-        # not write its own when we install lxc
-        utils.container_run(self.container_name, 'touch /etc/default/lxc-net')
+        # Set dhcp range for host container
+        self.set_dhcp_range()
+        # Add static route
+        self.add_static_route()
 
         log.debug("Installing openstack & openstack-single directly, "
                   "and juju-local, libvirt-bin and lxc via deps")
@@ -174,24 +179,6 @@ class SingleInstall:
                             "-o Dpkg::Options::=--force-confdef "
                             "-o Dpkg::Options::=--force-confold "
                             "install openstack openstack-single")
-
-        log.debug("Setting up lxcbr0 bridge config manually")
-        utils.container_run(self.container_name, "ifdown eth0")
-        utils.container_run(self.container_name,
-                            "mv /etc/network/interfaces.d/eth0.cfg "
-                            "/etc/network/interfaces.d/eth0.cfg.bak ")
-        bridge_cfg_filename = os.path.join(self.container_abspath, 'rootfs',
-                                           'etc', 'network', 'interfaces.d',
-                                           'bridge.cfg')
-
-        with open(bridge_cfg_filename, 'w') as f:
-            f.write("auto eth0\n"
-                    "    iface eth0 inet manual\n\n"
-                    "auto lxcbr0\n"
-                    "    iface lxcbr0 inet dhcp\n"
-                    "    bridge_ports eth0\n")
-        log.debug("bringing up network")
-        utils.container_run(self.container_name, "ifup eth0 lxcbr0")
 
     def cloud_init_finished(self, tries, maxlenient=20):
         """checks cloud-init result.json in container to find out status
