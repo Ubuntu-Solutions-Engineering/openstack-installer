@@ -14,7 +14,7 @@ apt_purge() {
   DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
 }
 
-JUJU_HOME=$(sudo openstack-install -g juju_home)
+JUJU_HOME=$(openstack-install -g juju_home)
 case $WHAT in
   Multi)
     echo Multi install environment
@@ -69,10 +69,10 @@ case $WHAT in
     ;;
   Single)
     echo Single install path.
-    lxc-stop -n uoi-bootstrap
-    lxc-destroy -n uoi-bootstrap
+    lxc-stop -n uoi-bootstrap || true
+    lxc-destroy -n uoi-bootstrap || true
     container_ip=$(openstack-install -g container_ip)
-    ip route del 10.0.4.0/24 via $container_ip dev lxcbr0
+    ip route del 10.0.4.0/24 via $container_ip dev lxcbr0 || true
     ;;
   *)
     echo Could not determine install type, was ~/.cloud-install removed prior to running the uninstallation?
