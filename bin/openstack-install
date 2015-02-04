@@ -219,6 +219,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if cfg.getopt('openstack_release'):
+        logger.info(
+            'Running {} release'.format(cfg.getopt('openstack_release')))
         utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
                    cfg.getopt('openstack_release'), owner=utils.install_user())
 
