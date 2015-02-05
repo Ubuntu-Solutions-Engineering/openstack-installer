@@ -31,6 +31,7 @@ class CharmQuantum(CharmBase):
     # TODO: Charms are still called quantum, we want to display
     # them as Neutron
     display_name = 'Neutron'
+    deploy_priority = 99
     related = ['mysql', 'nova-cloud-controller']
     isolate = True
     optional = False
@@ -64,7 +65,7 @@ class CharmQuantum(CharmBase):
 
     def post_proc(self):
         """ performs additional network configuration for charm """
-        if not self.wait_for_agent():
+        if not self.wait_for_agent([self.charm_name, 'nova-cloud-controller']):
             return True
         svc = self.juju_state.service(self.charm_name)
         unit = svc.unit(self.charm_name)

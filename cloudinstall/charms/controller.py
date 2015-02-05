@@ -28,6 +28,7 @@ class CharmNovaCloudController(CharmBase):
     charm_name = 'nova-cloud-controller'
     charm_rev = 50
     display_name = 'Controller'
+    deploy_priority = 2
     menuable = True
     related = ['mysql', 'rabbitmq-server', 'glance', 'keystone']
     allow_multi_units = False

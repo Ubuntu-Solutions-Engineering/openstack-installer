@@ -118,6 +118,21 @@ should be selected during placement.
 
       $ JUJU_HOME=~/.cloud-install/juju juju set quantum-gateway ext-port=<interface>
 
+   Or define the option in a separate **charm-config.yaml** file:
+
+   .. code::
+      quantum-gateway:
+        ext-port: <interface>
+
+   Then before you run the install append this option:
+
+   .. code::
+
+      $ sudo openstack-install --charm-config /path/to/charm-config.yaml
+
+   This will merge in the custom charm options with the rest of the configuration as to not
+   lose any default setup options.
+
 Setting a password
 ^^^^^^^^^^^^^^^^^^
 
