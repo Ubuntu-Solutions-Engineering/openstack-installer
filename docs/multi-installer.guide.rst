@@ -102,6 +102,22 @@ To start the installation run the following command
 An initial dialog box will appear asking you to select which type of
 install, choose **Multi-system**.
 
+Once juju is bootstrapped the installer will present a placement screen which allows
+the user to place services on specific machines. The placement screen does a few checks
+so that services will not be placed in a container that will only work in a KVM.
+
+There is a minimal requirement for **Neutron** that requires **2 NICs** and that machine
+should be selected during placement.
+
+.. attention::
+
+   After a complete deploy it is necessary to tell **Neutron** which interface to use
+   for external network access.
+
+   .. code::
+
+      $ JUJU_HOME=~/.cloud-install/juju juju set quantum-gateway ext-port=<interface>
+
 Setting a password
 ^^^^^^^^^^^^^^^^^^
 
