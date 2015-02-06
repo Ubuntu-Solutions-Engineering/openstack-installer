@@ -56,6 +56,10 @@ An example of a system with 2 network interfaces **eth0 (public)** and **eth1 (p
 
 Below sets up the NAT for those interfaces, save to **/etc/network/iptables.rules**:
 
+.. attention::
+
+   Make sure the **bridge-utils** package is installed.
+
 .. code::
 
    *nat
@@ -165,6 +169,10 @@ to use that machine instead:
 .. note::
 
    **sudo -E** is necessary for the current environment to be preserved.
+
+   A common scenario is to use a virtual machine as the juju bootstrap node as to not
+   waste a bare metal machine in the MAAS cluster. Visit the link on `uvtool <https://help.ubuntu.com/lts/serverguide/cloud-images-and-uvtool.html>`_
+   for more information on creating virtual machines.
 
 Troubleshooting
 ^^^^^^^^^^^^^^^
