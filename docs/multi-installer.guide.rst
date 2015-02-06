@@ -137,8 +137,7 @@ Setting a password
 ^^^^^^^^^^^^^^^^^^
 
 When asked to set the openstack password it should be noted that this password is
-used throughout all openstack related services (ie Horizon login password). The only
-service that does not use this password is **juju-gui**.
+used throughout all openstack related services (ie Horizon login password).
 
 Next Steps
 ^^^^^^^^^^
