@@ -143,6 +143,12 @@ class SingleInstall:
                 'home/ubuntu/.cloud-install'))
             f.write("/var/cache/lxc var/cache/lxc none bind,create=dir\n")
 
+        # update container config
+        with open(os.path.join(self.container_abspath, 'config'), 'a') as f:
+            f.write("lxc.mount.auto = cgroup:mixed\n"
+                    "lxc.start.auto = 1\n"
+                    "lxc.start.delay = 5\n")
+
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 
         try:
