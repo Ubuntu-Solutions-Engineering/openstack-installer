@@ -48,8 +48,8 @@ class Tasker:
         self.config = config
         self.display_controller = display_controller
         self.loop = loop
-        # cb = self.display_controller.show_exception_message
-        # utils.register_async_exception_callback(cb)
+        cb = self.display_controller.show_exception_message
+        utils.register_async_exception_callback(cb)
 
         self.tasks = []  # (name, starttime, endtime=None)
         self.tasks_started_debug = []
