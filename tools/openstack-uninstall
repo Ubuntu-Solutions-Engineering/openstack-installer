@@ -71,8 +71,7 @@ case $WHAT in
     echo Single install path.
     lxc-stop -n uoi-bootstrap || true
     lxc-destroy -n uoi-bootstrap || true
-    container_ip=$(openstack-install -g container_ip)
-    ip route del 10.0.4.0/24 via $container_ip dev lxcbr0 || true
+    ip route del 10.0.4.0/24 || true
     ;;
   *)
     echo Could not determine install type, was ~/.cloud-install removed prior to running the uninstallation?
