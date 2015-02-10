@@ -351,7 +351,7 @@ class MaasState:
 def connect_to_maas(creds=None):
     if creds:
         api_host = creds['api_host']
-        api_url = 'http://{}/MAAS/api/1.0/'.format(api_host)
+        api_url = 'http://{}/MAAS/api/1.0'.format(api_host)
         api_key = creds['api_key']
         auth = MaasAuth(api_url=api_url,
                         api_key=api_key)
