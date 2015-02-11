@@ -11,6 +11,7 @@ environments:
     apt-http-proxy: 'http://{{maas_server}}:8000/'
     lxc-clone: true
     bootstrap-timeout: 3600
+    no-proxy: localhost,{{maas_server}}
 
   openstack:
     type: openstack
