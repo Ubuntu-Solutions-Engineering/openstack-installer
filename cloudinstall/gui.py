@@ -237,14 +237,18 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
         return ScrollableListBox(text + [loading_boxes])
 
 
-class NodeViewMode(ScrollableWidgetWrap):
+class ServicesView(ScrollableWidgetWrap):
 
-    def __init__(self, nodes, juju_state, maas_state, **kwargs):
+    def __init__(self, nodes, juju_state, maas_state, config, **kwargs):
         nodes = [] if nodes is None else nodes
         self.juju_state = juju_state
         self.maas_state = maas_state
-        widget = self._build_widget(nodes, **kwargs)
-        super().__init__(widget)
+        self.config = config
+        self.update()
+        super().__init__(self.widget)
+
+    def update(self):
+        self.widget = self._build_widget(nodes, **kwargs)
 
     def _build_widget(self, nodes, **kwargs):
         unit_info = []
@@ -322,7 +326,9 @@ class NodeViewMode(ScrollableWidgetWrap):
                 sync_text = Text('   ' + status_oneline)
                 node_cols.append(Pile([hw_text, sync_text]))
             else:
-                node_cols.append(hw_text)
+                # if config.get('show-logs'):
+                log_text = self.get_log_text(unit.unit_name)
+                node_cols.append(Pile([hw_text, log_text]))
 
         return Columns(node_cols)
 
@@ -576,6 +582,7 @@ class PegasusGUI(WidgetWrap):
                            header=self.header,
                            footer=self.footer)
 
+        self.services_view = None
         self.placement_view = None
         self.machine_wait_view = None
         super().__init__(self.frame)
@@ -737,9 +744,14 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer = None
         self.frame.set_footer(self.frame.footer)
 
-    def render_nodes(self, nodes, juju_state, maas_state, **kwargs):
-        self.frame.body = NodeViewMode(nodes, juju_state, maas_state)
-        self.frame.set_body(self.frame.body)
+    def render_services_view(self, nodes, juju_state, maas_state, config,
+                             **kwargs):
+        if self.services_view is None:
+            self.services_view = ServicesView(nodes, juju_state, maas_state,
+                                              config)
+
+        self.services_view.update()
+        self.frame.set_body(self.services_view)
         self.header.set_show_add_units_hotkey(True)
 
     def render_node_install_wait(self, message=None, **kwargs):
