@@ -244,11 +244,12 @@ class ServicesView(ScrollableWidgetWrap):
         self.juju_state = juju_state
         self.maas_state = maas_state
         self.config = config
-        self.update()
-        super().__init__(self.widget)
+        self.log_cache = None
+        super().__init__()
+        self.update(nodes)
 
-    def update(self):
-        self.widget = self._build_widget(nodes, **kwargs)
+    def update(self, nodes, **kwargs):
+        self._w = self._build_widget(nodes, **kwargs)
 
     def _build_widget(self, nodes, **kwargs):
         unit_info = []
@@ -326,9 +327,11 @@ class ServicesView(ScrollableWidgetWrap):
                 sync_text = Text('   ' + status_oneline)
                 node_cols.append(Pile([hw_text, sync_text]))
             else:
-                # if config.get('show-logs'):
-                log_text = self.get_log_text(unit.unit_name)
-                node_cols.append(Pile([hw_text, log_text]))
+                if self.config.getopt('show_logs'):
+                    log_text = Text(self.get_log_text(unit.unit_name))
+                    node_cols.append(Pile([hw_text, log_text]))
+                else:
+                    node_cols.append(Pile([hw_text]))
 
         return Columns(node_cols)
 
@@ -428,6 +431,17 @@ class ServicesView(ScrollableWidgetWrap):
                 err_info += unit_machine.agent_state_info
             return err_info
         return None
+
+    def get_log_text(self, unit_name):
+        name = '-'.join(unit_name.split('/'))
+        cmd = ("sudo grep {unit} /var/log/juju-ubuntu-local/all-machines.log "
+               " | tail -n 2")
+        cmd = cmd.format(unit=name)
+        out = utils.get_command_output(cmd)
+        if out['status'] == 0 and len(out['output']) > 0:
+            return out['output']
+        else:
+            return "No log matches for {}".format(name)
 
 
 class Header(WidgetWrap):
@@ -750,7 +764,7 @@ class PegasusGUI(WidgetWrap):
             self.services_view = ServicesView(nodes, juju_state, maas_state,
                                               config)
 
-        self.services_view.update()
+        self.services_view.update(nodes)
         self.frame.set_body(self.services_view)
         self.header.set_show_add_units_hotkey(True)
 
