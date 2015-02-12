@@ -142,6 +142,13 @@ class SingleInstall:
                 self.config.cfg_path,
                 'home/ubuntu/.cloud-install'))
             f.write("/var/cache/lxc var/cache/lxc none bind,create=dir\n")
+            extra_mounts = os.getenv("EXTRA_BIND_DIRS", None)
+            if extra_mounts:
+                for d in extra_mounts.split(','):
+                    mountpoint = os.path.basename(d)
+                    f.write("{d} home/ubuntu/{m} "
+                            "none bind,create=dir\n".format(d=d,
+                                                            m=mountpoint))
 
         # update container config
         with open(os.path.join(self.container_abspath, 'config'), 'a') as f:
