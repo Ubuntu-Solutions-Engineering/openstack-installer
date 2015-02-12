@@ -75,7 +75,7 @@ def parse_options(argv):
                         'in place. CAUTION: Does not confirm teardown, '
                         'Use with care!')
     parser.add_argument('--openstack-release',
-                        dest='openstack_release',
+                        dest='openstack_release', default="juno",
                         help="Specify a specific OpenStack release by "
                         "code-name, e.g. 'icehouse' or 'juno'")
     parser.add_argument('-a', type=str, default=None,
