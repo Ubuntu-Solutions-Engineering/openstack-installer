@@ -19,6 +19,9 @@ packages:
 groups:
   - libvirtd: [ubuntu]
   - sudo: [ubuntu]
+apt_get_wrapper:
+  command: eatmydata
+  enabled: auto
 apt_sources:
   - source: "ppa:cloud-installer/testing"
   - source: "ppa:juju/stable"
@@ -49,3 +52,11 @@ manage_etc_hosts: localhost
 runcmd:
   - [ sh, /etc/rc.local ]
   - echo "export PATH=$PATH:/usr/sbin" >> /home/ubuntu/.bashrc
+{% if http_proxy %}
+  - echo "export http_proxy={{ http_proxy }}" >> /home/ubuntu/.bashrc
+  - echo "export HTTP_PROXY={{ http_proxy }}" >> /home/ubuntu/.bashrc
+{% endif %}
+{% if https_proxy %}
+  - echo "export https_proxy={{ https_proxy }}" >> /home/ubuntu/.bashrc
+  - echo "export HTTPS_PROXY={{ https_proxy }}" >> /home/ubuntu/.bashrc
+{% endif %}
