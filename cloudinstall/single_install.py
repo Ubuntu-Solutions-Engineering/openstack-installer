@@ -70,6 +70,14 @@ class SingleInstall:
 
         render_parts['seed_command'] = self._proxy_pollinate()
 
+        # Setup proxy
+        http_proxy = self.config.getopt('http_proxy')
+        https_proxy = self.config.getopt('https_proxy')
+        if http_proxy:
+            render_parts['http_proxy'] = http_proxy
+        if https_proxy:
+            render_parts['https_proxy'] = https_proxy
+
         if self.config.getopt('apt_mirror'):
             render_parts['apt_mirror'] = self.config.getopt('apt_mirror')
 
@@ -330,6 +338,15 @@ class SingleInstall:
             log.info("Done installing, stopping here per --install-only.")
             self.config.setopt('install_only', True)
             self.loop.exit(0)
+
+        # Update jujus no-proxy setting if applicable
+        if self.config.getopt('http_proxy') or \
+           self.config.getopt('https_proxy'):
+            log.info("Updating juju environments for proxy support")
+            self.config.update_environments_yaml(
+                key='no-proxy',
+                val='{},localhost,10.0.4.1'.format(
+                    utils.container_ip(self.container_name)))
 
         # start the party
         cloud_status_bin = ['openstack-status']
