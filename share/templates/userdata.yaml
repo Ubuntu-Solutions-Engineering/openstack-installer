@@ -24,7 +24,6 @@ apt_get_wrapper:
   enabled: auto
 apt_sources:
   - source: "ppa:cloud-installer/testing"
-  - source: "ppa:juju/stable"
 {% if extra_ppa %}
 {% for ppa in extra_ppa %}
   - source: "{{ ppa }}"
