@@ -17,3 +17,4 @@ macumba
 maasclient
 jinja2
 lxml
+netaddr

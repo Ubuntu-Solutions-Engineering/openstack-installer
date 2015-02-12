@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from ipaddress import IPv4Interface, ip_address
+from netaddr import IPSet
 import re
 from subprocess import check_output
 
@@ -69,6 +70,13 @@ def get_netmask(interface):
         return None
     info = info['network'].with_netmask
     return info.split('/')[-1]
+
+
+def get_ip_set(cidr):
+    """ Returns a list of ip's in cidr for use in juju's no-proxy setting
+    """
+    ips = list(IPSet([cidr]))
+    return ",".join(str(x) for x in ips)
 
 
 def get_default_gateway():
