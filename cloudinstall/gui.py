@@ -328,7 +328,8 @@ class ServicesView(ScrollableWidgetWrap):
                 node_cols.append(Pile([hw_text, sync_text]))
             else:
                 if self.config.getopt('show_logs'):
-                    log_text = Text(self.get_log_text(unit.unit_name))
+                    log_text = Text([('label',
+                                      self.get_log_text(unit.unit_name))])
                     node_cols.append(Pile([hw_text, log_text]))
                 else:
                     node_cols.append(Pile([hw_text]))
