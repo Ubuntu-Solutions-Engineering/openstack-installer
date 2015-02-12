@@ -19,7 +19,7 @@ import os
 import json
 import time
 import shutil
-from cloudinstall import utils
+from cloudinstall import utils, netutils
 
 
 log = logging.getLogger('cloudinstall.single_install')
@@ -256,10 +256,16 @@ class SingleInstall:
     def _install_upstream_deb(self):
         log.info('Found upstream deb, installing that instead')
         filename = os.path.basename(self.config.getopt('upstream_deb'))
-        utils.container_run(
-            self.container_name,
-            'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
-                filename))
+        try:
+            utils.container_run(
+                self.container_name,
+                'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
+                    filename))
+        except:
+            # Make sure deps are installed if any new ones introduced by
+            # the upstream packaging.
+            utils.container_run(
+                self.container_name, 'sudo apt-get install -qyf')
 
     def set_perms(self):
         """ sets permissions
@@ -345,8 +351,9 @@ class SingleInstall:
             log.info("Updating juju environments for proxy support")
             self.config.update_environments_yaml(
                 key='no-proxy',
-                val='{},localhost,10.0.4.1'.format(
-                    utils.container_ip(self.container_name)))
+                val='{},localhost,{}'.format(
+                    utils.container_ip(self.container_name),
+                    netutils.get_ip_set('10.0.4.0/24')))
 
         # start the party
         cloud_status_bin = ['openstack-status']
