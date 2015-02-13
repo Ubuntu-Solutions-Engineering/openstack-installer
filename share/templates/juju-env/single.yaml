@@ -36,7 +36,3 @@ environments:
 {% if https_proxy %}
     https-proxy: {{https_proxy}}
 {% endif %}
-{% if http_proxy or https_proxy %}
-    no-proxy: localhost
-{% endif %}
-
