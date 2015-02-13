@@ -229,6 +229,14 @@ if __name__ == '__main__':
     else:
         ui = PegasusGUI(header=InstallHeader())
 
+    # Set proxy
+    if cfg.getopt('http_proxy'):
+        os.environ['HTTP_PROXY'] = cfg.getopt('http_proxy')
+        os.environ['http_proxy'] = cfg.getopt('http_proxy')
+    if cfg.getopt('https_proxy'):
+        os.environ['HTTPS_PROXY'] = cfg.getopt('https_proxy')
+        os.environ['https_proxy'] = cfg.getopt('https_proxy')
+
     # Choose event loop
     ev = EventLoop(ui, cfg, logger)
 

@@ -675,7 +675,7 @@ def container_create(name, userdata):
         log.debug("USE_LXC_IMAGE_CACHE set, so not flushing in lxc-create")
         flushflag = ""
     out = get_command_output(
-        'sudo lxc-create -t ubuntu-cloud '
+        'sudo -E lxc-create -t ubuntu-cloud '
         '-n {name} -- {flushflag} '
         '-u {userdatafilename}'.format(name=name,
                                        flushflag=flushflag,
