@@ -19,6 +19,12 @@ packages:
 groups:
   - libvirtd: [ubuntu]
   - sudo: [ubuntu]
+{% if http_proxy %}
+apt_proxy: {{ http_proxy }}
+{% endif %}
+{% if https_proxy %}
+apt_https_proxy: {{ https_proxy }}
+{% endif %}
 apt_get_wrapper:
   command: eatmydata
   enabled: auto
