@@ -34,6 +34,8 @@ class CharmCeph(CharmBase):
     disabled = False
     isolate = True
     allow_multi_units = True
+    constraints = {'mem': 1024,
+                   'root-disk': 20480}
 
     @classmethod
     def required_num_units(self):
