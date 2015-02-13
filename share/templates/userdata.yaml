@@ -23,7 +23,21 @@ apt_get_wrapper:
   command: eatmydata
   enabled: auto
 apt_sources:
-  - source: "ppa:cloud-installer/testing"
+  - source: deb http://ppa.launchpad.net/cloud-installer/testing/ubuntu $RELEASE main
+    key: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: SKS 1.1.4
+      Comment: Hostname: keyserver.ubuntu.com
+
+      mI0EUwap0AEEAOcvGspxrV0/83Xa6grEAplHLuuvj3CrOH26XwSleu/wzzTmNqKDnZLWjBkA
+      qdbfYzQ3T4aD2uWfMJ2doqemBmLZWKrkMInLcS2o3cqraFHJaZDAvJHg7wiDBYiuq0cCrj/m
+      enC351p/DLQ+QuiHE1hgX6JV4nF527rCmGbWSSTRABEBAAG0KExhdW5jaHBhZCBQUEEgZm9y
+      IFVidW50dSBDbG91ZCBJbnN0YWxsZXKIuAQTAQIAIgUCUwap0AIbAwYLCQgHAwIGFQgCCQoL
+      BBYCAwECHgECF4AACgkQ3eaD+NL/Ce1RuQQApA4AaFlsujGJ4i2lN1qLbxivXu2fs+D9aXAV
+      MgYINVj13/xxtn+1PqV7x7I9ej+Adhy9uLc+7T6mfx7Ahn791hbNr/gycSZEkvdp3gZRFWHS
+      MqPZ3uOvWieRR347tMTh/BgxEsTdTUcLbt7jZkk6NypGO+ej8WtWugJ9kwOPb9s=
+      =aDcI
+      -----END PGP PUBLIC KEY BLOCK-----
 {% if extra_ppa %}
 {% for ppa in extra_ppa %}
   - source: "{{ ppa }}"
