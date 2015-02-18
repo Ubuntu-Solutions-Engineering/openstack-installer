@@ -51,14 +51,18 @@ Optional Flags
 
 .. code::
 
-    usage: openstack-install [-h] [-i] [-u] [-k]
+    usage: openstack-install [-h] [-i] [-u] [-c CONFIG_FILE]
+                             [--charm-config CHARM_CONFIG_FILE] [-g GET_CONFIG]
+                             [-k] [--killcloud-noprompt]
                              [--openstack-release OPENSTACK_RELEASE] [-a ARCH]
-                             [-r RELEASE]
+                             [-r RELEASE] [-p]
                              [--extra-ppa EXTRA_PPA [EXTRA_PPA ...]]
-                             [--upstream-deb UPSTREAM_DEB] [--version]
-    
+                             [--upstream-deb UPSTREAM_DEB]
+                             [--http-proxy HTTP_PROXY] [--https-proxy HTTPS_PROXY]
+                             [--headless] [--storage {ceph,swift}] [--version]
+
     Ubuntu Openstack Installer
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       -i, --install-only    install and bootstrap MAAS/Juju/Landscape (as
@@ -67,8 +71,17 @@ Optional Flags
                             openstack-status manually to continue.
       -u, --uninstall       Uninstalls the current cloud including removing of
                             packages.
-      -k, --kill            Tear down existing cloud leaving userdata in place.
+      -c CONFIG_FILE, --config CONFIG_FILE
+                            Custom configuration for OpenStack installer.
+      --charm-config CHARM_CONFIG_FILE
+                            Additional charm settings
+      -g GET_CONFIG, --get-config GET_CONFIG
+                            with arg <key>, prints config value for 'key' to
+                            stdout and exits.
+      -k, --killcloud       Tear down existing cloud leaving userdata in place.
                             Useful for iterative deploys.
+      --killcloud-noprompt  Tear down existing cloud leaving userdata in place.
+                            CAUTION: Does not confirm teardown, Use with care!
       --openstack-release OPENSTACK_RELEASE
                             Specify a specific OpenStack release by code-name,
                             e.g. 'icehouse' or 'juno'
@@ -85,6 +98,13 @@ Optional Flags
       --upstream-deb UPSTREAM_DEB
                             Upload a local copy of openstack debian package to be
                             used in a single install. (DEVELOPERS)
+      --http-proxy HTTP_PROXY
+                            Specify HTTP proxy
+      --https-proxy HTTPS_PROXY
+                            Specify HTTPS proxy
+      --headless            Run deployment without prompts/gui
+      --storage {ceph,swift}
+                            Choose storage backend to deploy initially.
       --version             show program's version number and exit
 
 .. attention::
