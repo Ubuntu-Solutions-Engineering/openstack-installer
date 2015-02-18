@@ -91,8 +91,8 @@ class AddCharmDialog(WidgetWrap):
     def submit(self):
         """ Handle OK submit """
         selected = [r for r in self.boxes if
-                    r is not self.count_editor
-                    and r.get_state()][0]
+                    r is not self.count_editor and
+                    r.get_state()][0]
         _charm_to_deploy = selected.label
         n = self.count_editor.value()
         self.emit_done_signal(n, _charm_to_deploy)

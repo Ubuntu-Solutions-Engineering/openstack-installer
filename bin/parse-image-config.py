@@ -81,8 +81,8 @@ def main():
 
     except:
         raise Exception("Error modifying YAML config:"
-                        " Original traceback follows:\n\n"
-                        + traceback.format_exc())
+                        " Original traceback follows:\n\n" +
+                        traceback.format_exc())
 
 
 if __name__ == "__main__":

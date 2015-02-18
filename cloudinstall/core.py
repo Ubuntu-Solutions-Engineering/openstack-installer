@@ -493,8 +493,7 @@ class Controller:
     def get_machine_spec(self, maas_machine, atype):
         """Given a machine and assignment type, return a juju machine spec"""
         jm = next((m for m in self.juju_state.machines()
-                   if (m.instance_id == maas_machine.instance_id
-                       or
+                   if (m.instance_id == maas_machine.instance_id or
                        m.machine_id == maas_machine.machine_id)), None)
         if jm is None:
             log.error("could not find juju machine matching {}"
