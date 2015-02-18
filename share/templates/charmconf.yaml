@@ -11,8 +11,9 @@ openstack_origin is defined.
 ceph:
   fsid: 4df47d30-cbf3-45d9-a485-27996ab6998e
   monitor-secret: AQBilclUKG9RIRAAlFP9bohec06c+e7lfCRGrw==
-  osd-devices: /dev/sdb
-  osd-reformat: "yes"
+{% if install_type == 'Single' %}
+  osd-devices: /home/ubuntu/ceph-osd/
+{% endif %}
 
 ceph-osd:
   osd-devices: /dev/sdb
