@@ -638,11 +638,11 @@ class MultiInstallNewMaas(MultiInstall):
                     static_ip_range_high=static_range[1])
 
         if interface_exists:
-            cmd = ('maas maas node-group-interface update {uuid} {interface} '
-                   + paramstr).format(**args)
+            cmd = ('maas maas node-group-interface update '
+                   '{uuid} {interface} paramstr').format(**args)
         else:
-            cmd = ('maas maas node-group-interfaces new {uuid} '
-                   + paramstr).format(**args)
+            cmd = ('maas maas node-group-interfaces new {uuid} ' +
+                   paramstr).format(**args)
 
         out = utils.get_command_output(cmd)
         if out['status'] != 0:
