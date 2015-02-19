@@ -23,7 +23,7 @@ log = logging.getLogger('cloudinstall.charms.neutron_openvswitch')
 class CharmNeutronOpenvswitch(CharmBase):
 
     charm_name = 'neutron-openvswitch'
-    charm_rev = 1
+    charm_rev = 2
     display_name = 'Neutron OpenVSwitch'
     menuable = True
     subordinate = True

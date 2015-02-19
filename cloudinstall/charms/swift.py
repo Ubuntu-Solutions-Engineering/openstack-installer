@@ -25,7 +25,7 @@ class CharmSwift(CharmBase):
     """ swift directives """
 
     charm_name = 'swift-storage'
-    charm_rev = 11
+    charm_rev = 13
     display_name = 'Swift'
     menuable = True
     display_priority = DisplayPriorities.Storage

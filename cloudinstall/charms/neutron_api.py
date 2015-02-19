@@ -23,7 +23,7 @@ log = logging.getLogger('cloudinstall.charms.neutron_api')
 class CharmNeutronAPI(CharmBase):
 
     charm_name = 'neutron-api'
-    charm_rev = 5
+    charm_rev = 6
     display_name = 'Neutron API'
     menuable = True
     openstack_release_min = 'j'
