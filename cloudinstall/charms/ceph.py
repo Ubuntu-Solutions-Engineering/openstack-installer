@@ -25,7 +25,7 @@ class CharmCeph(CharmBase):
     """ Ceph directives """
 
     charm_name = 'ceph'
-    charm_rev = 31
+    charm_rev = 34
     display_name = 'Ceph'
     menuable = True
     display_priority = DisplayPriorities.Storage

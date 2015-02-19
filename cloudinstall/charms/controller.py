@@ -26,7 +26,7 @@ class CharmNovaCloudController(CharmBase):
     """ Openstack Nova Cloud Controller directives """
 
     charm_name = 'nova-cloud-controller'
-    charm_rev = 50
+    charm_rev = 51
     display_name = 'Controller'
     deploy_priority = 2
     menuable = True
