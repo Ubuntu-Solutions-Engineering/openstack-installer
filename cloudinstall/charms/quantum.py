@@ -27,7 +27,7 @@ class CharmQuantum(CharmBase):
     """ quantum directives """
 
     charm_name = 'quantum-gateway'
-    charm_rev = 7
+    charm_rev = 10
     # TODO: Charms are still called quantum, we want to display
     # them as Neutron
     display_name = 'Neutron'
