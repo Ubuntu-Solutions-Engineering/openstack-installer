@@ -1,6 +1,11 @@
-openstack (0.22-0~alpha1~ubuntu15.04.1) vivid; urgency=medium
+openstack (0.22-0ubuntu1~15.04) vivid; urgency=medium
 
-  * Tag v0.22-alpha1
+  * New stable release
+  * Support for MAAS 1.7
+  * Support for Juju 1.20
+  * Proxy support
+  * Machine Placement UI
+  * Single, Multi, and Landscape OpenStack Autopilot support
 
  -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 28 Jan 2015 02:55:15 -0500
 
