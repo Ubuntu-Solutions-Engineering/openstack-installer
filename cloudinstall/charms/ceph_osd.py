@@ -24,7 +24,7 @@ class CharmCephOSD(CharmBase):
     """ Ceph OSD directives """
 
     charm_name = 'ceph-osd'
-    charm_rev = 5
+    charm_rev = 8
     display_name = 'Ceph OSD'
     menuable = True
     display_priority = DisplayPriorities.Storage

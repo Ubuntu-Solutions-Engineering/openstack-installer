@@ -20,7 +20,7 @@ class CharmGlance(CharmBase):
     """ Openstack Glance directives """
 
     charm_name = 'glance'
-    charm_rev = 9
+    charm_rev = 11
     display_name = 'Glance'
     menuable = True
     related = ['mysql', 'keystone', 'rabbitmq-server']

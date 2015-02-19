@@ -20,7 +20,7 @@ class CharmSwiftProxy(CharmBase):
     """ swift directives """
 
     charm_name = 'swift-proxy'
-    charm_rev = 8
+    charm_rev = 11
     display_name = 'Swift Proxy'
     display_priority = DisplayPriorities.Storage
     related = ['keystone', 'glance']
