@@ -16,11 +16,13 @@ apt_purge() {
 
 CFG_HOME=$(openstack-install -g cfg_path)
 case $WHAT in
+  "Landscape OpenStack Autopilot")
+    echo Landscape OpenStack Autopilot environment
+    JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || exit 1
+    ;;
   Multi)
     echo Multi install environment
 
-    # FIXME: probably need to convert this to a python script to pull
-    # same data from config object
     JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || exit 1
 
     if [ "$MAAS_TYPE" == "new" ]; then
