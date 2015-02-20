@@ -103,10 +103,20 @@ class MultiInstall:
 
         maas_creds = self.config.getopt('maascreds')
         maas_env = utils.load_template('juju-env/maas.yaml')
-        maas_env_modified = maas_env.render(
-            maas_server=maas_creds['api_host'],
-            maas_apikey=maas_creds['api_key'],
-            openstack_password=self.config.getopt('openstack_password'))
+
+        render_parts = {'openstack_password':
+                        self.config.getopt('openstack_password'),
+                        'maas_server': maas_creds['api_host'],
+                        'maas_apikey': maas_creds['api_key']}
+
+        if self.config.getopt('http_proxy'):
+            render_parts['http_proxy'] = self.config.getopt('http_proxy')
+
+        if self.config.getopt('https_proxy'):
+            render_parts['https_proxy'] = self.config.getopt('https_proxy')
+
+        maas_env_modified = maas_env.render(render_parts)
+
         check_output(['mkdir', '-p', self.config.juju_path()])
         utils.spew(self.config.juju_environments_path,
                    maas_env_modified)

@@ -12,6 +12,12 @@ environments:
     lxc-clone: true
     bootstrap-timeout: 3600
     no-proxy: localhost,{{maas_server}}
+{% if http_proxy %}
+    http-proxy: {{http_proxy}}
+{% endif %}
+{% if https_proxy %}
+    https-proxy: {{https_proxy}}
+{% endif %}
 
   openstack:
     type: openstack
@@ -24,3 +30,9 @@ environments:
     auth-mode: userpass
     username: ubuntu
     password: {{openstack_password}}
+{% if http_proxy %}
+    http-proxy: {{http_proxy}}
+{% endif %}
+{% if https_proxy %}
+    https-proxy: {{https_proxy}}
+{% endif %}
