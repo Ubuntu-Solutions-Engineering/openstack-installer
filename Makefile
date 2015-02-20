@@ -58,7 +58,7 @@ update_version:
 	@sed -i -r "s/(^__version__\s=\s)(.*)/\1\"$(VERSION)\"/" cloudinstall/__init__.py
 
 .PHONY: ci-test pyflakes pep8 test travis-test
-ci-test: pyflakes pep8 travis-test
+ci-test: tox
 
 pyflakes:
 	python3 `which pyflakes` cloudinstall test bin
