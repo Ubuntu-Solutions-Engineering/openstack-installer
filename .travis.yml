@@ -9,9 +9,8 @@ notifications:
     use_notice: true
     skip_join: true
 install:
-  - "pip install -r requirements.txt"
+  - "pip install tox"
   - "pip install coveralls"
-  - "python setup.py install"
-script: make ci-test
+script: tox
 after_success:
   coveralls
