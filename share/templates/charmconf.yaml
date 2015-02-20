@@ -16,7 +16,7 @@ cinder:
 
 ceph-radosgw:
 {% if openstack_origin is defined %}
-  openstack-origin: {{openstack_origin}}
+  source: {{openstack_origin}}
 {% endif %}
   use-embedded-webserver: True
 
