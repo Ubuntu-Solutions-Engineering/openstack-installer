@@ -31,15 +31,15 @@ class CharmCinderCeph(CharmBase):
                           'cinder:storage-backend'),
                'ceph': ('ceph:client', 'cinder-ceph:ceph')}
     deploy_priority = 5
-    isolate = True
-    disabled = False
+    subordinate = True
+    openstack_release_min = 'j'
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name, 'ceph', 'cinder']):
             return True
         for charm in self.related.keys():
             try:
-                rv = self.juju.add_relation(self.related[charm])
+                rv = self.juju.add_relation(*self.related[charm])
                 log.debug("add_relation {} "
                           "returned {}".format(charm, rv))
             except:
