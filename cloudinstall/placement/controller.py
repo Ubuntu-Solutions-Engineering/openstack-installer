@@ -271,7 +271,8 @@ class PlacementController:
         unplaced_services_names = [c.name() for c in
                                    self.unplaced_services]
         swift_charmnames = ['swift-storage', 'swift-proxy']
-        ceph_charmnames = ['ceph', 'ceph-osd']
+        ceph_charmnames = ['ceph', 'ceph-osd', 'ceph-radosgw',
+                           'cinder', 'cinder-ceph']
 
         # if both swift charms are unplaced, then they are unrequired.
         if set(swift_charmnames).issubset(unplaced_services_names) \
