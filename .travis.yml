@@ -6,7 +6,7 @@ notifications:
   webooks:
     - http://cypherbook.com:8080/hubot/travis
 install:
-  - "pip install -r requirements.txt --use-mirrors"
+  - "pip install -r requirements.txt"
   - "pip install coveralls"
   - "python setup.py install"
 script: make ci-test
