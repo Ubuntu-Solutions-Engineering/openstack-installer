@@ -272,7 +272,7 @@ class PlacementController:
                                    self.unplaced_services]
         swift_charmnames = ['swift-storage', 'swift-proxy']
         ceph_charmnames = ['ceph', 'ceph-osd', 'ceph-radosgw',
-                           'cinder', 'cinder-ceph']
+                           'cinder-ceph']
 
         # if both swift charms are unplaced, then they are unrequired.
         if set(swift_charmnames).issubset(unplaced_services_names) \
@@ -282,12 +282,13 @@ class PlacementController:
         if not storage_backend or storage_backend == 'swift':
             # ceph is required if ceph-osd is placed, but not vice versa.
             if set(ceph_charmnames).issubset(unplaced_services_names):
-                unrequired_services += ['ceph', 'ceph-osd']
+                unrequired_services += ceph_charmnames
             else:
-                unrequired_services += ['ceph-osd']
+                unrequired_services += ['ceph-osd', 'ceph-radosgw',
+                                        'cinder-ceph']
         else:
-            # ceph was chosen, and is required, but ceph-osd is not required.
-            unrequired_services += ['ceph-osd']
+            # ceph was chosen, and is required, but the others are not required.
+            unrequired_services += ['ceph-osd', 'ceph-radosgw', 'cinder-ceph']
 
         if cc.name() in unrequired_services:
             return False
