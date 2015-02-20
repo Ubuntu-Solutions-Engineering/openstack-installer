@@ -35,8 +35,7 @@ class CharmCinder(CharmBase):
                'nova-cloud-controller': (
                    'nova-cloud-controller:cinder-volume-service',
                    'cinder:cinder-volume-service')}
-    deploy_priority = 5
-    disabled = False
+    openstack_release_min = 'j'
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name,
@@ -47,7 +46,7 @@ class CharmCinder(CharmBase):
             return True
         for charm in self.related.keys():
             try:
-                rv = self.juju.add_relation(self.related[charm])
+                rv = self.juju.add_relation(*self.related[charm])
                 log.debug("add_relation {} "
                           "returned {}".format(charm, rv))
             except:

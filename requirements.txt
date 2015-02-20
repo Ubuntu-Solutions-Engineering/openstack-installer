@@ -18,3 +18,4 @@ maasclient
 jinja2
 netaddr
 tox
+coveralls

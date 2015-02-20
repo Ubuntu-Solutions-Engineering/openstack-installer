@@ -1,6 +1,6 @@
 language: python
-python:
-  - 3.4
+env:
+  - TOXENV=py34
 notifications:
   email: false
   irc:
@@ -9,8 +9,6 @@ notifications:
     use_notice: true
     skip_join: true
 install:
-  - "pip install tox"
-  - "pip install coveralls"
-script: tox
-after_success:
-  coveralls
+  - travis_retry pip install tox
+script:
+  - travis_retry tox

@@ -29,10 +29,8 @@ class CharmCephOSD(CharmBase):
     menuable = True
     display_priority = DisplayPriorities.Storage
     related = ['ceph']
-    deploy_priority = 5
-    disabled = False
     isolate = True
-    allow_multi_units = True
+    openstack_release_min = 'j'
 
 
 __charm_class__ = CharmCephOSD
