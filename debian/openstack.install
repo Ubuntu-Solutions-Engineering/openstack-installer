@@ -6,6 +6,8 @@ bin/openstack-juju                     usr/share/openstack
 bin/openstack-status                   usr/share/openstack
 bin/parse-image-config.py              usr/share/openstack/bin
 bin/status-listener                    usr/share/openstack/bin
+maasclient/maasclient                  usr/share/openstack
+macumba/macumba                        usr/share/openstack
 share/templates                        usr/share/openstack
 tools/apt-go-fast                      usr/share/openstack/tools
 tools/openstack-uninstall              usr/share/openstack/tools
