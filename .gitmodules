@@ -1,6 +1,6 @@
 [submodule "maasclient"]
 	path = maasclient
-	url = git@github.com:Ubuntu-Solutions-Engineering/maasclient.git
+	url = https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
 [submodule "macumba"]
 	path = macumba
-	url = git@github.com:Ubuntu-Solutions-Engineering/macumba.git
+	url = https@github.com/Ubuntu-Solutions-Engineering/macumba.git
