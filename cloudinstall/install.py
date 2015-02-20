@@ -46,6 +46,11 @@ class InstallController:
         self.config = config
         self.loop = loop
         self.config.setopt('current_state', InstallState.RUNNING.value)
+        
+        if self.config.getopt('openstack_release') == 'icehouse':
+            self.ui.set_openstack_rel("Icehouse (2014.1.3)")
+        else:
+            self.ui.set_openstack_rel("Juno (2014.2.2)")
 
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
@@ -106,7 +111,6 @@ class InstallController:
         utils.spew(os.path.join(
             self.config.cfg_path, 'installed'), 'auto-generated')
         if install_type == INSTALL_TYPE_SINGLE[0]:
-            # self.ui.set_openstack_rel("Icehouse (2014.1.3)")
             log.info("Performing a Single Install")
             self.SingleInstall(
                 self.loop, self.ui, self.config).run()
@@ -122,10 +126,8 @@ class InstallController:
                     self.MultiInstallNewMaas(
                         self.loop, self.ui, self.config).run()
             else:
-                self.ui.set_openstack_rel("Icehouse (2014.1.3)")
                 self.ui.select_maas_type(self._save_maas_creds)
         elif install_type == INSTALL_TYPE_LANDSCAPE[0]:
-            # self.ui.set_openstack_rel("")
             log.info("Performing a Landscape OpenStack Autopilot install")
             self.LandscapeInstall(
                 self.loop, self.ui, self.config).run()
