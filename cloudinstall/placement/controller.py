@@ -287,7 +287,8 @@ class PlacementController:
                 unrequired_services += ['ceph-osd', 'ceph-radosgw',
                                         'cinder-ceph']
         else:
-            # ceph was chosen, and is required, but the others are not required.
+            # ceph was chosen, and is required, but the others
+            # are not required.
             unrequired_services += ['ceph-osd', 'ceph-radosgw', 'cinder-ceph']
 
         if cc.name() in unrequired_services:
