@@ -3,8 +3,11 @@ python:
   - 3.4
 notifications:
   email: false
-  webooks:
-    - http://cypherbook.com:8080/hubot/travis
+  irc:
+    channels:
+      - "chat.freenode.net#ubuntu-solutions"
+    use_notice: true
+    skip_join: true
 install:
   - "pip install -r requirements.txt"
   - "pip install coveralls"
