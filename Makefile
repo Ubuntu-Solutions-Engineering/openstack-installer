@@ -35,7 +35,7 @@ clean:
 	@rm -rf cover
 	@rm -rf .coverage
 
-DPKGBUILDARGS = -us -uc -i'.git.*|.tox|.bzr.*|.editorconfig|.travis-yaml'
+DPKGBUILDARGS = -us -uc -i'.git.*|.tox|.bzr.*|.editorconfig|.travis-yaml|macumba\/debian|maasclient\/debian'
 deb-src: clean update_version tarball
 	@dpkg-buildpackage -S $(DPKGBUILDARGS)
 
