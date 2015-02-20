@@ -104,7 +104,8 @@ def parse_options(argv):
                         help="Run deployment without prompts/gui",
                         dest='headless')
     parser.add_argument('--storage', dest='storage_backend',
-                        choices=['ceph', 'swift'],
+                        default='none',
+                        choices=['ceph', 'swift', 'none'],
                         help="Choose storage backend to deploy initially.")
     # TODO: currently only works for single installs. Use
     # SHOW_JUJU_LOGS=1 in the env to enable. See github issue #421

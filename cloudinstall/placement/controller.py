@@ -402,18 +402,21 @@ class PlacementController:
 
     def filter_storage_backends(self, charm_classes):
         "return list of charm classes with only selected backends"
-        all_backend_charms = ['swift-proxy', 'swift-storage',
-                              'ceph']
+        swift_charms = ['swift-proxy', 'swift-storage']
+        ceph_charms = ['ceph', 'ceph-osd', 'ceph-radosgw', 'cinder-ceph']
 
         selected_backend = self.config.getopt('storage_backend')
-        to_remove = all_backend_charms
+        log.debug("filtering storage charms. "
+                  " Selected backend is {}".format(selected_backend))
 
-        if selected_backend:
-            to_remove = [n for n in to_remove if
-                         selected_backend not in n]
-
-        # ceph-osd is never required, only included for scale-out:
-        to_remove.append('ceph-osd')
+        if selected_backend == 'none':
+            to_remove = swift_charms + ceph_charms
+        elif selected_backend == 'ceph':
+            # ceph-osd is never deployed initially, only included for
+            # scale-out:
+            to_remove = swift_charms = ['ceph-osd']
+        elif selected_backend == 'swift':
+            to_remove = ceph_charms
 
         log.debug("to_remove is {}".format(to_remove))
 
