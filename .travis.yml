@@ -8,6 +8,7 @@ notifications:
       - "chat.freenode.net#ubuntu-solutions"
     use_notice: true
     skip_join: true
+    on_failure: change
 install:
   - travis_retry pip install tox
 script:
