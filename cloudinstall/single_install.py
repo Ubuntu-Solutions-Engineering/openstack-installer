@@ -335,7 +335,9 @@ class SingleInstall:
                            '.ssh/.')
         # Install local copy of openstack installer if provided
         upstream_deb = self.config.getopt('upstream_deb')
-        if upstream_deb and os.path.isfile(upstream_deb):
+        if upstream_deb:
+            if not os.path.isfile(upstream_deb):
+                raise Exception("Upstream deb specified but file not found.")
             shutil.copy(upstream_deb, self.config.cfg_path)
             self._install_upstream_deb()
 
