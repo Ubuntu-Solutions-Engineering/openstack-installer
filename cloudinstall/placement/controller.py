@@ -265,6 +265,9 @@ class PlacementController:
                                'juju-gui']
 
         storage_backend = self.config.getopt('storage_backend')
+        if storage_backend not in ['swift', 'ceph', 'none']:
+            raise AssertionError("unexpected storage_backend: "
+                                 "'{}'".format(storage_backend))
 
         # if we place one of swift-proxy or swift-storage, we must
         # place the others.
@@ -279,7 +282,7 @@ class PlacementController:
            and storage_backend != 'swift':
             unrequired_services += swift_charmnames
 
-        if not storage_backend or storage_backend == 'swift':
+        if storage_backend in ['none', 'swift']:
             # ceph is required if ceph-osd is placed, but not vice versa.
             if set(ceph_charmnames).issubset(unplaced_services_names):
                 unrequired_services += ceph_charmnames
