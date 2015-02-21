@@ -32,7 +32,6 @@ class CharmCinderCeph(CharmBase):
                'ceph': ('ceph:client', 'cinder-ceph:ceph')}
     deploy_priority = 5
     subordinate = True
-    openstack_release_min = 'j'
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name, 'ceph', 'cinder']):

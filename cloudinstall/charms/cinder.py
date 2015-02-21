@@ -25,7 +25,7 @@ class CharmCinder(CharmBase):
     """ Cinder directives """
 
     charm_name = 'cinder'
-    charm_rev = 10
+    charm_rev = 12
     display_name = 'Cinder'
     related = {'glance': ('cinder:image-service', 'glance:image-service'),
                'rabbitmq-server': ('rabbitmq-server:amqp',
@@ -35,7 +35,6 @@ class CharmCinder(CharmBase):
                'nova-cloud-controller': (
                    'nova-cloud-controller:cinder-volume-service',
                    'cinder:cinder-volume-service')}
-    openstack_release_min = 'j'
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name,

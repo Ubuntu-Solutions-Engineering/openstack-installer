@@ -30,7 +30,6 @@ class CharmCephOSD(CharmBase):
     display_priority = DisplayPriorities.Storage
     related = ['ceph']
     isolate = True
-    openstack_release_min = 'j'
 
 
 __charm_class__ = CharmCephOSD
