@@ -37,7 +37,10 @@ clean:
 
 DPKGBUILDARGS = -us -uc -i'.git.*|.tox|.bzr.*|.editorconfig|.travis-yaml|macumba\/debian|maasclient\/debian'
 deb-src: clean update_version tarball
-	@dpkg-buildpackage -S $(DPKGBUILDARGS)
+	@dpkg-buildpackage -S -sa $(DPKGBUILDARGS)
+
+deb-release:
+	@dpkg-buildpackage -S -sd $(DPKGBUILDARGS)
 
 deb: clean update_version man-pages tarball
 	@dpkg-buildpackage -b $(DPKGBUILDARGS)
@@ -58,7 +61,7 @@ update_version:
 	@sed -i -r "s/(^__version__\s=\s)(.*)/\1\"$(VERSION)\"/" cloudinstall/__init__.py
 
 .PHONY: ci-test pyflakes pep8 test travis-test
-ci-test: tox
+ci-test: pyflakes pep8 travis-test
 
 pyflakes:
 	python3 `which pyflakes` cloudinstall test bin
