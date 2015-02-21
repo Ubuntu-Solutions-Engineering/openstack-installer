@@ -27,6 +27,7 @@ class CharmCephOSD(CharmBase):
     charm_rev = 8
     display_name = 'Ceph OSD'
     menuable = True
+    allow_multi_units = True
     display_priority = DisplayPriorities.Storage
     related = ['ceph']
     isolate = True
