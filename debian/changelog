@@ -1,4 +1,4 @@
-openstack (0.99.0-0ubuntu1) UNRELEASED; urgency=medium
+openstack (0.99.1-0ubuntu1~15.04.1~bleed1) vivid; urgency=medium
 
   * Start next development release. This is the prelude to 1.0
     and marks our first feature complete release.
