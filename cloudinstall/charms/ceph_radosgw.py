@@ -26,11 +26,10 @@ class CharmCephRadosGw(CharmBase):
 
     charm_name = 'ceph-radosgw'
     charm_rev = 9
-    display_name = 'Ceph Radosgw'
+    display_name = 'Ceph RADOS Gateway'
     related = {'ceph': ('ceph:radosgw', 'ceph-radosgw:mon'),
                'keystone': ('ceph-radosgw:identity-service',
                             'keystone:identity-service')}
-    openstack_release_min = 'j'
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name,
