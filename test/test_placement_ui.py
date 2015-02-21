@@ -78,6 +78,7 @@ class ServiceWidgetTestCase(unittest.TestCase):
             utils.spew(tempf.name, yaml.dump(dict()))
             self.conf = Config({}, tempf.name)
 
+        self.conf.setopt('storage_backend', 'none')
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)
 
@@ -319,6 +320,7 @@ class ServicesListTestCase(unittest.TestCase):
             utils.spew(tempf.name, yaml.dump(dict()))
             self.conf = Config({}, tempf.name)
 
+        self.conf.setopt('storage_backend', 'none')
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)
         self.mock_machine = make_fake_machine('machine1', {'cpu_count': 3})
