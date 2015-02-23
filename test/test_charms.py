@@ -99,9 +99,7 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
     def test_set_relations_no_unit(self):
         ms = MagicMock(name='mock_service')
         self.mock_juju_state.service.return_value = ms
-        mu = MagicMock(name='mock_unit')
         ms.unit.side_effect = JujuUnitNotFoundException()
         rv = self.charm.set_relations()
         self.assertTrue(rv)
-        expected = []
         self.assertEqual(self.mock_jujuclient.mock_calls, [])
