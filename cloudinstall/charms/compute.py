@@ -28,7 +28,14 @@ class CharmNovaCompute(CharmBase):
     display_name = 'Compute'
     menuable = True
     display_priority = DisplayPriorities.Compute
-    related = ['mysql', 'glance', 'nova-cloud-controller']
+    related = {'rabbitmq-server': ('nova-compute:amqp',
+                                   'rabbitmq-server:amqp'),
+               'mysql': ('mysql:shared-db',
+                         'nova-compute:shared-db'),
+               'glance': ('nova-compute:image-service',
+                          'glance:image-service'),
+               'nova-cloud-controller': ('nova-cloud-controller:cloud-compute',
+                                         'nova-compute:cloud-compute')}
     isolate = True
     constraints = {'mem': 4096,
                    'root-disk': 40960}
@@ -39,38 +46,6 @@ class CharmNovaCompute(CharmBase):
     def set_relations(self):
         if not self.wait_for_agent(['nova-cloud-controller']):
             return True
-
-        for charm in self.related:
-            log.debug("{1} adding relation to {0}".format(
-                charm, self.display_name))
-            try:
-                if "mysql" in charm:
-                    rv = self.juju.add_relation(
-                        "{0}:shared-db".format(self.charm_name),
-                        "{0}:shared-db".format(charm))
-                    log.debug("add_relation (shared-db) "
-                              "returned {}".format(rv))
-                else:
-                    self.juju.add_relation(self.charm_name,
-                                           charm)
-                    log.debug("add_relation returned {}".format(rv))
-            except:
-                log.exception("{0} not ready for relation".format(charm))
-                return True
-
-        service = self.juju_state.service(self.charm_name)
-        has_amqp = list(filter(lambda r: 'amqp' in r.relation_name,
-                        service.relations))
-        if len(has_amqp) == 0:
-            log.debug("Setting amqp relation for compute.")
-            try:
-                self.juju.add_relation("{c}:amqp".format(
-                                       c=self.charm_name),
-                                       "rabbitmq-server:amqp")
-            except:
-                log.exception("Not ready to set amqp relation.")
-                return True
-            return False
-        return False
+        super().set_relations()
 
 __charm_class__ = CharmNovaCompute

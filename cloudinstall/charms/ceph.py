@@ -29,7 +29,8 @@ class CharmCeph(CharmBase):
     display_name = 'Ceph'
     menuable = True
     display_priority = DisplayPriorities.Storage
-    related = ['glance', 'nova-compute']
+    related = {'glance': ('glance:ceph', 'ceph:client'),
+               'nova-compute': ('nova-compute:ceph', 'ceph:client')}
     deploy_priority = 5
     disabled = False
     isolate = True

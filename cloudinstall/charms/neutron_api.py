@@ -27,37 +27,20 @@ class CharmNeutronAPI(CharmBase):
     display_name = 'Neutron API'
     menuable = True
     openstack_release_min = 'j'
+    related = {'nova-cloud-controller': ('nova-cloud-controller:neutron-api',
+                                         'neutron-api:neutron-api'),
+               'keystone': ('neutron-api:identity-service',
+                            'keystone:identity-service'),
+               'neutron-openvswitch': (
+                   'neutron-openvswitch:neutron-plugin-api',
+                   'neutron-api:neutron-plugin-api'),
+               'mysql': ('mysql:shared-db', 'neutron-api:shared-db'),
+               'rabbitmq-server': ('rabbitmq-server:amqp',
+                                   'neutron-api:amqp'),
+               'quantum-gateway': ('quantum-gateway:neutron-plugin-api',
+                                   'neutron-api:neutron-plugin-api'),
+               'nova-cloud-controller': ('nova-cloud-controller:neutron-api',
+                                         'neutron-api:neutron-api')}
 
-    def set_relations(self):
-        repoll = super().set_relations()
-        if repoll:
-            return True
-        service = self.juju_state.service(self.charm_name)
-        for other_serv, interface in [('rabbitmq-server', 'amqp'),
-                                      ('mysql', 'shared-db'),
-                                      ('nova-cloud-controller', 'neutron-api'),
-                                      ('keystone', 'identity-service')]:
-
-            if self.is_related(other_serv, service.relations):
-                return False
-
-            rel_this = "{}:{}".format(self.charm_name,
-                                      interface)
-            rel_other = "{}:{}".format(other_serv,
-                                       interface)
-            log.debug("calling add_relation({}, {})".format(rel_this,
-                                                            rel_other))
-
-            try:
-                self.juju.add_relation(rel_this, rel_other)
-
-            except:
-                msg = ("Relation {}<->{} not ready, "
-                       "requeueing.".format(rel_this, rel_other))
-                log.info(msg)
-                self.ui.status_info_message(msg)
-                return True
-
-        return False
 
 __charm_class__ = CharmNeutronAPI
