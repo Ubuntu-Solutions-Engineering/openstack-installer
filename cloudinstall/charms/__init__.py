@@ -256,9 +256,10 @@ export OS_REGION_NAME=RegionOne
         if isinstance(self.related, dict):
             for charm in self.related.keys():
                 try:
-                    rv = self.juju.add_relation(*self.related[charm])
-                    log.debug("add_relation {} "
-                              "returned {}".format(charm, rv))
+                    log.debug("add_relation ({}, {})".format(
+                        *self.related[charm]))
+
+                    self.juju.add_relation(*self.related[charm])
                 except:
                     log.exception("{} not ready for relation".format(charm))
                     return True
