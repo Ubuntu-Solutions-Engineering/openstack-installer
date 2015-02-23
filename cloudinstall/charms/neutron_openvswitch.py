@@ -28,36 +28,11 @@ class CharmNeutronOpenvswitch(CharmBase):
     menuable = True
     subordinate = True
     openstack_release_min = 'j'
-
-    def set_relations(self):
-        repoll = super().set_relations()
-        if repoll:
-            return True
-        service = self.juju_state.service(self.charm_name)
-        for other_serv, interface in [('rabbitmq-server', 'amqp'),
-                                      ('nova-compute', 'neutron-plugin'),
-                                      ('neutron-api', 'neutron-plugin-api')]:
-
-            if self.is_related(other_serv, service.relations):
-                return False
-
-            rel_this = "{}:{}".format(self.charm_name,
-                                      interface)
-            rel_other = "{}:{}".format(other_serv,
-                                       interface)
-            log.debug("calling add_relation({}, {})".format(rel_this,
-                                                            rel_other))
-
-            try:
-                self.juju.add_relation(rel_this, rel_other)
-
-            except:
-                msg = ("Relation {}<->{} not ready, "
-                       "requeueing.".format(rel_this, rel_other))
-                log.info(msg)
-                self.ui.status_info_message(msg)
-                return True
-
-        return False
+    related = {'nova-compute': ('nova-compute:neutron-plugin',
+                                'neutron-openvswitch:neutron-plugin'),
+               'rabbitmq-server': ('rabbitmq-server:amqp',
+                                   'neutron-openvswitch:amqp'),
+               'neutron-api': ('neutron-api:neutron-plugin-api',
+                               'neutron-openvswitch:neutron-plugin-api')}
 
 __charm_class__ = CharmNeutronOpenvswitch
