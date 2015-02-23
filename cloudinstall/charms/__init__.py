@@ -253,7 +253,17 @@ export OS_REGION_NAME=RegionOne
 
         Override in charm specific.
         """
-        if len(self.related) > 0:
+        if isinstance(self.related, dict):
+            for charm in self.related.keys():
+                try:
+                    rv = self.juju.add_relation(*self.related[charm])
+                    log.debug("add_relation {} "
+                              "returned {}".format(charm, rv))
+                except:
+                    log.exception("{} not ready for relation".format(charm))
+                    return True
+
+        elif isinstance(self.related, list) and len(self.related) > 0:
             services = self.juju_state.service(self.charm_name)
             unit = services.unit(self.charm_name)
             if unit.agent_state != "started":
