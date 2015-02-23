@@ -35,7 +35,9 @@ class CharmNovaCompute(CharmBase):
                ('nova-compute:image-service',
                 'glance:image-service'),
                ('nova-cloud-controller:cloud-compute',
-                'nova-compute:cloud-compute')]
+                'nova-compute:cloud-compute'),
+               ('ntp:juju-info',
+                'nova-compute:juju-info')]
     isolate = True
     constraints = {'mem': 4096,
                    'root-disk': 40960}

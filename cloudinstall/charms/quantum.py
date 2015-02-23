@@ -34,7 +34,8 @@ class CharmQuantum(CharmBase):
     deploy_priority = 99
     related = [('mysql:shared-db', 'quantum-gateway:shared-db'),
                ('nova-cloud-controller:quantum-network-service',
-                ('quantum-gateway:quantum-network-service'))]
+                'quantum-gateway:quantum-network-service'),
+               ('ntp:juju-info', 'quantum-gateway:juju-info')]
     isolate = True
     menuable = True
     constraints = {'mem': 2048,

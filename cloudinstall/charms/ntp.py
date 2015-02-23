@@ -27,11 +27,7 @@ class CharmNtp(CharmBase):
     charm_name = 'ntp'
     charm_rev = 6
     display_name = 'NTP'
-    related = [('ntp:juju-info',
-                'nova-compute:juju-info'),
-               ('ntp:juju-info',
-                'quantum-gateway:juju-info'),
-               ('ntp:juju-info', 'ceph-osd:juju-info')]
     subordinate = True
+    deploy_priority = 0
 
 __charm_class__ = CharmNtp
