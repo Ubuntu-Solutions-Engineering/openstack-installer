@@ -255,10 +255,9 @@ export OS_REGION_NAME=RegionOne
         """
         if len(self.related) > 0:
             services = self.juju_state.service(self.charm_name)
-            # FIXME: Is this still needed?
-            # unit = services.unit(self.charm_name)
-            # if unit.agent_state != "started":
-            #     return True
+            unit = services.unit(self.charm_name)
+            if unit.agent_state != "started":
+                return True
             for relation_a, relation_b in self.related:
                 if not self.is_related(":".split(relation_a)[0],
                                        services.relations):

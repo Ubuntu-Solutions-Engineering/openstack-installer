@@ -83,6 +83,11 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
                 config=self.mock_config)
 
     def test_set_relations_ok(self):
+        ms = MagicMock(name='mock_service')
+        self.mock_juju_state.service.return_value = ms
+        mu = MagicMock(name='mock_unit')
+        ms.unit.return_value = mu
+        mu.agent_state = "started"
         self.charm.set_relations()
         expected = []
         for relation_a, relation_b in sorted(self.charm.related):
