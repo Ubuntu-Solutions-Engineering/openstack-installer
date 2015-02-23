@@ -31,11 +31,4 @@ class CharmCephRadosGw(CharmBase):
                ('ceph-radosgw:identity-service',
                 'keystone:identity-service')]
 
-    def set_relations(self):
-        if not self.wait_for_agent([self.charm_name,
-                                    'keystone',
-                                    'ceph']):
-            return True
-        super().set_relations()
-
 __charm_class__ = CharmCephRadosGw

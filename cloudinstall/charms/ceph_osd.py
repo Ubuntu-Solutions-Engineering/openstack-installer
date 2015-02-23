@@ -15,7 +15,7 @@
 
 import logging
 
-from cloudinstall.charms import CharmBase, DisplayPriorities
+from cloudinstall.charms import CharmBase
 
 log = logging.getLogger('cloudinstall.charms.ceph')
 
@@ -26,10 +26,13 @@ class CharmCephOSD(CharmBase):
     charm_name = 'ceph-osd'
     charm_rev = 8
     display_name = 'Ceph OSD'
-    menuable = True
     allow_multi_units = True
-    display_priority = DisplayPriorities.Storage
-    related = [('ceph:osd', 'ceph-osd:mon')]
+    related = [('ceph:osd', 'ceph-osd:mon'),
+               ('ntp:juju-info', 'ceph-osd:juju-info')]
 
+    def set_relations(self):
+        if not self.wait_for_agent(['ceph']):
+            return True
+        super().set_relations()
 
 __charm_class__ = CharmCephOSD

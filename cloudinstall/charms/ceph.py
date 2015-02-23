@@ -30,7 +30,8 @@ class CharmCeph(CharmBase):
     menuable = True
     display_priority = DisplayPriorities.Storage
     related = [('glance:ceph', 'ceph:client'),
-               ('nova-compute:ceph', 'ceph:client')]
+               ('nova-compute:ceph', 'ceph:client'),
+               ('ntp:juju-info', 'ceph:juju-info')]
     deploy_priority = 5
     disabled = False
     isolate = True
