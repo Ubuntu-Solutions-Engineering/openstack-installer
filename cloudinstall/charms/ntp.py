@@ -30,13 +30,13 @@ class CharmNtp(CharmBase):
     related = {'nova-compute': ('ntp:juju-info',
                                 'nova-compute:juju-info'),
                'neutron-gateway': ('ntp:juju-info',
-                                   'neutron-gateway:juju-info'),
+                                   'quantum-gateway:juju-info'),
                'ceph-osd': ('ntp:juju-info', 'ceph-osd:juju-info')}
     subordinate = True
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name, 'nova-compute',
-                                    'neutron-gateway', 'ceph-osd']):
+                                    'quantum-gateway']):
             return True
         for charm in self.related.keys():
             try:
