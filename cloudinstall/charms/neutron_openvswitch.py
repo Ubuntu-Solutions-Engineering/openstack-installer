@@ -28,11 +28,11 @@ class CharmNeutronOpenvswitch(CharmBase):
     menuable = True
     subordinate = True
     openstack_release_min = 'j'
-    related = {'nova-compute': ('nova-compute:neutron-plugin',
-                                'neutron-openvswitch:neutron-plugin'),
-               'rabbitmq-server': ('rabbitmq-server:amqp',
-                                   'neutron-openvswitch:amqp'),
-               'neutron-api': ('neutron-api:neutron-plugin-api',
-                               'neutron-openvswitch:neutron-plugin-api')}
+    related = [('nova-compute:neutron-plugin',
+                'neutron-openvswitch:neutron-plugin'),
+               ('rabbitmq-server:amqp',
+                'neutron-openvswitch:amqp'),
+               ('neutron-api:neutron-plugin-api',
+                'neutron-openvswitch:neutron-plugin-api')]
 
 __charm_class__ = CharmNeutronOpenvswitch
