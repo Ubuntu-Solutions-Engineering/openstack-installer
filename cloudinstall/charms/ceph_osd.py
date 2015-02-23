@@ -29,6 +29,7 @@ class CharmCephOSD(CharmBase):
     allow_multi_units = True
     related = [('ceph:osd', 'ceph-osd:mon'),
                ('ntp:juju-info', 'ceph-osd:juju-info')]
+    isolate = True
 
     def set_relations(self):
         if not self.wait_for_agent(['ceph']):
