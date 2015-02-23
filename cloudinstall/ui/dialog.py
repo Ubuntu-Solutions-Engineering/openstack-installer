@@ -89,9 +89,6 @@ class Dialog(WidgetWrap):
                 self.input_items[_item], 'input', 'input focus'))
         self.input_lbox = ListBox(SimpleListWalker(total_items))
 
-        log.debug("Num items: {}, items: {}".format(len(total_items),
-                                                    self.input_lbox))
-
         # Add buttons
         self.add_buttons()
         self.container_box_adapter = BoxAdapter(self.input_lbox,
@@ -108,7 +105,6 @@ class Dialog(WidgetWrap):
             title=self.title)
 
     def submit(self, button):
-        log.debug("Callback on : {}".format(self.input_items))
         self.emit_done_signal(self.input_items)
 
     def cancel(self, button):
