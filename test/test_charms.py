@@ -84,14 +84,8 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
 
     def test_set_relations_ok(self):
         self.charm.set_relations()
-
-        expected = [
-            call.add_relation('nova-compute:neutron-plugin',
-                              'neutron-openvswitch:neutron-plugin'),
-            call.add_relation('rabbitmq-server:amqp',
-                              'neutron-openvswitch:amqp'),
-            call.add_relation('neutron-api:neutron-plugin-api',
-                              'neutron-openvswitch:neutron-plugin-api')
-        ]
+        expected = []
+        for relation_a, relation_b in sorted(self.charm.related):
+            expected.append(call.add_relation(relation_a, relation_b))
         self.assertEqual(sorted(self.mock_jujuclient.mock_calls),
                          sorted(expected))
