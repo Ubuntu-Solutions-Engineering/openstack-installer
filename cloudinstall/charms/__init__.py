@@ -255,11 +255,12 @@ export OS_REGION_NAME=RegionOne
         """
         if isinstance(self.related, dict):
             for charm in self.related.keys():
+                relation_a, relation_b = self.related[charm]
                 try:
                     log.debug("add_relation ({}, {})".format(
-                        *self.related[charm]))
+                        relation_a, relation_b))
 
-                    self.juju.add_relation(*self.related[charm])
+                    self.juju.add_relation(relation_a, relation_b)
                 except:
                     log.exception("{} not ready for relation".format(charm))
                     return True
