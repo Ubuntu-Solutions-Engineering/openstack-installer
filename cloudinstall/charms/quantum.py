@@ -32,7 +32,9 @@ class CharmQuantum(CharmBase):
     # them as Neutron
     display_name = 'Neutron'
     deploy_priority = 99
-    related = ['mysql', 'nova-cloud-controller']
+    related = [('mysql:shared-db', 'quantum-gateway:shared-db'),
+               ('nova-cloud-controller:quantum-network-service',
+                ('quantum-gateway:quantum-network-service'))]
     isolate = True
     menuable = True
     constraints = {'mem': 2048,

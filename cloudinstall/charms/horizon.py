@@ -23,6 +23,7 @@ class CharmHorizon(CharmBase):
     charm_rev = 9
     display_name = 'Openstack Dashboard'
     menuable = True
-    related = ['keystone']
+    related = [('keystone:identity-service',
+                'openstack-dashboard:identity-service')]
 
 __charm_class__ = CharmHorizon

@@ -27,17 +27,11 @@ class CharmNtp(CharmBase):
     charm_name = 'ntp'
     charm_rev = 6
     display_name = 'NTP'
-    related = {'nova-compute': ('ntp:juju-info',
-                                'nova-compute:juju-info'),
-               'neutron-gateway': ('ntp:juju-info',
-                                   'quantum-gateway:juju-info'),
-               'ceph-osd': ('ntp:juju-info', 'ceph-osd:juju-info')}
+    related = [('ntp:juju-info',
+                'nova-compute:juju-info'),
+               ('ntp:juju-info',
+                'quantum-gateway:juju-info'),
+               ('ntp:juju-info', 'ceph-osd:juju-info')]
     subordinate = True
-
-    def set_relations(self):
-        if not self.wait_for_agent([self.charm_name, 'nova-compute',
-                                    'quantum-gateway']):
-            return True
-        super().set_relations()
 
 __charm_class__ = CharmNtp

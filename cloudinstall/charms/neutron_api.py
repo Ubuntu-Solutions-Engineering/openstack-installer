@@ -27,20 +27,19 @@ class CharmNeutronAPI(CharmBase):
     display_name = 'Neutron API'
     menuable = True
     openstack_release_min = 'j'
-    related = {'nova-cloud-controller': ('nova-cloud-controller:neutron-api',
-                                         'neutron-api:neutron-api'),
-               'keystone': ('neutron-api:identity-service',
-                            'keystone:identity-service'),
-               'neutron-openvswitch': (
-                   'neutron-openvswitch:neutron-plugin-api',
-                   'neutron-api:neutron-plugin-api'),
-               'mysql': ('mysql:shared-db', 'neutron-api:shared-db'),
-               'rabbitmq-server': ('rabbitmq-server:amqp',
-                                   'neutron-api:amqp'),
-               'quantum-gateway': ('quantum-gateway:neutron-plugin-api',
-                                   'neutron-api:neutron-plugin-api'),
-               'nova-cloud-controller': ('nova-cloud-controller:neutron-api',
-                                         'neutron-api:neutron-api')}
+    related = [('nova-cloud-controller:neutron-api',
+                'neutron-api:neutron-api'),
+               ('neutron-api:identity-service',
+                'keystone:identity-service'),
+               ('neutron-openvswitch:neutron-plugin-api',
+                'neutron-api:neutron-plugin-api'),
+               ('mysql:shared-db', 'neutron-api:shared-db'),
+               ('rabbitmq-server:amqp',
+                'neutron-api:amqp'),
+               ('quantum-gateway:neutron-plugin-api',
+                'neutron-api:neutron-plugin-api'),
+               ('nova-cloud-controller:neutron-api',
+                'neutron-api:neutron-api')]
 
 
 __charm_class__ = CharmNeutronAPI

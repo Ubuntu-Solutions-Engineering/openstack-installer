@@ -30,16 +30,16 @@ class CharmNovaCloudController(CharmBase):
     display_name = 'Controller'
     deploy_priority = 2
     menuable = True
-    related = {'mysql': ('nova-cloud-controller:shared-db',
-                         'mysql:shared-db'),
-               'rabbitmq-server': ('rabbitmq-server:amqp',
-                                   'nova-cloud-controller:amqp'),
-               'glance': ('glance:image-service',
-                          'nova-cloud-controller:image-service'),
-               'keystone': ('keystone:identity-service',
-                            'nova-cloud-controller:identity-service'),
-               'neutron-api': ('neutron-api:neutron-api',
-                               'nova-cloud-controller:neutron-api')}
+    related = [('nova-cloud-controller:shared-db',
+                'mysql:shared-db'),
+               ('rabbitmq-server:amqp',
+                'nova-cloud-controller:amqp'),
+               ('glance:image-service',
+                'nova-cloud-controller:image-service'),
+               ('keystone:identity-service',
+                'nova-cloud-controller:identity-service'),
+               ('neutron-api:neutron-api',
+                'nova-cloud-controller:neutron-api')]
     allow_multi_units = False
 
     def post_proc(self):

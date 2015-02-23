@@ -27,15 +27,10 @@ class CharmCinderCeph(CharmBase):
     charm_name = 'cinder-ceph'
     charm_rev = 4
     display_name = 'Cinder-Ceph'
-    related = {'cinder': ('cinder-ceph:storage-backend',
-                          'cinder:storage-backend'),
-               'ceph': ('ceph:client', 'cinder-ceph:ceph')}
+    related = [('cinder-ceph:storage-backend',
+                'cinder:storage-backend'),
+               ('ceph:client', 'cinder-ceph:ceph')]
     deploy_priority = 5
     subordinate = True
-
-    def set_relations(self):
-        if not self.wait_for_agent([self.charm_name, 'ceph', 'cinder']):
-            return True
-        super().set_relations()
 
 __charm_class__ = CharmCinderCeph
