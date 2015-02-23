@@ -23,7 +23,13 @@ import logging
 log = logging.getLogger('cloudinstall.service')
 
 
+class JujuUnitNotFoundException(Exception):
+
+    """ Unable to find a matching Unit """
+
+
 class Unit:
+
     """ Unit class """
 
     def __init__(self, unit_name, unit):
@@ -110,6 +116,7 @@ class Unit:
 
 
 class Relation:
+
     """ Relation class """
 
     def __init__(self, relation_name, charms):
@@ -126,6 +133,7 @@ class Relation:
 
 
 class Service:
+
     """ Service class """
 
     def __init__(self, service_name, service):
@@ -148,7 +156,11 @@ class Service:
                 return True
             return False
 
-        return next(filter(_match, self.units), Unit('unknown', {}))
+        try:
+            next(filter(_match, self.units))
+        except:
+            raise JujuUnitNotFoundException("Could not find matching "
+                                            "unit: {}".format(name))
 
     @property
     def units(self):
