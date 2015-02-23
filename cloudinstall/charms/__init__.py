@@ -27,6 +27,7 @@ import requests
 from macumba import MacumbaError
 from cloudinstall import utils
 from cloudinstall.placement.controller import AssignmentType
+from cloudinstall.service import JujuUnitNotFoundException
 
 log = logging.getLogger('cloudinstall.charms')
 
@@ -255,7 +256,10 @@ export OS_REGION_NAME=RegionOne
         """
         if len(self.related) > 0:
             services = self.juju_state.service(self.charm_name)
-            unit = services.unit(self.charm_name)
+            try:
+                unit = services.unit(self.charm_name)
+            except JujuUnitNotFoundException:
+                return True
             if unit.agent_state != "started":
                 return True
             for relation_a, relation_b in self.related:
