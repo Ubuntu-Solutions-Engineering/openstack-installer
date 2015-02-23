@@ -29,7 +29,7 @@ class CharmCephOSD(CharmBase):
     menuable = True
     allow_multi_units = True
     display_priority = DisplayPriorities.Storage
-    related = {'ceph': ('ceph:osd', 'ceph-osd:mon')}
+    related = [('ceph:osd', 'ceph-osd:mon')]
 
 
 __charm_class__ = CharmCephOSD

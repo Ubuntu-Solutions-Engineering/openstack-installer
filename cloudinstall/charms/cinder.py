@@ -27,14 +27,13 @@ class CharmCinder(CharmBase):
     charm_name = 'cinder'
     charm_rev = 12
     display_name = 'Cinder'
-    related = {'glance': ('cinder:image-service', 'glance:image-service'),
-               'rabbitmq-server': ('rabbitmq-server:amqp',
-                                   'cinder:amqp'),
-               'keystone': ('cinder:identity-service',
-                            'keystone:identity-service'),
-               'nova-cloud-controller': (
-                   'nova-cloud-controller:cinder-volume-service',
-                   'cinder:cinder-volume-service')}
+    related = [('cinder:image-service', 'glance:image-service'),
+               ('rabbitmq-server:amqp',
+                'cinder:amqp'),
+               ('cinder:identity-service',
+                'keystone:identity-service'),
+               ('nova-cloud-controller:cinder-volume-service',
+                'cinder:cinder-volume-service')]
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name,

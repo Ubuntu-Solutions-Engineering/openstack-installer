@@ -28,7 +28,7 @@ class CharmKeystone(CharmBase):
     charm_name = 'keystone'
     charm_rev = 12
     display_name = 'Keystone'
-    related = ['mysql']
+    related = [('mysql:shared-db', 'keystone:shared-db')]
     deploy_priority = 1
     menuable = True
 

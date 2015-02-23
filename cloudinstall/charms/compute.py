@@ -28,14 +28,14 @@ class CharmNovaCompute(CharmBase):
     display_name = 'Compute'
     menuable = True
     display_priority = DisplayPriorities.Compute
-    related = {'rabbitmq-server': ('nova-compute:amqp',
-                                   'rabbitmq-server:amqp'),
-               'mysql': ('mysql:shared-db',
-                         'nova-compute:shared-db'),
-               'glance': ('nova-compute:image-service',
-                          'glance:image-service'),
-               'nova-cloud-controller': ('nova-cloud-controller:cloud-compute',
-                                         'nova-compute:cloud-compute')}
+    related = [('nova-compute:amqp',
+                'rabbitmq-server:amqp'),
+               ('mysql:shared-db',
+                'nova-compute:shared-db'),
+               ('nova-compute:image-service',
+                'glance:image-service'),
+               ('nova-cloud-controller:cloud-compute',
+                'nova-compute:cloud-compute')]
     isolate = True
     constraints = {'mem': 4096,
                    'root-disk': 40960}

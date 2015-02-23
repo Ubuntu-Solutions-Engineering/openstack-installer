@@ -44,7 +44,8 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     menuable = True
     display_name = 'Glance - Simplestreams Image Sync'
     display_priority = DisplayPriorities.Other
-    related = ['keystone']
+    related = [('keystone:identity-service',
+                'glance-simplestreams-sync:identity-service')]
 
     def download_stable(self):
         if not os.path.exists(CHARMS_DIR):
@@ -126,10 +127,11 @@ class CharmGlanceSimplestreamsSync(CharmBase):
         if os.path.exists(os.path.join(CHARMS_DIR, CURRENT_DISTRO,
                                        'glance-simplestreams-sync')):
             if 'rabbitmq-server' not in self.related:
-                self.related.append('rabbitmq-server')
+                self.related.append(('rabbitmq-server:amqp',
+                                     'glance-simplestreams-sync:amqp'))
                 log.debug("Added rabbitmq to relation list")
 
-        return super(CharmGlanceSimplestreamsSync, self).set_relations()
+        return super().set_relations()
 
 
 __charm_class__ = CharmGlanceSimplestreamsSync

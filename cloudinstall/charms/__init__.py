@@ -253,33 +253,22 @@ export OS_REGION_NAME=RegionOne
 
         Override in charm specific.
         """
-        if isinstance(self.related, dict):
-            for charm in self.related.keys():
-                relation_a, relation_b = self.related[charm]
-                try:
-                    log.debug("add_relation ({}, {})".format(
-                        relation_a, relation_b))
-
-                    self.juju.add_relation(relation_a, relation_b)
-                except:
-                    log.exception("{} not ready for relation".format(charm))
-                    return True
-
-        elif isinstance(self.related, list) and len(self.related) > 0:
+        if len(self.related) > 0:
             services = self.juju_state.service(self.charm_name)
             unit = services.unit(self.charm_name)
             if unit.agent_state != "started":
                 return True
-            for charm in self.related:
-                if not self.is_related(charm, services.relations):
+            for relation_a, relation_b in self.related:
+                if not self.is_related(":".split(relation_a)[0],
+                                       services.relations):
                     try:
                         log.debug("calling add_relation({}, {})".format(
-                            self.charm_name, charm))
-                        self.juju.add_relation(self.charm_name,
-                                               charm)
+                            relation_a, relation_b))
+                        self.juju.add_relation(relation_a,
+                                               relation_b)
                     except:
                         msg = "Relation {}-{} not ready, " \
-                              "requeueing.".format(self.charm_name, charm)
+                              "requeueing.".format(relation_a, relation_b)
                         log.exception("failure in add_relation {}".format(msg))
                         self.ui.status_info_message(msg)
                         return True

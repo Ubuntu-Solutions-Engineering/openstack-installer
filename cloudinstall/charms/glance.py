@@ -23,6 +23,8 @@ class CharmGlance(CharmBase):
     charm_rev = 11
     display_name = 'Glance'
     menuable = True
-    related = ['mysql', 'keystone', 'rabbitmq-server']
+    related = [('mysql:shared-db', 'glance:shared-db'),
+               ('keystone:identity-service', 'glance:identity-service'),
+               ('rabbitmq-server:amqp', 'glance:amqp')]
 
 __charm_class__ = CharmGlance

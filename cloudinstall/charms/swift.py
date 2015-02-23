@@ -29,7 +29,7 @@ class CharmSwift(CharmBase):
     display_name = 'Swift'
     menuable = True
     display_priority = DisplayPriorities.Storage
-    related = ['swift-proxy']
+    related = [('swift-proxy:swift-storage', 'swift:swift-storage')]
     deploy_priority = 5
     default_replicas = 3
     isolate = True
