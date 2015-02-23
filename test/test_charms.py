@@ -25,7 +25,7 @@ from unittest.mock import ANY, call, MagicMock, patch
 
 from cloudinstall.charms import CharmBase
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
-
+from cloudinstall.service import JujuUnitNotFoundException
 
 log = logging.getLogger('cloudinstall.test_utils')
 
@@ -88,9 +88,20 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
         mu = MagicMock(name='mock_unit')
         ms.unit.return_value = mu
         mu.agent_state = "started"
-        self.charm.set_relations()
+        rv = self.charm.set_relations()
+        self.assertFalse(rv)
         expected = []
         for relation_a, relation_b in sorted(self.charm.related):
             expected.append(call.add_relation(relation_a, relation_b))
         self.assertEqual(sorted(self.mock_jujuclient.mock_calls),
                          sorted(expected))
+
+    def test_set_relations_no_unit(self):
+        ms = MagicMock(name='mock_service')
+        self.mock_juju_state.service.return_value = ms
+        mu = MagicMock(name='mock_unit')
+        ms.unit.side_effect = JujuUnitNotFoundException()
+        rv = self.charm.set_relations()
+        self.assertTrue(rv)
+        expected = []
+        self.assertEqual(self.mock_jujuclient.mock_calls, [])
