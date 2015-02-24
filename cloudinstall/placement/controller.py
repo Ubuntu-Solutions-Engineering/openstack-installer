@@ -414,9 +414,12 @@ class PlacementController:
         elif selected_backend == 'ceph':
             # ceph-osd is never deployed initially, only included for
             # scale-out:
-            to_remove = swift_charms = ['ceph-osd']
+            to_remove = swift_charms + ['ceph-osd']
         elif selected_backend == 'swift':
             to_remove = ceph_charms
+        else:
+            raise AssertionError("unknown "
+                                 "backend '{}'".format(selected_backend))
 
         log.debug("to_remove is {}".format(to_remove))
 
