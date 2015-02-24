@@ -64,7 +64,7 @@ class TestCharmBase(unittest.TestCase):
                                                        None)
 
 
-class TestCharmNeutronOpenvswitch(unittest.TestCase):
+class PrepCharmTest(unittest.TestCase):
 
     def setUp(self):
         self.mock_jujuclient = MagicMock(name='jujuclient')
@@ -81,6 +81,9 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
                 juju_state=self.mock_juju_state,
                 ui=self.mock_ui,
                 config=self.mock_config)
+
+
+class TestCharmNeutronOpenvswitch(PrepCharmTest):
 
     def test_set_relations_ok(self):
         ms = MagicMock(name='mock_service')
@@ -103,3 +106,13 @@ class TestCharmNeutronOpenvswitch(unittest.TestCase):
         rv = self.charm.set_relations()
         self.assertTrue(rv)
         self.assertEqual(self.mock_jujuclient.mock_calls, [])
+
+
+class TestCharmKeystone(PrepCharmTest):
+
+    def test_missing_agent_state(self):
+        """ Checks deploy returns False if agent_state is None/missing """
+        ms = MagicMock(name='mock_server')
+        self.mock_juju_state.service.return_value = ms
+        rv = self.charm.wait_for_agent(['mysql'])
+        self.assertFalse(rv)

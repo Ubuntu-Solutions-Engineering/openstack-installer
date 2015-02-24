@@ -305,13 +305,17 @@ export OS_REGION_NAME=RegionOne
                 c=svc_name,
                 s=svc))
             unit = svc.unit(svc_name)
-            self.ui.status_info_message(
-                "Checking availability of {0}: {1}".format(
-                    svc_name, unit.agent_state))
-            log.debug("Unit state: {}".format(unit.agent_state))
-            if unit.agent_state == "started":
-                status_res.append(True)
-            else:
+            try:
+                self.ui.status_info_message(
+                    "Checking availability of {0}: {1}".format(
+                        svc_name, unit.agent_state))
+                log.debug("Unit state: {}".format(unit.agent_state))
+                if unit.agent_state == "started":
+                    status_res.append(True)
+                else:
+                    status_res.append(False)
+            except:
+                log.exception("Unable to verify {}".format(unit))
                 status_res.append(False)
         return all(status_res)
 
