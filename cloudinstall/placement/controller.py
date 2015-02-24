@@ -262,7 +262,8 @@ class PlacementController:
            and cc in self.unplaced_services:
             return True
 
-        unrequired_services = ['nova-compute',
+        unrequired_services = ['heat',
+                               'nova-compute',
                                'juju-gui']
 
         storage_backend = self.config.getopt('storage_backend')
