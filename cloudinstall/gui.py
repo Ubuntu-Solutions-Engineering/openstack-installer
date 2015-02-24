@@ -318,21 +318,23 @@ class ServicesView(ScrollableWidgetWrap):
                  Text("{:<12}".format("IP Pending"))))
 
         if error_info:
-            node_cols.append(('pack', Text(" | {}".format(error_info))))
+            infos = [('pack', Text(" | {}".format(error_info)))]
         else:
             hw_text = Text([" | "] + self._get_hardware_info(unit))
 
             if 'glance-simplestreams-sync' in unit.unit_name:
                 status_oneline = get_sync_status().replace("\n", " - ")
                 sync_text = Text('   ' + status_oneline)
-                node_cols.append(Pile([hw_text, sync_text]))
+                infos = [hw_text, sync_text]
             else:
-                if self.config.getopt('show_logs'):
-                    log_text = Text([('label',
-                                      self.get_log_text(unit.unit_name))])
-                    node_cols.append(Pile([hw_text, log_text]))
-                else:
-                    node_cols.append(Pile([hw_text]))
+                infos = [hw_text]
+
+        if self.config.getopt('show_logs'):
+            log_text = Text([('label',
+                              self.get_log_text(unit.unit_name))])
+            infos.append(log_text)
+
+        node_cols.append(Pile(infos))
 
         return Columns(node_cols)
 
