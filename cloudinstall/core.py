@@ -272,8 +272,27 @@ class Controller:
         # for juju_machine_id in self.juju_m_idmap.values():
         #    self.run_apt_go_fast(juju_machine_id)
 
+        if self.config.is_single():
+            # FIXME: Remove once http://pad.lv/1326091 is fixed
+            self.set_unique_hostnames()
+
         self.deploy_using_placement()
         self.enqueue_deployed_charms()
+
+    def set_unique_hostnames(self):
+        count = 0
+        for machine in self.juju_state.machines():
+            count += 1
+            hostname = "{}-{}".format('ubuntu', count)
+            log.debug("Setting hostname: {}".format(machine))
+            utils.remote_run(
+                machine.machine_id,
+                cmds="echo {} |sudo tee /etc/hostname".format(hostname),
+                juju_home=self.config.juju_home(use_expansion=True))
+            utils.remote_run(
+                machine.machine_id,
+                cmds="sudo hostname {}".format(hostname),
+                juju_home=self.config.juju_home(use_expansion=True))
 
     def all_maas_machines_ready(self):
         self.maas_state.invalidate_nodes_cache()
