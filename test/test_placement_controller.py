@@ -397,6 +397,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         mock_maas_state = MagicMock()
         mock_maas_state.machines.return_value = []
         c = Config()
+        c.setopt('storage_backend', 'none')
         pc = PlacementController(config=c, maas_state=mock_maas_state)
         pc.gen_defaults()
         mock_maas_state.machines.assert_called_with(MaasMachineStatus.READY)
@@ -415,6 +416,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         pc = PlacementController(config=c)
 
         # default storage_backend is 'none'
+        c.setopt('storage_backend', 'none')
         defaults = pc.gen_single()
         self.assertFalse(find_charm(CharmSwiftProxy, defaults))
         self.assertFalse(find_charm(CharmSwift, defaults))
