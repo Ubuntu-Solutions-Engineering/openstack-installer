@@ -125,7 +125,8 @@ class Controller:
         if len(self.nodes) == 0:
             return
         else:
-            self.ui.render_nodes(self.nodes, self.juju_state, self.maas_state)
+            self.ui.render_services_view(self.nodes, self.juju_state,
+                                         self.maas_state, self.config)
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -218,7 +219,8 @@ class Controller:
 
     def commit_placement(self):
         self.config.setopt('current_state', ControllerState.SERVICES.value)
-        self.ui.render_nodes(self.nodes, self.juju_state, self.maas_state)
+        self.ui.render_services_view(self.nodes, self.juju_state,
+                                     self.maas_state, self.config)
         self.loop.redraw_screen()
         if self.config.getopt('headless'):
             self.begin_deployment()
@@ -549,7 +551,8 @@ class Controller:
             "Services deployed, relationships may still be"
             " pending. Please wait for all services to be checked before"
             " deploying compute nodes")
-        self.ui.render_nodes(self.nodes, self.juju_state, self.maas_state)
+        self.ui.render_services_view(self.nodes, self.juju_state,
+                                     self.maas_state, self.config)
         self.loop.redraw_screen()
 
     def add_charm(self, count=0, charm=None):
