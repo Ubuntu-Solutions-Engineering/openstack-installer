@@ -134,6 +134,10 @@ if __name__ == '__main__':
             sys.stdout.write(val)
         sys.exit(0)
 
+    # see github issue #421:
+    if os.environ.get("SHOW_JUJU_LOGS", False):
+        cfg.setopt('show_logs', True)
+
     try:
         setup_logger(headless=cfg.getopt('headless'))
     except PermissionError:
