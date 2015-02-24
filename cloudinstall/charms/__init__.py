@@ -304,8 +304,8 @@ export OS_REGION_NAME=RegionOne
             log.debug("Checking availability for {c}: {s}.".format(
                 c=svc_name,
                 s=svc))
-            unit = svc.unit(svc_name)
             try:
+                unit = svc.unit(svc_name)
                 self.ui.status_info_message(
                     "Checking availability of {0}: {1}".format(
                         svc_name, unit.agent_state))
@@ -315,8 +315,7 @@ export OS_REGION_NAME=RegionOne
                 else:
                     status_res.append(False)
             except:
-                log.exception("Unable to verify {}".format(unit))
-                status_res.append(False)
+                return False
         return all(status_res)
 
     def __repr__(self):

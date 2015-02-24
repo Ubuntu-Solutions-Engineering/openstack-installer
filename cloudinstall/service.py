@@ -155,9 +155,8 @@ class Service:
             if name in unit.unit_name:
                 return True
             return False
-
         try:
-            next(filter(_match, self.units))
+            return next(filter(_match, self.units))
         except:
             raise JujuUnitNotFoundException("Could not find matching "
                                             "unit: {}".format(name))
