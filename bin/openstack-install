@@ -21,6 +21,7 @@
 import argparse
 import sys
 import os
+import platform
 import logging
 import signal
 from functools import partial
@@ -124,6 +125,10 @@ def parse_options(argv):
     # parser.add_argument('--show-logs', action='store_true',
     #                     help="Show Juju log tails for deploying services.",
     #                     dest='show_logs')
+    parser.add_argument('--series', dest='ubuntu_series',
+                        default=platform.dist()[-1],
+                        help="Ubuntu series codename (eg. 'trusty', 'utopic') "
+                        "for juju default")
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)
