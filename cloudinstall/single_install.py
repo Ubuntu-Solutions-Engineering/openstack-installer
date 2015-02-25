@@ -150,6 +150,15 @@ class SingleInstall:
                 self.config.cfg_path,
                 'home/ubuntu/.cloud-install'))
             f.write("/var/cache/lxc var/cache/lxc none bind,create=dir\n")
+            # Detect additional charm plugins and make available to the
+            # container.
+            if self.config.getopt('charm_plugins'):
+                plug_dir = os.path.abspath(self.config.getopt('charm_plugins'))
+                plug_base = os.path.basename(plug_dir)
+                f.write("{d} home/ubuntu/{m} "
+                        "none bind,create=dir\n".format(d=plug_dir,
+                                                        m=plug_base))
+
             extra_mounts = os.getenv("EXTRA_BIND_DIRS", None)
             if extra_mounts:
                 for d in extra_mounts.split(','):

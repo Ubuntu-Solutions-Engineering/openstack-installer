@@ -20,9 +20,13 @@
 from jinja2 import Environment, FileSystemLoader
 import logging
 import os
+from importlib import import_module
+import pkgutil
 import unittest
 from unittest.mock import ANY, call, MagicMock, patch
 
+import cloudinstall.utils as utils
+import cloudinstall.charms
 from cloudinstall.charms import CharmBase
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
 from cloudinstall.service import JujuUnitNotFoundException
@@ -116,3 +120,34 @@ class TestCharmKeystone(PrepCharmTest):
         self.mock_juju_state.service.return_value = ms
         rv = self.charm.wait_for_agent(['mysql'])
         self.assertFalse(rv)
+
+
+class TestCharmPlugin(unittest.TestCase):
+
+    def setUp(self):
+        cur_path = os.path.abspath(os.path.dirname(__file__))
+        self.charm_path = os.path.join(cur_path, 'files/charm_plugins')
+        self.charm_modules = [import_module('cloudinstall.charms.' + mname)
+                              for (_, mname, _) in
+                              pkgutil.iter_modules(
+                                  cloudinstall.charms.__path__)]
+        self.charm_sys_path = '/usr/share/openstack/cloudinstall/charms'
+
+    def test_override_sys_charm(self):
+        """ Check that a system charm is overridden installed charm
+        """
+        charms = utils.load_ext_charms(self.charm_path, self.charm_modules)
+        horizon_charm = [x for x in
+                         charms if
+                         x.__charm_class__.name() == "openstack-dashboard"]
+        charm_path = os.path.dirname(horizon_charm[0].__file__)
+        self.assertNotEqual(charm_path, self.charm_sys_path)
+
+    def test_loaded_charm(self):
+        """ Check for custom charm plugin
+        """
+        charms = utils.load_ext_charms(self.charm_path, self.charm_modules)
+        charm = [x for x in
+                 charms if
+                 x.__charm_class__.name() == "bitlbee"]
+        self.assertEqual(charm[0].__charm_class__.name(), "bitlbee")

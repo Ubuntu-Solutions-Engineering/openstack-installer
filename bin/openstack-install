@@ -61,6 +61,9 @@ def parse_options(argv):
                         help="Custom configuration for OpenStack installer.")
     parser.add_argument('--charm-config', type=str, dest='charm_config_file',
                         help="Additional charm settings")
+    parser.add_argument('--charm-plugin-dir', type=str, dest='charm_plugins',
+                        help="Location of additional charm plugins to extend "
+                        "the installer.")
     parser.add_argument('-g', '--get-config', type=str, dest='get_config',
                         default=None,
                         help="with arg <key>, prints config value for 'key' "
