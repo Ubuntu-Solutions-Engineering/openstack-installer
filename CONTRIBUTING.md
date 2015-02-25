@@ -23,10 +23,11 @@ Guidelines to follow when writing new code or submitting patches.
      See: https://github.com/Ubuntu-Solutions-Engineering/openstack-installer/issues/374#issuecomment-71521918
 
 # Filing a Pull Request
-  1. Rebase from master before a PR
-  2. Coherent subject/commit message
-  3. (optional) dco
-  4. Passes unittests, pep8, pyflakes (use `make tox` if installed.)
+  1. Must sign the CLA http://www.ubuntu.com/legal/contributors/
+  2. Rebase from master before a PR
+  3. Coherent subject/commit message
+  4. (optional) dco
+  5. Passes unittests, pep8, pyflakes (use `make tox` if installed.)
 
 
 * Follow PEP-8 style guide.
