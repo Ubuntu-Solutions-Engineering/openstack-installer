@@ -144,7 +144,37 @@ def populate_config(opts):
         return sanitize_config_items(cfg_cli_opts)
 
 
-def load_charms():
+def load_ext_charms(plug_path, charm_modules):
+    """ Load external charms from plugin directory
+
+    :param plug_path: Top level dir housing 'charms/'
+    :param charm_modules: Existing charms usually import by load_charms()
+    """
+    if os.path.exists(plug_path):
+        try:
+            sys.path.insert(0, plug_path)
+            import charms
+        except ImportError:
+            log.error("No external charms found, not importing.")
+            return charm_modules
+
+        for (_, mname, _) in pkgutil.iter_modules(charms.__path__):
+            charm = import_module('charms.' + mname)
+
+            # Override any system charms
+            idx = [idx for idx, i in
+                   enumerate(charm_modules) if
+                   i.__charm_class__.name() == charm.__charm_class__.name()]
+            if idx:
+                charm_modules[idx[0]] = charm
+            else:
+                charm_modules.extend([import_module('charms.' + mname)])
+        log.debug("Found additional charms: {}".format(charm_modules))
+
+    return charm_modules
+
+
+def load_charms(ext_charm_path=None):
     """ Load known charm modules
     """
     import cloudinstall.charms
@@ -152,6 +182,9 @@ def load_charms():
     charm_modules = [import_module('cloudinstall.charms.' + mname)
                      for (_, mname, _) in
                      pkgutil.iter_modules(cloudinstall.charms.__path__)]
+
+    if ext_charm_path:
+        charm_modules = load_ext_charms(ext_charm_path, charm_modules)
 
     release_path = os.path.join(install_home(),
                                 '.cloud-install/openstack_release')
