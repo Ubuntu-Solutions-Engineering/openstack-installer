@@ -76,9 +76,7 @@ class TestRenderCharmConfig(unittest.TestCase):
         self._do_test_osrel(None, None, mockspew)
 
     def test_render_openstack_release_given(self, mockspew):
-        with patch('cloudinstall.utils.platform.dist') as mock_dist:
-            mock_dist.return_value = ('', '', 'willing')
-            self._do_test_osrel('klaxon', 'cloud:willing-klaxon', mockspew)
+        self._do_test_osrel('klaxon', 'cloud:trusty-klaxon', mockspew)
 
     def _do_test_multiplier(self, is_single, mockspew, expected=None):
         if is_single:

@@ -41,7 +41,6 @@ from functools import wraps
 import time
 from importlib import import_module
 import pkgutil
-import platform
 import sys
 import errno
 import shlex
