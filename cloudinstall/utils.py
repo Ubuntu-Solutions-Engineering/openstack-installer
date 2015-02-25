@@ -150,26 +150,27 @@ def load_ext_charms(plug_path, charm_modules):
     :param plug_path: Top level dir housing 'charms/'
     :param charm_modules: Existing charms usually import by load_charms()
     """
-    if os.path.exists(plug_path):
-        try:
-            sys.path.insert(0, plug_path)
-            import charms
-        except ImportError:
-            log.error("No external charms found, not importing.")
-            return charm_modules
+    if not os.path.exists(plug_path):
+        raise Exception(
+            "Non-existent plugin path '{}' specified.".format(plug_path))
+    try:
+        sys.path.insert(0, plug_path)
+        import charms
+    except ImportError as e:
+        raise Exception("Problem importing external charms: {}".format(e))
 
-        for (_, mname, _) in pkgutil.iter_modules(charms.__path__):
-            charm = import_module('charms.' + mname)
+    for (_, mname, _) in pkgutil.iter_modules(charms.__path__):
+        charm = import_module('charms.' + mname)
 
-            # Override any system charms
-            idx = [idx for idx, i in
-                   enumerate(charm_modules) if
-                   i.__charm_class__.name() == charm.__charm_class__.name()]
-            if idx:
-                charm_modules[idx[0]] = charm
-            else:
-                charm_modules.extend([import_module('charms.' + mname)])
-        log.debug("Found additional charms: {}".format(charm_modules))
+        # Override any system charms
+        idx = [idx for idx, i in
+               enumerate(charm_modules) if
+               i.__charm_class__.name() == charm.__charm_class__.name()]
+        if idx:
+            charm_modules[idx[0]] = charm
+        else:
+            charm_modules.extend([import_module('charms.' + mname)])
+    log.debug("Found additional charms: {}".format(charm_modules))
 
     return charm_modules
 
