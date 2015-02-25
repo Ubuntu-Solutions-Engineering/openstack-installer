@@ -152,8 +152,9 @@ class SingleInstall:
             f.write("/var/cache/lxc var/cache/lxc none bind,create=dir\n")
             # Detect additional charm plugins and make available to the
             # container.
-            if self.config.getopt('charm_plugins'):
-                plug_dir = os.path.abspath(self.config.getopt('charm_plugins'))
+            if self.config.getopt('charm_plugin_dir'):
+                plug_dir = os.path.abspath(
+                    self.config.getopt('charm_plugin_dir'))
                 plug_base = os.path.basename(plug_dir)
                 f.write("{d} home/ubuntu/{m} "
                         "none bind,create=dir\n".format(d=plug_dir,

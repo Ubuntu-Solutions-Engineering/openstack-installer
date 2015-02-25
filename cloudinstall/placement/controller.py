@@ -166,7 +166,7 @@ class PlacementController:
 
     def charm_classes(self):
         cl = [m.__charm_class__ for m in
-              load_charms(self.config.getopt('charm_plugins'))
+              load_charms(self.config.getopt('charm_plugin_dir'))
               if not m.__charm_class__.disabled]
 
         return cl
