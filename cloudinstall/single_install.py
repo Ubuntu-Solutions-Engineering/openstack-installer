@@ -90,7 +90,9 @@ class SingleInstall:
         """ preps juju environments for bootstrap
         """
         render_parts = {'openstack_password':
-                        self.config.getopt('openstack_password')}
+                        self.config.getopt('openstack_password'),
+                        'ubuntu_series':
+                        self.config.getopt('ubuntu_series')}
 
         if self.config.getopt('http_proxy'):
             render_parts['http_proxy'] = self.config.getopt('http_proxy')
