@@ -7,7 +7,7 @@ environments:
     lxc-clone: true
     authorized-keys-path: ~/.ssh/id_rsa.pub
     network-bridge: lxcbr0
-    default-series: trusty
+    default-series: {{ubuntu_series}}
     admin-secret: "{{openstack_password}}"
 {%- if http_proxy %}
     apt-http-proxy: {{http_proxy}}
