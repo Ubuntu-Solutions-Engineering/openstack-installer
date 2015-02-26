@@ -17,6 +17,7 @@ from cloudinstall.charms import CharmBase
 
 
 class CharmHeat(CharmBase):
+
     """ Openstack Heat directives """
 
     charm_name = 'heat'
@@ -29,5 +30,6 @@ class CharmHeat(CharmBase):
                 'heat:shared-db'),
                ('rabbitmq-server:amqp',
                 'heat:amqp')]
+    contrib = True
 
 __charm_class__ = CharmHeat
