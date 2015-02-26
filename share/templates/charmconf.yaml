@@ -13,11 +13,15 @@ heat:
 {% endif %}
 
 cinder:
+  glance-api-version: 2
 {% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
 {% endif %}
+{% if storage_backend == 'ceph' %}
   block-device: None
-  glance-api-version: 2
+{% else %}
+  block-device: /var/lib/cinder-sdb.img|5G
+{% endif %}
 
 ceph-radosgw:
 {% if openstack_origin is defined %}
