@@ -104,7 +104,13 @@ if __name__ == '__main__':
     # Create pidfile
     utils.spew(config.pidfile, str(os.getppid()), utils.install_user())
 
-    import atexit
-    atexit.register(partial(utils.cleanup, config))
-    core.start()
-    sys.exit(ev.error_code)
+    try:
+        import atexit
+        atexit.register(partial(utils.cleanup, config))
+        core.start()
+    except:
+        if opts.debug and not config.getopt('headless'):
+            import pdb
+            pdb.post_mortem()
+    finally:
+        sys.exit(ev.error_code)
