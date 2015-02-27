@@ -27,9 +27,7 @@ class CharmNeutronAPI(CharmBase):
     display_name = 'Neutron API'
     menuable = True
     openstack_release_min = 'j'
-    related = [('nova-cloud-controller:neutron-api',
-                'neutron-api:neutron-api'),
-               ('neutron-api:identity-service',
+    related = [('neutron-api:identity-service',
                 'keystone:identity-service'),
                ('neutron-openvswitch:neutron-plugin-api',
                 'neutron-api:neutron-plugin-api'),
