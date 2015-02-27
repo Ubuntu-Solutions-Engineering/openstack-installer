@@ -67,7 +67,7 @@ class Controller:
         self.juju = None
         self.maas = None
         self.maas_state = None
-        self.nodes = None
+        self.nodes = []
         self.juju_m_idmap = None  # for single, {instance_id: machine id}
         self.deployed_charm_classes = []
         self.placement_controller = None
