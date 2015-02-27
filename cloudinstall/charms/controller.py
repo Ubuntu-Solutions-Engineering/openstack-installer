@@ -37,9 +37,7 @@ class CharmNovaCloudController(CharmBase):
                ('glance:image-service',
                 'nova-cloud-controller:image-service'),
                ('keystone:identity-service',
-                'nova-cloud-controller:identity-service'),
-               ('neutron-api:neutron-api',
-                'nova-cloud-controller:neutron-api')]
+                'nova-cloud-controller:identity-service')]
     allow_multi_units = False
 
     def post_proc(self):
