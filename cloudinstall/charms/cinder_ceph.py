@@ -17,7 +17,7 @@ import logging
 
 from cloudinstall.charms import CharmBase
 
-log = logging.getLogger('cloudinstall.charms.cinder-ceph')
+log = logging.getLogger('cloudinstall.charms.cinder_ceph')
 
 
 class CharmCinderCeph(CharmBase):
