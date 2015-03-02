@@ -27,7 +27,8 @@ class CharmCinder(CharmBase):
     charm_name = 'cinder'
     charm_rev = 12
     display_name = 'Cinder'
-    related = [('cinder:storage-backend',
+    related = [('cinder:image-service', 'glance:image-service'),
+               ('cinder:storage-backend',
                 'cinder-ceph:storage-backend'),
                ('cinder:image-service', 'glance:image-service'),
                ('rabbitmq-server:amqp',
