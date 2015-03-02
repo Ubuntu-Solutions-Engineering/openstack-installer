@@ -23,5 +23,7 @@ class CharmRabbitMQ(CharmBase):
     charm_rev = 26
     display_name = 'RabbitMQ Server'
     menuable = True
+    related = [('rabbitmq-server:amqp',
+                'neutron-openvswitch:amqp')]
 
 __charm_class__ = CharmRabbitMQ

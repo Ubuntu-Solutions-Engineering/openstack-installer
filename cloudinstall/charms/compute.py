@@ -28,7 +28,9 @@ class CharmNovaCompute(CharmBase):
     display_name = 'Compute'
     menuable = True
     display_priority = DisplayPriorities.Compute
-    related = [('nova-compute:amqp',
+    related = [('nova-compute:neutron-plugin',
+                'neutron-openvswitch:neutron-plugin'),
+               ('nova-compute:amqp',
                 'rabbitmq-server:amqp'),
                ('mysql:shared-db',
                 'nova-compute:shared-db'),
