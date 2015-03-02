@@ -31,8 +31,7 @@ class CharmNeutronOpenvswitch(CharmBase):
     related = [('nova-compute:neutron-plugin',
                 'neutron-openvswitch:neutron-plugin'),
                ('rabbitmq-server:amqp',
-                'neutron-openvswitch:amqp'),
-               ('neutron-api:neutron-plugin-api',
-                'neutron-openvswitch:neutron-plugin-api')]
+                'neutron-openvswitch:amqp')]
+                
 
 __charm_class__ = CharmNeutronOpenvswitch
