@@ -90,18 +90,23 @@ class PrepCharmTest(unittest.TestCase):
 class TestCharmNeutronOpenvswitch(PrepCharmTest):
 
     def test_set_relations_ok(self):
-        ms = MagicMock(name='mock_service')
-        self.mock_juju_state.service.return_value = ms
-        mu = MagicMock(name='mock_unit')
-        ms.unit.return_value = mu
-        mu.agent_state = "started"
-        rv = self.charm.set_relations()
-        self.assertFalse(rv)
-        expected = []
-        for relation_a, relation_b in sorted(self.charm.related):
-            expected.append(call.add_relation(relation_a, relation_b))
-        self.assertEqual(sorted(self.mock_jujuclient.mock_calls),
-                         sorted(expected))
+
+        # No longer a need for this since NeutronOpenvswitch
+        # is not related to any services
+
+        #ms = MagicMock(name='mock_service')
+        #self.mock_juju_state.service.return_value = ms
+        #mu = MagicMock(name='mock_unit')
+        #ms.unit.return_value = mu
+        #mu.agent_state = "started"
+        #rv = self.charm.set_relations()
+        #self.assertFalse(rv)
+        #expected = []
+        #for relation_a, relation_b in sorted(self.charm.related):
+        #    expected.append(call.add_relation(relation_a, relation_b))
+        #self.assertEqual(sorted(self.mock_jujuclient.mock_calls),
+        #                 sorted(expected))
+        pass
 
     def test_set_relations_no_unit(self):
         ms = MagicMock(name='mock_service')
