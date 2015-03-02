@@ -25,11 +25,8 @@ class CharmCinderCeph(CharmBase):
     """ Cinder-Ceph directives """
 
     charm_name = 'cinder-ceph'
-    charm_rev = 4
+    charm_rev = 5
     display_name = 'Cinder-Ceph'
-    related = [('cinder-ceph:storage-backend',
-                'cinder:storage-backend'),
-               ('ceph:client', 'cinder-ceph:ceph')]
     deploy_priority = 5
     subordinate = True
 
