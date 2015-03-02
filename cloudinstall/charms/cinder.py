@@ -30,7 +30,6 @@ class CharmCinder(CharmBase):
     related = [('cinder:image-service', 'glance:image-service'),
                ('cinder:storage-backend',
                 'cinder-ceph:storage-backend'),
-               ('cinder:image-service', 'glance:image-service'),
                ('rabbitmq-server:amqp',
                 'cinder:amqp'),
                ('cinder:identity-service',
