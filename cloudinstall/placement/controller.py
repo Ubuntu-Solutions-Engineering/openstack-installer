@@ -280,7 +280,7 @@ class PlacementController:
                            'cinder-ceph']
         telemetry_charmnames = ['ceilometer', 'ceilometer-agent',
                                 'mongodb']
-        
+
         # Ensure all or none telemetry_charms are required
         if not set(telemetry_charmnames).issubset(unplaced_services_names):
             unrequired_services += telemetry_charmnames
