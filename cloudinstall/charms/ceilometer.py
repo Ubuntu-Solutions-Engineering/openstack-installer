@@ -36,6 +36,6 @@ class CharmCeilometer(CharmBase):
                ('ceilometer:identity-notifications',
                 'keystone:identity-notifications'),
                ('ceilometer:ceilometer-service',
-               'ceilometer-agent:ceilometer-service')]
+                'ceilometer-agent:ceilometer-service')]
 
 __charm_class__ = CharmCeilometer
