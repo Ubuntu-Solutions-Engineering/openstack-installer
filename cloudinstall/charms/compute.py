@@ -39,7 +39,9 @@ class CharmNovaCompute(CharmBase):
                ('nova-cloud-controller:cloud-compute',
                 'nova-compute:cloud-compute'),
                ('ntp:juju-info',
-                'nova-compute:juju-info')]
+                'nova-compute:juju-info'),
+               ('nova-compute:nova-ceilometer',
+                'ceilometer-agent:nova-ceilometer')]
     isolate = True
     constraints = {'mem': 4096,
                    'root-disk': 40960}

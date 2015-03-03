@@ -278,6 +278,12 @@ class PlacementController:
         swift_charmnames = ['swift-storage', 'swift-proxy']
         ceph_charmnames = ['ceph', 'ceph-osd', 'ceph-radosgw',
                            'cinder-ceph']
+        telemetry_charmnames = ['ceilometer', 'ceilometer-agent',
+                                'mongodb']
+        
+        # Ensure all or none telemetry_charms are required
+        if not set(telemetry_charmnames).issubset(unplaced_service_names):
+            unrequired_services += telemetry_charmnames
 
         # if both swift charms are unplaced, then they are unrequired.
         if set(swift_charmnames).issubset(unplaced_services_names) \
