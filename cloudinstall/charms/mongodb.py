@@ -17,7 +17,8 @@ from cloudinstall.charms import CharmBase
 
 
 class CharmMongo(CharmBase):
-    """ Mongodb directives """
+
+    """ MongoDB directives """
 
     charm_name = 'mongodb'
     charm_rev = 16
