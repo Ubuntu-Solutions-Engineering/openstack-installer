@@ -282,7 +282,7 @@ class PlacementController:
                                 'mongodb']
         
         # Ensure all or none telemetry_charms are required
-        if not set(telemetry_charmnames).issubset(unplaced_service_names):
+        if not set(telemetry_charmnames).issubset(unplaced_services_names):
             unrequired_services += telemetry_charmnames
 
         # if both swift charms are unplaced, then they are unrequired.
