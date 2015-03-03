@@ -36,7 +36,9 @@ class CharmCinder(CharmBase):
                ('cinder:identity-service',
                 'keystone:identity-service'),
                ('nova-cloud-controller:cinder-volume-service',
-                'cinder:cinder-volume-service')]
+                'cinder:cinder-volume-service')
+               ('cinder:shared-db', 'mysql:shared-db')]
+
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
 
