@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
 import logging
 
 from cloudinstall.charms import CharmBase
+from cloudinstall.placement.controller import AssignmentType
 
 log = logging.getLogger('cloudinstall.charms.cinder')
 
@@ -36,6 +37,8 @@ class CharmCinder(CharmBase):
                 'keystone:identity-service'),
                ('nova-cloud-controller:cinder-volume-service',
                 'cinder:cinder-volume-service')]
+    allowed_assignment_types = [AssignmentType.BareMetal,
+                                AssignmentType.KVM]
 
     def set_relations(self):
         if not self.wait_for_agent([self.charm_name,
