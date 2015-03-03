@@ -28,6 +28,7 @@ class CharmCeilometer(CharmBase):
     display_name = 'Ceilometer'
     deploy_priority = 100
     menuable = True
+    contrib = True
     related = [('ceilometer:shared-db', 'mongodb:database'),
                ('ceilometer:identity-service',
                 'keystone:identity-service'),

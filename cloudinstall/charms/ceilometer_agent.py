@@ -28,6 +28,7 @@ class CharmCeilometerAgent(CharmBase):
     charm_rev = 3
     display_name = 'Ceilometer-Agent'
     subordinate = True
+    contrib = True
     deploy_priority = 0
 
 __charm_class__ = CharmCeilometerAgent
