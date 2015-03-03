@@ -23,13 +23,12 @@ import os
 from importlib import import_module
 import pkgutil
 import unittest
-from unittest.mock import ANY, call, MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import cloudinstall.utils as utils
 import cloudinstall.charms
 from cloudinstall.charms import CharmBase
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
-from cloudinstall.service import JujuUnitNotFoundException
 
 log = logging.getLogger('cloudinstall.test_utils')
 
