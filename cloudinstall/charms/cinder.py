@@ -28,6 +28,7 @@ class CharmCinder(CharmBase):
     charm_name = 'cinder'
     charm_rev = 12
     display_name = 'Cinder'
+    menuable = True
     related = [('cinder:image-service', 'glance:image-service'),
                ('cinder:storage-backend',
                 'cinder-ceph:storage-backend'),
