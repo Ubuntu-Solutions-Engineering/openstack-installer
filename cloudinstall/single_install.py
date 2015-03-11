@@ -307,39 +307,34 @@ class SingleInstall:
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
         if os.path.exists(self.container_abspath):
-            # Container exists, handle return code in installer
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 
-        try:
-            utils.ssh_genkey()
-        except:
-            log.exception("Error generating ssh key")
-            raise Exception("Error generating ssh key")
+        # check for deb early, will actually install it later
+        upstream_deb = self.config.getopt('upstream_deb')
+        if upstream_deb and not os.path.isfile(upstream_deb):
+                raise Exception("Upstream deb '{}' "
+                                "not found.".format(upstream_deb))
 
-        # Preparations
+        utils.ssh_genkey()
+
         self.prep_userdata()
 
-        # setup charm configurations
         utils.render_charm_config(self.config)
 
         self.prep_juju()
 
-        # Set permissions
         self.set_perms()
 
-        # Start container
         self.create_container_and_wait()
 
         # Copy over host ssh keys
         utils.container_cp(self.container_name,
                            os.path.join(utils.install_home(), '.ssh/id_rsa*'),
                            '.ssh/.')
+
         # Install local copy of openstack installer if provided
-        upstream_deb = self.config.getopt('upstream_deb')
         if upstream_deb:
-            if not os.path.isfile(upstream_deb):
-                raise Exception("Upstream deb specified but file not found.")
             shutil.copy(upstream_deb, self.config.cfg_path)
             self._install_upstream_deb()
 
