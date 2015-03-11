@@ -77,7 +77,7 @@ if __name__ == '__main__':
               " for reporting a bug.)")
         sys.exit(1)
 
-    logger = logging.getLogger('openstack-status')
+    logger = logging.getLogger('cloudinstall')
     logger.info("openstack-status starting")
 
     if os.path.isfile(config.pidfile):
