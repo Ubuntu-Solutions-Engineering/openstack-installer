@@ -156,7 +156,7 @@ if __name__ == '__main__':
               " for reporting a bug.)")
         sys.exit(1)
 
-    logger = logging.getLogger('openstack-install')
+    logger = logging.getLogger('cloudinstall')
     logger.info('openstack-install starting')
 
     if os.geteuid() != 0:
