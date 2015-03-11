@@ -307,7 +307,6 @@ class SingleInstall:
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
         if os.path.exists(self.container_abspath):
-            # Container exists, handle return code in installer
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 
@@ -319,18 +318,14 @@ class SingleInstall:
 
         utils.ssh_genkey()
 
-        # Preparations
         self.prep_userdata()
 
-        # setup charm configurations
         utils.render_charm_config(self.config)
 
         self.prep_juju()
 
-        # Set permissions
         self.set_perms()
 
-        # Start container
         self.create_container_and_wait()
 
         # Copy over host ssh keys
