@@ -311,11 +311,13 @@ class SingleInstall:
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 
-        try:
-            utils.ssh_genkey()
-        except:
-            log.exception("Error generating ssh key")
-            raise Exception("Error generating ssh key")
+        # check for deb early, will actually install it later
+        upstream_deb = self.config.getopt('upstream_deb')
+        if upstream_deb and not os.path.isfile(upstream_deb):
+                raise Exception("Upstream deb '{}' "
+                                "not found.".format(upstream_deb))
+
+        utils.ssh_genkey()
 
         # Preparations
         self.prep_userdata()
@@ -335,11 +337,9 @@ class SingleInstall:
         utils.container_cp(self.container_name,
                            os.path.join(utils.install_home(), '.ssh/id_rsa*'),
                            '.ssh/.')
+
         # Install local copy of openstack installer if provided
-        upstream_deb = self.config.getopt('upstream_deb')
         if upstream_deb:
-            if not os.path.isfile(upstream_deb):
-                raise Exception("Upstream deb specified but file not found.")
             shutil.copy(upstream_deb, self.config.cfg_path)
             self._install_upstream_deb()
 
