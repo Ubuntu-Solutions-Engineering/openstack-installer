@@ -141,11 +141,15 @@ class InstallController:
         if self.config.getopt('headless'):
             log.info("Running in headless mode.")
             install_type = self.config.getopt('install_type')
-            if install_type:
-                self.do_install(install_type)
-            else:
+            if not install_type:
                 raise Exception(
                     'Unable to read install type from configuration.')
+            try:
+                self.do_install(install_type)
+            except:
+                log.exception("Fatal error")
+                self.loop.exit(1)
+
         else:
             self.ui.status_info_message("Get started by entering an OpenStack "
                                         "password for your cloud")
