@@ -91,7 +91,7 @@ status:
 
 .PHONY: install
 install: ../openstack*.deb
-	-dpkg -i ../openstack*deb
+	-dpkg -i ../openstack_*deb
 	-dpkg -i ../openstack-${type}*deb
 	apt-get -yy install -f
 
