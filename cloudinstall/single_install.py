@@ -133,9 +133,8 @@ class SingleInstall:
         out = utils.get_command_output(
             'ip route add 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
         if out['status'] != 0:
-            log.error("Could not add static route for "
-                      "10.0.4.0/24 network: {}".format(out['output']))
-            self.loop.exit(1)
+            raise Exception("Could not add static route for "
+                            "10.0.4.0/24 network: {}".format(out['output']))
 
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
@@ -178,18 +177,10 @@ class SingleInstall:
 
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 
-        try:
-            utils.container_start(self.container_name, lxc_logfile)
-        except Exception as e:
-            log.error(e)
-            self.loop.exit(1)
+        utils.container_start(self.container_name, lxc_logfile)
 
-        try:
-            utils.container_wait_checked(self.container_name,
-                                         lxc_logfile)
-        except Exception as e:
-            log.error(e)
-            self.loop.exit(1)
+        utils.container_wait_checked(self.container_name,
+                                     lxc_logfile)
 
         tries = 0
         while not self.cloud_init_finished(tries):
@@ -259,10 +250,8 @@ class SingleInstall:
         if len(errors):
             log.error("Container cloud-init finished with "
                       "errors: {}".format(errors))
-            log.error("Top-level container OS did not initialize "
-                      "correctly. See ~/.cloud-install/commands.log "
-                      "for details.")
-            self.loop.exit(1)
+            raise Exception("Top-level container OS did not initialize "
+                            "correctly.")
         return True
 
     def _install_upstream_deb(self):
@@ -294,9 +283,10 @@ class SingleInstall:
             utils.get_command_output("sudo chmod 777 -R {}/*".format(
                 self.config.cfg_path))
         except:
-            log.exception(
-                "Unable to set ownership for {}".format(self.config.cfg_path))
-            self.loop.exit(1)
+            msg = ("Error setting ownership for "
+                   "{}".format(self.config.cfg_path))
+            log.exception(msg)
+            raise Exception(msg)
 
     def run(self):
         self.tasker.register_tasks([
@@ -323,9 +313,9 @@ class SingleInstall:
 
         try:
             utils.ssh_genkey()
-        except Exception as e:
-            log.error(e)
-            self.loop.exit(1)
+        except:
+            log.exception("Error generating ssh key")
+            raise Exception("Error generating ssh key")
 
         # Preparations
         self.prep_userdata()
