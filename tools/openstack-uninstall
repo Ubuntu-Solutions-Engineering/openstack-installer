@@ -12,7 +12,7 @@ else
 fi
 
 apt_purge() {
-  DEBIAN_FRONTEND=noninteractive apt-get -yy purnge $@
+  DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
 }
 
 CFG_HOME=$(openstack-install -g cfg_path)
