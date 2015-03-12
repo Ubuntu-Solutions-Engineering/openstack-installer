@@ -89,9 +89,10 @@ if __name__ == '__main__':
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
     hostname = out['output'].rstrip()
-    if config.is_single() and 'uoi-bootstrap' not in hostname:
+    if config.is_single() and config.getopt('container_name') not in hostname:
         logger.info("Running status within container")
-        utils.container_run_status('uoi-bootstrap', 'openstack-status', config)
+        utils.container_run_status(config.getopt('container_name'),
+                                   'openstack-status', config)
 
     if config.getopt('headless'):
         ui = ConsoleUI()
