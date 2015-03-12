@@ -142,8 +142,9 @@ class InstallController:
             log.info("Running in headless mode.")
             install_type = self.config.getopt('install_type')
             if not install_type:
-                raise Exception(
-                    'Unable to read install type from configuration.')
+                log.error('Fatal error: '
+                          'Unable to read install type from configuration.')
+                self.loop.exit(1)
             try:
                 self.do_install(install_type)
             except:
