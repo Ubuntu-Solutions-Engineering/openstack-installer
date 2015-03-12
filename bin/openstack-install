@@ -173,6 +173,10 @@ if __name__ == '__main__':
         utils.chown(
             cfg.juju_path(), utils.install_user(), utils.install_user())
 
+    if not cfg.getopt('container_name'):
+        cfg.setopt('container_name',
+                   'openstack-single-{}'.format(utils.install_user()))
+
     if cfg.getopt('uninstall'):
         msg = ("Warning:\n\nThis will uninstall OpenStack and "
                "make a best effort to return the system back "
@@ -199,7 +203,7 @@ if __name__ == '__main__':
             if "y" in yn or "Y" in yn:
                 try:
                     print("Removing static route")
-                    ip = utils.container_ip('uoi-bootstrap')
+                    ip = utils.container_ip(cfg.getopt('container_name'))
                     out = utils.get_command_output(
                         'ip route del 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
                     logger.debug("Removed route: {}".format(out['output']))
@@ -207,8 +211,8 @@ if __name__ == '__main__':
                     logger.exception("No static route defined.")
                     print("No static route defined.")
                 print("Removing host container...")
-                utils.container_stop('uoi-bootstrap')
-                utils.container_destroy('uoi-bootstrap')
+                utils.container_stop(cfg.getopt('container_name'))
+                utils.container_destroy(cfg.getopt('container_name'))
                 if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
                     os.remove(os.path.join(cfg.cfg_path, 'installed'))
                 print("Container is removed.")

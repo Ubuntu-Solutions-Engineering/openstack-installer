@@ -3,6 +3,7 @@
 echo -n Ubuntu Openstack Installer Uninstalling ...
 
 WHAT=$(openstack-install -g install_type)
+CONTAINER_NAME=$(openstack-install -g container_name)
 
 if [ -f ~/.cloud-install/new-maas ]; then
   MAAS_TYPE=new
@@ -71,8 +72,8 @@ case $WHAT in
     ;;
   Single)
     echo Single install path.
-    lxc-stop -n uoi-bootstrap || true
-    lxc-destroy -n uoi-bootstrap || true
+    lxc-stop -n $CONTAINER_NAME || true
+    lxc-destroy -n $CONTAINER_NAME || true
     ip route del 10.0.4.0/24 || true
     ;;
   *)
