@@ -36,7 +36,8 @@ class SingleInstall:
         self.config = config
         self.loop = loop
         self.tasker = self.display_controller.tasker(loop, config)
-        self.container_name = 'uoi-bootstrap'
+        username = utils.install_user()
+        self.container_name = 'openstack-single-{}'.format(username)
         self.container_path = '/var/lib/lxc'
         self.container_abspath = os.path.join(self.container_path,
                                               self.container_name)
