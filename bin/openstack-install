@@ -177,51 +177,22 @@ if __name__ == '__main__':
         cfg.setopt('container_name',
                    'openstack-single-{}'.format(utils.install_user()))
 
-    if cfg.getopt('uninstall'):
+    if any([cfg.getopt(flag) for flag in ['uninstall', 'killcloud',
+                                          'killcloud_noprompt']]):
         msg = ("Warning:\n\nThis will uninstall OpenStack and "
                "make a best effort to return the system back "
                "to its original state.")
         print(msg)
-        yn = input("Proceed? [y/N] ")
+        if cfg.getopt('killcloud_noprompt'):
+            yn = "Y"
+        else:
+            yn = input("Proceed? [y/N] ")
+
         if "y" in yn or "Y" in yn:
             print("Restoring system to last known state.")
             os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
         else:
             print("Uninstall cancelled.")
-            sys.exit(1)
-
-    if cfg.getopt('killcloud') or cfg.getopt('killcloud_noprompt'):
-        if cfg.is_single():
-            msg = ("Warning:\n\nThis will destroy the host Container "
-                   "housing the OpenStack private cloud. This is a permanent "
-                   "operation.")
-            print(msg)
-            if cfg.getopt('killcloud_noprompt'):
-                yn = "Y"
-            else:
-                yn = input("Proceed? [y/N] ")
-            if "y" in yn or "Y" in yn:
-                try:
-                    print("Removing static route")
-                    ip = utils.container_ip(cfg.getopt('container_name'))
-                    out = utils.get_command_output(
-                        'ip route del 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
-                    logger.debug("Removed route: {}".format(out['output']))
-                except:
-                    logger.exception("No static route defined.")
-                    print("No static route defined.")
-                print("Removing host container...")
-                utils.container_stop(cfg.getopt('container_name'))
-                utils.container_destroy(cfg.getopt('container_name'))
-                if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
-                    os.remove(os.path.join(cfg.cfg_path, 'installed'))
-                print("Container is removed.")
-                sys.exit(0)
-            else:
-                print("Destroying container cancelled.")
-                sys.exit(1)
-        else:
-            print('Only supports killing a single install for now.')
             sys.exit(1)
 
     if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
