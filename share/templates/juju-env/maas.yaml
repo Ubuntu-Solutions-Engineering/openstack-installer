@@ -8,16 +8,30 @@ environments:
     admin-secret: {{openstack_password}}
     default-series: trusty
     authorized-keys-path: ~/.ssh/id_rsa.pub
+{%- if http_proxy %}
+    apt-http-proxy: {{http_proxy}}
+{%- else %}
     apt-http-proxy: 'http://{{maas_server}}:8000/'
+{%- endif %}
     lxc-clone: true
     bootstrap-timeout: 3600
+{%- if no_proxy -%}
+    no-proxy: {{no_proxy}}
+{%- else %}
     no-proxy: localhost,{{maas_server}}
-{% if http_proxy %}
+{%- endif %}
+{%- if http_proxy %}
     http-proxy: {{http_proxy}}
-{% endif %}
-{% if https_proxy %}
+{%- endif %}
+{%- if https_proxy %}
     https-proxy: {{https_proxy}}
-{% endif %}
+{%- endif %}
+{%- if image_metadata_url -%}
+    image-metadata-url: {{image_metadata_url}}
+{%- endif %}
+{%- if tools_metadata_url -%}
+    tools-metadata-url: {{tools_metadata_url}}
+{%- endif %}
 
   openstack:
     type: openstack
@@ -30,9 +44,14 @@ environments:
     auth-mode: userpass
     username: ubuntu
     password: {{openstack_password}}
-{% if http_proxy %}
+{%- if http_proxy %}
     http-proxy: {{http_proxy}}
-{% endif %}
-{% if https_proxy %}
+{%- endif %}
+{%- if https_proxy %}
     https-proxy: {{https_proxy}}
-{% endif %}
+{%- endif %}
+{%- if no_proxy -%}
+    no-proxy: {{no_proxy}}
+{%- else %}
+    no-proxy: localhost,{{maas_server}}
+{%- endif %}

@@ -74,10 +74,18 @@ class SingleInstall:
         # Setup proxy
         http_proxy = self.config.getopt('http_proxy')
         https_proxy = self.config.getopt('https_proxy')
+        no_proxy = self.config.getopt('no_proxy')
         if http_proxy:
             render_parts['http_proxy'] = http_proxy
         if https_proxy:
             render_parts['https_proxy'] = https_proxy
+        if no_proxy:
+            render_parts['no_proxy'] = no_proxy
+
+        if self.config.getopt('image_metadata_url'):
+            render_parts['image_metadata_url'] = self.config.getopt('image_metadata_url')
+        if self.config.getopt('tools_metadata_url'):
+            render_parts['tools_metadata_url'] = self.config.getopt('tools_metadata_url')
 
         if self.config.getopt('apt_mirror'):
             render_parts['apt_mirror'] = self.config.getopt('apt_mirror')
