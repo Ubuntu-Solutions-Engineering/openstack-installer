@@ -31,20 +31,14 @@ installer:
 
    $ git clone https://github.com/Ubuntu-Solutions-Engineering/openstack-installer.git ~/openstack-installer
    $ cd ~/openstack-installer
-
-There are a few dependencies for the OpenStack installer which are kept in a PPA. To add it:
-
-.. code::
-
-   $ sudo add-apt-repository -y ppa:cloud-installer/experimental
-   $ sudo apt-get update
+   $ git submodule init
+   $ git submodule update
 
 Use the target 'install-dependencies' to install a custom binary package for the build dependencies:
 
 .. code::
 
    $ make install-dependencies
-
 
 From here you can build the entire package set by running:
 
