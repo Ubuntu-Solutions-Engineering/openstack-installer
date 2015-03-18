@@ -71,24 +71,12 @@ class SingleInstall:
 
         render_parts['seed_command'] = self._proxy_pollinate()
 
-        # Setup proxy
-        http_proxy = self.config.getopt('http_proxy')
-        https_proxy = self.config.getopt('https_proxy')
-        no_proxy = self.config.getopt('no_proxy')
-        if http_proxy:
-            render_parts['http_proxy'] = http_proxy
-        if https_proxy:
-            render_parts['https_proxy'] = https_proxy
-        if no_proxy:
-            render_parts['no_proxy'] = no_proxy
-
-        if self.config.getopt('image_metadata_url'):
-            render_parts['image_metadata_url'] = self.config.getopt('image_metadata_url')
-        if self.config.getopt('tools_metadata_url'):
-            render_parts['tools_metadata_url'] = self.config.getopt('tools_metadata_url')
-
-        if self.config.getopt('apt_mirror'):
-            render_parts['apt_mirror'] = self.config.getopt('apt_mirror')
+        for opt in ['http_proxy', 'https_proxy', 'no_proxy',
+                    'image_metadata_url', 'tools_metadata_url',
+                    'apt_mirror']:
+            val = self.config.getopt(opt)
+            if val:
+                render_parts[opt] = val
 
         dst_file = os.path.join(self.config.cfg_path,
                                 'userdata.yaml')
