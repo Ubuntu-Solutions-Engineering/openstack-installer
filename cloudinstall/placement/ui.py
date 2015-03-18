@@ -170,7 +170,8 @@ class MachineWidget(WidgetWrap):
         buttons = []
         for at in self.actions:
             if len(at) == 2:
-                def predicate(x): return True
+                def predicate(x):
+                    return True
                 label, func = at
             else:
                 predicate, label, func = at
@@ -284,7 +285,8 @@ class ServiceWidget(WidgetWrap):
         buttons = []
         for at in self.actions:
             if len(at) == 2:
-                def predicate(x): return True
+                def predicate(x):
+                    return True
                 label, func = at
             else:
                 predicate, label, func = at
