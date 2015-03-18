@@ -17,6 +17,7 @@ from cloudinstall.charms import CharmBase
 
 
 class CharmMysql(CharmBase):
+
     """ MYSQL directives """
 
     charm_name = 'mysql'
@@ -24,5 +25,6 @@ class CharmMysql(CharmBase):
     display_name = 'MySQL'
     deploy_priority = 0
     menuable = True
+    is_core = True
 
 __charm_class__ = CharmMysql

@@ -17,6 +17,7 @@ from cloudinstall.charms import CharmBase
 
 
 class CharmRabbitMQ(CharmBase):
+
     """ RabbitMQ directives """
 
     charm_name = 'rabbitmq-server'
@@ -25,5 +26,6 @@ class CharmRabbitMQ(CharmBase):
     menuable = True
     related = [('rabbitmq-server:amqp',
                 'neutron-openvswitch:amqp')]
+    is_core = True
 
 __charm_class__ = CharmRabbitMQ

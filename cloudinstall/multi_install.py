@@ -119,10 +119,12 @@ class MultiInstall:
             render_parts['no_proxy'] = self.config.getopt('no_proxy')
 
         if self.config.getopt('image_metadata_url'):
-            render_parts['image_metadata_url'] = self.config.getopt('image_metadata_url')
+            render_parts['image_metadata_url'] = self.config.getopt(
+                'image_metadata_url')
 
         if self.config.getopt('tools_metadata_url'):
-            render_parts['tools_metadata_url'] = self.config.getopt('tools_metadata_url')
+            render_parts['tools_metadata_url'] = self.config.getopt(
+                'tools_metadata_url')
 
         maas_env_modified = maas_env.render(render_parts)
 

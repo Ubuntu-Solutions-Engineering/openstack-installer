@@ -83,9 +83,11 @@ class SingleInstall:
             render_parts['no_proxy'] = no_proxy
 
         if self.config.getopt('image_metadata_url'):
-            render_parts['image_metadata_url'] = self.config.getopt('image_metadata_url')
+            render_parts['image_metadata_url'] = self.config.getopt(
+                'image_metadata_url')
         if self.config.getopt('tools_metadata_url'):
-            render_parts['tools_metadata_url'] = self.config.getopt('tools_metadata_url')
+            render_parts['tools_metadata_url'] = self.config.getopt(
+                'tools_metadata_url')
 
         if self.config.getopt('apt_mirror'):
             render_parts['apt_mirror'] = self.config.getopt('apt_mirror')
@@ -322,8 +324,8 @@ class SingleInstall:
         # check for deb early, will actually install it later
         upstream_deb = self.config.getopt('upstream_deb')
         if upstream_deb and not os.path.isfile(upstream_deb):
-                raise Exception("Upstream deb '{}' "
-                                "not found.".format(upstream_deb))
+            raise Exception("Upstream deb '{}' "
+                            "not found.".format(upstream_deb))
 
         utils.ssh_genkey()
 

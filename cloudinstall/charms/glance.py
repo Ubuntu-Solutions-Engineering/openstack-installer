@@ -17,6 +17,7 @@ from cloudinstall.charms import CharmBase
 
 
 class CharmGlance(CharmBase):
+
     """ Openstack Glance directives """
 
     charm_name = 'glance'
@@ -26,5 +27,6 @@ class CharmGlance(CharmBase):
     related = [('mysql:shared-db', 'glance:shared-db'),
                ('keystone:identity-service', 'glance:identity-service'),
                ('rabbitmq-server:amqp', 'glance:amqp')]
+    is_core = True
 
 __charm_class__ = CharmGlance

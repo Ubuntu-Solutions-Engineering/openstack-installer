@@ -38,6 +38,7 @@ class CharmNeutronAPI(CharmBase):
                 'neutron-api:neutron-plugin-api'),
                ('nova-cloud-controller:neutron-api',
                 'neutron-api:neutron-api')]
+    is_core = True
 
 
 __charm_class__ = CharmNeutronAPI
