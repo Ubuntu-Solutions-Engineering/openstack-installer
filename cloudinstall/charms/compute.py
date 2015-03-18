@@ -21,6 +21,7 @@ log = logging.getLogger('cloudinstall.charms.compute')
 
 
 class CharmNovaCompute(CharmBase):
+
     """ Openstack Nova Compute directives """
 
     charm_name = 'nova-compute'
@@ -48,6 +49,8 @@ class CharmNovaCompute(CharmBase):
     allow_multi_units = True
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
+    is_core = True
+    depends = ['nova-cloud-controller', 'mysql', 'glance', 'rabbitmq']
 
     def set_relations(self):
         if not self.wait_for_agent(['nova-cloud-controller']):

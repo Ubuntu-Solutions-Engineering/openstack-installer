@@ -20,19 +20,20 @@
 import logging
 import os
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import call, MagicMock, PropertyMock, patch
 import yaml
 from tempfile import NamedTemporaryFile
 
-from cloudinstall.charms.jujugui import CharmJujuGui
 from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
 from cloudinstall.charms.swift import CharmSwift
 from cloudinstall.charms.swift_proxy import CharmSwiftProxy
 from cloudinstall.charms.ceph import CharmCeph
 from cloudinstall.charms.ceph_osd import CharmCephOSD
+from cloudinstall.charms.ceph_radosgw import CharmCephRadosGw
 from cloudinstall.maas import MaasMachineStatus
 from cloudinstall.config import Config
+from cloudinstall.state import CharmState
 import cloudinstall.utils as utils
 
 from cloudinstall.placement.controller import (AssignmentType,
@@ -199,6 +200,13 @@ class PlacementControllerTestCase(unittest.TestCase):
         lxcs = self.pc.assignments[mid][AssignmentType.LXC]
         self.assertEqual(lxcs, [])
 
+    def test_unplaced_starts_full(self):
+        self.assertEqual(len(self.pc.unplaced_services),
+                         len(self.pc.charm_classes()))
+
+    def test_placed_charm_classes_starts_empty(self):
+        self.assertEqual(0, len(self.pc.placed_charm_classes()))
+
     def test_reset_unplaced_none(self):
         """Assign all charms, ensure that unplaced is empty"""
         for cc in self.pc.charm_classes():
@@ -224,83 +232,131 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.reset_unplaced()
         self.assertEqual(len(self.pc.unplaced_services), 1)
 
-    def test_service_is_required(self):
+    def test_get_charm_state(self):
         "Test a sampling of required services and special handling for compute"
-        self.assertTrue(self.pc.service_is_required(CharmKeystone))
-        self.assertTrue(self.pc.service_is_required(CharmNovaCompute))
-        self.assertFalse(self.pc.service_is_required(CharmJujuGui))
+        self.assertEqual(self.pc.get_charm_state(CharmKeystone)[0],
+                         CharmState.REQUIRED)
+        self.assertEqual(self.pc.get_charm_state(CharmNovaCompute)[0],
+                         CharmState.REQUIRED)
 
     def test_one_compute_required(self):
         """after being assigned at least once, novacompute is no longer
         considered 'required' (aka required)"""
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        self.assertFalse(self.pc.service_is_required(CharmNovaCompute))
+        self.assertNotEqual(self.pc.get_charm_state(CharmNovaCompute)[0],
+                            CharmState.REQUIRED)
 
     def test_swift_unrequired_then_required_default(self):
         "Swift and swift-proxy are both optional until you add swift"
-        self.assertFalse(self.pc.service_is_required(CharmSwift))
-        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
         self.pc.assign(self.mock_machine, CharmSwift, AssignmentType.LXC)
-        self.assertTrue(self.pc.service_is_required(CharmSwift))
-        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
 
     def test_swift_unrequired_then_required_swift_backend(self):
         "Swift and swift-proxy are not optional with swift as the backend."
         self.conf.setopt('storage_backend', 'swift')
-        self.assertTrue(self.pc.service_is_required(CharmSwift))
-        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
         self.pc.assign(self.mock_machine, CharmSwift, AssignmentType.LXC)
-        self.assertTrue(self.pc.service_is_required(CharmSwift))
-        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
 
     def test_swift_proxy_unrequired_then_required_default(self):
         "Swift and swift-proxy are both optional until you add swift-proxy"
-        self.assertFalse(self.pc.service_is_required(CharmSwift))
-        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
+
         self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
-        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwift)[0])
         # Only one swift-proxy is required, so now that we've added
         # it, it is still not required:
-        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
 
     def test_swift_proxy_unrequired_then_required_swift_backend(self):
         "Swift and swift-proxy are not optional with swift as the backend"
         self.conf.setopt('storage_backend', 'swift')
-        self.assertTrue(self.pc.service_is_required(CharmSwift))
-        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
         self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
-        self.assertTrue(self.pc.service_is_required(CharmSwift))
+        self.assertEqual(CharmState.REQUIRED,
+                         self.pc.get_charm_state(CharmSwift)[0])
         # Only one swift-proxy is required, so now that we've added
         # it, it is still not required:
-        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
 
     def test_storage_backends_in_is_required(self):
         # default is 'none'
-        self.assertFalse(self.pc.service_is_required(CharmCeph))
-        self.assertFalse(self.pc.service_is_required(CharmCephOSD))
-        self.assertFalse(self.pc.service_is_required(CharmSwift))
-        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmCeph)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmCephOSD)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
 
         self.conf.setopt('storage_backend', 'swift')
-        self.assertFalse(self.pc.service_is_required(CharmCeph))
-        self.assertFalse(self.pc.service_is_required(CharmCephOSD))
-        self.assertTrue(self.pc.service_is_required(CharmSwift))
-        self.assertTrue(self.pc.service_is_required(CharmSwiftProxy))
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmCeph)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmCephOSD)[0])
+        self.assertEqual(CharmState.CONFLICTED,
+                         self.pc.get_charm_state(CharmCephRadosGw)[0])
+
+        st = self.pc.get_charm_state(CharmSwift)
+        swift_state, swift_cons, swift_deps = st
+        self.assertEqual(CharmState.REQUIRED, swift_state)
+
+        st = self.pc.get_charm_state(CharmSwiftProxy)
+        swp_state, swp_cons, swp_deps = st
+        self.assertEqual(CharmState.REQUIRED, swp_state)
+        self.assertEqual([], swp_cons)
+
+        ceph_state, ceph_cons, ceph_deps = self.pc.get_charm_state(CharmCeph)
+        self.assertEqual(CharmState.OPTIONAL, ceph_state)
+
+        st = self.pc.get_charm_state(CharmCephRadosGw)
+        ceph_rg_state, ceph_rg_cons, ceph_rg_deps = st
+        self.assertEqual(CharmState.CONFLICTED, ceph_rg_state)
 
         self.conf.setopt('storage_backend', 'ceph')
-        self.assertTrue(self.pc.service_is_required(CharmCeph))
-        self.assertFalse(self.pc.service_is_required(CharmCephOSD))
-        self.assertFalse(self.pc.service_is_required(CharmSwift))
-        self.assertFalse(self.pc.service_is_required(CharmSwiftProxy))
+        ceph_state, ceph_cons, ceph_deps = self.pc.get_charm_state(CharmCeph)
+        self.assertEqual(CharmState.REQUIRED, ceph_state)
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmCephOSD)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwift)[0])
+        self.assertEqual(CharmState.OPTIONAL,
+                         self.pc.get_charm_state(CharmSwiftProxy)[0])
 
     def test_ceph_num_required(self):
         "3 units of ceph should be required after having been placed"
-        self.assertFalse(self.pc.service_is_required(CharmCeph))
+        state, cons, deps = self.pc.get_charm_state(CharmCeph)
+        self.assertEqual(state, CharmState.OPTIONAL)
         self.pc.assign(self.mock_machine, CharmCeph, AssignmentType.KVM)
-        self.assertTrue(self.pc.service_is_required(CharmCeph))
+        self.assertEqual(self.pc.get_charm_state(CharmCeph)[0],
+                         CharmState.REQUIRED)
         self.pc.assign(self.mock_machine, CharmCeph, AssignmentType.KVM)
         self.pc.assign(self.mock_machine, CharmCeph, AssignmentType.KVM)
-        self.assertFalse(self.pc.service_is_required(CharmCeph))
+        self.assertEqual(self.pc.get_charm_state(CharmCeph)[0],
+                         CharmState.OPTIONAL)
 
     def test_persistence(self):
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
@@ -389,7 +445,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.clear_assignments(self.mock_machine_2)
 
     def test_gen_defaults_raises_with_no_maas_state(self):
-        pc = PlacementController()
+        pc = PlacementController(None, self.conf)
         self.assertRaises(PlacementError, pc.gen_defaults)
 
     def test_gen_defaults_uses_only_ready(self):
@@ -399,8 +455,16 @@ class PlacementControllerTestCase(unittest.TestCase):
         c = Config()
         c.setopt('storage_backend', 'none')
         pc = PlacementController(config=c, maas_state=mock_maas_state)
+        # reset the mock to avoid looking at calls from
+        # PlacementController.__init__().
+        mock_maas_state.reset_mock()
+
         pc.gen_defaults()
-        mock_maas_state.machines.assert_called_with(MaasMachineStatus.READY)
+        # we simply check the first call because we know that
+        # follow-on calls are from calls to machines_for_charm and do
+        # not affect machines used for defaults
+        self.assertEqual(mock_maas_state.machines.mock_calls[0],
+                         call(MaasMachineStatus.READY))
 
     def test_gen_single_backends(self):
         "gen_single has no storage backend by default"

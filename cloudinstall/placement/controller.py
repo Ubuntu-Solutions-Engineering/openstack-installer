@@ -20,6 +20,7 @@ from multiprocessing import cpu_count
 
 from cloudinstall.maas import (satisfies, MaasMachineStatus)
 from cloudinstall.utils import load_charms
+from cloudinstall.state import CharmState
 
 log = logging.getLogger('cloudinstall.placement')
 
@@ -88,7 +89,7 @@ class PlacementController:
         self._machines = []
         # id -> {atype: [charm class]}
         self.assignments = defaultdict(lambda: defaultdict(list))
-        self.unplaced_services = set()
+        self.reset_unplaced()
 
     def save(self):
         """ Save placement state, to be re-read by
@@ -254,71 +255,75 @@ class PlacementController:
             if not is_placed:
                 self.unplaced_services.add(cc)
 
-    def service_is_required(self, cc):
-        """Returns True if service needs to be placed before deploying is
-        OK.
+    def get_charm_state(self, charm):
+        """Returns tuple of charm state:
+        (state, cons, deps)
+
+        state is a CharmState:
+
+        - REQUIRED means that the charm still must be placed before
+        deploying is OK.
+
+        IF a charm dependency forced this, then the other charm will
+        be in 'deps'.  'deps' is NOT just a list of all charms that
+        depend on the given charm.
+
+        - CONFLICTED means that it can't be placed until a conflicting
+        charm is unplaced.  In this case, the conflicting charm is in
+        'cons'.
+
+        - OPTIONAL means that it is ok either way. deps and cons are unused
+
         """
-        self.reset_unplaced()
-        if cc.name() == 'nova-compute' \
-           and cc in self.unplaced_services:
-            return True
+        state = CharmState.OPTIONAL
+        conflicting = []
+        depending = []
 
-        unrequired_services = ['heat',
-                               'nova-compute',
-                               'juju-gui']
+        def conflicts_with(other_charm):
+            return (charm.charm_name in other_charm.conflicts or
+                    other_charm.charm_name in charm.conflicts)
 
-        storage_backend = self.config.getopt('storage_backend')
-        if storage_backend not in ['swift', 'ceph', 'none']:
-            raise AssertionError("unexpected storage_backend: "
-                                 "'{}'".format(storage_backend))
+        def depends(a_charm, b_charm):
+            return b_charm.charm_name in a_charm.depends
 
-        # if we place one of swift-proxy or swift-storage, we must
-        # place the others.
-        unplaced_services_names = [c.name() for c in
-                                   self.unplaced_services]
-        swift_charmnames = ['swift-storage', 'swift-proxy']
-        ceph_charmnames = ['ceph', 'ceph-osd', 'ceph-radosgw',
-                           'cinder-ceph']
-        telemetry_charmnames = ['ceilometer', 'ceilometer-agent',
-                                'mongodb']
+        required_charms = [c for c in self.charm_classes()
+                           if c.is_core or
+                           c.charm_name in self.selected_storage_charms()]
+        placed_or_required = self.placed_charm_classes() + required_charms
 
-        # Ensure all or none telemetry_charms are required
-        if not set(telemetry_charmnames).issubset(unplaced_services_names):
-            unrequired_services += telemetry_charmnames
+        for other_charm in placed_or_required:
+            if conflicts_with(other_charm):
+                state = CharmState.CONFLICTED
+                conflicting.append(other_charm)
+            if depends(other_charm, charm):
+                if state != CharmState.CONFLICTED:
+                    state = CharmState.REQUIRED
+                depending.append(other_charm)
 
-        # if both swift charms are unplaced, then they are unrequired.
-        if set(swift_charmnames).issubset(unplaced_services_names) \
-           and storage_backend != 'swift':
-            unrequired_services += swift_charmnames
+        if charm in required_charms:
+            state = CharmState.REQUIRED
 
-        if storage_backend in ['none', 'swift']:
-            # ceph is required if ceph-osd is placed, but not vice versa.
-            if set(ceph_charmnames).issubset(unplaced_services_names):
-                unrequired_services += ceph_charmnames
-            else:
-                unrequired_services += ['ceph-osd', 'ceph-radosgw',
-                                        'cinder-ceph']
-        else:
-            # ceph was chosen, and is required, but the others
-            # are not required.
-            unrequired_services += ['ceph-osd', 'ceph-radosgw', 'cinder-ceph']
-
-        if cc.name() in unrequired_services:
-            return False
-
-        n_required = cc.required_num_units()
+        n_required = charm.required_num_units()
         # sanity check:
-        if n_required > 1 and not cc.allow_multi_units:
+        if n_required > 1 and not charm.allow_multi_units:
             log.error("Inconsistent charm definition for {}:"
                       " - requires {} units but does not allow "
-                      "multi units.".format(cc.charm_name, n_required))
+                      "multi units.".format(charm.charm_name, n_required))
 
-        n_units = self.machine_count_for_charm(cc)
-        return n_units < n_required
+        n_units = self.machine_count_for_charm(charm)
+
+        if state == CharmState.OPTIONAL and \
+           n_units > 0 and n_units < n_required:
+            state = CharmState.REQUIRED
+        elif state == CharmState.REQUIRED and n_units >= n_required:
+            state = CharmState.OPTIONAL
+
+        return (state, conflicting, depending)
 
     def can_deploy(self):
         unplaced_requireds = [cc for cc in self.unplaced_services
-                              if self.service_is_required(cc)]
+                              if self.get_charm_state(cc)[0] ==
+                              CharmState.REQUIRED]
 
         return len(unplaced_requireds) == 0
 
@@ -385,7 +390,10 @@ class PlacementController:
 
         isolated_charms, controller_charms = [], []
 
-        for charm_class in self.filter_storage_backends(charm_classes):
+        for charm_class in charm_classes:
+            state, _, _ = self.get_charm_state(charm_class)
+            if state != CharmState.REQUIRED:
+                continue
             if charm_class.isolate:
                 isolated_charms.append(charm_class)
             else:
@@ -409,31 +417,18 @@ class PlacementController:
         log.debug(pprint.pformat(assignments))
         return assignments
 
-    def filter_storage_backends(self, charm_classes):
-        "return list of charm classes with only selected backends"
-        swift_charms = ['swift-proxy', 'swift-storage']
-        ceph_charms = ['ceph', 'ceph-osd', 'ceph-radosgw', 'cinder-ceph']
-
+    def selected_storage_charms(self):
+        """returns minimal list of charm names that are required by user selection.
+        other requirements are sorted using deps and conflicts.
+        """
         selected_backend = self.config.getopt('storage_backend')
-        log.debug("filtering storage charms. "
-                  " Selected backend is {}".format(selected_backend))
-
         if selected_backend == 'none':
-            to_remove = swift_charms + ceph_charms
-        elif selected_backend == 'ceph':
-            # ceph-osd is never deployed initially, only included for
-            # scale-out:
-            to_remove = swift_charms + ['ceph-osd']
-        elif selected_backend == 'swift':
-            to_remove = ceph_charms
-        else:
-            raise AssertionError("unknown "
-                                 "backend '{}'".format(selected_backend))
-
-        log.debug("to_remove is {}".format(to_remove))
-
-        return [cc for cc in charm_classes
-                if cc.charm_name not in to_remove]
+            return []
+        if selected_backend == 'ceph':
+            return ['ceph']
+        if selected_backend == 'swift':
+            return ['swift-proxy', 'swift-storage']
+        raise Exception("unexpected backend: {}".format(selected_backend))
 
     def gen_single(self):
         """Generates an assignment for the single installer."""
@@ -463,7 +458,10 @@ class PlacementController:
             return PlaceholderMachine(instance_id, m_name,
                                       charm_class.constraints)
 
-        for charm_class in self.filter_storage_backends(self.charm_classes()):
+        for charm_class in self.charm_classes():
+            state, _, _ = self.get_charm_state(charm_class)
+            if state != CharmState.REQUIRED:
+                continue
             if charm_class.isolate:
                 for n in range(charm_class.required_num_units()):
                     pm = placeholder_for_charm(charm_class)

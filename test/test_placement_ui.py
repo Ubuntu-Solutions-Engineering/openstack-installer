@@ -25,6 +25,7 @@ from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
 import cloudinstall.utils as utils
+from cloudinstall.state import CharmState
 from cloudinstall.config import Config
 from cloudinstall.charms.jujugui import CharmJujuGui
 from cloudinstall.charms.keystone import CharmKeystone
@@ -388,7 +389,7 @@ class ServicesListTestCase(unittest.TestCase):
         mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                mock_sw3]
 
-        with patch.object(self.pc, 'service_is_required') as mock_isreq:
+        with patch.object(self.pc, 'get_charm_state') as mock_get_state:
             with patch.object(self.pc, 'charm_classes') as mock_classesfunc:
                 mock_classesfunc.return_value = [MagicMock(name='fake-class-1',
                                                            charm_name='cc1'),
@@ -398,16 +399,16 @@ class ServicesListTestCase(unittest.TestCase):
                                                            charm_name='cc3')]
 
                 # First, test when all charms are required
-                mock_isreq.return_value = True
+                mock_get_state.return_value = (CharmState.REQUIRED, [], [])
 
                 # rsl shows required charms
                 rsl = ServicesList(self.pc, self.actions, machine=None,
                                    show_type='required')
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show all 3
                 self.assertEqual(len(rsl.service_widgets), 3)
 
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
@@ -415,82 +416,88 @@ class ServicesListTestCase(unittest.TestCase):
                 # usl shows ONLY un-required charms
                 usl = ServicesList(self.pc, self.actions, machine=None,
                                    show_type='non-required')
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show 0
                 self.assertEqual(len(usl.service_widgets), 0)
 
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
 
                 # asl has default show_type='all', showing all charms
                 asl = ServicesList(self.pc, self.actions)
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show all 3
                 self.assertEqual(len(asl.service_widgets), 3)
 
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
 
                 # next, test where no charms are required
-                mock_isreq.return_value = False
+                mock_get_state.return_value = (CharmState.OPTIONAL, [], [])
                 rsl.update()
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show 0 charms
                 self.assertEqual(len(rsl.service_widgets), 0)
 
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
 
                 usl.update()
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show all 3
                 self.assertEqual(len(usl.service_widgets), 3)
 
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
 
                 asl.update()
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should still show all 3
                 self.assertEqual(len(asl.service_widgets), 3)
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
 
                 # next test two un-required and one required charm:
-                mock_isreq.side_effect = [False, True, False]
+                mock_get_state.side_effect = [(CharmState.OPTIONAL, [], []),
+                                              (CharmState.REQUIRED, [], []),
+                                              (CharmState.OPTIONAL, [], [])]
                 rsl.update()
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show 1:
                 self.assertEqual(len(rsl.service_widgets), 1)
 
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
-                mock_isreq.side_effect = [False, True, False]
+                mock_get_state.side_effect = [(CharmState.OPTIONAL, [], []),
+                                              (CharmState.REQUIRED, [], []),
+                                              (CharmState.OPTIONAL, [], [])]
 
                 usl.update()
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show two
                 self.assertEqual(len(usl.service_widgets), 2)
 
-                mock_isreq.reset_mock()
+                mock_get_state.reset_mock()
                 mock_servicewidgetclass.reset_mock()
                 mock_servicewidgetclass.side_effect = [mock_sw1, mock_sw2,
                                                        mock_sw3]
-                mock_isreq.side_effect = [False, True, False]
+                mock_get_state.side_effect = [(CharmState.OPTIONAL, [], []),
+                                              (CharmState.REQUIRED, [], []),
+                                              (CharmState.OPTIONAL, [], [])]
 
                 asl.update()
-                self.assertEqual(len(mock_isreq.mock_calls), 3)
+                self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should still show all three
                 self.assertEqual(len(asl.service_widgets), 3)

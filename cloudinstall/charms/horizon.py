@@ -17,6 +17,7 @@ from cloudinstall.charms import CharmBase
 
 
 class CharmHorizon(CharmBase):
+
     """ Openstack Horizon directives """
 
     charm_name = 'openstack-dashboard'
@@ -25,5 +26,6 @@ class CharmHorizon(CharmBase):
     menuable = True
     related = [('keystone:identity-service',
                 'openstack-dashboard:identity-service')]
+    is_core = True
 
 __charm_class__ = CharmHorizon

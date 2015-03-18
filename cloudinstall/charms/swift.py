@@ -34,6 +34,8 @@ class CharmSwift(CharmBase):
     default_replicas = 3
     isolate = True
     allow_multi_units = True
+    conflicts = ['ceph-radosgw']
+    depends = ['swift-proxy']
 
     @classmethod
     def required_num_units(self):
