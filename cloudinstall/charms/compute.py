@@ -50,7 +50,6 @@ class CharmNovaCompute(CharmBase):
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
     is_core = True
-    depends = ['nova-cloud-controller', 'mysql', 'glance', 'rabbitmq']
 
     def set_relations(self):
         if not self.wait_for_agent(['nova-cloud-controller']):
