@@ -46,6 +46,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     display_priority = DisplayPriorities.Other
     related = [('keystone:identity-service',
                 'glance-simplestreams-sync:identity-service')]
+    is_core = True
 
     def download_stable(self):
         if not os.path.exists(CHARMS_DIR):

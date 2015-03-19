@@ -42,6 +42,7 @@ class CharmQuantum(CharmBase):
                    'root-disk': 20480}
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
+    is_core = True
 
     def set_relations(self):
         repoll = super().set_relations()

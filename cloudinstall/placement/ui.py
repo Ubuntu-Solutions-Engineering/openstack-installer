@@ -24,6 +24,7 @@ from cloudinstall.maas import satisfies
 from cloudinstall.placement.controller import AssignmentType
 from cloudinstall.ui import InfoDialog
 from cloudinstall.utils import format_constraint
+from cloudinstall.state import CharmState
 
 log = logging.getLogger('cloudinstall.placement')
 
@@ -261,7 +262,8 @@ class ServiceWidget(WidgetWrap):
         md = self.controller.machines_for_charm(self.charm_class)
         mstr = [""]
 
-        if self.controller.service_is_required(self.charm_class):
+        if self.controller.get_charm_state(
+                self.charm_class)[0] == CharmState.REQUIRED:
             np = self.controller.machine_count_for_charm(self.charm_class)
             nr = self.charm_class.required_num_units()
             self.title_markup[1] = ('info',
@@ -504,13 +506,13 @@ class ServicesList(WidgetWrap):
                     self.remove_service_widget(cc)
                     continue
 
-            is_required = self.controller.service_is_required(cc)
+            state, _, _ = self.controller.get_charm_state(cc)
             if self.show_type == 'required':
-                if not is_required:
+                if state != CharmState.REQUIRED:
                     self.remove_service_widget(cc)
                     continue
             elif self.show_type == 'non-required':
-                if is_required:
+                if state == CharmState.REQUIRED:
                     self.remove_service_widget(cc)
                     continue
                 if not cc.allow_multi_units and \

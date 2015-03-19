@@ -17,6 +17,7 @@ from cloudinstall.charms import CharmBase, DisplayPriorities
 
 
 class CharmSwiftProxy(CharmBase):
+
     """ swift directives """
 
     charm_name = 'swift-proxy'
@@ -32,5 +33,7 @@ class CharmSwiftProxy(CharmBase):
                    'root-disk': 8192}
     allow_multi_units = False
     menuable = True
+    depends = ['swift-storage']
+    conflicts = ['ceph-radosgw']
 
 __charm_class__ = CharmSwiftProxy

@@ -31,6 +31,7 @@ class CharmKeystone(CharmBase):
     related = [('mysql:shared-db', 'keystone:shared-db')]
     deploy_priority = 1
     menuable = True
+    is_core = True
 
     def deploy(self, m):
         mysql_exists = self.wait_for_agent(['mysql'])
