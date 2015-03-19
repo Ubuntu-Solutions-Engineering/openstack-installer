@@ -30,5 +30,7 @@ class CharmCephRadosGw(CharmBase):
     related = [('ceph:radosgw', 'ceph-radosgw:mon'),
                ('ceph-radosgw:identity-service',
                 'keystone:identity-service')]
+    depends = ['ceph']
+    conflicts = ['swift-proxy', 'swift-storage']
 
 __charm_class__ = CharmCephRadosGw

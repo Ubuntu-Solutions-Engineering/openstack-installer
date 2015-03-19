@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from enum import IntEnum, unique
+from enum import Enum, IntEnum, unique
 import logging
 
 log = logging.getLogger('cloudinstall.state')
@@ -32,3 +32,11 @@ class ControllerState(IntEnum):
     INSTALL_WAIT = 0
     PLACEMENT = 1
     SERVICES = 2
+
+
+class CharmState(Enum):
+
+    """ Charm relation states """
+    REQUIRED = 0
+    OPTIONAL = 1
+    CONFLICTED = 2

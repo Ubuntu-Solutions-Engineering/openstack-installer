@@ -21,6 +21,7 @@ log = logging.getLogger('cloudinstall.charms.ceph')
 
 
 class CharmCephOSD(CharmBase):
+
     """ Ceph OSD directives """
 
     charm_name = 'ceph-osd'
@@ -29,6 +30,7 @@ class CharmCephOSD(CharmBase):
     allow_multi_units = True
     related = [('ceph:osd', 'ceph-osd:mon'),
                ('ntp:juju-info', 'ceph-osd:juju-info')]
+    depends = ['ntp', 'ceph']
     isolate = True
 
     def set_relations(self):

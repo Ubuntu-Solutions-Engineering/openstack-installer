@@ -28,5 +28,6 @@ class CharmNeutronOpenvswitch(CharmBase):
     menuable = True
     subordinate = True
     openstack_release_min = 'j'
+    is_core = True
 
 __charm_class__ = CharmNeutronOpenvswitch

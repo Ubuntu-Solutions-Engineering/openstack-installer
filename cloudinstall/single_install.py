@@ -310,8 +310,8 @@ class SingleInstall:
         # check for deb early, will actually install it later
         upstream_deb = self.config.getopt('upstream_deb')
         if upstream_deb and not os.path.isfile(upstream_deb):
-                raise Exception("Upstream deb '{}' "
-                                "not found.".format(upstream_deb))
+            raise Exception("Upstream deb '{}' "
+                            "not found.".format(upstream_deb))
 
         utils.ssh_genkey()
 

@@ -94,6 +94,7 @@ class CharmBase:
     charm_name = None
     charm_rev = None
     display_name = None
+    # TODO: Deprecate once depends/require checks are implemented
     related = []
     isolate = False
     constraints = {}
@@ -105,6 +106,9 @@ class CharmBase:
     menuable = False
     subordinate = False
     openstack_release_min = 'i'
+    depends = []
+    conflicts = []
+    is_core = False
     contrib = False
 
     def __init__(self, config, ui, juju, juju_state,

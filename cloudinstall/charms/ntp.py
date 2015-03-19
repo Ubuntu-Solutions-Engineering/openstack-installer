@@ -29,5 +29,6 @@ class CharmNtp(CharmBase):
     display_name = 'NTP'
     subordinate = True
     deploy_priority = 0
+    is_core = True
 
 __charm_class__ = CharmNtp
