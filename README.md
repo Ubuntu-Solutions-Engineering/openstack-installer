@@ -5,13 +5,27 @@
 
 ## Support
 
-IRC: **freenode.net** in channel **#ubuntu-solutions**
+All support for the installer itself is done through our mailing list.
 
 Mailing list: https://lists.ubuntu.com/mailman/listinfo/ubuntu-openstack-installer
+
+Any support for administering, running, maintaining the OpenStack cloud is outside of the scope
+of this project. However, additional support for those questions are handled at:
+
+* [Askubuntu/OpenStack](https://askubuntu.com/questions/tagged/openstack)
+* [Askubuntu/Landscape OpenStack Autopilot](https://askubuntu.com/questions/tagged/landscape+openstack-autopilot)
+
+### Filing Bugs
+
+Please make sure to read our [CONTRIBUTING](https://github.com/Ubuntu-Solutions-Engineering/openstack-installer/blob/master/CONTRIBUTING.md) document before filing a bug.
 
 ## Developers
 
 * [Read the developers guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/developers.html)
+
+For further discussions of code development of the installer please join our IRC channel.
+
+IRC: **freenode.net** in channel **#ubuntu-solutions**
 
 ## Users
 
@@ -21,7 +35,7 @@ Mailing list: https://lists.ubuntu.com/mailman/listinfo/ubuntu-openstack-install
 
 # Copyright
 
-Copyright 2014 Canonical, Ltd.
+Copyright 2015 Canonical, Ltd.
 
 # License
 
