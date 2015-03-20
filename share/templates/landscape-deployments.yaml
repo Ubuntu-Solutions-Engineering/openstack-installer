@@ -1,87 +1,78 @@
-# Copied from lp:landscape-charm /config/landscape-deployments.yaml
-# and then:
-#   # charm no longer requires a license file
-#   sed -e 's/license-file$/\/dev\/null/g' -i landscape-deployments.yaml
-#
-#   Users who want to use the landscape installer should:
-#   # $CONTENTS here is what is in https://pastebin.canonical.com/112787/
-#   # for now. When landscape is released, we can make this something public.
-#   sed -e 's/include-file:\/\/repo-file/$CONTENTS/g' -i landscape-deployments.yaml
-_common:
-    services:
-        rabbitmq-server:
-            charm: cs:trusty/rabbitmq-server-7
-        postgresql:
-            charm: cs:trusty/postgresql-3
-            constraints: mem=2048
-            options:
-                extra-packages: python-apt postgresql-contrib postgresql-.*-debversion
-                max_connections: 500
-        haproxy:
-            charm: cs:trusty/haproxy-1
-            options:
-                enable_monitoring: True
-                monitoring_allowed_cidr: "0.0.0.0/0"
-                monitoring_password: "haproxy"
-                default_timeouts: "queue 60000, connect 5000, client 120000, server 120000"
-                # Don't deploy default haproxy service on port 80
-                services: ""
-        apache2:
-            charm: cs:trusty/apache2-4
-            expose: True
-            options:
-                enable_modules: proxy proxy_http proxy_balancer rewrite expires headers ssl
-                ssl_cert: SELFSIGNED
-                ssl_certlocation: apache2.cert
-                ssl_keylocation: apache2.key
-
-landscape:
-    inherits: _common
-    series: trusty
-    services:
-        landscape:
-            charm: cs:trusty/landscape-server
-            constraints: mem=2048
-            options:
-                service-count: "2"
-                landscape-password: {{ landscape_password }}
-                services: static appserver pingserver combo-loader async-frontend apiserver package-upload jobhandler package-search cron juju-sync
-                repository: http://ppa.launchpad.net/landscape/14.10/ubuntu
-        landscape-msg:
-            charm: cs:trusty/landscape-server
-            constraints: mem=2048
-            options:
-                landscape-password: {{ landscape_password }}
-                services: msgserver
-                repository: http://ppa.launchpad.net/landscape/14.10/ubuntu
-    relations:
-        - [landscape, rabbitmq-server]
-        - [landscape, haproxy]
-        - ["landscape:vhost-config", "apache2:vhost-config"]
-        - ["landscape:db-admin", "postgresql:db-admin"]
-        - ["haproxy:website", "apache2:reverseproxy"]
-        - [landscape-msg, rabbitmq-server]
-        - [landscape-msg, haproxy]
-        - ["landscape-msg:db-admin", "postgresql:db-admin"]
-
-landscape-dense:
-    inherits: landscape-dense-maas
-    services:
-        apache2:
-            to: 0
-
-landscape-dense-maas:
-    inherits: landscape
-    services:
-        landscape:
-            to: lxc:0
-        landscape-msg:
-            to: lxc:0
-        postgresql:
-            to: lxc:0
-        rabbitmq-server:
-            to: lxc:0
-        apache2:
-            to: lxc:0
-        haproxy:
-            to: lxc:0
+services:
+  apache2:
+    charm: cs:trusty/apache2-10
+    num_units: 1
+    to:
+    - lxc:0
+    options:
+      enable_modules: proxy proxy_http proxy_balancer rewrite expires headers ssl
+      ssl_cert: SELFSIGNED
+      ssl_certlocation: apache2.cert
+      ssl_keylocation: apache2.key
+  haproxy:
+    charm: cs:trusty/haproxy-4
+    num_units: 1
+    to:
+    - lxc:0
+    options:
+      default_timeouts: queue 60000, connect 5000, client 120000, server 120000
+      enable_monitoring: true
+      monitoring_allowed_cidr: 0.0.0.0/0
+      monitoring_password: haproxy
+      services: ""
+  landscape:
+    charm: cs:trusty/landscape-server
+    num_units: 1
+    to:
+    - lxc:0
+    options:
+      landscape-password: {{ landscape_password }}
+      repository: http://ppa.launchpad.net/landscape/15.01/ubuntu
+      service-count: "2"
+      services: static appserver pingserver combo-loader async-frontend apiserver
+        package-upload jobhandler package-search cron juju-sync
+    constraints: mem=2048
+  landscape-msg:
+    charm: cs:trusty/landscape-server
+    num_units: 1
+    to:
+    - lxc:0
+    options:
+      landscape-password: {{ landscape_password }}
+      repository: http://ppa.launchpad.net/landscape/15.01/ubuntu
+      services: msgserver
+    constraints: mem=2048
+  postgresql:
+    charm: cs:trusty/postgresql-15
+    num_units: 1
+    to:
+    - lxc:0
+    options:
+      extra-packages: python-apt postgresql-contrib postgresql-.*-debversion
+      max_connections: 500
+    constraints: mem=2048
+  rabbitmq-server:
+    charm: cs:trusty/rabbitmq-server-26
+    num_units: 1
+    to:
+    - lxc:0
+machines:
+  "0": {}
+series: trusty
+relations:
+- - landscape
+  - rabbitmq-server
+- - landscape
+  - haproxy
+- - landscape:vhost-config
+  - apache2:vhost-config
+- - landscape:db-admin
+  - postgresql:db-admin
+- - haproxy:website
+  - apache2:reverseproxy
+- - landscape-msg
+  - rabbitmq-server
+- - landscape-msg
+  - haproxy
+- - landscape-msg:db-admin
+  - postgresql:db-admin
