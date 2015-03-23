@@ -43,13 +43,4 @@ class CharmCinder(CharmBase):
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
 
-    def set_relations(self):
-        if not self.wait_for_agent([self.charm_name,
-                                    'glance',
-                                    'keystone',
-                                    'rabbitmq-server',
-                                    'nova-cloud-controller']):
-            return True
-        super().set_relations()
-
 __charm_class__ = CharmCinder

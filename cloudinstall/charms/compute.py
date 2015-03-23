@@ -51,9 +51,4 @@ class CharmNovaCompute(CharmBase):
                                 AssignmentType.KVM]
     is_core = True
 
-    def set_relations(self):
-        if not self.wait_for_agent(['nova-cloud-controller']):
-            return True
-        super().set_relations()
-
 __charm_class__ = CharmNovaCompute

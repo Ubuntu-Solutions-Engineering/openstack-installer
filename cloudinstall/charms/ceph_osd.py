@@ -33,9 +33,4 @@ class CharmCephOSD(CharmBase):
     depends = ['ntp', 'ceph']
     isolate = True
 
-    def set_relations(self):
-        if not self.wait_for_agent(['ceph']):
-            return True
-        super().set_relations()
-
 __charm_class__ = CharmCephOSD

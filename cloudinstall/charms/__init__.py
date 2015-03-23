@@ -27,7 +27,6 @@ import requests
 from macumba import MacumbaError
 from cloudinstall import utils
 from cloudinstall.placement.controller import AssignmentType
-from cloudinstall.service import JujuUnitNotFoundException
 
 log = logging.getLogger('cloudinstall.charms')
 
@@ -94,7 +93,6 @@ class CharmBase:
     charm_name = None
     charm_rev = None
     display_name = None
-    # TODO: Deprecate once depends/require checks are implemented
     related = []
     isolate = False
     constraints = {}
@@ -254,35 +252,6 @@ export OS_REGION_NAME=RegionOne
             return True
         return False
 
-    def set_relations(self):
-        """ Setup charm relations
-
-        Override in charm specific.
-        """
-        if len(self.related) > 0:
-            services = self.juju_state.service(self.charm_name)
-            try:
-                unit = services.unit(self.charm_name)
-            except JujuUnitNotFoundException:
-                return True
-            if unit.agent_state != "started":
-                return True
-            for relation_a, relation_b in self.related:
-                if not self.is_related(":".split(relation_a)[0],
-                                       services.relations):
-                    try:
-                        log.debug("calling add_relation({}, {})".format(
-                            relation_a, relation_b))
-                        self.juju.add_relation(relation_a,
-                                               relation_b)
-                    except:
-                        msg = "Relation {}-{} not ready, " \
-                              "requeueing.".format(relation_a, relation_b)
-                        log.exception("failure in add_relation {}".format(msg))
-                        self.ui.status_info_message(msg)
-                        return True
-        return False
-
     def post_proc(self):
         """ Perform any post processing
 
@@ -327,27 +296,53 @@ export OS_REGION_NAME=RegionOne
         return self.name()
 
 
+class CharmQueueRelationsError(Exception):
+
+    """ An exception occured during relation setter """
+
+
 class CharmQueue:
 
     """ charm queue for handling relations in the background
     """
 
-    def __init__(self, ui, config):
+    def __init__(self, ui, config, juju_state, juju, deployed_charms):
         self.charm_relations_q = Queue()
         self.charm_deploy_q = Queue()
         self.charm_post_proc_q = Queue()
         self.is_running = False
         self.ui = ui
         self.config = config
+        self.juju = juju
+        self.juju_state = juju_state
+        self.deployed_charms = deployed_charms
 
-    def add_relation(self, charm):
-        self.charm_relations_q.put(charm)
+    def filter_valid_relations(self):
+        """
+        Return a list of [('relation:interface', 'relation_b:interface')] where
+        only charms exist from current deployed_charms.
+
+        Any relation found that is attempting to access a Charm that hasn't
+        been deployed will be dropped. We don't error on this because optional
+        charms may fall into this category and we want to make sure to include
+        those if placed by the controller.
+        """
+        all_relations = []
+        for c in self.deployed_charms:
+            all_relations.extend(c.related)
+
+        charm_names = [x.charm_name for x in self.deployed_charms]
+
+        valid_relations = []
+        for rel_a, rel_b in all_relations:
+            rel_a_name = rel_a.split(":")[0]
+            rel_b_name = rel_b.split(":")[0]
+            if rel_a_name in charm_names and rel_b_name in charm_names:
+                valid_relations.append((rel_a, rel_b))
+        return valid_relations
 
     def add_deploy(self, charm):
         self.charm_deploy_q.put(charm)
-
-    def add_post_proc(self, charm):
-        self.charm_post_proc_q.put(charm)
 
     def watch_deploy(self):
         log.debug("Starting charm deploy watcher.")
@@ -369,25 +364,36 @@ class CharmQueue:
         self.watch_relations()
 
     def watch_relations(self):
-        log.debug("Starting charm relations watcher.")
-        while not self.charm_relations_q.empty():
-            try:
-                charm = self.charm_relations_q.get()
-                err = charm.set_relations()
-                if err:
-                    self.charm_relations_q.put(charm)
-                self.charm_relations_q.task_done()
-            except:
-                msg = "Exception in relations watcher, re-trying."
-                log.exception(msg)
-                self.ui.status_error_message(msg)
-            time.sleep(10)
+        """ Setup charm relations
+        """
+        valid_relations = self.filter_valid_relations()
+        completed_relations = []
+        if len(valid_relations) <= 0:
+            return
+        while len(valid_relations) != len(completed_relations):
+            for relation_a, relation_b in valid_relations:
+                try:
+                    log.debug("calling add_relation({}, {})".format(
+                        relation_a, relation_b))
+                    self.juju.add_relation(relation_a,
+                                           relation_b)
+                    completed_relations.append((relation_a,
+                                                relation_b))
+                except Exception as e:
+                    print(e)
+                    msg = "Relation {}-{} not ready, " \
+                          "requeueing.".format(relation_a, relation_b)
+                    log.exception("Failure in add_relation: {}".format(msg))
+                    self.ui.status_info_message(msg)
 
     @utils.async
     def watch_post_proc_async(self):
         self.watch_post_proc()
 
     def watch_post_proc(self):
+        for charm in self.deployed_charms:
+            self.charm_post_proc_q.put(charm)
+
         log.debug("Starting charm post processing watcher.")
         while not self.charm_post_proc_q.empty():
             try:
