@@ -543,12 +543,9 @@ class Controller:
                   " post-processing enqueueing {}".format(
                       [c.charm_name for c in self.deployed_charm_classes]))
 
-        charm_q = CharmQueue(ui=self.ui, config=self.config)
-        for charm_class in self.deployed_charm_classes:
-            charm = charm_class(juju=self.juju, juju_state=self.juju_state,
-                                ui=self.ui, config=self.config)
-            charm_q.add_relation(charm)
-            charm_q.add_post_proc(charm)
+        charm_q = CharmQueue(ui=self.ui, config=self.config,
+                             juju=self.juju, juju_state=self.juju,
+                             deployed_charms=self.deployed_charm_classes)
 
         if self.config.getopt('headless'):
             charm_q.watch_relations()
@@ -575,6 +572,7 @@ class Controller:
                                      self.maas_state, self.config)
         self.loop.redraw_screen()
 
+    # FIXME: Use try_deploy and handle charm depends?
     def add_charm(self, count=0, charm=None):
         if not charm:
             self.ui.hide_add_charm_info()
@@ -585,7 +583,9 @@ class Controller:
                 n=count, charm=charm))
             self.juju.add_unit(charm, num_units=int(count))
         else:
-            charm_q = CharmQueue(ui=self.ui, config=self.config)
+            charm_q = CharmQueue(ui=self.ui, config=self.config,
+                                 juju=self.juju, juju_state=self.juju,
+                                 deployed_charms=self.deployed_charm_classes)
             charm_sel = get_charm(charm,
                                   self.juju,
                                   self.juju_state,
@@ -598,8 +598,6 @@ class Controller:
             self.ui.status_info_message("Adding {} to environment".format(
                 charm_sel))
             charm_q.add_deploy(charm_sel)
-            charm_q.add_relation(charm_sel)
-            charm_q.add_post_proc(charm_sel)
 
             # Add charm dependencies
             if len(charm_sel.related) > 0:
@@ -616,8 +614,6 @@ class Controller:
                         if not charm_dep.isolate:
                             charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
                         charm_q.add_deploy(charm_dep)
-                        charm_q.add_relation(charm_dep)
-                        charm_q.add_post_proc(charm_dep)
 
             if not charm_q.is_running:
                 charm_q.watch_deploy()

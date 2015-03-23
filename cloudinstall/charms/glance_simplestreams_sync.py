@@ -122,9 +122,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
             log.warning("Deploy error. rc={} out={}".format(e.returncode,
                                                             e.output))
             return True
-        return False
 
-    def set_relations(self):
         if os.path.exists(os.path.join(CHARMS_DIR, CURRENT_DISTRO,
                                        'glance-simplestreams-sync')):
             if 'rabbitmq-server' not in self.related:
@@ -132,7 +130,6 @@ class CharmGlanceSimplestreamsSync(CharmBase):
                                      'glance-simplestreams-sync:amqp'))
                 log.debug("Added rabbitmq to relation list")
 
-        return super().set_relations()
-
+        return False
 
 __charm_class__ = CharmGlanceSimplestreamsSync

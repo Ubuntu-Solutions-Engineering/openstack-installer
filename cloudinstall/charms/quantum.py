@@ -35,7 +35,8 @@ class CharmQuantum(CharmBase):
     related = [('mysql:shared-db', 'quantum-gateway:shared-db'),
                ('nova-cloud-controller:quantum-network-service',
                 'quantum-gateway:quantum-network-service'),
-               ('ntp:juju-info', 'quantum-gateway:juju-info')]
+               ('ntp:juju-info', 'quantum-gateway:juju-info'),
+               ('rabbitmq-server:amqp', 'quantum-gateway:amqp')]
     isolate = True
     menuable = True
     constraints = {'mem': 2048,
@@ -43,28 +44,6 @@ class CharmQuantum(CharmBase):
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
     is_core = True
-
-    def set_relations(self):
-        repoll = super().set_relations()
-        if repoll:
-            return True
-        service = self.juju_state.service(self.charm_name)
-        if self.is_related('rabbitmq-server', service.relations):
-            return False
-
-        try:
-            log.debug("calling add_relation(quantum-gateway:amqp, "
-                      "rabbitmq-server:amqp")
-            self.juju.add_relation('quantum-gateway:amqp',
-                                   'rabbitmq-server:amqp')
-        except:
-            msg = ("Relation quantum-gateway-rabbitmq-server not ready, "
-                   "requeueing.")
-            log.exception("failure in add_relation {}".format(msg))
-            self.ui.status_info_message(msg)
-            return True
-
-        return False
 
     def post_proc(self):
         """ performs additional network configuration for charm """

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #
-# tests utils.py
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -27,10 +25,14 @@ from unittest.mock import ANY, MagicMock, patch
 
 import cloudinstall.utils as utils
 import cloudinstall.charms
-from cloudinstall.charms import CharmBase
+from cloudinstall.charms import CharmBase, CharmQueue, CharmQueueRelationsError
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
+from cloudinstall.charms.compute import CharmNovaCompute
+from cloudinstall.charms.glance import CharmGlance
+from cloudinstall.charms.mysql import CharmMysql
+from cloudinstall.charms.ntp import CharmNtp
 
-log = logging.getLogger('cloudinstall.test_utils')
+log = logging.getLogger('cloudinstall.test_charms')
 
 
 def source_tree_template_loader(name):
@@ -94,6 +96,68 @@ class TestCharmKeystone(PrepCharmTest):
         self.mock_juju_state.service.return_value = ms
         rv = self.charm.wait_for_agent(['mysql'])
         self.assertFalse(rv)
+
+
+class TestCharmRelations(unittest.TestCase):
+
+    """ Use NovaCompute to determine if certain relations
+    are supported as it contains an optional charm relation.
+
+    NovaCompute includes an optional relation for ceilometer, this
+    class will test to make sure that relation is dropped
+    since that service is unavailable in this test.
+    """
+
+    def setUp(self):
+        self.mock_jujuclient = MagicMock(name='jujuclient')
+        self.mock_juju_state = MagicMock(name='juju_state')
+        self.mock_ui = MagicMock(name='ui')
+        self.mock_config = MagicMock(name='config')
+
+        self.deployed_charms = [CharmNtp, CharmNovaCompute, CharmGlance,
+                                CharmMysql]
+
+        self.charm = CharmQueue(
+            ui=self.mock_ui,
+            config=self.mock_config,
+            juju=self.mock_jujuclient,
+            juju_state=self.mock_juju_state,
+            deployed_charms=self.deployed_charms)
+
+        self.expected_relation = [('mysql:shared-db',
+                                   'nova-compute:shared-db'),
+                                  ('nova-compute:image-service',
+                                   'glance:image-service'),
+                                  ('ntp:juju-info', 'nova-compute:juju-info'),
+                                  ('mysql:shared-db', 'glance:shared-db')]
+
+        self.unexpected_relation = [('nova-compute:nova-ceilometer',
+                                     'ceilometer-agent:nova-ceilometer')]
+
+    def test_expected_relations(self):
+        """ Test valid relations are provided """
+        valid_relations = self.charm.filter_valid_relations()
+        self.assertEqual(self.expected_relation, valid_relations)
+
+    def test_unexpected_relations(self):
+        """ Test invalid relations are removed """
+        valid_relations = self.charm.filter_valid_relations()
+        self.assertNotIn(self.unexpected_relation, valid_relations)
+
+    def test_watch_relations_exception(self):
+        """ Verifies watch_relations croaks on failed add_relation """
+        juju = self.mock_jujuclient
+
+        juju.add_relation.side_effect = Exception('Failed to add relations')
+
+        charm_q = CharmQueue(
+            ui=self.mock_ui,
+            config=self.mock_config,
+            juju=juju,
+            juju_state=self.mock_juju_state,
+            deployed_charms=self.deployed_charms)
+        # TODO: Test expected exception msg
+        self.assertRaises(Exception, charm_q.watch_relations)
 
 
 class TestCharmPlugin(unittest.TestCase):
