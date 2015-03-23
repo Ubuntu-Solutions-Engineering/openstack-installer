@@ -64,11 +64,17 @@ class CharmNovaCloudController(CharmBase):
                 src=self._openstack_env_path(u),
                 dst='/tmp/openstack-{u}-rc'.format(u=u),
                 juju_home=self.config.juju_home(use_expansion=True))
+
+        setup_script_path = self.render_setup_script()
+        remote_setup_script_path = "/tmp/nova-controller-setup.sh"
         utils.remote_cp(
             unit.machine_id,
-            src=os.path.join(self.config.tmpl_path,
-                             "nova-controller-setup.sh"),
-            dst="/tmp/nova-controller-setup.sh",
+            src=setup_script_path,
+            dst=remote_setup_script_path,
+            juju_home=self.config.juju_home(use_expansion=True))
+        utils.remote_run(
+            unit.machine_id,
+            cmds="chmod +x {}".format(remote_setup_script_path),
             juju_home=self.config.juju_home(use_expansion=True))
         utils.remote_cp(
             unit.machine_id,
@@ -86,6 +92,18 @@ class CharmNovaCloudController(CharmBase):
             # something happened during nova setup, re-run
             return True
         return False
+
+    def render_setup_script(self):
+        setup_template = utils.load_template("nova-controller-setup.sh")
+        lxc_network = self.config.getopt('lxc_network')
+        N = lxc_network.split('.')[2]
+
+        setup_script_path = os.path.join(self.config.cfg_path,
+                                         "nova-controller-setup.sh")
+
+        utils.spew(setup_script_path,
+                   setup_template.render(dict(N=N)))
+        return setup_script_path
 
 
 __charm_class__ = CharmNovaCloudController
