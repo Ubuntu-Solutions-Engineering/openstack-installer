@@ -193,6 +193,7 @@ class SingleInstall:
         # Add static route
         self.add_static_route()
 
+        self.tasker.start_task("Installing Dependencies")
         log.debug("Installing openstack & openstack-single directly, "
                   "and juju-local, libvirt-bin and lxc via deps")
         utils.container_run(self.container_name,
@@ -288,7 +289,8 @@ class SingleInstall:
     def run(self):
         self.tasker.register_tasks([
             "Initializing Environment",
-            "Creating container",
+            "Creating Container",
+            "Installing Dependencies",
             "Bootstrapping Juju"])
 
         self.tasker.start_task("Initializing Environment")
