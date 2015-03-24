@@ -4,6 +4,7 @@ echo -n Ubuntu Openstack Installer Uninstalling ...
 
 WHAT=$(openstack-install -g install_type)
 CONTAINER_NAME=$(openstack-install -g container_name)
+CONTAINER_NETWORK=$(openstack-install -g lxc_network)
 
 if [ -f ~/.cloud-install/new-maas ]; then
   MAAS_TYPE=new
@@ -72,9 +73,15 @@ case $WHAT in
     ;;
   Single)
     echo Single install path.
+    echo "Destroying $CONTAINER_NAME"
     lxc-stop -n $CONTAINER_NAME || true
     lxc-destroy -n $CONTAINER_NAME || true
-    ip route del 10.0.4.0/24 || true
+    if [ -n "$CONTAINER_NETWORK" ]; then
+        echo "Deleting $CONTAINER_NETWORK"
+        ip route del $CONTAINER_NETWORK || true
+    else
+        echo "No static route defined. Not changing routing tables."
+    fi
     ;;
   *)
     echo Could not determine install type, was ~/.cloud-install removed prior to running the uninstallation?

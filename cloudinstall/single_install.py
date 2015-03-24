@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from ipaddress import IPv4Network
 import logging
 import os
 import json
@@ -105,33 +106,48 @@ class SingleInstall:
                    single_env_modified,
                    owner=utils.install_user())
 
-    def set_dhcp_range(self):
-        """ defines a new dhcp range within host container
-        to leave the other IPS open for Neutron to use as floating.
-
-        By default the single installer uses a range of x.x.x.200-x.x.x.254
+    def write_lxc_net_config(self):
+        """Finds and configures a new subnet for the host container,
+        to avoid overlapping with IPs used for Neutron.
         """
-        lxc_net_file = os.path.join(self.config.tmpl_path, 'lxc-net')
-        lxc_net_container_file = os.path.join(self.container_abspath,
-                                              'rootfs/etc/default/lxc-net')
-        lxc_net = utils.slurp(lxc_net_file)
-        log.info("Setting DHCP properties for host container.")
-        utils.spew(lxc_net_container_file, lxc_net)
+        lxc_net_template = utils.load_template('lxc-net')
+        lxc_net_container_filename = os.path.join(self.container_abspath,
+                                                  'rootfs/etc/default/lxc-net')
 
-    def add_static_route(self):
+        network = netutils.get_unique_lxc_network()
+        self.config.setopt('lxc_network', network)
+
+        nw = IPv4Network(network)
+        addr = nw[1]
+        netmask = nw.with_netmask.split('/')[-1]
+        net_low, net_high = netutils.ip_range_max(nw, [addr])
+        dhcp_range = "{},{}".format(net_low, net_high)
+        render_parts = dict(addr=addr,
+                            netmask=netmask,
+                            network=network,
+                            dhcp_range=dhcp_range)
+        lxc_net = lxc_net_template.render(render_parts)
+        name = self.container_name
+        log.info("Writing lxc-net config for {}".format(name))
+        utils.spew(lxc_net_container_filename, lxc_net)
+
+        return network
+
+    def add_static_route(self, lxc_net):
         """ Adds static route to host system
         """
         # Store container IP in config
         ip = utils.container_ip(self.container_name)
         self.config.setopt('container_ip', ip)
 
-        log.info("Adding static route for 10.0.4.0/24 via {}".format(ip))
+        log.info("Adding static route for {} via {}".format(lxc_net,
+                                                            ip))
 
         out = utils.get_command_output(
-            'ip route add 10.0.4.0/24 via {} dev lxcbr0'.format(ip))
+            'ip route add {} via {} dev lxcbr0'.format(lxc_net, ip))
         if out['status'] != 0:
-            raise Exception("Could not add static route for "
-                            "10.0.4.0/24 network: {}".format(out['output']))
+            raise Exception("Could not add static route for {}"
+                            " network: {}".format(lxc_net, out['output']))
 
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
@@ -188,10 +204,8 @@ class SingleInstall:
         # control over ordering
         log.debug("Container started, cloud-init done.")
 
-        # Set dhcp range for host container
-        self.set_dhcp_range()
-        # Add static route
-        self.add_static_route()
+        lxc_network = self.write_lxc_net_config()
+        self.add_static_route(lxc_network)
 
         self.tasker.start_task("Installing Dependencies")
         log.debug("Installing openstack & openstack-single directly, "
@@ -347,11 +361,12 @@ class SingleInstall:
         if self.config.getopt('http_proxy') or \
            self.config.getopt('https_proxy'):
             log.info("Updating juju environments for proxy support")
+            lxc_net = self.config.getopt('lxc_network')
             self.config.update_environments_yaml(
                 key='no-proxy',
                 val='{},localhost,{}'.format(
                     utils.container_ip(self.container_name),
-                    netutils.get_ip_set('10.0.4.0/24')))
+                    netutils.get_ip_set(lxc_net)))
 
         # start the party
         cloud_status_bin = ['openstack-status']
