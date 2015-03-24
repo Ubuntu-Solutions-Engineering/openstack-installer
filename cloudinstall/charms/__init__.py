@@ -296,18 +296,12 @@ export OS_REGION_NAME=RegionOne
         return self.name()
 
 
-class CharmQueueRelationsError(Exception):
-
-    """ An exception occured during relation setter """
-
-
 class CharmQueue:
 
     """ charm queue for handling relations in the background
     """
 
     def __init__(self, ui, config, juju_state, juju, deployed_charms):
-        self.charm_relations_q = Queue()
         self.charm_deploy_q = Queue()
         self.charm_post_proc_q = Queue()
         self.is_running = False
@@ -388,12 +382,24 @@ class CharmQueue:
                     self.ui.status_info_message(msg)
                     raise e
 
+    def _charm_classes(self):
+        """ Returns instances of deployed charms """
+        charms = []
+        for c in self.deployed_charms:
+            charm = get_charm(c.charm_name,
+                              self.juju,
+                              self.juju_state,
+                              self.ui,
+                              config=self.config)
+            charms.append(charm)
+        return charms
+
     @utils.async
     def watch_post_proc_async(self):
         self.watch_post_proc()
 
     def watch_post_proc(self):
-        for charm in self.deployed_charms:
+        for charm in self._charm_classes():
             self.charm_post_proc_q.put(charm)
 
         log.debug("Starting charm post processing watcher.")
