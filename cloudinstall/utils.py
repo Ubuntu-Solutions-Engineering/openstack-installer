@@ -351,7 +351,7 @@ def get_command_output(command, timeout=None, user_sudo=False):
     :param timeout: (optional) use 'timeout' to limit time. default 300
     :param user_sudo: (optional) sudo into install users env. default False.
     :type command: str
-    :returns: {status: returncode, output: stdout+stdeer}
+    :returns: {status: returncode, output: stdout, err: stderr}
     :rtype: dict
 
     .. code::
@@ -380,8 +380,11 @@ def get_command_output(command, timeout=None, user_sudo=False):
     stdout, stderr = p.communicate()
     if p.returncode == 126 or p.returncode == 127:
         stdout = bytes()
+    if not stderr:
+        stderr = bytes()
     return dict(status=p.returncode,
-                output=stdout.decode('utf-8'))
+                output=stdout.decode('utf-8'),
+                err=stderr.decode('utf-8'))
 
 
 def poll_until_true(cmd, predicate, frequency, timeout=600,
