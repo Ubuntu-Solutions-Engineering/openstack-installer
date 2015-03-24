@@ -11,24 +11,39 @@ write_files:
     permissions: '0755'
 packages:
   - software-properties-common
-{% if extra_pkgs %}
+{%- if extra_pkgs %}
 {% for pkg in extra_pkgs %}
   - {{ pkg }}
 {% endfor %}
-{% endif %}
+{%- endif %}
 groups:
   - libvirtd: [ubuntu]
   - sudo: [ubuntu]
-{% if http_proxy %}
+{%- if http_proxy %}
 apt_proxy: {{ http_proxy }}
-{% endif %}
-{% if https_proxy %}
+{%- endif %}
+{%- if https_proxy %}
 apt_https_proxy: {{ https_proxy }}
-{% endif %}
+{%- endif %}
 apt_get_wrapper:
   command: eatmydata
   enabled: auto
 apt_sources:
+  - source: deb http://ppa.launchpad.net/juju/stable/ubuntu $RELEASE main
+    key: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: SKS 1.1.4
+      Comment: Hostname: keyserver.ubuntu.com
+
+      mI0ETDzUZwEEAK3pnEmDZFVTehdKEN6jWs5UBfiEuyqHOmeINREQVn2ue+3bvFb+pYnjaPoz
+      CxLRDa4gitS8Wt/rtLvC/Gl+0UNXl71yVdQoPCOPTjfcc4WfPe5EaVNUqNZsEou31jRLvuq9
+      D/047ZjUbEFjy/oMY5I/zBA5X0BjNc30Tlm9NoMRABEBAAG0FkxhdW5jaHBhZCBFbnNlbWJs
+      ZSBQUEGItgQTAQIAIAUCTDzUZwIbAwYLCQgHAwIEFQIIAwQWAgMBAh4BAheAAAoJEDdqKQ7I
+      BosRT50EAJQVKoSFSxyIlx4fdH9vhftKwvvmZK6KHYHqVY8Hee3exU/wdPCH+nssG2s/9/oW
+      ReHiRNgIhc+iIDr+OTh/9TNPoClybkvrlWBgqUh6CIUNXbJQMigZlly90gkaLtUMGfsfW2+1
+      u9j+vBKs9toPKDN1ybKu61k4lCrxoDUo9QDp
+      =4LP9
+      -----END PGP PUBLIC KEY BLOCK-----
   - source: deb http://ppa.launchpad.net/cloud-installer/testing/ubuntu $RELEASE main
     key: |
       -----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -44,17 +59,17 @@ apt_sources:
       MqPZ3uOvWieRR347tMTh/BgxEsTdTUcLbt7jZkk6NypGO+ej8WtWugJ9kwOPb9s=
       =aDcI
       -----END PGP PUBLIC KEY BLOCK-----
-{% if extra_ppa %}
+{%- if extra_ppa %}
 {% for ppa in extra_ppa %}
   - source: "{{ ppa }}"
 {% endfor %}
-{% endif %}
-{% if extra_sshkeys %}
+{%- endif %}
+{%- if extra_sshkeys %}
 ssh_authorized_keys:
 {% for ssh in extra_sshkeys %}
   - {{ ssh }}
-{% endfor %}
-{% endif %}
+{%- endfor %}
+{%- endif %}
 random_seed:
   command: {{seed_command}}
 {% if apt_mirror %}
@@ -71,11 +86,11 @@ manage_etc_hosts: localhost
 runcmd:
   - [ sh, /etc/rc.local ]
   - echo "export PATH=$PATH:/usr/sbin" >> /home/ubuntu/.bashrc
-{% if http_proxy %}
+{%- if http_proxy %}
   - echo "export http_proxy={{ http_proxy }}" >> /home/ubuntu/.bashrc
   - echo "export HTTP_PROXY={{ http_proxy }}" >> /home/ubuntu/.bashrc
-{% endif %}
-{% if https_proxy %}
+{%- endif %}
+{%- if https_proxy %}
   - echo "export https_proxy={{ https_proxy }}" >> /home/ubuntu/.bashrc
   - echo "export HTTPS_PROXY={{ https_proxy }}" >> /home/ubuntu/.bashrc
-{% endif %}
+{%- endif %}
