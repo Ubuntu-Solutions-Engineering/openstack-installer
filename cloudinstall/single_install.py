@@ -204,6 +204,7 @@ class SingleInstall:
         # control over ordering
         log.debug("Container started, cloud-init done.")
 
+        lxc_network = self.write_lxc_net_config()
         self.add_static_route(lxc_network)
 
         self.tasker.start_task("Installing Dependencies")
