@@ -104,7 +104,6 @@ def get_unique_lxc_network():
     n = 6
     cidrfmt = "10.0.{}.0/24"
     while static_route_exists(cidrfmt.format(n)):
-        print("trying {}".format(cidrfmt.format(n)))
         n += 1
     return cidrfmt.format(n)
 
