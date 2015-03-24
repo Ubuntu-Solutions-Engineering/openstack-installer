@@ -6,7 +6,7 @@ if [[ "$2" == "Single" ]]; then
     if neutron net-list|grep -q ubuntu-net; then exit 0; fi
     # configure external network for Single install path
     neutron net-create --router:external=True ext-net
-    neutron subnet-create --name ext-subnet --gateway 10.0.4.1 --allocation-pool start=10.0.4.200,end=10.0.4.254 --disable-dhcp ext-net 10.0.4.0/24
+    neutron subnet-create --name ext-subnet --gateway 10.0.{{N}}.1 --allocation-pool start=10.0.{{N}}.200,end=10.0.{{N}}.254 --disable-dhcp ext-net 10.0.{{N}}.0/24
 fi
 
 # adjust tiny image
@@ -23,7 +23,7 @@ keystone user-role-add --user ubuntu --role Member --tenant ubuntu
 # create vm network on Single only
 if [[ "$2" == "Single" ]]; then
     neutron net-create ubuntu-net
-    neutron subnet-create --name ubuntu-subnet --gateway 10.0.5.1 --dns-nameserver 10.0.4.1 ubuntu-net 10.0.5.0/24
+    neutron subnet-create --name ubuntu-subnet --gateway 10.0.5.1 --dns-nameserver 10.0.{{N}}.1 ubuntu-net 10.0.5.0/24
     neutron router-create ubuntu-router
     neutron router-interface-add ubuntu-router ubuntu-subnet
     neutron router-gateway-set ubuntu-router ext-net
