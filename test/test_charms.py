@@ -25,7 +25,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 import cloudinstall.utils as utils
 import cloudinstall.charms
-from cloudinstall.charms import CharmBase, CharmQueue, CharmQueueRelationsError
+from cloudinstall.charms import CharmBase, CharmQueue
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
 from cloudinstall.charms.compute import CharmNovaCompute
 from cloudinstall.charms.glance import CharmGlance
@@ -156,7 +156,6 @@ class TestCharmRelations(unittest.TestCase):
             juju=juju,
             juju_state=self.mock_juju_state,
             deployed_charms=self.deployed_charms)
-        # TODO: Test expected exception msg
         self.assertRaises(Exception, charm_q.watch_relations)
 
 

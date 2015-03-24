@@ -24,7 +24,7 @@ from queue import Queue
 import time
 import requests
 
-from macumba import MacumbaError
+from macumba import MacumbaError, ServerError
 from cloudinstall import utils
 from cloudinstall.placement.controller import AssignmentType
 
@@ -379,12 +379,14 @@ class CharmQueue:
                                            relation_b)
                     completed_relations.append((relation_a,
                                                 relation_b))
-                except Exception as e:
-                    print(e)
-                    msg = "Relation {}-{} not ready, " \
-                          "requeueing.".format(relation_a, relation_b)
-                    log.exception("Failure in add_relation: {}".format(msg))
+                except ServerError as e:
+                    msg = ('Failure in add_relation({}, {}): {}'.format(
+                        relation_a,
+                        relation_b,
+                        e))
+                    log.exception(msg)
                     self.ui.status_info_message(msg)
+                    raise e
 
     @utils.async
     def watch_post_proc_async(self):
