@@ -301,7 +301,8 @@ class CharmQueue:
     """ charm queue for handling relations in the background
     """
 
-    def __init__(self, ui, config, juju_state, juju, deployed_charms):
+    def __init__(self, ui, config, juju_state=None, juju=None,
+                 deployed_charms=None):
         self.charm_deploy_q = Queue()
         self.charm_post_proc_q = Queue()
         self.is_running = False
@@ -309,7 +310,10 @@ class CharmQueue:
         self.config = config
         self.juju = juju
         self.juju_state = juju_state
-        self.deployed_charms = deployed_charms
+        if deployed_charms is None:
+            self.deployed_charms = []
+        else:
+            self.deployed_charms = deployed_charms
 
     def filter_valid_relations(self):
         """
