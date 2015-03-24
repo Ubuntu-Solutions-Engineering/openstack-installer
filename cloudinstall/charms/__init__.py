@@ -364,11 +364,10 @@ class CharmQueue:
         completed_relations = []
         if len(valid_relations) <= 0:
             return
+        log.debug("Processing relations: {}".format(valid_relations))
         while len(valid_relations) != len(completed_relations):
             for relation_a, relation_b in valid_relations:
                 try:
-                    log.debug("calling add_relation({}, {})".format(
-                        relation_a, relation_b))
                     self.juju.add_relation(relation_a,
                                            relation_b)
                     completed_relations.append((relation_a,

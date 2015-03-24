@@ -82,18 +82,15 @@ def setup_logger(name=__name__, headless=False):
 
     commandslog.setLevel(env)
     commandslog.setFormatter(logging.Formatter(
-        "[%(levelname)-5s \N{BULLET} %(asctime)s] "
-        "\N{BULLET} %(name)s \N{BULLET} "
-        "(%(filename)s, %(funcName)s, %(lineno)d)]\n"
-        "   %(message)s",
+        "[%(levelname)-4s: %(asctime)s, "
+        "%(filename)s:%(lineno)d] %(message)s",
         datefmt='%m-%d %H:%M:%S'))
 
     if headless:
         consolelog = logging.StreamHandler()
         consolelog.setLevel(logging.INFO)
         consolelog.setFormatter(logging.Formatter(
-            '[%(levelname)-5s \N{BULLET} %(asctime)s \N{BULLET} %(name)-16s] '
-            '%(message)s',
+            '[%(levelname)-4s: %(asctime)s] %(message)s',
             datefmt='%m-%d %H:%M:%S'))
 
     logger = logging.getLogger('')
