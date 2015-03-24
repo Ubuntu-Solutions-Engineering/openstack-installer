@@ -436,7 +436,7 @@ class PlacementController:
 
         max_cpus = cpu_count()
         if max_cpus >= 2:
-            max_cpus = max_cpus // 2
+            max_cpus = min(8, max_cpus // 2)
 
         controller = PlaceholderMachine('controller', 'controller',
                                         {'mem': 6144,
