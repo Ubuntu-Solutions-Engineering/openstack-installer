@@ -544,7 +544,7 @@ class Controller:
                       [c.charm_name for c in self.deployed_charm_classes]))
 
         charm_q = CharmQueue(ui=self.ui, config=self.config,
-                             juju=self.juju, juju_state=self.juju,
+                             juju=self.juju, juju_state=self.juju_state,
                              deployed_charms=self.deployed_charm_classes)
 
         if self.config.getopt('headless'):
@@ -584,7 +584,7 @@ class Controller:
             self.juju.add_unit(charm, num_units=int(count))
         else:
             charm_q = CharmQueue(ui=self.ui, config=self.config,
-                                 juju=self.juju, juju_state=self.juju,
+                                 juju=self.juju, juju_state=self.juju_state,
                                  deployed_charms=self.deployed_charm_classes)
             charm_sel = get_charm(charm,
                                   self.juju,
