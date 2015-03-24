@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import (Popen, PIPE, call, STDOUT, check_output,
+from subprocess import (Popen, PIPE, call, check_output,
                         check_call, DEVNULL, CalledProcessError)
 from contextlib import contextmanager
 from collections import deque
@@ -366,15 +366,15 @@ def get_command_output(command, timeout=None, user_sudo=False):
         command = "timeout %ds %s" % (timeout, command)
 
     if user_sudo:
-        command = "sudo -H -u {0} {1}".format(install_user(), command)
+        command = "sudo -E -H -u {0} {1}".format(install_user(), command)
 
     try:
         p = Popen(command, shell=True,
-                  stdout=PIPE, stderr=STDOUT,
+                  stdout=PIPE, stderr=PIPE,
                   bufsize=-1, env=cmd_env, close_fds=True)
     except OSError as e:
         if e.errno == errno.ENOENT:
-            return dict(ret=127, output="")
+            return dict(ret=127, output="", err="")
         else:
             raise e
     stdout, stderr = p.communicate()
