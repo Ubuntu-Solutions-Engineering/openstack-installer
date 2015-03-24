@@ -28,7 +28,9 @@ import cloudinstall.charms
 from cloudinstall.charms import CharmBase, CharmQueue
 from cloudinstall.charms.neutron_openvswitch import CharmNeutronOpenvswitch
 from cloudinstall.charms.compute import CharmNovaCompute
+from cloudinstall.charms.controller import CharmNovaCloudController
 from cloudinstall.charms.glance import CharmGlance
+from cloudinstall.charms.swift import CharmSwift
 from cloudinstall.charms.mysql import CharmMysql
 from cloudinstall.charms.ntp import CharmNtp
 
@@ -157,6 +159,34 @@ class TestCharmRelations(unittest.TestCase):
             juju_state=self.mock_juju_state,
             deployed_charms=self.deployed_charms)
         self.assertRaises(Exception, charm_q.watch_relations)
+
+
+class TestCharmQueuePostProc(unittest.TestCase):
+
+    """ Use CharmNovaCloudController, CharmSwift to process their post_proc()
+    via CharmQueue and to make sure it is called by an initialized charm().
+    """
+
+    def setUp(self):
+        self.mock_jujuclient = MagicMock(name='jujuclient')
+        self.mock_juju_state = MagicMock(name='juju_state')
+        self.mock_ui = MagicMock(name='ui')
+        self.mock_config = MagicMock(name='config')
+
+        self.deployed_charms = [CharmNovaCloudController, CharmSwift]
+
+        self.charm = CharmQueue(
+            ui=self.mock_ui,
+            config=self.mock_config,
+            juju=self.mock_jujuclient,
+            juju_state=self.mock_juju_state,
+            deployed_charms=self.deployed_charms)
+
+    def test_can_post_proc(self):
+        """ Test that post_proc is available and can be triggered """
+        charms = self.charm._charm_classes()
+        for c in charms:
+            self.assertTrue(callable(c.post_proc))
 
 
 class TestCharmPlugin(unittest.TestCase):
