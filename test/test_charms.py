@@ -186,7 +186,7 @@ class TestCharmQueuePostProc(unittest.TestCase):
         """ Test that post_proc is available and can be triggered """
         charms = self.charm._charm_classes()
         for c in charms:
-            self.assertTrue(callable(c.post_proc))
+            self.assertTrue(isinstance(c, CharmBase))
 
 
 class TestCharmPlugin(unittest.TestCase):
