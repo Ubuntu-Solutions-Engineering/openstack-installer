@@ -39,6 +39,10 @@ class ConsoleUI:
     def show_step_info(self, msg):
         log.info(msg)
 
+    def set_pending_deploys(self, names):
+        names = ", ".join(names)
+        log.info("Charms set to deploy: {}".format(names))
+
     def __getattr__(self, attr):
         """
         Override attribute lookup since ConsoleUI doesn't implement
