@@ -21,7 +21,7 @@ Please make sure to read our [CONTRIBUTING](https://github.com/Ubuntu-Solutions-
 
 ## Developers
 
-* [Read the developers guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/developers.html)
+* [Read the developers guide](http://ubuntu-cloud-installer.readthedocs.org/en/latest/developer.setup.html)
 
 For further discussions of code development of the installer please join our IRC channel.
 
