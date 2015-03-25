@@ -394,7 +394,7 @@ class Controller:
 
     def configure_lxc_network(self, machine_id):
         # upload our lxc-host-only template and setup bridge
-        log.debug('Copying network specifications to machine')
+        log.info('Copying network specifications to machine')
         srcpath = path.join(self.config.tmpl_path, 'lxc-host-only')
         destpath = "/tmp/lxc-host-only"
         utils.remote_cp(machine_id, src=srcpath, dst=destpath,
@@ -507,7 +507,7 @@ class Controller:
                         errs.append(machine)
 
         had_err = len(errs) > 0
-        if had_err:
+        if had_err and not self.config.getopt('headless'):
             log.warning("deferred deploying to these machines: {}".format(
                 errs))
         return had_err
@@ -539,9 +539,9 @@ class Controller:
         post-proc.
         """
 
-        log.debug("Starting CharmQueue for relation setting and"
-                  " post-processing enqueueing {}".format(
-                      [c.charm_name for c in self.deployed_charm_classes]))
+        self.ui.status_info_message(
+            "Processing Relations and finalizing charm operations"
+            "{}".format([c.charm_name for c in self.deployed_charm_classes]))
 
         charm_q = CharmQueue(ui=self.ui, config=self.config,
                              juju=self.juju, juju_state=self.juju_state,
@@ -559,9 +559,12 @@ class Controller:
         # post processing, and running in headless mode.
         if self.config.getopt('headless'):
             while not self.config.getopt('deploy_complete'):
-                log.info("Waiting for services to be started.")
-                time.sleep(10)
-            log.info("All services deployed, relations set, and started")
+                self.ui.status_info_message(
+                    "Waiting for services to be started.")
+                # FIXME: Is this needed?
+                # time.sleep(10)
+            self.ui.status_info_message(
+                "All services deployed, relations set, and started")
             self.loop.exit(0)
 
         self.ui.status_info_message(
@@ -632,7 +635,6 @@ class Controller:
         """ Starts UI loop
         """
         if self.config.getopt('headless'):
-            log.info("Running openstack-status in headless mode.")
             self.initialize()
         else:
             self.ui.status_info_message("Welcome")

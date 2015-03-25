@@ -71,8 +71,6 @@ class CharmQuantum(CharmBase):
             cmds="sudo /tmp/quantum-network.sh {}".format(
                 self.config.getopt('install_type')),
             juju_home=self.config.juju_home(use_expansion=True))
-        self.ui.status_info_message(
-            "All systems go!")
         return False
 
 

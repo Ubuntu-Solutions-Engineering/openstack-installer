@@ -111,7 +111,7 @@ class InstallController:
         utils.spew(os.path.join(
             self.config.cfg_path, 'installed'), 'auto-generated')
         if install_type == INSTALL_TYPE_SINGLE[0]:
-            log.info("Performing a Single Install")
+            self.ui.status_info_message("Performing a Single Install")
             self.SingleInstall(
                 self.loop, self.ui, self.config).run()
         elif install_type == INSTALL_TYPE_MULTI[0]:
@@ -119,7 +119,8 @@ class InstallController:
             # opts.headless but in a few places
             if self.config.getopt('headless'):
                 if self.config.getopt('maascreds'):
-                    log.info("Performing a Multi install with existing MAAS")
+                    self.ui.status_info_message(
+                        "Performing a Multi install with existing MAAS")
                     self.MultiInstallExistingMaas(
                         self.loop, self.ui, self.config).run()
                 else:
@@ -139,7 +140,6 @@ class InstallController:
         """ Start installer eventloop
         """
         if self.config.getopt('headless'):
-            log.info("Running in headless mode.")
             install_type = self.config.getopt('install_type')
             if not install_type:
                 log.error('Fatal error: '

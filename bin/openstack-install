@@ -157,7 +157,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     logger = logging.getLogger('cloudinstall')
-    logger.info('openstack-install starting')
+    logger.info('Starting OpenStack Installer')
 
     if os.geteuid() != 0:
         sys.exit(
@@ -231,10 +231,8 @@ if __name__ == '__main__':
     install = InstallController(
         ui=ui, config=cfg, loop=ev)
 
-    logger.info("OpenStack install using eventloop {} "
-                "with options: {}".format(ev, opts))
     logger.info('Running {} release'.format(
-                cfg.getopt('openstack_release')))
+                cfg.getopt('openstack_release').capitalize()))
 
     utils.spew(os.path.join(cfg.cfg_path, 'openstack_release'),
                cfg.getopt('openstack_release'), owner=utils.install_user())

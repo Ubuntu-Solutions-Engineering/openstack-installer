@@ -159,13 +159,12 @@ class TaskerConsole:
         self.tasks = []
 
     def start_task(self, taskname):
-        log.info("[TASK] {}".format(taskname))
+        log.info(taskname)
 
     def stop_current_task(self):
         pass
 
     def register_tasks(self, tasks):
-        log.info("[TASKLIST] {}".format(tasks))
         self.tasks.extend(tasks)
 
 

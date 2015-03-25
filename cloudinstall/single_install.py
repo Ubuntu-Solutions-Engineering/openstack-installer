@@ -370,7 +370,6 @@ class SingleInstall:
 
         # start the party
         cloud_status_bin = ['openstack-status']
-        self.display_controller.status_info_message("Bootstrapping Juju")
         self.tasker.start_task("Bootstrapping Juju")
         utils.container_run(self.container_name,
                             "{0} juju bootstrap".format(
