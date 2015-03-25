@@ -25,7 +25,7 @@ class CharmNovaCompute(CharmBase):
     """ Openstack Nova Compute directives """
 
     charm_name = 'nova-compute'
-    charm_rev = 14
+    charm_rev = 15
     display_name = 'Compute'
     menuable = True
     display_priority = DisplayPriorities.Compute
