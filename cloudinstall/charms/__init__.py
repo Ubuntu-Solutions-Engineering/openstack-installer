@@ -270,11 +270,18 @@ export OS_REGION_NAME=RegionOne
         :returns: True if all svcs are started, False otherwise
         """
         status_res = []
+        prev_state = None
+
+        def format_agent_status(name, state, prev_state):
+            self.ui.status_info_message(
+                "Checking availability of {0}: {1} "
+                "(previous_state: {})".format(
+                    name, state, prev_state))
+            prev_state = unit.agent_state
 
         if not svcs:
             svcs = [self.charm_name]
 
-        current_state = None
         for svc_name in svcs:
             svc = self.juju_state.service(svc_name)
             log.debug("Checking availability for {c}: {s}.".format(
@@ -282,15 +289,13 @@ export OS_REGION_NAME=RegionOne
                 s=svc))
             try:
                 unit = svc.unit(svc_name)
-                if current_state != unit.agent_state:
-                    self.ui.status_info_message(
-                        "Checking availability of {0}: {1}".format(
-                            svc_name, unit.agent_state))
-                    current_state = unit.agent_state
                 if unit.agent_state == "started":
                     status_res.append(True)
-                else:
-                    status_res.append(False)
+                    continue
+                if prev_state != unit.agent_state:
+                    format_agent_status(svc_name, unit.agent_state,
+                                        prev_state)
+                status_res.append(False)
             except:
                 return False
         return all(status_res)

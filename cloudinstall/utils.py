@@ -653,9 +653,10 @@ def container_run(name, cmd, use_ssh=False):
     if subproc.returncode == 0:
         return outs.strip().decode('utf-8')
     else:
-        log.debug("Error running command {} in container {}:{}\n"
-                  "Output: '{}'\n"
-                  "Stderr: '{}'".format(quoted_cmd, name, ip, outs, errs))
+        log.debug("Error with command: "
+                  "[Output] {} [Error] {}".format(
+                      outs.strip().decode('utf-8'),
+                      errs.strip().decode('utf-8')))
 
         raise ContainerRunException("Problem running {0} in container "
                                     "{1}:{2}".format(quoted_cmd, name, ip),

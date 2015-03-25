@@ -231,7 +231,6 @@ class SingleInstall:
         cmd = 'sudo cat /run/cloud-init/result.json'
         try:
             result_json = utils.container_run(self.container_name, cmd)
-            log.debug(result_json)
 
         except utils.NoContainerIPException as e:
             log.debug("Container has no IPs according to lxc-info. "
@@ -247,7 +246,8 @@ class SingleInstall:
                 raise e
             if returncode == 1:
                 # the 'cat' did not find the file.
-                log.debug("Waiting for cloud-init status result")
+                if tries < 1:
+                    log.debug("Waiting for cloud-init status result")
                 return False
             else:
                 log.debug("Unexpected return code from reading "
