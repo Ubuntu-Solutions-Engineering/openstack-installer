@@ -78,7 +78,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     logger = logging.getLogger('cloudinstall')
-    logger.info("openstack-status starting")
+    logger.info("Starting deployment of OpenStack")
 
     if os.path.isfile(config.pidfile):
         print("Another instance of openstack-status is running. If you're "
