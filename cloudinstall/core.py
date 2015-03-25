@@ -262,7 +262,7 @@ class Controller:
                                             "start: {}".format(summary))
                 _previous_summary = summary
 
-            time.sleep(3)
+            time.sleep(1)
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
         if self.config.is_single():
@@ -448,7 +448,7 @@ class Controller:
                 err = self.try_deploy(charm_class)
                 name = charm_class.display_name
                 if err:
-                    self.ui.status_info_message(
+                    log.debug(
                         "{} is waiting for another service, will"
                         " re-try in a few seconds".format(name))
                     break
