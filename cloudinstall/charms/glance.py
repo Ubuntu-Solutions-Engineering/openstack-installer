@@ -21,7 +21,7 @@ class CharmGlance(CharmBase):
     """ Openstack Glance directives """
 
     charm_name = 'glance'
-    charm_rev = 11
+    charm_rev = 13
     display_name = 'Glance'
     menuable = True
     related = [('mysql:shared-db', 'glance:shared-db'),

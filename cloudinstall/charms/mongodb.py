@@ -21,7 +21,7 @@ class CharmMongo(CharmBase):
     """ MongoDB directives """
 
     charm_name = 'mongodb'
-    charm_rev = 16
+    charm_rev = 17
     display_name = 'MongoDB'
     deploy_priority = 0
     menuable = True
