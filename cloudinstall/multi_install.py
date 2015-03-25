@@ -224,7 +224,8 @@ class MultiInstall:
         if out['status'] != 0:
             log.debug("error from get-env: {}".format(out))
             raise Exception("Problem getting existing no-proxy setting")
-        no_proxy = "{},{}".format(out['output'], bootstrap_ip)
+        no_proxy = "{},{}".format(
+            out['output'].rstrip(), bootstrap_ip)
 
         out = utils.get_command_output(
             "{} juju set-env no-proxy={}".format(self.config.juju_home(),
