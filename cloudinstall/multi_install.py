@@ -23,6 +23,7 @@ import pwd
 import re
 import shlex
 import time
+import yaml
 
 from subprocess import check_output
 from tempfile import TemporaryDirectory
@@ -164,6 +165,8 @@ class MultiInstall:
             log.debug("failure to get initial juju status: '{}'".format(out))
             raise Exception("Problem with juju status poke.")
 
+        self.add_bootstrap_to_no_proxy()
+
         self.tasker.stop_current_task()
 
         if self.config.getopt('install_only'):
@@ -195,6 +198,39 @@ class MultiInstall:
         os.initgroups(user_name, pwnam.pw_gid)
         os.setregid(pwnam.pw_gid, pwnam.pw_gid)
         os.setreuid(pwnam.pw_uid, pwnam.pw_uid)
+
+    def add_bootstrap_to_no_proxy(self):
+        """Finds bootstrap node IP and adds it to the current setting of
+        no-proxy in the juju env.
+        """
+        out = utils.get_command_output(
+            "{0} juju status".format(
+                self.config.juju_home()),
+            timeout=None,
+            user_sudo=True)
+        if out['status'] != 0:
+            log.debug("error from status: {}".format(out))
+            raise Exception("Problem with juju status.")
+        try:
+            status = yaml.load(out['output'])
+            bootstrap_ip = status['machines']['0']
+        except:
+            log.exception("Error parsing yaml from juju status")
+            raise Exception("Problem getting bootstrap machine IP")
+
+        out = utils.get_command_output(
+            "{} juju get-env no-proxy".format(self.config.juju_home()))
+        if out['status'] != 0:
+            log.debug("error from get-env: {}".format(out))
+            raise Exception("Problem getting existing no-proxy setting")
+        no_proxy = "{},{}".format(out['output'], bootstrap_ip)
+
+        out = utils.get_command_output(
+            "{} juju set-env no-proxy={}".format(self.config.juju_home(),
+                                                 no_proxy))
+        if out['status'] != 0:
+            log.debug("error from set-env: {}".format(out))
+            raise Exception("Problem setting no-proxy environment")
 
 
 class MultiInstallExistingMaas(MultiInstall):
