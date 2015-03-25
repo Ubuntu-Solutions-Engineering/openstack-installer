@@ -76,7 +76,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Ubuntu Openstack Installer'
-copyright = u'2014, Canonical Ltd'
+copyright = u'2015, Canonical Ltd'
 
 version = release = cloudinstall.__version__
 
