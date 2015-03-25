@@ -44,6 +44,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     menuable = True
     display_name = 'Glance - Simplestreams Image Sync'
     display_priority = DisplayPriorities.Other
+    deploy_priority = 99
     related = [('keystone:identity-service',
                 'glance-simplestreams-sync:identity-service')]
     is_core = True
@@ -84,6 +85,13 @@ class CharmGlanceSimplestreamsSync(CharmBase):
 
     def deploy(self, mspec):
         """Temporary override to get local copy of charm."""
+
+        # FIXME: This shouldnt be needed as the charm should
+        # handle any relation processing against keystone/swift
+        # no matter the state of those services.
+        wait_on = ['keystone', 'rabbitmq-server']
+        if not self.wait_for_agent(wait_on):
+            return True
 
         log.debug("downloading stable branch from github")
         try:
