@@ -333,11 +333,12 @@ class PlacementController:
         return sum([len(al) for al in self.machines_for_charm(cc).values()])
 
     def autoplace_unplaced_services(self):
-        """Attempt to find machines for all unplaced services using only empty
-        machines.
+        """Attempt to find machines for all required unplaced services using
+        only empty machines.
 
         Returns a pair (success, message) where success is True if all
         services are placed. message is an info message for the user.
+
         """
 
         empty_machines = [m for m in self.machines()
@@ -351,11 +352,15 @@ class PlacementController:
 
         self.update_and_save()
 
-        if len(self.unplaced_services) > 0:
-            msg = ("Not enough empty machines could be found for the required"
-                   " services. Please add machines or finish placement "
+        unplaced_reqs = [c for c in self.unplaced_services if
+                         self.get_charm_state(c)[0] == CharmState.REQUIRED]
+
+        if len(unplaced_reqs) > 0:
+            msg = ("Not enough empty machines could be found for the following"
+                   "required services. Please add machines or finish placement "
                    "manually.")
-            return (False, msg)
+            m = ", ".join([c.charm_name for c in unplaced_reqs])
+            return (False, msg  + "\n" + m)
         return (True, "")
 
     def gen_defaults(self, charm_classes=None, maas_machines=None):
@@ -418,8 +423,9 @@ class PlacementController:
         return assignments
 
     def selected_storage_charms(self):
-        """returns minimal list of charm names that are required by user selection.
-        other requirements are sorted using deps and conflicts.
+        """returns minimal list of charm names that are required by user
+        selection. Other requirements are sorted using deps and
+        conflicts.
         """
         selected_backend = self.config.getopt('storage_backend')
         if selected_backend == 'none':
