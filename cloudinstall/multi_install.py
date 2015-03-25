@@ -213,13 +213,14 @@ class MultiInstall:
             raise Exception("Problem with juju status.")
         try:
             status = yaml.load(out['output'])
-            bootstrap_ip = status['machines']['0']
+            bootstrap_ip = status['machines']['0']['dns-name']
         except:
             log.exception("Error parsing yaml from juju status")
             raise Exception("Problem getting bootstrap machine IP")
 
         out = utils.get_command_output(
-            "{} juju get-env no-proxy".format(self.config.juju_home()))
+            "{} juju get-env no-proxy".format(self.config.juju_home()),
+            timeout=None, user_sudo=True)
         if out['status'] != 0:
             log.debug("error from get-env: {}".format(out))
             raise Exception("Problem getting existing no-proxy setting")
@@ -227,7 +228,8 @@ class MultiInstall:
 
         out = utils.get_command_output(
             "{} juju set-env no-proxy={}".format(self.config.juju_home(),
-                                                 no_proxy))
+                                                 no_proxy),
+            timeout=None, user_sudo=True)
         if out['status'] != 0:
             log.debug("error from set-env: {}".format(out))
             raise Exception("Problem setting no-proxy environment")
