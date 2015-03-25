@@ -17,16 +17,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import errno
 from jinja2 import Environment, FileSystemLoader
 import logging
 import os
+from subprocess import PIPE
+from tempfile import NamedTemporaryFile
 import unittest
 from unittest.mock import patch, PropertyMock
 import yaml
 
-from cloudinstall.utils import render_charm_config, merge_dicts, slurp
+
+from cloudinstall.utils import (render_charm_config,
+                                merge_dicts, slurp, get_command_output)
 from cloudinstall.config import Config
-from tempfile import NamedTemporaryFile
 
 
 log = logging.getLogger('cloudinstall.test_utils')
@@ -112,3 +116,49 @@ class TestRenderCharmConfig(unittest.TestCase):
         self.assertEqual(merged_dicts['mysql']['max-connections'], 25000)
         self.assertEqual(merged_dicts['swift-proxy']['zone-assignment'],
                          'auto')
+
+
+@patch('cloudinstall.utils.os.environ')
+@patch('cloudinstall.utils.Popen')
+class TestGetCommandOutput(unittest.TestCase):
+
+    def test_get_command_output_timeout(self, mock_Popen, mock_env):
+        mock_env.copy.return_value = {'FOO': 'bazbot'}
+        mock_Popen.return_value.communicate.return_value = (bytes(), bytes())
+        get_command_output("fake", timeout=20)
+        mock_Popen.assert_called_with("timeout 20s fake", shell=True,
+                                      stdout=PIPE, stderr=PIPE,
+                                      bufsize=-1,
+                                      env={'LC_ALL': 'C',
+                                           'FOO': 'bazbot'},
+                                      close_fds=True)
+
+    def test_get_command_output_user_sudo(self, mock_Popen, mock_env):
+        mock_env.copy.return_value = {'FOO': 'bazbot'}
+        outb, errb = bytes('out', 'utf-8'), bytes('err', 'utf-8')
+        mock_Popen.return_value.communicate.return_value = (outb, errb)
+        mock_Popen.return_value.returncode = 4747
+        with patch('cloudinstall.utils.install_user') as mock_install_user:
+            mock_install_user.return_value = 'fakeuser'
+            rv = get_command_output("fake", user_sudo=True)
+            self.assertEqual(rv, dict(output='out', err='err',
+                                      status=4747))
+
+        mock_Popen.assert_called_with("sudo -E -H -u fakeuser fake",
+                                      shell=True,
+                                      stdout=PIPE, stderr=PIPE,
+                                      bufsize=-1,
+                                      env={'LC_ALL': 'C',
+                                           'FOO': 'bazbot'},
+                                      close_fds=True)
+
+    def test_get_command_output_raises(self, mock_Popen, mock_env):
+        err = OSError()
+        err.errno = errno.ENOENT
+        mock_Popen.side_effect = err
+        rv = get_command_output('foo')
+        self.assertEqual(rv, dict(ret=127, output="", err=""))
+
+        mock_Popen.side_effect = OSError()
+        with self.assertRaises(OSError):
+            get_command_output('foo')
