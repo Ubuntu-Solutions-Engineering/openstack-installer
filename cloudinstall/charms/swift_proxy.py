@@ -26,7 +26,7 @@ class CharmSwiftProxy(CharmBase):
     display_priority = DisplayPriorities.Storage
     related = [
         ('keystone:identity-service', 'swift-proxy:identity-service'),
-        ('glance:image-service', 'swift-proxy:image-service')
+        ('glance:object-store', 'swift-proxy:object-store')
     ]
     deploy_priority = 5
     constraints = {'mem': 1024,
