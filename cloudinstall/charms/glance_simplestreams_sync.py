@@ -44,7 +44,6 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     menuable = True
     display_name = 'Glance - Simplestreams Image Sync'
     display_priority = DisplayPriorities.Other
-    deploy_priority = 99
     related = [('keystone:identity-service',
                 'glance-simplestreams-sync:identity-service')]
     is_core = True
