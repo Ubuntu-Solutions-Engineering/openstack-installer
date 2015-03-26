@@ -357,10 +357,10 @@ class PlacementController:
 
         if len(unplaced_reqs) > 0:
             msg = ("Not enough empty machines could be found for the following"
-                   "required services. Please add machines or finish placement "
-                   "manually.")
+                   "required services. Please add machines or finish "
+                   "placement manually.")
             m = ", ".join([c.charm_name for c in unplaced_reqs])
-            return (False, msg  + "\n" + m)
+            return (False, msg + "\n" + m)
         return (True, "")
 
     def gen_defaults(self, charm_classes=None, maas_machines=None):
