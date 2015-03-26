@@ -277,8 +277,7 @@ class Controller:
             self.set_unique_hostnames()
 
         self.deploy_using_placement()
-        self.ui.status_info_message(
-            "Waiting for deployed services to be in a ready state.")
+        self.wait_for_deployed_services_ready()
         self.enqueue_deployed_charms()
 
     def set_unique_hostnames(self):
@@ -542,6 +541,9 @@ class Controller:
         if not self.juju_state:
             return
 
+        self.ui.status_info_message(
+            "Waiting for deployed services to be in a ready state.")
+
         not_ready_len = 0
         while not self.juju_state.all_agents_started():
             not_ready = [(a, b) for a, b in self.juju_state.get_agent_states()
@@ -562,9 +564,6 @@ class Controller:
         """Send all deployed charms to CharmQueue for relation setting and
         post-proc.
         """
-
-        self.wait_for_deployed_services_ready()
-
         charm_q = CharmQueue(ui=self.ui, config=self.config,
                              juju=self.juju, juju_state=self.juju_state,
                              deployed_charms=self.deployed_charm_classes)
