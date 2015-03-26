@@ -715,7 +715,11 @@ class ServicesColumn(WidgetWrap):
                                       self.placement_controller,
                                       self.placement_view)
 
-        actions = [("Choose Machine",
+        def not_conflicted_p(cc):
+            state, _, _ = self.placement_controller.get_charm_state(cc)
+            return state != CharmState.CONFLICTED
+
+        actions = [(not_conflicted_p, "Choose Machine",
                     self.placement_view.do_show_machine_chooser)]
         self.required_services_list = ServicesList(self.placement_controller,
                                                    actions,
