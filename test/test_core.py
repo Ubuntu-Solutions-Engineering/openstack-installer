@@ -17,12 +17,11 @@
 
 import logging
 import unittest
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock, patch
 
 from cloudinstall.config import Config
 from cloudinstall.core import Controller
 from cloudinstall.juju import JujuState
-from cloudinstall.service import Service
 
 log = logging.getLogger('cloudinstall.test_core')
 
@@ -39,27 +38,12 @@ class EnqueueDeployedCoreTestCase(unittest.TestCase):
         self.mock_log = MagicMock(name='log')
         self.mock_loop = MagicMock(name='loop')
 
-        self.services_ready = [
-            Service('keystone',
-                    {'Units': {'fake': {'AgentState': 'started'}}}),
-            Service('nova-compute',
-                    {'Units': {'fake': {'AgentState': 'started'}}}),
-        ]
-
-        self.services_some_ready = [
-            Service('keystone',
-                    {'Units': {'fake': {'AgentState': 'started'}}}),
-            Service('nova-compute',
-                    {'Units': {'fake2': {'AgentState': 'started'}}}),
-            Service('nova-cloud-controller',
-                    {'Units': {'fake3': {'AgentState': 'installing'}}}),
-            Service('glance',
-                    {'Units': {'fake4': {'AgentState': 'allocating'}}}),
-        ]
-
     def test_validate_services_ready(self):
-        """ Verifies services ready allow enqueue to complete
-        to end of its routine """
+        """ Verifies wait_for_deployed_services_ready
+
+        time.sleep should not be called here as all services
+        are in a started state.
+        """
         self.conf.setopt('headless', False)
         dc = Controller(
             ui=self.mock_ui, config=self.conf,
@@ -67,24 +51,30 @@ class EnqueueDeployedCoreTestCase(unittest.TestCase):
         dc.initialize = MagicMock()
         dc.juju_state = JujuState(juju=MagicMock())
         dc.juju_state.all_agents_started = MagicMock()
-        dc.juju_state.all_agents_started.return_value = all(
-            self.services_ready)
+        dc.juju_state.all_agents_started.return_value = True
 
-        dc.enqueue_deployed_charms()
-        self.mock_loop.redraw_screen.assert_called_once_with()
+        with patch('cloudinstall.core.time.sleep') as mock_sleep:
+            dc.wait_for_deployed_services_ready()
+        self.assertEqual(len(mock_sleep.mock_calls), 0)
 
-    def test_services_ready(self):
-        """ Verifies all ready services  """
-        juju_state = JujuState(juju=MagicMock())
-        services = PropertyMock(return_value=self.services_ready)
-        type(juju_state).services = services
-        self.assertTrue(juju_state.all_agents_started())
+    def test_validate_services_some_ready(self):
+        """ Verifies wait_for_deployed_services_ready against some of the
+        services in started state
 
-    def test_some_services_ready(self):
-        """ Verifies some ready services == not_ready list """
-        juju_state = JujuState(juju=MagicMock())
-        services = PropertyMock(return_value=self.services_some_ready)
-        type(juju_state).services = services
-        not_ready = [(a, b) for a, b in juju_state.get_agents_states()
-                     if b != 'started']
-        self.assertEqual(len(not_ready), 2)
+        Here we test if time.sleep was called twice due to some services
+        being in an installing and allocating state.
+        """
+        self.conf.setopt('headless', False)
+        dc = Controller(
+            ui=self.mock_ui, config=self.conf,
+            loop=self.mock_loop)
+        dc.initialize = MagicMock()
+        dc.juju_state = JujuState(juju=MagicMock())
+        dc.juju_state.all_agents_started = MagicMock()
+        dc.juju_state.all_agents_started.side_effect = [
+            False, False, True, True]
+
+        with patch('cloudinstall.core.time.sleep') as mock_sleep:
+            dc.wait_for_deployed_services_ready()
+        print(mock_sleep.mock_calls)
+        self.assertEqual(len(mock_sleep.mock_calls), 2)
