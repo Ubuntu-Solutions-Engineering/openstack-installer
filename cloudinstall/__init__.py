@@ -1,7 +1,4 @@
-#
-# __init__.py - init
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -18,4 +15,4 @@
 
 """ Ubuntu Openstack Installer """
 
-__version__ = "0.99.1"
+__version__ = "0.99.3"
