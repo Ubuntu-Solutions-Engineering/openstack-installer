@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -67,6 +67,7 @@ class EventLoopCoreTestCase(unittest.TestCase):
             ui=self.mock_ui, config=self.conf,
             loop=self.mock_loop)
         dc.initialize = MagicMock()
+        dc.juju_state = MagicMock()
         dc.enqueue_deployed_charms()
         self.mock_loop.redraw_screen.assert_called_once_with()
 

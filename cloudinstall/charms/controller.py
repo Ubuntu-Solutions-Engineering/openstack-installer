@@ -43,8 +43,6 @@ class CharmNovaCloudController(CharmBase):
 
     def post_proc(self):
         """ post processing for nova-cloud-controller """
-        if not self.wait_for_agent(['keystone', self.charm_name]):
-            return True
         svc = self.juju_state.service(self.charm_name)
         unit = svc.unit(self.charm_name)
         k_svc = self.juju_state.service('keystone')
