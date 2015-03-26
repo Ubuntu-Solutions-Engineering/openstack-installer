@@ -1,3 +1,11 @@
+openstack (0.99.3-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+
+  * Refactor how services were monitored and acted upon
+  * More tests
+  * Runs against Juju 1.22
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 26 Mar 2015 13:58:06 -0400
+
 openstack (0.99.1-0ubuntu1~15.04.1~bleed1) vivid; urgency=medium
 
   * Start next development release. This is the prelude to 1.0
