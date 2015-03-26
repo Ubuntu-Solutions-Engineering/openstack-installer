@@ -67,6 +67,6 @@ class JujuStateTestCase(unittest.TestCase):
         juju_state = JujuState(juju=MagicMock())
         services = PropertyMock(return_value=self.services_some_ready)
         type(juju_state).services = services
-        not_ready = [(a, b) for a, b in juju_state.get_agents_states()
+        not_ready = [(a, b) for a, b in juju_state.get_agent_states()
                      if b != 'started']
         self.assertEqual(len(not_ready), 2)
