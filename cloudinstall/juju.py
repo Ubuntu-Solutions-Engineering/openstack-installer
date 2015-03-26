@@ -56,14 +56,8 @@ class JujuState:
         :rtype: :class:`~cloudinstall.service.Unit`
         :returns: True if all svcs are started, False otherwise
         """
-        status_res = []
-        for svc, state in self.get_agent_states():
-            if state == "started":
-                status_res.append(True)
-                continue
-            else:
-                return False
-        return all(status_res)
+        return all([state == "started" for _, state in
+                    self.get_agent_states()])
 
     def status(self):
         """Returns juju status.
