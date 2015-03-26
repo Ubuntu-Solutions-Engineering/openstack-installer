@@ -33,14 +33,6 @@ class CharmKeystone(CharmBase):
     menuable = True
     is_core = True
 
-    def deploy(self, m):
-        mysql_exists = self.wait_for_agent(['mysql'])
-        if not mysql_exists:
-            log.debug("mysql not yet available, deferring keystone deploy")
-            return True
-        log.debug("mysql is available, deploying keystone")
-        return super().deploy(m)
-
     def _is_auth_url_valid(self):
         existing_yaml = yaml.load(slurp(self.config.juju_environments_path))
         existing_yaml = existing_yaml['environments']
@@ -57,9 +49,6 @@ class CharmKeystone(CharmBase):
         if self._is_auth_url_valid():
             return False
 
-        keystone = self.wait_for_agent()
-        if not keystone:
-            return True
         service = self.juju_state.service('keystone')
         if len(service.units) > 0:
             unit = service.units[0]

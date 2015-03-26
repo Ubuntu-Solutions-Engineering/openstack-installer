@@ -40,6 +40,25 @@ class JujuState:
         self._juju_status = None
         self.valid_states = ['pending', 'started', 'down']
 
+    def get_agent_states(self):
+        """ Returns list of deployed services and their agent-state """
+        states = []
+        for svc in self.services:
+            for unit in svc.units:
+                states.append((svc.service_name, unit.agent_state))
+        return states
+
+    def all_agents_started(self):
+        """ Check status of all deployed agents
+
+        :param list svcs: List of services to check or empty for calling
+                          service
+        :rtype: :class:`~cloudinstall.service.Unit`
+        :returns: True if all svcs are started, False otherwise
+        """
+        return all([state == "started" for _, state in
+                    self.get_agent_states()])
+
     def status(self):
         """Returns juju status.
         Caches value for 20 seconds.

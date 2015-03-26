@@ -1,5 +1,4 @@
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -278,6 +277,7 @@ class Controller:
             self.set_unique_hostnames()
 
         self.deploy_using_placement()
+        self.wait_for_deployed_services_ready()
         self.enqueue_deployed_charms()
 
     def set_unique_hostnames(self):
@@ -534,15 +534,36 @@ class Controller:
             log.error("unexpected atype: {}".format(atype))
             return None
 
+    def wait_for_deployed_services_ready(self):
+        """ Blocks until all deployed services attached units
+        are in a 'started' state
+        """
+        if not self.juju_state:
+            return
+
+        self.ui.status_info_message(
+            "Waiting for deployed services to be in a ready state.")
+
+        not_ready_len = 0
+        while not self.juju_state.all_agents_started():
+            not_ready = [(a, b) for a, b in self.juju_state.get_agent_states()
+                         if b != 'started']
+            if len(not_ready) == not_ready_len:
+                time.sleep(3)
+                continue
+
+            not_ready_len = len(not_ready)
+            log.info("Checking availability of {} ".format(
+                ", ".join(["{}:{}".format(a, b) for a, b in not_ready])))
+            time.sleep(3)
+
+        self.ui.status_info_message(
+            "Processing Relations and finalizing services")
+
     def enqueue_deployed_charms(self):
         """Send all deployed charms to CharmQueue for relation setting and
         post-proc.
         """
-
-        self.ui.status_info_message(
-            "Processing Relations and finalizing charm operations"
-            "{}".format([c.charm_name for c in self.deployed_charm_classes]))
-
         charm_q = CharmQueue(ui=self.ui, config=self.config,
                              juju=self.juju, juju_state=self.juju_state,
                              deployed_charms=self.deployed_charm_classes)

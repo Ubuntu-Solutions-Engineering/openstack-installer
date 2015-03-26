@@ -47,8 +47,6 @@ class CharmQuantum(CharmBase):
 
     def post_proc(self):
         """ performs additional network configuration for charm """
-        if not self.wait_for_agent([self.charm_name, 'nova-cloud-controller']):
-            return True
         svc = self.juju_state.service(self.charm_name)
         unit = svc.unit(self.charm_name)
 
