@@ -95,8 +95,13 @@ class CharmNovaCloudController(CharmBase):
 
     def render_setup_script(self):
         setup_template = utils.load_template("nova-controller-setup.sh")
-        lxc_network = self.config.getopt('lxc_network')
-        N = lxc_network.split('.')[2]
+        if self.config.is_single():
+            lxc_network = self.config.getopt('lxc_network')
+            N = lxc_network.split('.')[2]
+        else:
+            # N is used to define networks for single, so we simply
+            # set a dummy value for multi
+            N = 0
 
         setup_script_path = os.path.join(self.config.cfg_path,
                                          "nova-controller-setup.sh")
