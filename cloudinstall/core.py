@@ -277,6 +277,8 @@ class Controller:
             self.set_unique_hostnames()
 
         self.deploy_using_placement()
+        self.ui.status_info_message(
+            "Waiting for deployed services to be in a ready state.")
         self.enqueue_deployed_charms()
 
     def set_unique_hostnames(self):
@@ -537,12 +539,9 @@ class Controller:
         """ Blocks until all deployed services attached units
         are in a 'started' state
         """
-        self.ui.status_info_message(
-            "Waiting for deployed services to be in a ready state.")
-
         not_ready_len = 0
         while not self.juju_state.all_agents_started():
-            not_ready = [(a, b) for a, b in self.juju_state.get_agents_states()
+            not_ready = [(a, b) for a, b in self.juju_state.get_agent_states()
                          if b != 'started']
             if len(not_ready) == not_ready_len:
                 time.sleep(3)

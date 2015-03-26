@@ -40,7 +40,7 @@ class JujuState:
         self._juju_status = None
         self.valid_states = ['pending', 'started', 'down']
 
-    def get_agents_states(self):
+    def get_agent_states(self):
         """ Returns list of deployed services and their agent-state """
         states = []
         for svc in self.services:
@@ -57,7 +57,7 @@ class JujuState:
         :returns: True if all svcs are started, False otherwise
         """
         status_res = []
-        for svc, state in self.get_agents_states():
+        for svc, state in self.get_agent_states():
             if state == "started":
                 status_res.append(True)
                 continue
