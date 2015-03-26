@@ -67,7 +67,6 @@ class EventLoopCoreTestCase(unittest.TestCase):
             ui=self.mock_ui, config=self.conf,
             loop=self.mock_loop)
         dc.initialize = MagicMock()
-        dc.juju_state = MagicMock()
         dc.enqueue_deployed_charms()
         self.mock_loop.redraw_screen.assert_called_once_with()
 

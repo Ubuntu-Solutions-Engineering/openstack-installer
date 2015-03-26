@@ -539,6 +539,9 @@ class Controller:
         """ Blocks until all deployed services attached units
         are in a 'started' state
         """
+        if not self.juju_state:
+            return
+
         not_ready_len = 0
         while not self.juju_state.all_agents_started():
             not_ready = [(a, b) for a, b in self.juju_state.get_agent_states()
