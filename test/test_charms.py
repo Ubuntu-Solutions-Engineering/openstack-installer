@@ -90,16 +90,6 @@ class PrepCharmTest(unittest.TestCase):
                 config=self.mock_config)
 
 
-class TestCharmKeystone(PrepCharmTest):
-
-    def test_missing_agent_state(self):
-        """ Checks deploy returns False if agent_state is None/missing """
-        ms = MagicMock(name='mock_server')
-        self.mock_juju_state.service.return_value = ms
-        rv = self.charm.wait_for_agent(['mysql'])
-        self.assertFalse(rv)
-
-
 class TestCharmRelations(unittest.TestCase):
 
     """ Use NovaCompute to determine if certain relations

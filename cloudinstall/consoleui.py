@@ -40,8 +40,9 @@ class ConsoleUI:
         log.info(msg)
 
     def set_pending_deploys(self, names):
-        names = ", ".join(names)
-        log.info("Charms set to deploy: {}".format(names))
+        if len(names) > 0:
+            names = ", ".join(names)
+            log.info("Pending charms to deploy: {}".format(names))
 
     def __getattr__(self, attr):
         """
