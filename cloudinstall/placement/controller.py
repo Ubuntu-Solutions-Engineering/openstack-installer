@@ -275,8 +275,8 @@ class PlacementController:
 
         """
         state = CharmState.OPTIONAL
-        conflicting = []
-        depending = []
+        conflicting = set()
+        depending = set()
 
         def conflicts_with(other_charm):
             return (charm.charm_name in other_charm.conflicts or
@@ -293,11 +293,11 @@ class PlacementController:
         for other_charm in placed_or_required:
             if conflicts_with(other_charm):
                 state = CharmState.CONFLICTED
-                conflicting.append(other_charm)
+                conflicting.add(other_charm)
             if depends(other_charm, charm):
                 if state != CharmState.CONFLICTED:
                     state = CharmState.REQUIRED
-                depending.append(other_charm)
+                depending.add(other_charm)
 
         if charm in required_charms:
             state = CharmState.REQUIRED
@@ -317,7 +317,7 @@ class PlacementController:
         elif state == CharmState.REQUIRED and n_units >= n_required:
             state = CharmState.OPTIONAL
 
-        return (state, conflicting, depending)
+        return (state, list(conflicting), list(depending))
 
     def can_deploy(self):
         unplaced_requireds = [cc for cc in self.unplaced_services
