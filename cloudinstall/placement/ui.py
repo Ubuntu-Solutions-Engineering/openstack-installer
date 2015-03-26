@@ -262,12 +262,28 @@ class ServiceWidget(WidgetWrap):
         md = self.controller.machines_for_charm(self.charm_class)
         mstr = [""]
 
-        if self.controller.get_charm_state(
-                self.charm_class)[0] == CharmState.REQUIRED:
+        state, cons, deps = self.controller.get_charm_state(self.charm_class)
+
+        if state == CharmState.REQUIRED:
             np = self.controller.machine_count_for_charm(self.charm_class)
             nr = self.charm_class.required_num_units()
-            self.title_markup[1] = ('info',
-                                    " ({} of {} placed)".format(np, nr))
+            info_str = " ({} of {} placed)".format(np, nr)
+
+            # Add hint to explain why a dep showed up in required
+            if np == 0 and len(deps) > 0:
+                dep_str = ", ".join([c.display_name for c in deps])
+                info_str += " - required by {}".format(dep_str)
+
+            self.title_markup[1] = ('info', info_str)
+            self.charm_info_widget.set_text(self.title_markup)
+
+        elif state == CharmState.CONFLICTED:
+            con_str = ", ".join([c.display_name for c in cons])
+            self.title_markup[1] = ('error_icon',
+                                    ' - Conflicts with {}'.format(con_str))
+            self.charm_info_widget.set_text(self.title_markup)
+        elif state == CharmState.OPTIONAL:
+            self.title_markup[1] = ""
             self.charm_info_widget.set_text(self.title_markup)
 
         for atype, ml in md.items():
