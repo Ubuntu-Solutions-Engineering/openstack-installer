@@ -110,9 +110,10 @@ class Unit:
         return 'nova-cloud-controller' in self.unit_name
 
     def __repr__(self):
-        return "<Unit: {name} " \
-            "Machine: {machine}>".format(name=self.unit_name,
-                                         machine=self.machine_id)
+        return "<Unit: {name}, Machine: {machine}, State: {state}>".format(
+            name=self.unit_name,
+            machine=self.machine_id,
+            state=self.agent_state)
 
 
 class Relation:
