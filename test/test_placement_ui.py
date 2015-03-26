@@ -33,8 +33,11 @@ from cloudinstall.charms.compute import CharmNovaCompute
 
 from cloudinstall.placement.controller import (AssignmentType,
                                                PlacementController)
-from cloudinstall.placement.ui import (MachinesList, MachineWidget,
-                                       ServicesList, ServiceWidget)
+
+from cloudinstall.placement.ui.machines_list import MachinesList
+from cloudinstall.placement.ui.machine_widget import MachineWidget
+from cloudinstall.placement.ui.services_list import ServicesList
+from cloudinstall.placement.ui.service_widget import ServiceWidget
 
 
 log = logging.getLogger('cloudinstall.test_placement_ui')
@@ -244,7 +247,7 @@ class MachineWidgetTestCase(unittest.TestCase):
         fake_pred.assert_called_with(self.mock_machine)
 
 
-@patch('cloudinstall.placement.ui.MachineWidget')
+@patch('cloudinstall.placement.ui.machines_list.MachineWidget')
 class MachinesListTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -312,7 +315,7 @@ class MachinesListTestCase(unittest.TestCase):
         self.assertEqual(1, len(ml.machine_widgets))
 
 
-@patch('cloudinstall.placement.ui.ServiceWidget')
+@patch('cloudinstall.placement.ui.services_list.ServiceWidget')
 class ServicesListTestCase(unittest.TestCase):
 
     def setUp(self):
