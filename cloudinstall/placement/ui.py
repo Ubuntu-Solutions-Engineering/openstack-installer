@@ -827,7 +827,7 @@ class DeployView(WidgetWrap):
 
     def build_widgets(self):
         self.deploy_ok_msg = ("\u2713 All the required OpenStack services are "
-                              "placed on a machine, and you can now deploy.")
+                              "placed on a machine, and you can now deploy")
 
         # Save a new placements configuration once all required services are
         # placed.
