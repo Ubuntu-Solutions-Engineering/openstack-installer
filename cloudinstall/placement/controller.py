@@ -35,19 +35,28 @@ DEFAULT_SHARED_ASSIGNMENT_TYPE = AssignmentType.LXC
 
 class PlaceholderMachine:
 
-    """A dummy machine that doesn't map to an existing maas machine, to be
-    used for single installs only."""
+    """A dummy MaasMachine that doesn't map to an actual machine in MAAS.
 
-    def __init__(self, instance_id, name, constraints):
+    To specify a future virtual machine for placement that will be
+    created later, pass in vm specs as juju constraints in 'constraints'.
+
+    The keys juju uses differ somewhat from the MAAS API status keys,
+    and are mapped so that they will appear correct to placement code
+    expecting MAAS machines.
+    """
+
+    def __init__(self, instance_id, name, constraints=None):
         self.instance_id = instance_id
         self.system_id = instance_id
         self.machine_id = -1
         self.display_name = name
-        self.constraints = constraints
-
-    @property
-    def machine(self):
-        return self.constraints
+        def_cons = {'arch': '?',
+                    'cpu_count': 0,
+                    'cpu_cores': 0,
+                    'memory': 0,
+                    'mem': 0,
+                    'storage': 0}
+        self.constraints = constraints if constraints else def_cons
 
     @property
     def arch(self):
@@ -57,9 +66,20 @@ class PlaceholderMachine:
     def cpu_cores(self):
         return self.constraints['cpu_cores']
 
+    def filter_label(self):
+        return self.display_name
+
+    @property
+    def machine(self):
+        return self.constraints
+
     @property
     def mem(self):
         return self.constraints['mem']
+
+    @property
+    def status(self):
+        return MaasMachineStatus.UNKNOWN
 
     @property
     def storage(self):
@@ -87,9 +107,14 @@ class PlacementController:
         self.config = config
         self.maas_state = maas_state
         self._machines = []
-        # id -> {atype: [charm class]}
+        self.sub_placeholder = PlaceholderMachine('_internal_sub',
+                                                  'Subordinate Charms')
+        # assignments is {id: {atype: [charm class]}}
         self.assignments = defaultdict(lambda: defaultdict(list))
         self.reset_unplaced()
+
+    def __repr__(self):
+        return "<PlacementController {}>".format(id(self))
 
     def save(self):
         """ Save placement state, to be re-read by
@@ -151,9 +176,11 @@ class PlacementController:
 
     def machines(self):
         if self.maas_state:
-            return self.maas_state.machines()
+            ms = self.maas_state.machines()
         else:
-            return self._machines
+            ms = self._machines
+
+        return ms + [self.sub_placeholder]
 
     def machines_used(self):
         ms = []
