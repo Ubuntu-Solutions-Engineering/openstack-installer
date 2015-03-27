@@ -152,7 +152,7 @@ class SingleInstall:
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
-        self.tasker.start_task("Creating container")
+        self.tasker.start_task("Creating Container")
 
         utils.container_create(self.container_name, self.userdata)
 
