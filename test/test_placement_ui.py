@@ -274,12 +274,11 @@ class MachinesListTestCase(unittest.TestCase):
                 MachinesList(self.pc, self.actions,
                              show_hardware=show_hardware,
                              show_assignments=show_assignments)
-                mock_machinewidget.assert_called_with(
-                    self.mock_machine,
-                    self.pc,
-                    self.actions,
-                    show_hardware,
-                    show_assignments)
+                mock_machinewidget.assert_any_call(self.mock_machine,
+                                                   self.pc,
+                                                   self.actions,
+                                                   show_hardware,
+                                                   show_assignments)
                 mock_machinewidget.reset_mock()
 
     def test_show_matching_constraints(self, mock_machinewidget):
