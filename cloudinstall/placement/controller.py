@@ -107,7 +107,7 @@ class PlacementController:
         self.config = config
         self.maas_state = maas_state
         self._machines = []
-        self.sub_placeholder = PlaceholderMachine('_internal_sub',
+        self.sub_placeholder = PlaceholderMachine('_subordinates',
                                                   'Subordinate Charms')
         # assignments is {id: {atype: [charm class]}}
         self.assignments = defaultdict(lambda: defaultdict(list))
@@ -420,13 +420,18 @@ class PlacementController:
             return None
 
         isolated_charms, controller_charms = [], []
+        subordinate_charms = []
 
         for charm_class in charm_classes:
             state, _, _ = self.get_charm_state(charm_class)
             if state != CharmState.REQUIRED:
                 continue
             if charm_class.isolate:
+                assert(not charm_class.subordinate)
                 isolated_charms.append(charm_class)
+            elif charm_class.subordinate:
+                assert(not charm_class.isolate)
+                subordinate_charms.append(charm_class)
             else:
                 controller_charms.append(charm_class)
 
@@ -443,6 +448,12 @@ class PlacementController:
                 ad = assignments[controller_machine.instance_id]
                 l = ad[DEFAULT_SHARED_ASSIGNMENT_TYPE]
                 l.append(charm_class)
+
+        for charm_class in subordinate_charms:
+            ad = assignments[self.sub_placeholder.instance_id]
+            # BareMetal is arbitrary, it is ignored in deploy:
+            l = ad[AssignmentType.BareMetal]
+            l.append(charm_class)
 
         import pprint
         log.debug(pprint.pformat(assignments))
@@ -495,12 +506,18 @@ class PlacementController:
             if state != CharmState.REQUIRED:
                 continue
             if charm_class.isolate:
+                assert(not charm_class.subordinate)
                 for n in range(charm_class.required_num_units()):
                     pm = placeholder_for_charm(charm_class)
                     self._machines.append(pm)
                     ad = assignments[pm.instance_id]
                     # in single, "BareMetal" is in a KVM on the host
                     ad[AssignmentType.BareMetal].append(charm_class)
+            elif charm_class.subordinate:
+                assert(not charm_class.isolate)
+                ad = assignments[self.sub_placeholder.instance_id]
+                l = ad[AssignmentType.BareMetal]
+                l.append(charm_class)
             else:
                 ad = assignments[controller.instance_id]
                 ad[AssignmentType.LXC].append(charm_class)
