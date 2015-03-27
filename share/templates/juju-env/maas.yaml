@@ -5,7 +5,7 @@ environments:
     type: maas
     maas-server: 'http://{{maas_server}}/MAAS/'
     maas-oauth: '{{maas_apikey}}'
-    admin-secret: {{openstack_password}}
+    admin-secret: "{{openstack_password}}"
     default-series: trusty
     authorized-keys-path: ~/.ssh/id_rsa.pub
 {%- if http_proxy %}
@@ -43,7 +43,7 @@ environments:
     region: RegionOne
     auth-mode: userpass
     username: ubuntu
-    password: {{openstack_password}}
+    password: "{{openstack_password}}"
 {%- if http_proxy %}
     http-proxy: {{http_proxy}}
 {%- endif %}
