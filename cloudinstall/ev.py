@@ -100,8 +100,9 @@ class EventLoop:
         if not self.config.getopt('headless'):
             try:
                 self.loop.draw_screen()
-            except AssertionError as message:
-                self.log.critical(message)
+            except AssertionError as e:
+                self.log.exception("exception failure in redraw_screen")
+                raise e
 
     def set_alarm_in(self, interval, cb):
         if not self.config.getopt('headless'):
