@@ -45,13 +45,14 @@ class CharmKeystone(CharmBase):
         return False
 
     def post_proc(self):
-        # Dont bother updating auth-url if its already set
         if self._is_auth_url_valid():
             return False
 
         service = self.juju_state.service('keystone')
-        if len(service.units) > 0:
-            unit = service.units[0]
+        if len(service.units) < 1:
+            return True
+
+        unit = service.units[0]
         self.config.update_environments_yaml(
             key='auth-url',
             val='http://{0}:5000/v2.0/'.format(unit.public_address),
