@@ -68,7 +68,9 @@ class ServiceWidget(WidgetWrap):
         self.charm_info_widget = Text(self.title_markup)
         self.assignments_widget = Text("")
 
-        if len(self.charm_class.constraints) == 0:
+        if self.charm_class.subordinate:
+            c_str = [('label', "  (subordinate charm)")]
+        elif len(self.charm_class.constraints) == 0:
             c_str = [('label', "  no constraints set")]
         else:
             cpairs = [format_constraint(k, v) for k, v in
