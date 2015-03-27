@@ -36,12 +36,12 @@ class ServicesList(WidgetWrap):
 
     """
 
-    def __init__(self, controller, actions, machine=None,
-                 unplaced_only=False, show_type='all',
-                 show_constraints=False,
-                 title="Services"):
+    def __init__(self, controller, actions, subordinate_actions,
+                 machine=None, unplaced_only=False, show_type='all',
+                 show_constraints=False, title="Services"):
         self.controller = controller
         self.actions = actions
+        self.subordinate_actions = subordinate_actions
         self.service_widgets = []
         self.machine = machine
         self.unplaced_only = unplaced_only
@@ -104,7 +104,11 @@ class ServicesList(WidgetWrap):
             sw.update()
 
     def add_service_widget(self, charm_class):
-        sw = ServiceWidget(charm_class, self.controller, self.actions,
+        if charm_class.subordinate:
+            actions = self.subordinate_actions
+        else:
+            actions = self.actions
+        sw = ServiceWidget(charm_class, self.controller, actions,
                            self.show_constraints)
         self.service_widgets.append(sw)
         options = self.service_pile.options()

@@ -54,9 +54,10 @@ class ServiceChooser(WidgetWrap):
                     return True
             return False
 
+        actions = [(show_remove_p, 'Remove', self.do_remove)]
+
         self.services_list = ServicesList(self.controller,
-                                          [(show_remove_p, 'Remove',
-                                            self.do_remove)],
+                                          actions, actions,
                                           machine=self.machine)
 
         close_button = AttrMap(Button('X',
