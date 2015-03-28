@@ -174,17 +174,30 @@ class PlacementController:
         self.reset_unplaced()
         self.save()
 
-    def machines(self):
+    def machines(self, include_placeholders=True):
+        """Returns all machines known to the controller.
+
+        if 'include_placeholder' is False, any placeholder machines
+        are excluded.
+        """
         if self.maas_state:
             ms = self.maas_state.machines()
         else:
             ms = self._machines
 
-        return ms + [self.sub_placeholder]
+        if include_placeholders:
+            return ms + [self.sub_placeholder]
+        else:
+            return ms
 
-    def machines_used(self):
+    def machines_used(self, include_placeholders=False):
+        """Returns a list of machines that have charms placed on them.
+
+        Excludes placeholder machines by default, so this can be used
+        to e.g. get the number of real machines to wait for.
+        """
         ms = []
-        for m in self.machines():
+        for m in self.machines(include_placeholders=include_placeholders):
             if m.instance_id in self.assignments:
                 n = sum(len(cl) for _, cl in
                         self.assignments[m.instance_id].items())
