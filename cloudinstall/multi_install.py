@@ -22,6 +22,7 @@ import os
 import pwd
 import re
 import shlex
+import socket
 import time
 import yaml
 
@@ -213,10 +214,16 @@ class MultiInstall:
             raise Exception("Problem with juju status.")
         try:
             status = yaml.load(out['output'])
-            bootstrap_ip = status['machines']['0']['dns-name']
+            bootstrap_dns_name = status['machines']['0']['dns-name']
         except:
             log.exception("Error parsing yaml from juju status")
-            raise Exception("Problem getting bootstrap machine IP")
+            raise Exception("Problem getting bootstrap machine DNS name")
+
+        try:
+            bootstrap_ip = socket.gethostbyname(bootstrap_dns_name)
+        except socket.gaierror as e:
+            log.error("Failed to get ip: {}".format(e))
+            raise Exception("Failed to get IP of bootstrap from DNS name")
 
         out = utils.get_command_output(
             "{} juju get-env no-proxy".format(self.config.juju_home()),
