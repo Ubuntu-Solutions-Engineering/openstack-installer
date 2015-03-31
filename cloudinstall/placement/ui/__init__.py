@@ -20,6 +20,8 @@ from urwid import (AttrMap, Button, Columns, Divider, Filler,
                    GridFlow, Overlay, Padding, Pile, SelectableIcon,
                    Text, WidgetWrap)
 
+from cloudinstall.placement.controller import AssignmentType
+
 from cloudinstall.placement.ui.machine_chooser import MachineChooser
 from cloudinstall.placement.ui.machines_list import MachinesList
 from cloudinstall.placement.ui.service_chooser import ServiceChooser
@@ -61,14 +63,18 @@ class ServicesColumn(WidgetWrap):
 
         actions = [(not_conflicted_p, "Choose Machine",
                     self.placement_view.do_show_machine_chooser)]
+        subordinate_actions = [("Add",
+                                self.do_place_subordinate)]
         self.required_services_list = ServicesList(self.placement_controller,
                                                    actions,
+                                                   subordinate_actions,
                                                    unplaced_only=True,
                                                    show_type='required',
                                                    show_constraints=True,
                                                    title="Required Services")
         self.additional_services_list = ServicesList(self.placement_controller,
                                                      actions,
+                                                     subordinate_actions,
                                                      show_type='non-required',
                                                      show_constraints=True,
                                                      title="Additional "
@@ -132,6 +138,12 @@ class ServicesColumn(WidgetWrap):
     def do_reset_to_defaults(self, sender):
         self.placement_controller.set_all_assignments(
             self.placement_controller.gen_defaults())
+
+    def do_place_subordinate(self, sender, charm_class):
+        sub_placeholder = self.placement_controller.sub_placeholder
+        self.placement_controller.assign(sub_placeholder,
+                                         charm_class,
+                                         AssignmentType.BareMetal)
 
 
 class DeployView(WidgetWrap):
@@ -283,7 +295,8 @@ class MachinesColumn(WidgetWrap):
                                                 align='center',
                                                 width=BUTTON_SIZE)])
 
-        if len(self.placement_controller.machines()) == 0:
+        # 1 machine is the subordinate placeholder:
+        if len(self.placement_controller.machines()) == 1:
             self.main_pile.contents[2] = (self.empty_maas_widgets,
                                           self.main_pile.options())
         else:

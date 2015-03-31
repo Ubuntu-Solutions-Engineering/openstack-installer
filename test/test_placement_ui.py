@@ -274,12 +274,11 @@ class MachinesListTestCase(unittest.TestCase):
                 MachinesList(self.pc, self.actions,
                              show_hardware=show_hardware,
                              show_assignments=show_assignments)
-                mock_machinewidget.assert_called_with(
-                    self.mock_machine,
-                    self.pc,
-                    self.actions,
-                    show_hardware,
-                    show_assignments)
+                mock_machinewidget.assert_any_call(self.mock_machine,
+                                                   self.pc,
+                                                   self.actions,
+                                                   show_hardware,
+                                                   show_assignments)
                 mock_machinewidget.reset_mock()
 
     def test_show_matching_constraints(self, mock_machinewidget):
@@ -305,13 +304,16 @@ class MachinesListTestCase(unittest.TestCase):
         mw2.machine = self.mock_machine2
         mw3 = MagicMock(name="mw3")
         mw3.machine = self.mock_machine3
-        mock_machinewidget.side_effect = [mw1, mw2, mw3]
+        # the repeated fourth one is the subordinate placeholder:
+        mw4 = MagicMock(name="mw4")
+        mock_machinewidget.side_effect = [mw1, mw2, mw3, mw4]
 
         ml = MachinesList(self.pc, self.actions)
-        self.assertEqual(3, len(ml.machine_widgets))
+        self.assertEqual(4, len(ml.machine_widgets))
 
         ml.filter_string = "machine1-filter_label"
         ml.update()
+        print("ml.machinewidgets is {}".format(ml.machine_widgets))
         self.assertEqual(1, len(ml.machine_widgets))
 
 
@@ -336,10 +338,11 @@ class ServicesListTestCase(unittest.TestCase):
         self.mock_maas_state.machines.return_value = self.mock_machines
 
         self.actions = []
+        self.sub_actions = []
 
     def test_widgets_config(self, mock_servicewidgetclass):
         for show_constraints in [False, True]:
-            ServicesList(self.pc, self.actions,
+            ServicesList(self.pc, self.actions, self.sub_actions,
                          show_constraints=show_constraints)
 
             mock_servicewidgetclass.assert_any_call(
@@ -355,14 +358,15 @@ class ServicesListTestCase(unittest.TestCase):
             fc.required_num_units.return_value = 1
             fc.constraints = {'cpu_count': 1000}
             mock_classesfunc.return_value = [fc]
-            sl = ServicesList(self.pc, self.actions)
+            sl = ServicesList(self.pc, self.actions, self.sub_actions)
             self.assertEqual(len(sl.service_widgets), 1)
 
     def test_machine_checks_constraints(self, mock_servicewidgetclass):
         mock_machine = make_fake_machine('fm', {'cpu_count': 0,
                                                 'storage': 0,
                                                 'memory': 0})
-        sl = ServicesList(self.pc, self.actions, machine=mock_machine)
+        sl = ServicesList(self.pc, self.actions, self.sub_actions,
+                          machine=mock_machine)
         self.assertEqual(len(sl.service_widgets), 0)
 
     def test_do_not_show_assigned(self, mock_servicewidgetclass):
@@ -371,7 +375,8 @@ class ServicesListTestCase(unittest.TestCase):
                                                 'memory': 0})
         self.pc.assign(mock_machine, CharmNovaCompute,
                        AssignmentType.LXC)
-        sl = ServicesList(self.pc, self.actions, machine=mock_machine)
+        sl = ServicesList(self.pc, self.actions, self.sub_actions,
+                          machine=mock_machine)
         classes = [sw.charm_class for sw in sl.service_widgets]
         self.assertTrue(CharmNovaCompute not in classes)
 
@@ -405,7 +410,8 @@ class ServicesListTestCase(unittest.TestCase):
                 mock_get_state.return_value = (CharmState.REQUIRED, [], [])
 
                 # rsl shows required charms
-                rsl = ServicesList(self.pc, self.actions, machine=None,
+                rsl = ServicesList(self.pc, self.actions,
+                                   self.sub_actions, machine=None,
                                    show_type='required')
                 self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show all 3
@@ -417,7 +423,8 @@ class ServicesListTestCase(unittest.TestCase):
                                                        mock_sw3]
 
                 # usl shows ONLY un-required charms
-                usl = ServicesList(self.pc, self.actions, machine=None,
+                usl = ServicesList(self.pc, self.actions,
+                                   self.sub_actions, machine=None,
                                    show_type='non-required')
                 self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show 0
@@ -429,7 +436,7 @@ class ServicesListTestCase(unittest.TestCase):
                                                        mock_sw3]
 
                 # asl has default show_type='all', showing all charms
-                asl = ServicesList(self.pc, self.actions)
+                asl = ServicesList(self.pc, self.actions, self.sub_actions)
                 self.assertEqual(len(mock_get_state.mock_calls), 3)
                 # should show all 3
                 self.assertEqual(len(asl.service_widgets), 3)

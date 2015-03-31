@@ -481,16 +481,15 @@ class Controller:
         first_deploy = True
         for atype, ml in placements.items():
             for machine in ml:
-                # get machine spec from atype and machine instance id:
                 mspec = self.get_machine_spec(machine, atype)
                 if mspec is None:
                     errs.append(machine)
                     continue
                 if first_deploy:
-                    self.ui.status_info_message("Deploying {c} "
-                                                "to machine {mspec}".format(
-                                                    c=charm_class.display_name,
-                                                    mspec=mspec))
+                    msg = "Deploying {c}".format(c=charm_class.display_name)
+                    if mspec != '':
+                        msg += " to machine {mspec}".format(mspec=mspec)
+                    self.ui.status_info_message(msg)
                     deploy_err = charm.deploy(mspec)
                     if deploy_err:
                         errs.append(machine)
@@ -498,10 +497,11 @@ class Controller:
                         first_deploy = False
                 else:
                     # service already deployed, need to add-unit
-                    self.ui.status_info_message("Adding one unit of {c} "
-                                                "to machine {mspec}".format(
-                                                    c=charm_class.display_name,
-                                                    mspec=mspec))
+                    msg = ("Adding one unit of "
+                           "{c}".format(c=charm_class.display_name))
+                    if mspec != '':
+                        msg += " to machine {mspec}".format(mspec=mspec)
+                    self.ui.status_info_message(msg)
                     deploy_err = charm.add_unit(machine_spec=mspec)
                     if deploy_err:
                         errs.append(machine)
@@ -513,7 +513,14 @@ class Controller:
         return had_err
 
     def get_machine_spec(self, maas_machine, atype):
-        """Given a machine and assignment type, return a juju machine spec"""
+        """Given a machine and assignment type, return a juju machine spec.
+
+        Returns None on errors, and '' for the subordinate char placeholder.
+        """
+        if maas_machine == self.placement_controller.sub_placeholder:
+            # subordinate charms do not use a machine spec
+            return ""
+
         jm = next((m for m in self.juju_state.machines()
                    if (m.instance_id == maas_machine.instance_id or
                        m.machine_id == maas_machine.machine_id)), None)

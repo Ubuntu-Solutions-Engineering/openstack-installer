@@ -97,11 +97,14 @@ class MachineWidget(WidgetWrap):
 
     def update(self):
         self.update_machine()
-        info_markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
-                       ('label', " ({})".format(self.machine.status))]
-
-        self.machine_info_widget.set_text(info_markup)
-        self.hardware_widget.set_text(["  "] + self.hardware_info_markup())
+        if self.machine == self.controller.sub_placeholder:
+            self.machine_info_widget.set_text("\N{BULLET} Subordinate Charms")
+            self.hardware_widget.set_text("")
+        else:
+            info_markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
+                           ('label', " ({})".format(self.machine.status))]
+            self.machine_info_widget.set_text(info_markup)
+            self.hardware_widget.set_text(["  "] + self.hardware_info_markup())
 
         ad = self.controller.assignments_for_machine(self.machine)
         astr = [('label', "  Services: ")]
@@ -124,7 +127,16 @@ class MachineWidget(WidgetWrap):
                 astr.append(", ".join(["\N{GEAR} {}".format(c.display_name)
                                        for c in al]))
 
-        self.assignments_widget.set_text(astr)
+        if self.machine == self.controller.sub_placeholder:
+            assignments_text = ''
+            for _, al in ad.items():
+                charm_txts = ["\N{GEAR} {}".format(c.display_name)
+                              for c in al]
+                assignments_text += ", ".join(charm_txts)
+        else:
+            assignments_text = astr
+
+        self.assignments_widget.set_text(assignments_text)
         self.update_buttons()
 
     def update_buttons(self):
