@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -23,7 +23,6 @@ class CharmHorizon(CharmBase):
     charm_name = 'openstack-dashboard'
     charm_rev = 8
     display_name = 'Openstack Dashboard'
-    menuable = True
     related = ['keystone']
 
 __charm_class__ = CharmHorizon

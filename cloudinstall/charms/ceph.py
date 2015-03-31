@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -27,7 +27,6 @@ class CharmCeph(CharmBase):
     charm_name = 'ceph'
     charm_rev = 34
     display_name = 'Ceph'
-    menuable = True
     display_priority = DisplayPriorities.Storage
     related = [('ceph:client', 'cinder-ceph:ceph'),
                ('glance:ceph', 'ceph:client'),

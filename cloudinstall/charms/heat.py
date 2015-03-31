@@ -1,4 +1,5 @@
 # Copyright 2015 James Beedy jamesbeedy@gmail.com
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -23,7 +24,6 @@ class CharmHeat(CharmBase):
     charm_name = 'heat'
     charm_rev = 5
     display_name = 'Heat'
-    menuable = True
     related = [('keystone:identity-service',
                 'heat:identity-service'),
                ('mysql:shared-db',

@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -32,7 +32,6 @@ class CharmSwiftProxy(CharmBase):
     constraints = {'mem': 1024,
                    'root-disk': 8192}
     allow_multi_units = False
-    menuable = True
     depends = ['swift-storage']
     conflicts = ['ceph-radosgw']
 

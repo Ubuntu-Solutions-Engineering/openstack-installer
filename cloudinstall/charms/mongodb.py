@@ -1,4 +1,5 @@
 # Copyright 2015 James Beedy jamesbeedy@gmail.com
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -24,7 +25,6 @@ class CharmMongo(CharmBase):
     charm_rev = 17
     display_name = 'MongoDB'
     deploy_priority = 0
-    menuable = True
     contrib = True
 
 __charm_class__ = CharmMongo
