@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -29,7 +29,6 @@ class CharmNovaCloudController(CharmBase):
     charm_rev = 53
     display_name = 'Controller'
     deploy_priority = 2
-    menuable = True
     related = [('nova-cloud-controller:shared-db',
                 'mysql:shared-db'),
                ('rabbitmq-server:amqp',

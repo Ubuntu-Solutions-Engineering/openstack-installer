@@ -1,4 +1,5 @@
 # Copyright 2015 James Beedy jamesbeedy@gmail.com
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -27,7 +28,6 @@ class CharmCeilometer(CharmBase):
     charm_rev = 6
     display_name = 'Ceilometer'
     deploy_priority = 100
-    menuable = True
     contrib = True
     related = [('ceilometer:shared-db', 'mongodb:database'),
                ('ceilometer:identity-service',

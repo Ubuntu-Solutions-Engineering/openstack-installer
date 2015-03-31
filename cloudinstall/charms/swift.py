@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -27,7 +27,6 @@ class CharmSwift(CharmBase):
     charm_name = 'swift-storage'
     charm_rev = 13
     display_name = 'Swift'
-    menuable = True
     display_priority = DisplayPriorities.Storage
     related = [('swift-proxy:swift-storage', 'swift:swift-storage')]
     deploy_priority = 5

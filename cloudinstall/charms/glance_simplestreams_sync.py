@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -41,7 +41,6 @@ class CharmGlanceSimplestreamsSync(CharmBase):
 
     charm_name = 'glance-simplestreams-sync'
     charm_rev = 2
-    menuable = True
     display_name = 'Glance - Simplestreams Image Sync'
     display_priority = DisplayPriorities.Other
     related = [('keystone:identity-service',
