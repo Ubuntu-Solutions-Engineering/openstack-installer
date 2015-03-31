@@ -1,0 +1,2 @@
+--ignore-dir=debian
+--ignore-dir=.pybuild
