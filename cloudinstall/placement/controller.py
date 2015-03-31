@@ -154,7 +154,8 @@ class PlacementController:
         file_assignments = self.config.getopt('placements')
         new_assignments = defaultdict(lambda: defaultdict(list))
         for iid, d in file_assignments.items():
-            if self.maas_state is None:
+            if self.maas_state is None and \
+               iid != self.sub_placeholder.instance_id:
                 constraints = d['constraints']
                 pm = PlaceholderMachine(iid, iid,
                                         constraints)
