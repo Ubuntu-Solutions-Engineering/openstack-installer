@@ -56,7 +56,10 @@ class PlaceholderMachine:
                     'memory': 0,
                     'mem': 0,
                     'storage': 0}
-        self.constraints = constraints if constraints else def_cons
+        if constraints is None:
+            self.constraints = def_cons
+        else:
+            self.constraints = constraints
 
     @property
     def arch(self):
