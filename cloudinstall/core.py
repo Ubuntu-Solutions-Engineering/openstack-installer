@@ -357,11 +357,11 @@ class Controller:
 
         log.debug("existing juju machines: {}".format(self.juju_m_idmap))
 
-        def get_created_machine_id(response):
+        def get_created_machine_id(iid, response):
             d = response['Machines'][0]
             if d['Error']:
-                log.debug("Error from add_machine: {}".format(response))
-                return None
+                raise Exception("Error adding machine '{}':"
+                                "{}".format(iid, response))
             else:
                 return d['Machine']
 
@@ -375,7 +375,7 @@ class Controller:
             log.debug("adding machine with "
                       "constraints={}".format(machine.constraints))
             rv = self.juju.add_machine(constraints=machine.constraints)
-            m_id = get_created_machine_id(rv)
+            m_id = get_created_machine_id(machine.instance_id, rv)
             machine.machine_id = m_id
             rv = self.juju.set_annotations(m_id, 'machine',
                                            {'instance_id':
