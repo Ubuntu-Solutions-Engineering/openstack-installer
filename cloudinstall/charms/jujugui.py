@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -24,6 +24,5 @@ class CharmJujuGui(CharmBase):
     display_name = 'Juju GUI'
     display_priority = DisplayPriorities.Other
     deploy_priority = 1
-    menuable = True
 
 __charm_class__ = CharmJujuGui
