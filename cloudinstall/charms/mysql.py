@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,6 @@ class CharmMysql(CharmBase):
     charm_rev = 24
     display_name = 'MySQL'
     deploy_priority = 0
-    menuable = True
     is_core = True
 
 __charm_class__ = CharmMysql

@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -25,7 +25,6 @@ class CharmNeutronOpenvswitch(CharmBase):
     charm_name = 'neutron-openvswitch'
     charm_rev = 2
     display_name = 'Neutron OpenVSwitch'
-    menuable = True
     subordinate = True
     openstack_release_min = 'j'
     is_core = True

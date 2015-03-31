@@ -1,7 +1,7 @@
 #
 # charms.py - Charm instructions to Cloud Installer
 #
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -101,7 +101,6 @@ class CharmBase:
     allow_multi_units = False
     allowed_assignment_types = list(AssignmentType)
     disabled = False
-    menuable = False
     subordinate = False
     openstack_release_min = 'i'
     depends = []

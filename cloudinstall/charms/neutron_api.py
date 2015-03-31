@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -25,7 +25,6 @@ class CharmNeutronAPI(CharmBase):
     charm_name = 'neutron-api'
     charm_rev = 9
     display_name = 'Neutron API'
-    menuable = True
     openstack_release_min = 'j'
     related = [('neutron-api:identity-service',
                 'keystone:identity-service'),

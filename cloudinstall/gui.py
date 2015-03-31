@@ -257,7 +257,7 @@ class ServicesView(ScrollableWidgetWrap):
             node_pile = []
             node_cols = []
             charm_class, service = node
-            if charm_class.menuable and len(service.units) > 0:
+            if len(service.units) > 0:
                 for u in sorted(service.units, key=attrgetter('unit_name')):
                     node_cols = self._build_node_columns(u, charm_class)
                     node_pile.append(node_cols)

@@ -1,4 +1,4 @@
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -23,7 +23,6 @@ class CharmGlance(CharmBase):
     charm_name = 'glance'
     charm_rev = 13
     display_name = 'Glance'
-    menuable = True
     related = [('mysql:shared-db', 'glance:shared-db'),
                ('keystone:identity-service', 'glance:identity-service'),
                ('rabbitmq-server:amqp', 'glance:amqp')]
