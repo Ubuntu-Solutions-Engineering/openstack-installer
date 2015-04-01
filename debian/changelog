@@ -1,4 +1,4 @@
-openstack (0.99.5-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+openstack (0.99.6-0ubuntu1~15.04.1~bleed1) vivid; urgency=medium
 
   * Fix subordinate charm failure in placements
   * Fix global exception handler in UI
