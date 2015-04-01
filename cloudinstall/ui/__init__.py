@@ -211,7 +211,6 @@ class SelectorWithDescription(Dialog):
             title=self.title)
 
     def submit(self, button):
-        log.debug("Callback on : {}".format(self.radio_items))
         for item in self.radio_items.keys():
             _item = self.radio_items[item][0]
             if _item.get_state():
