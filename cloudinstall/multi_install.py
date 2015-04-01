@@ -219,11 +219,27 @@ class MultiInstall:
             log.exception("Error parsing yaml from juju status")
             raise Exception("Problem getting bootstrap machine DNS name")
 
+        # first attempt to get directly, then use juju run:
         try:
             bootstrap_ip = socket.gethostbyname(bootstrap_dns_name)
+
         except socket.gaierror as e:
-            log.error("Failed to get ip: {}".format(e))
-            raise Exception("Failed to get IP of bootstrap from DNS name")
+            log.error("Failed to get ip directly: {}".format(e))
+
+            out = utils.get_command_output(
+                "{} juju run --machine 0 "
+                "'ip -o -4 address show dev juju-br0'".format(
+                    self.config.juju_home()))
+            if out['status'] != 0:
+                log.error("Failed to get ip: {}".format(out))
+                raise Exception("Failed to get IP of bootstrap node")
+            regex = re.compile("inet\s+(\d+\.\d+\.\d+\.\d+)\/")
+            match = re.search(regex, out['output'].rstrip())
+            if match:
+                bootstrap_ip = match.group(1)
+            else:
+                log.error("Failed to get ip: {}".format(out))
+                raise Exception("Failed to get IP of bootstrap node")
 
         out = utils.get_command_output(
             "{} juju get-env no-proxy".format(self.config.juju_home()),
@@ -231,6 +247,7 @@ class MultiInstall:
         if out['status'] != 0:
             log.debug("error from get-env: {}".format(out))
             raise Exception("Problem getting existing no-proxy setting")
+
         no_proxy = "{},{}".format(
             out['output'].rstrip(), bootstrap_ip)
 
