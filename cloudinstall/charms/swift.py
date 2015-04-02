@@ -28,7 +28,7 @@ class CharmSwift(CharmBase):
     charm_rev = 13
     display_name = 'Swift'
     display_priority = DisplayPriorities.Storage
-    related = [('swift-proxy:swift-storage', 'swift:swift-storage')]
+    related = [('swift-proxy:swift-storage', 'swift-storage:swift-storage')]
     deploy_priority = 5
     default_replicas = 3
     isolate = True
