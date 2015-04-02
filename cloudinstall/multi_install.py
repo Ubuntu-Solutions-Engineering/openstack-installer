@@ -32,7 +32,7 @@ from tempfile import TemporaryDirectory
 from cloudinstall.state import InstallState
 from cloudinstall.netutils import (get_ip_addr, get_bcast_addr, get_network,
                                    get_default_gateway, get_netmask,
-                                   get_network_interfaces,
+                                   get_network_interfaces, get_ip_set,
                                    ip_range_max)
 
 from cloudinstall import utils
@@ -237,6 +237,7 @@ class MultiInstall:
             match = re.search(regex, out['output'].rstrip())
             if match:
                 bootstrap_ip = match.group(1)
+                bootstrap_ip = get_ip_set("{}/24".format(bootstrap_ip))
             else:
                 log.error("Failed to get ip: {}".format(out))
                 raise Exception("Failed to get IP of bootstrap node")
