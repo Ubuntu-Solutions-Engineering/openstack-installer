@@ -122,6 +122,16 @@ def populate_config(opts):
         return {k: v for (k, v) in _cfg.items()
                 if v is not None}
 
+    def verbose_update(main, main_name, new, new_name):
+        for nk, nv in new.items():
+            if nk in main and nv != main[nk]:
+                log.info("*** config: '{}: {}' from {} "
+                         "overriding '{}: {}' from {}".format(nk, nv,
+                                                              new_name,
+                                                              nk, main[nk],
+                                                              main_name))
+            main[nk] = nv
+
     if 'config_file' not in cfg_cli_opts:
         # Check for a pre-existing install config
         presaved_config = os.path.join(
@@ -129,7 +139,8 @@ def populate_config(opts):
         if os.path.exists(presaved_config):
             cfg.update(yaml.load(slurp(presaved_config)))
         scrub = sanitize_config_items(cfg_cli_opts)
-        cfg.update(scrub)
+        verbose_update(cfg, 'pre-existing config file',
+                       scrub, 'command-line options')
         return cfg
 
     # Always override presaved config if defined in cli switch
@@ -138,7 +149,10 @@ def populate_config(opts):
                                 yaml.load(
                                     slurp(cfg_cli_opts['config_file'])))
         scrub = sanitize_config_items(cfg_cli_opts)
-        _cfg_copy.update(scrub)
+        verbose_update(_cfg_copy,
+                       "contents of --config-file: "
+                       "'{}'".format(cfg_cli_opts['config_file']),
+                       scrub, 'command-line options')
         return _cfg_copy
     else:
         return sanitize_config_items(cfg_cli_opts)
