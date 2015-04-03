@@ -90,7 +90,7 @@ def parse_options(argv):
                         help='<rel, ..> comma-separated list of Ubuntu '
                         'releases to filter available cloud images with '
                         'which to populate Glance, e.g. precise,trusty')
-    parser.add_argument('-p', '--placement', action='store_true',
+    parser.add_argument('--edit-placement', action='store_true',
                         dest='edit_placement',
                         help='Show machine placement UI before deploying')
     parser.add_argument('--extra-ppa', nargs='+', dest='extra_ppa',
