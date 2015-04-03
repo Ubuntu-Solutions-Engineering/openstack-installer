@@ -8,11 +8,13 @@ SYNOPSIS
 
 usage: openstack-juju [subcommand] [opts]
 
-$ openstack-juju deploy jenkins
-$ openstack-juju deploy -n 5 jenkins-slave
-$ openstack-juju add-relation jenkins jenkins-slave
-$ openstack-juju set jenkins password=AseCreTPassWoRd
-$ openstack-juju expose jenkins
+.. code::
+
+   $ openstack-juju deploy jenkins
+   $ openstack-juju deploy -n 5 jenkins-slave
+   $ openstack-juju add-relation jenkins jenkins-slave
+   $ openstack-juju set jenkins password=AseCreTPassWoRd
+   $ openstack-juju expose jenkins
 
 DESCRIPTION
 ===========
