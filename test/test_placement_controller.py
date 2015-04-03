@@ -22,7 +22,7 @@ import os
 import unittest
 from unittest.mock import call, MagicMock, PropertyMock, patch
 import yaml
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryFile
 
 from cloudinstall.charms.keystone import CharmKeystone
 from cloudinstall.charms.compute import CharmNovaCompute
@@ -366,10 +366,12 @@ class PlacementControllerTestCase(unittest.TestCase):
         cons2 = PropertyMock(return_value={'cpu': 8})
         type(self.mock_machine_2).constraints = cons2
 
-        self.pc.save()
-        newpc = PlacementController(
-            self.mock_maas_state, self.conf)
-        newpc.load()
+        with TemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            self.pc.save(tempf)
+            tempf.seek(0)
+            newpc = PlacementController(
+                self.mock_maas_state, self.conf)
+            newpc.load(tempf)
         self.assertEqual(self.pc.assignments, newpc.assignments)
         self.assertEqual(self.pc.machines_used(), newpc.machines_used())
         self.assertEqual(self.pc.placed_charm_classes(),
@@ -384,17 +386,21 @@ class PlacementControllerTestCase(unittest.TestCase):
             utils.spew(tempf.name, yaml.dump(dict()))
             conf = Config({}, tempf.name)
 
-        conf.setopt('placements', {
+        fake_assignments = {
             'fake_iid': {'constraints': {},
                          'assignments': {'KVM':
                                          ['nova-compute']}},
             'fake_iid_2': {'constraints': {'cpu': 8},
                            'assignments':
-                           {'BareMetal': ['nova-compute']}}})
-        conf.save()
+                           {'BareMetal': ['nova-compute']}}}
+
         singlepc = PlacementController(
             None, conf)
-        singlepc.load()
+
+        with TemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            yaml.dump(fake_assignments, tempf)
+            tempf.seek(0)
+            singlepc.load(tempf)
 
         self.assertEqual(set([m.instance_id for m in
                               singlepc.machines_used()]),
@@ -407,7 +413,9 @@ class PlacementControllerTestCase(unittest.TestCase):
     def test_load_error_mismatch_charm_name(self):
         """Should safely ignore (and log) a charm name in a placement file
         that can't be matched to a loaded charm class."""
-        self.conf.setopt('placements', {
+        singlepc = PlacementController(None, self.conf)
+
+        fake_assignments = {
             'fake_iid': {
                 'constraints': {},
                 'assignments': {'KVM':
@@ -415,10 +423,12 @@ class PlacementControllerTestCase(unittest.TestCase):
             'fake_iid_2': {
                 'constraints': {'cpu': 8},
                 'assignments':
-                {'BareMetal': ['nova-compute']}}})
+                {'BareMetal': ['nova-compute']}}}
 
-        singlepc = PlacementController(None, self.conf)
-        singlepc.load()
+        with TemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            yaml.dump(fake_assignments, tempf)
+            tempf.seek(0)
+            singlepc.load(tempf)
 
         self.assertEqual(set([m.instance_id for m in
                               singlepc.machines_used()]),
