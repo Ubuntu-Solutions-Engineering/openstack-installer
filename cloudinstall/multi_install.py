@@ -179,7 +179,7 @@ class MultiInstall:
         if not self.config.is_landscape():
             args = ['openstack-status']
             if self.config.getopt('edit_placement'):
-                args.append('--placement')
+                args.append('--edit-placement')
 
             self.drop_privileges()
             os.execvp('openstack-status', args)
