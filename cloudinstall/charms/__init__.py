@@ -301,10 +301,22 @@ class CharmQueue:
 
         valid_relations = []
         for rel_a, rel_b in all_relations:
-            rel_a_name = rel_a.split(":")[0]
-            rel_b_name = rel_b.split(":")[0]
-            if rel_a_name in charm_names and rel_b_name in charm_names:
+            rel_a_svc = rel_a.split(":")[0]
+            svc_a_placed = rel_a_svc in charm_names
+            rel_b_svc = rel_b.split(":")[0]
+            svc_b_placed = rel_b_svc in charm_names
+
+            if svc_a_placed and svc_b_placed:
                 valid_relations.append((rel_a, rel_b))
+            else:
+                msg = ("relation {}:{} ignored "
+                       "because:".format(rel_a, rel_b))
+                if not svc_a_placed:
+                    msg += " {} is not placed".format(rel_a_svc)
+                if not svc_b_placed:
+                    msg += " {} is not placed".format(rel_b_svc)
+                log.info(msg)
+
         return valid_relations
 
     def add_deploy(self, charm):
