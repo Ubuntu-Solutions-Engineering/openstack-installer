@@ -132,6 +132,10 @@ class Config:
         """ scripts located in non-default system path """
         return os.path.join(self.share_path, "bin")
 
+    @property
+    def placements_filename(self):
+        return os.path.join(self.cfg_path, 'placements.yaml')
+
     def is_single(self):
         if self.getopt('install_type') and \
            'Single' in self.getopt('install_type'):

@@ -165,9 +165,6 @@ class DeployView(WidgetWrap):
         self.deploy_ok_msg = ("\u2713 All the required OpenStack services are "
                               "placed on a machine, and you can now deploy.")
 
-        # Save a new placements configuration once all required services are
-        # placed.
-        self.placement_controller.save()
         self.deploy_button = AttrMap(
             Button("Deploy", on_press=self.do_deploy),
             'button_primary', 'button_primary focus')

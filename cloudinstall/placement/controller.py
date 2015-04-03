@@ -16,6 +16,7 @@
 from collections import defaultdict, Counter
 from enum import Enum
 import logging
+import yaml
 from multiprocessing import cpu_count
 
 from cloudinstall.maas import (satisfies, MaasMachineStatus)
@@ -114,13 +115,23 @@ class PlacementController:
                                                   'Subordinate Charms')
         # assignments is {id: {atype: [charm class]}}
         self.assignments = defaultdict(lambda: defaultdict(list))
+        self.autosave_filename = None
         self.reset_unplaced()
 
     def __repr__(self):
         return "<PlacementController {}>".format(id(self))
 
-    def save(self):
-        """ Save placement state, to be re-read by
+    def set_autosave_filename(self, filename):
+        self.autosave_filename = filename
+
+    def do_autosave(self):
+        if not self.autosave_filename:
+            return
+        with open(self.autosave_filename, 'w') as af:
+            self.save(af)
+
+    def save(self, f):
+        """f is a file-like object to save state to, to be re-read by
         load(). No guarantees made about the contents of the file.
         """
         flat_assignments = {}
@@ -139,12 +150,11 @@ class PlacementController:
 
             flat_assignments[iid] = dict(constraints=constraints,
                                          assignments=flat_ad)
-        self.config.setopt('placements', flat_assignments)
+        yaml.dump(flat_assignments, f)
 
-    def load(self):
-        """
-        Load assignments from config placements replaces current
-        assignments.
+    def load(self, f):
+        """Load assignments from file object written to by save().
+        replaces current assignments.
         """
         def find_charm_class(name):
             for cc in self.charm_classes():
@@ -154,7 +164,7 @@ class PlacementController:
                         "matching saved charm name {}".format(name))
             return None
 
-        file_assignments = self.config.getopt('placements')
+        file_assignments = yaml.load(f)
         new_assignments = defaultdict(lambda: defaultdict(list))
         for iid, d in file_assignments.items():
             if self.maas_state is None and \
@@ -176,7 +186,7 @@ class PlacementController:
 
     def update_and_save(self):
         self.reset_unplaced()
-        self.save()
+        self.do_autosave()
 
     def machines(self, include_placeholders=True):
         """Returns all machines known to the controller.
