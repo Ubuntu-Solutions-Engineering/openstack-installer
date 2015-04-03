@@ -78,7 +78,6 @@ class Controller:
         PegasusGUI only.
         """
         interval = 1
-
         if self.config.getopt('current_state') == ControllerState.PLACEMENT:
             self.ui.render_placement_view(self.placement_controller,
                                           self.loop,
@@ -154,8 +153,9 @@ class Controller:
         self.placement_controller = PlacementController(
             self.maas_state, self.config)
 
-        if self.config.getopt('placements'):
-            self.placement_controller.load()
+        if path.exists(self.config.placements_filename):
+            with open(self.config.placements_filename, 'r') as pf:
+                self.placement_controller.load(pf)
             self.ui.status_info_message("Loaded placements from file.")
 
         else:
@@ -166,7 +166,9 @@ class Controller:
 
             self.placement_controller.set_all_assignments(def_assignments)
 
-        self.placement_controller.save()
+        pfn = self.config.placements_filename
+        self.placement_controller.set_autosave_filename(pfn)
+        self.placement_controller.do_autosave()
 
         if self.config.is_single():
             if self.config.getopt('headless'):
@@ -234,7 +236,6 @@ class Controller:
         self.begin_deployment()
 
     def begin_deployment(self):
-        log.debug("begin_deployment")
         if self.config.is_multi():
 
             # now all machines are added
