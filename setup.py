@@ -69,6 +69,6 @@ setup(name='openstack',
       data_files=[
           ('share/man/man1', ['man/en/openstack-status.1',
                               'man/en/openstack-install.1',
-                              'man/en/openstack-juju.1'])
-      ],
-      )
+                              'man/en/openstack-juju.1']),
+          ('share/man/man5', ['man/en/openstack-config.5'])
+      ])

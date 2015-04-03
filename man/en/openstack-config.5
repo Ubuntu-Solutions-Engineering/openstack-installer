@@ -1,0 +1,113 @@
+.TH "" "" "" "" ""
+.SH NAME
+.PP
+openstack\-config.yaml \- Ubuntu OpenStack Installer Configuration
+options
+.SH SYNOPSIS
+.PP
+usage: ~/.cloud\-install/config.yaml
+.SH DESCRIPTION
+.PP
+Ubuntu OpenStack Installer configuration file
+.SH OPTIONS
+.PP
+\f[B]debug\f[]
+.IP
+.nf
+\f[C]
+Enable\ debugging\ and\ provide\ a\ pdb\ post\ mortem\ shell\ if\ any\ exceptions\ arise.
+\f[]
+.fi
+.PP
+\f[B]http_proxy\f[]
+.IP
+.nf
+\f[C]
+Enable\ HTTP\ proxy\ for\ Juju\ to\ utilize
+\f[]
+.fi
+.PP
+\f[B]https_proxy\f[]
+.IP
+.nf
+\f[C]
+Enable\ HTTPS\ proxy\ for\ Juju\ to\ utilize
+\f[]
+.fi
+.PP
+\f[B]apt_mirror\f[]
+.IP
+.nf
+\f[C]
+Alternate\ location\ of\ Ubuntu\ archives
+\f[]
+.fi
+.PP
+\f[B]openstack_release\f[]
+.IP
+.nf
+\f[C]
+Set\ OpenStack\ release\ to\ be\ deployed,\ default:\ juno
+\f[]
+.fi
+.PP
+\f[B]openstack_password\f[]
+.IP
+.nf
+\f[C]
+A\ password\ used\ throughout\ the\ OpenStack\ deployment
+\f[]
+.fi
+.PP
+\f[B]headless\f[]
+.IP
+.nf
+\f[C]
+Do\ not\ use\ the\ GUI\ interface,\ default:\ false
+\f[]
+.fi
+.PP
+\f[B]install_type\f[]
+.IP
+.nf
+\f[C]
+Type\ of\ installation,\ choices:\ Single,\ Multi,\ Landscape\ OpenStack\ Autopilot
+\f[]
+.fi
+.PP
+\f[B]storage_backend\f[]
+.IP
+.nf
+\f[C]
+Type\ of\ storage\ to\ use,\ default:\ none,\ choices:\ ceph,\ swift,\ none
+\f[]
+.fi
+.PP
+\f[B]upstream_deb\f[]
+.IP
+.nf
+\f[C]
+Provide\ an\ upstream\ openstack\ debian\ package,\ mostly\ used\ during\ development\ to
+quickly\ test\ changes\ in\ a\ Single\ installation.
+\f[]
+.fi
+.PP
+\f[B]extra_ppa\f[]
+.IP
+.nf
+\f[C]
+Provide\ additional\ ppa\[aq]s\ for\ the\ installer\ to\ look\ for\ when\ installing\ package
+dependencies.
+\f[]
+.fi
+.SH EXAMPLE
+.IP
+.nf
+\f[C]
+\-\-\-
+debug:\ false
+headless:\ true
+install_type:\ Single
+openstack_password:\ passw0rd
+\f[]
+.fi
