@@ -48,6 +48,7 @@ import shutil
 import subprocess
 import json
 import yaml
+import requests
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -976,3 +977,16 @@ def macgen():
            random.randint(0x00, 0xff),
            random.randint(0x00, 0xff)]
     return ':'.join(map(lambda x: "%02x" % x, mac))
+
+
+def download_url(url, output_file):
+    """ Downloads contents from a URL
+    :param str url: HTTP resource
+    :param str output_file: path to store downloaded contents
+    """
+    res = requests.get(url)
+    if res.ok:
+        spew(output_file, res.content.decode('utf-8'))
+    else:
+        raise UtilsException("Exception downloading {}:{}".format(
+            url, res.content))

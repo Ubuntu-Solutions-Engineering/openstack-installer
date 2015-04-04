@@ -1,5 +1,4 @@
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -745,6 +744,8 @@ class LandscapeInstallFinal:
 
     """ Final phase of landscape install
     """
+    BUNDLE_URL = ("https://api.jujucharms.com/charmstore/v4/"
+                  "~landscape/bundle/landscape-dense-maas/archive/bundle.yaml")
 
     def __init__(self, multi_installer, display_controller,
                  config, loop):
@@ -791,6 +792,14 @@ class LandscapeInstallFinal:
         # Set remaining permissions
         self.set_perms()
 
+        try:
+            self.display_controller.status_info_message(
+                "Downloading latest Landscape Autopilot bundle")
+            utils.download_url(self.BUNDLE_URL, self.lscape_yaml_path)
+        except Exception as e:
+            log.exception(e)
+            raise e
+
         self.multi_installer.tasker.start_task("Deploying Landscape")
         self.run_deployer()
 
@@ -813,11 +822,15 @@ class LandscapeInstallFinal:
     def run_deployer(self):
         # Prep deployer template for landscape
         lscape_password = utils.random_password()
-        lscape_env = utils.load_template('landscape-deployments.yaml')
-        lscape_env_modified = lscape_env.render(
-            landscape_password=lscape_password.strip())
+        password_re = re.compile(
+            '(change-me)')
+        lscape_env = utils.slurp(self.lscape_yaml_path)
+        lscape_env_re = password_re.sub(
+            lscape_password, str(lscape_env))
+        lscape_env_modified = {'landscape-dense-maas': yaml.load(
+            lscape_env_re)}
         utils.spew(self.lscape_yaml_path,
-                   lscape_env_modified)
+                   yaml.dump(lscape_env_modified))
 
         out = utils.get_command_output(
             "{0} juju-deployer -WdvL -w 180 -c {1} "
