@@ -668,7 +668,7 @@ class Controller:
         else:
             self.ui.status_info_message("Welcome")
             self.initialize()
-            self.loop.register_callback('add_charm', self.add_charm)
+            self.loop.register_callback('add_services', self.add_charm)
             self.loop.register_callback('refresh_display', self.update)
             self.loop.set_alarm_in(0, self.update)
             self.loop.run()

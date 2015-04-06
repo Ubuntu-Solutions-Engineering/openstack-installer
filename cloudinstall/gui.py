@@ -29,10 +29,8 @@ import random
 import urwid
 from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
                    ListBox, Filler, BoxAdapter, Frame, WidgetWrap,
-                   RadioButton, IntEdit, Padding, Pile,
-                   SimpleListWalker, Divider, Button,
+                   Padding, Pile)
 
-                   signals, emit_signal, connect_signal)
 from cloudinstall.task import Tasker
 from cloudinstall import utils
 from cloudinstall.status import get_sync_status
@@ -48,6 +46,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.machinewait import MachineWaitView
 from cloudinstall.placement.ui import PlacementView
+from cloudinstall.placement.ui.add_services_dialog import AddServicesDialog
 
 log = logging.getLogger('cloudinstall.gui')
 sys.excepthook = utils.global_exchandler
@@ -61,97 +60,6 @@ IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['output'])
 LOCK_TIME = 120
 
 padding = functools.partial(Padding, left=2, right=2)
-
-
-class AddCharmDialog(WidgetWrap):
-
-    """ Adding charm dialog
-
-    :param list charms: list of charms that can be added
-    :param cb: callback routine to process submit/cancel actions
-    :returns: input from dialog
-    """
-
-    __metaclass__ = signals.MetaSignals
-    signals = ['done']
-
-    def __init__(self, charm_classes, cb, **kwargs):
-        self.charms = charm_classes
-        self.cb = cb
-        self.count_editor = None
-        self.boxes = []
-
-        w = self._build_widget()
-        w = AttrWrap(w, "dialog")
-
-        # Handle signals from add charm
-        connect_signal(self, 'done', cb)
-        super().__init__(w)
-
-    def submit(self):
-        """ Handle OK submit """
-        selected = [r for r in self.boxes if
-                    r is not self.count_editor and
-                    r.get_state()][0]
-        _charm_to_deploy = selected.label
-        n = self.count_editor.value()
-        self.emit_done_signal(n, _charm_to_deploy)
-
-    def cancel(self):
-        """ Handle cancel action """
-        self.emit_done_signal()
-
-    def emit_done_signal(self, *args):
-        emit_signal(self, 'done', *args)
-
-    def _build_widget(self, **kwargs):
-        # Charm selections
-        num_of_items, charm_sel = self._insert_charm_selections()
-
-        # Control buttons
-        buttons = self._insert_buttons()
-
-        return LineBox(
-            BoxAdapter(
-                ListBox([charm_sel, Divider(), buttons]),
-                height=num_of_items + 2),
-            title="Add unit")
-
-    def _insert_charm_selections(self):
-        first_index = 0
-        bgroup = []
-        for i, charm_class in enumerate(self.charms):
-            charm = charm_class
-            if charm.name() and not first_index:
-                first_index = i
-            r = RadioButton(bgroup, charm.name())
-            r.text_label = charm.name()
-            self.boxes.append(r)
-
-        # Add input widget for specifying NumUnits
-        self.count_editor = IntEdit("Number of units to add: ", 1)
-        self.boxes.append(self.count_editor)
-        wrapped_boxes = self._wrap_focus(self.boxes)
-        items = ListBox(SimpleListWalker(wrapped_boxes))
-        items.set_focus(first_index)
-        return (len(self.boxes), BoxAdapter(items, len(self.boxes)))
-
-    def _insert_buttons(self):
-        bs = [Button("Ok", self.yes), Button("Cancel", self.no)]
-        wrapped_buttons = self._wrap_focus(bs)
-        return Columns(wrapped_buttons)
-
-    def yes(self, button):
-        self.submit()
-
-    def no(self, button):
-        self.cancel()
-
-    def _wrap_focus(self, widgets, unfocused=None):
-        try:
-            return [AttrWrap(w, "focus", 'radio focus') for w in widgets]
-        except TypeError:
-            return AttrWrap(widgets, "focus", 'radio focus')
 
 
 class Banner(ScrollableWidgetWrap):
@@ -462,7 +370,7 @@ class Header(WidgetWrap):
 
     def update(self):
         if self.show_add_units:
-            add_unit_string = '(A)dd units \N{BULLET}'
+            add_unit_string = '(A)dd Services \N{BULLET}'
         else:
             add_unit_string = ''
         tw = AttrWrap(Text(add_unit_string + ' (H)elp \N{BULLET} '
@@ -723,11 +631,11 @@ class PegasusGUI(WidgetWrap):
     def hide_show_landscape_input(self):
         self.hide_widget_on_top()
 
-    def show_add_charm_info(self, charms, cb):
-        widget = AddCharmDialog(charms, cb)
+    def show_add_services_dialog(self, cb):
+        widget = AddServicesDialog(cb)
         self.show_widget_on_top(widget, width=50, height=10)
 
-    def hide_add_charm_info(self):
+    def hide_add_services_dialog(self):
         self.hide_widget_on_top()
 
     def set_pending_deploys(self, pending_charms):
