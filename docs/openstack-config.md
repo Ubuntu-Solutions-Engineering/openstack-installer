@@ -1,10 +1,10 @@
 # NAME
 
-openstack-config.yaml - Ubuntu OpenStack Installer Configuration options
+config.yaml - Ubuntu OpenStack Installer Configuration options
 
 # SYNOPSIS
 
-usage: ~/.cloud-install/config.yaml
+usage: sudo openstack-install -c config.yaml
 
 # DESCRIPTION
 
