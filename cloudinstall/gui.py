@@ -521,7 +521,7 @@ class StatusBar(WidgetWrap):
         if not ip:
             text += "(pending)"
         else:
-            text += "http://{}/horizon l:{} p:{}".format(
+            text += "https://{}/horizon l:{} p:{}".format(
                 ip, user, password)
         return self._horizon_url.set_text(text)
 
