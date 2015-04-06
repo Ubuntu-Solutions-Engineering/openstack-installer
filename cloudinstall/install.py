@@ -77,8 +77,9 @@ class InstallController:
         maas_apikey = creds['maas_apikey'].value
 
         if maas_server and maas_apikey:
-            if maas_server.startswith("http://"):
-                self.ui.flash('MAAS Server expects and IP not a URL')
+            if maas_server.startswith("http"):
+                self.ui.flash('Please enter the MAAS server\'s '
+                              'IP address only, not a full URL')
                 return self.ui.select_maas_type(self._save_maas_creds)
             self.config.setopt('maascreds', dict(api_host=maas_server,
                                                  api_key=maas_apikey))
