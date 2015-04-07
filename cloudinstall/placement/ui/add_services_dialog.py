@@ -45,26 +45,20 @@ class AddServicesDialog(WidgetWrap):
         self.count_editor = None
         self.boxes = []
 
-        w = self._build_widget()
+        w = self.build_widget()
         w = AttrWrap(w, "dialog")
 
         super().__init__(w)
 
-    def submit(self):
-        """ Handle OK submit """
-        selected = [r for r in self.boxes if
-                    r is not self.count_editor and
-                    r.get_state()][0]
-        _charm_to_deploy = selected.label
-        n = self.count_editor.value()
-        self.cb(n, _charm_to_deploy)
+    def do_deploy(self):
+        self.cb()  # TODO
 
     def cancel(self):
         """ Handle cancel action """
-        self.cb()
+        self.cb()  # TODO
 
-    def _build_widget(self, **kwargs):
-        # Charm selections
+    def build_widget(self, **kwargs):
+
         num_of_items, charm_sel = self._insert_charm_selections()
 
         # Control buttons

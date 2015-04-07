@@ -300,7 +300,7 @@ class Controller:
         self.maas_state.invalidate_nodes_cache()
 
         needed = set([m.instance_id for m in
-                      self.placement_controller.machines_used()])
+                      self.placement_controller.machines_pending()])
         ready = set([m.instance_id for m in
                      self.maas_state.machines(MaasMachineStatus.READY)])
         allocated = set([m.instance_id for m in
@@ -324,7 +324,7 @@ class Controller:
         juju_ids = [jm.instance_id for jm in self.juju_state.machines()]
 
         machine_params = []
-        for maas_machine in self.placement_controller.machines_used():
+        for maas_machine in self.placement_controller.machines_pending():
             if maas_machine.instance_id in juju_ids:
                 # ignore machines that are already added to juju
                 continue
@@ -342,7 +342,7 @@ class Controller:
 
     def all_juju_machines_started(self):
         self.juju_state.invalidate_status_cache()
-        n_needed = len(self.placement_controller.machines_used())
+        n_needed = len(self.placement_controller.machines_pending())
         n_allocated = len([jm for jm in self.juju_state.machines()
                            if jm.agent_state == 'started'])
         return n_allocated >= n_needed
@@ -366,7 +366,7 @@ class Controller:
             else:
                 return d['Machine']
 
-        for machine in self.placement_controller.machines_used():
+        for machine in self.placement_controller.machines_pending():
             if machine.instance_id in self.juju_m_idmap:
                 machine.machine_id = self.juju_m_idmap[machine.instance_id]
                 log.debug("machine instance_id {} already exists as #{}, "
@@ -477,10 +477,10 @@ class Controller:
                             ui=self.ui,
                             config=self.config)
 
-        placements = self.placement_controller.machines_for_charm(charm_class)
+        asts = self.placement_controller.get_assignments(charm_class)
         errs = []
         first_deploy = True
-        for atype, ml in placements.items():
+        for atype, ml in asts.items():
             for machine in ml:
                 mspec = self.get_machine_spec(machine, atype)
                 if mspec is None:
