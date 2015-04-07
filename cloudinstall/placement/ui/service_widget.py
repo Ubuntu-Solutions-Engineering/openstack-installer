@@ -93,18 +93,22 @@ class ServiceWidget(WidgetWrap):
         return Padding(p, left=2, right=2)
 
     def update(self):
-        md = self.controller.machines_for_charm(self.charm_class)
         mstr = [""]
 
         state, cons, deps = self.controller.get_charm_state(self.charm_class)
 
         if state == CharmState.REQUIRED:
-            np = self.controller.machine_count_for_charm(self.charm_class)
+            p = self.controller.get_assignments(self.charm_class)
+            d = self.controller.get_deployments(self.charm_class)
             nr = self.charm_class.required_num_units()
-            info_str = " ({} of {} placed)".format(np, nr)
+            info_str = " ({} of {} placed".format(len(p), nr)
+            if len(d) > 0:
+                info_str += ", {} deployed)".format(len(d))
+            else:
+                info_str += ")"
 
             # Add hint to explain why a dep showed up in required
-            if np == 0 and len(deps) > 0:
+            if len(p) == 0 and len(deps) > 0:
                 dep_str = ", ".join([c.display_name for c in deps])
                 info_str += " - required by {}".format(dep_str)
 
@@ -120,7 +124,8 @@ class ServiceWidget(WidgetWrap):
             self.title_markup[1] = ""
             self.charm_info_widget.set_text(self.title_markup)
 
-        for atype, ml in md.items():
+        pd = self.controller.get_assignments(self.charm_class)
+        for atype, ml in pd.items():
             n = len(ml)
             mstr.append(('label', "    {} ({}): ".format(atype.name, n)))
             if len(ml) == 0:

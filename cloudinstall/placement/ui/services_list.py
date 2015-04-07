@@ -78,9 +78,10 @@ class ServicesList(WidgetWrap):
                     continue
 
             if self.unplaced_only:
-                n_units = self.controller.machine_count_for_charm(cc)
-                if n_units == cc.required_num_units() \
-                   and cc not in self.controller.unplaced_services:
+                n = (self.controller.placement_machine_count_for_charm(cc)
+                     + self.controller.deployment_machine_count_for_charm(cc))
+                if n == cc.required_num_units() \
+                   and self.controller.is_placed_or_deployed(cc):
                     self.remove_service_widget(cc)
                     continue
 

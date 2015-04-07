@@ -47,7 +47,7 @@ class ServiceChooser(WidgetWrap):
                                             show_hardware=True)
 
         def show_remove_p(cc):
-            md = self.controller.machines_for_charm(cc)
+            md = self.controller.get_assignments(cc)
             for atype, ms in md.items():
                 hostnames = [m.hostname for m in ms]
                 if self.machine.hostname in hostnames:

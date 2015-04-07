@@ -115,8 +115,9 @@ class PlacementController:
                                                   'Subordinate Charms')
         # assignments is {id: {atype: [charm class]}}
         self.assignments = defaultdict(lambda: defaultdict(list))
+        self.deployments = defaultdict(lambda: defaultdict(list))
         self.autosave_filename = None
-        self.reset_unplaced()
+        self.reset_placed_deployed()
 
     def __repr__(self):
         return "<PlacementController {}>".format(id(self))
@@ -134,22 +135,32 @@ class PlacementController:
         """f is a file-like object to save state to, to be re-read by
         load(). No guarantees made about the contents of the file.
         """
-        flat_assignments = {}
+        flat_assignments = defaultdict(dict)
         for iid, ad in self.assignments.items():
-            constraints = {}
-            if self.maas_state is None:
-                machine = next((m for m in self.machines() if
-                                m.instance_id == iid), None)
-                if machine:
-                    constraints = machine.constraints
 
             flat_ad = {}
             for atype, al in ad.items():
                 flat_al = [cc.charm_name for cc in al]
                 flat_ad[atype.name] = flat_al
 
-            flat_assignments[iid] = dict(constraints=constraints,
-                                         assignments=flat_ad)
+            flat_assignments[iid]['assignments'] = flat_ad
+
+        for iid, dd in self.deployments.items():
+            flat_dd = {}
+            for atype, dl in dd.items():
+                flat_dl = [cc.charm_name for cc in dl]
+                flat_dd[atype.name] = flat_dl
+            flat_assignments[iid]['deployments'] = flat_dd
+
+        for iid in flat_assignments.keys():
+            constraints = {}
+            if self.maas_state is None:
+                machine = next((m for m in self.machines() if
+                                m.instance_id == iid), None)
+                if machine:
+                    constraints = machine.constraints
+                    flat_assignments[iid]['constraints'] = constraints
+
         yaml.dump(flat_assignments, f)
 
     def load(self, f):
@@ -166,6 +177,7 @@ class PlacementController:
 
         file_assignments = yaml.load(f)
         new_assignments = defaultdict(lambda: defaultdict(list))
+        new_deployments = defaultdict(lambda: defaultdict(list))
         for iid, d in file_assignments.items():
             if self.maas_state is None and \
                iid != self.sub_placeholder.instance_id:
@@ -180,12 +192,24 @@ class PlacementController:
                 at = AssignmentType.__members__[atypestr]
                 new_assignments[iid][at] = new_al
 
+            if 'deployments' not in d:
+                continue
+
+            for atypestr, dl in d['deployments'].items():
+                new_dl = [find_charm_class(ccname)
+                          for ccname in dl]
+                new_dl = [x for x in new_dl if x is not None]
+                at = AssignmentType.__members__[atypestr]
+                new_deployments[iid][at] = new_dl
+
         self.assignments.clear()
         self.assignments.update(new_assignments)
-        self.reset_unplaced()
+        self.deployments.clear()
+        self.deployments.update(new_deployments)
+        self.reset_placed_deployed()
 
     def update_and_save(self):
-        self.reset_unplaced()
+        self.reset_placed_deployed()
         self.do_autosave()
 
     def machines(self, include_placeholders=True):
@@ -204,11 +228,13 @@ class PlacementController:
         else:
             return ms
 
-    def machines_used(self, include_placeholders=False):
-        """Returns a list of machines that have charms placed on them.
+    def machines_pending(self, include_placeholders=False):
+        """Returns a list of machines that have charms placed on them which
+        are not yet deployed.
 
         Excludes placeholder machines by default, so this can be used
         to e.g. get the number of real machines to wait for.
+
         """
         ms = []
         for m in self.machines(include_placeholders=include_placeholders):
@@ -227,9 +253,15 @@ class PlacementController:
         return cl
 
     def placed_charm_classes(self):
-        "Returns a deduplicated list of all charms that have a placement"
-        return [cc for cc in self.charm_classes()
-                if cc not in self.unplaced_services]
+        """Returns a deduplicated list of all charms that have a placement,
+        but are not yet deployed.
+        """
+        return list(self.placed_services)
+
+    def deployed_charm_classes(self):
+        """Returns a deduplicated list of all charms that have been deployed.
+        """
+        return list(self.deployed_services)
 
     def assign(self, machine, charm_class, atype):
         if not charm_class.allow_multi_units:
@@ -241,13 +273,17 @@ class PlacementController:
         self.assignments[machine.instance_id][atype].append(charm_class)
         self.update_and_save()
 
-    def machines_for_charm(self, charm_class):
-        """ returns assignments for a given charm
-        returns {assignment_type : [machines]}
-        """
+    def mark_deployed(self, machine, charm_class, atype):
+        self.deployments[machine.instance_id][atype].append(charm_class)
+        self.assignments[machine.instance_id][atype].remove(charm_class)
+        self.update_and_save()
+
+    def _get_machines_by_atype(self, a_dict, charm_class):
+        "Helper for get_assignments and get_deployments"
         all_machines = self.machines()
+
         machines_by_atype = defaultdict(list)
-        for m_id, d in self.assignments.items():
+        for m_id, d in a_dict.items():
             for atype, assignment_list in d.items():
                 for a in assignment_list:
                     if a == charm_class:
@@ -256,6 +292,22 @@ class PlacementController:
                         if m:
                             machines_by_atype[atype].append(m)
         return machines_by_atype
+
+    def get_assignments(self, charm_class):
+        """returns assignments for a given charm
+
+        returns a dict like {assignment_type : [machines]}
+        """
+        return self._get_machines_by_atype(self.assignments,
+                                           charm_class)
+
+    def get_deployments(self, charm_class):
+        """returns deployments for a given charm
+
+        returns a dict like {assignment_type : [machines]}
+        """
+        return self._get_machines_by_atype(self.deployments,
+                                           charm_class)
 
     def clear_all_assignments(self):
         self.assignments = defaultdict(lambda: defaultdict(list))
@@ -286,6 +338,12 @@ class PlacementController:
         """
         return self.assignments[m.instance_id]
 
+    def deployments_for_machine(self, m):
+        """Returns deployments
+        {atype: [charm_class]}
+        """
+        return self.deployments[m.instance_id]
+
     def is_assigned(self, charm_class, machine):
         assignment_dict = self.assignments[machine.instance_id]
         for atype, charm_classes in assignment_dict.items():
@@ -297,16 +355,29 @@ class PlacementController:
         self.assignments = assignments
         self.update_and_save()
 
-    def reset_unplaced(self):
-        self.unplaced_services = set()
+    def reset_placed_deployed(self):
+        self.placed_services = set()
+        self.deployed_services = set()
         for cc in self.charm_classes():
-            md = self.machines_for_charm(cc)
+            ad = self.get_assignments(cc)
             is_placed = False
-            for atype, ml in md.items():
-                if len(ml) > 0:
+            for atype, al in ad.items():
+                if len(al) > 0:
                     is_placed = True
-            if not is_placed:
-                self.unplaced_services.add(cc)
+            if is_placed:
+                self.placed_services.add(cc)
+
+            dd = self.get_deployments(cc)
+            is_deployed = False
+            for atype, dl in dd.items():
+                if len(dl) > 0:
+                    is_deployed = True
+            if is_deployed:
+                self.deployed_services.add(cc)
+
+    def is_placed_or_deployed(self, charm):
+        return (charm in self.placed_services or
+                charm in self.deployed_services)
 
     def get_charm_state(self, charm):
         """Returns tuple of charm state:
@@ -342,9 +413,10 @@ class PlacementController:
         required_charms = [c for c in self.charm_classes()
                            if c.is_core or
                            c.charm_name in self.selected_storage_charms()]
-        placed_or_required = self.placed_charm_classes() + required_charms
+        planned_or_deployed = (self.placed_charm_classes() + required_charms
+                               + self.deployed_charm_classes())
 
-        for other_charm in placed_or_required:
+        for other_charm in planned_or_deployed:
             if conflicts_with(other_charm):
                 state = CharmState.CONFLICTED
                 conflicting.add(other_charm)
@@ -363,7 +435,8 @@ class PlacementController:
                       " - requires {} units but does not allow "
                       "multi units.".format(charm.charm_name, n_required))
 
-        n_units = self.machine_count_for_charm(charm)
+        n_units = (self.placement_machine_count_for_charm(charm)
+                   + self.deployment_machine_count_for_charm(charm))
 
         if state == CharmState.OPTIONAL and \
            n_units > 0 and n_units < n_required:
@@ -373,17 +446,27 @@ class PlacementController:
 
         return (state, list(conflicting), list(depending))
 
+    def unplaced_undeployed_services(self):
+        all_charms = set(self.charm_classes())
+        return (all_charms -
+                (self.placed_services.union(self.deployed_services)))
+
     def can_deploy(self):
-        unplaced_requireds = [cc for cc in self.unplaced_services
+        unplaced_requireds = [cc for cc in self.unplaced_undeployed_services()
                               if self.get_charm_state(cc)[0] ==
                               CharmState.REQUIRED]
 
         return len(unplaced_requireds) == 0
 
-    def machine_count_for_charm(self, cc):
+    def placement_machine_count_for_charm(self, cc):
         """Returns the total number of placements of any type for a given
         charm."""
-        return sum([len(al) for al in self.machines_for_charm(cc).values()])
+        return sum([len(al) for al in self.get_assignments(cc).values()])
+
+    def deployment_machine_count_for_charm(self, cc):
+        """Returns the total number of deployments of any type for a given
+        charm."""
+        return sum([len(al) for al in self.get_deployments(cc).values()])
 
     def autoplace_unplaced_services(self):
         """Attempt to find machines for all required unplaced services using
