@@ -531,7 +531,7 @@ class StatusBar(WidgetWrap):
         if not ip:
             text += "(pending)"
         else:
-            text += "http://{}/".format(ip)
+            text += "https://{}/".format(ip)
         return self._jujugui_url.set_text(text)
 
     def message(self, text):
