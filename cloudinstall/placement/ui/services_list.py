@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from urwid import (AttrMap, Divider, Padding, Pile, Text,
                    WidgetWrap)
 
@@ -20,6 +22,7 @@ from cloudinstall.maas import satisfies
 from cloudinstall.state import CharmState
 from cloudinstall.placement.ui.service_widget import ServiceWidget
 
+log = logging.getLogger('cloudinstall.placement.ui')
 
 class ServicesList(WidgetWrap):
 
