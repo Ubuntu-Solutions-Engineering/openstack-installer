@@ -19,6 +19,9 @@ import sys
 import cloudinstall.utils as utils
 from cloudinstall.state import ControllerState
 
+import logging
+
+log = logging.getLogger('cloudinstall.ev')
 
 class EventLoop:
 
@@ -109,7 +112,11 @@ class EventLoop:
         :param func cb: (optional) callback
         """
         if not self.config.getopt('headless'):
-            self.loop.run()
+            try:
+                self.loop.run()
+            except:
+                log.exception("Exception in ev.run():")
+                raise
         return
 
     def __repr__(self):
