@@ -27,9 +27,12 @@ log = logging.getLogger('cloudinstall.placement')
 
 
 class AssignmentType(Enum):
+    # both are equivalent to not specifying a type to juju:
+    DEFAULT = 1
     BareMetal = 1
     KVM = 2
     LXC = 3
+
 
 DEFAULT_SHARED_ASSIGNMENT_TYPE = AssignmentType.LXC
 
@@ -105,6 +108,11 @@ class PlacementError(Exception):
 class PlacementController:
 
     """Keeps state of current machines and their assigned services.
+
+    Maintains two placeholder machines, one for subordinate charms and
+    one for "Juju Default" that are both the equivalent of not
+    specifying a machine to deploy to when invoking Juju.
+
     """
 
     def __init__(self, maas_state=None, config=None):
@@ -113,11 +121,13 @@ class PlacementController:
         self._machines = []
         self.sub_placeholder = PlaceholderMachine('_subordinates',
                                                   'Subordinate Charms')
+        self.def_placeholder = PlaceholderMachine('_default',
+                                                  'Juju Default')
         # assignments is {id: {atype: [charm class]}}
         self.assignments = defaultdict(lambda: defaultdict(list))
         self.deployments = defaultdict(lambda: defaultdict(list))
         self.autosave_filename = None
-        self.reset_placed_deployed()
+        self.reset_assigned_deployed()
 
     def __repr__(self):
         return "<PlacementController {}>".format(id(self))
@@ -180,22 +190,22 @@ class PlacementController:
         new_deployments = defaultdict(lambda: defaultdict(list))
         for iid, d in file_assignments.items():
             if self.maas_state is None and \
-               iid != self.sub_placeholder.instance_id:
-                constraints = d['constraints']
+               not self.is_placeholder(iid):
+                constraints = d.get('constraints', {})
                 pm = PlaceholderMachine(iid, iid,
                                         constraints)
                 self._machines.append(pm)
-            for atypestr, al in d['assignments'].items():
+
+            ad = d.get('assignments', {})
+            for atypestr, al in ad.items():
                 new_al = [find_charm_class(ccname)
                           for ccname in al]
                 new_al = [x for x in new_al if x is not None]
                 at = AssignmentType.__members__[atypestr]
                 new_assignments[iid][at] = new_al
 
-            if 'deployments' not in d:
-                continue
-
-            for atypestr, dl in d['deployments'].items():
+            dd = d.get('deployments', {})
+            for atypestr, dl in dd.items():
                 new_dl = [find_charm_class(ccname)
                           for ccname in dl]
                 new_dl = [x for x in new_dl if x is not None]
@@ -206,11 +216,15 @@ class PlacementController:
         self.assignments.update(new_assignments)
         self.deployments.clear()
         self.deployments.update(new_deployments)
-        self.reset_placed_deployed()
+        self.reset_assigned_deployed()
 
     def update_and_save(self):
-        self.reset_placed_deployed()
+        self.reset_assigned_deployed()
         self.do_autosave()
+
+    def is_placeholder(self, mid):
+        return mid in [self.sub_placeholder.instance_id,
+                       self.def_placeholder.instance_id]
 
     def machines(self, include_placeholders=True):
         """Returns all machines known to the controller.
@@ -224,12 +238,12 @@ class PlacementController:
             ms = self._machines
 
         if include_placeholders:
-            return ms + [self.sub_placeholder]
+            return ms + [self.sub_placeholder, self.def_placeholder]
         else:
             return ms
 
     def machines_pending(self, include_placeholders=False):
-        """Returns a list of machines that have charms placed on them which
+        """Returns a list of machines that have charms assigned to them which
         are not yet deployed.
 
         Excludes placeholder machines by default, so this can be used
@@ -252,11 +266,12 @@ class PlacementController:
 
         return cl
 
-    def placed_charm_classes(self):
-        """Returns a deduplicated list of all charms that have a placement,
-        but are not yet deployed.
+    def assigned_charm_classes(self):
+        """Returns a deduplicated list of all charms that have a placement
+        assigned, but are not yet deployed.
+
         """
-        return list(self.placed_services)
+        return list(self.assigned_services)
 
     def deployed_charm_classes(self):
         """Returns a deduplicated list of all charms that have been deployed.
@@ -344,9 +359,16 @@ class PlacementController:
         """
         return self.deployments[m.instance_id]
 
-    def is_assigned(self, charm_class, machine):
+    def is_assigned_to(self, charm_class, machine):
         assignment_dict = self.assignments[machine.instance_id]
         for atype, charm_classes in assignment_dict.items():
+            if charm_class in charm_classes:
+                return True
+        return False
+
+    def is_deployed_to(self, charm_class, machine):
+        dd = self.deployments[machine.instance_id]
+        for atype, charm_classes in dd.items():
             if charm_class in charm_classes:
                 return True
         return False
@@ -355,17 +377,17 @@ class PlacementController:
         self.assignments = assignments
         self.update_and_save()
 
-    def reset_placed_deployed(self):
-        self.placed_services = set()
+    def reset_assigned_deployed(self):
+        self.assigned_services = set()
         self.deployed_services = set()
         for cc in self.charm_classes():
             ad = self.get_assignments(cc)
-            is_placed = False
+            is_assigned = False
             for atype, al in ad.items():
                 if len(al) > 0:
-                    is_placed = True
-            if is_placed:
-                self.placed_services.add(cc)
+                    is_assigned = True
+            if is_assigned:
+                self.assigned_services.add(cc)
 
             dd = self.get_deployments(cc)
             is_deployed = False
@@ -375,9 +397,11 @@ class PlacementController:
             if is_deployed:
                 self.deployed_services.add(cc)
 
-    def is_placed_or_deployed(self, charm):
-        return (charm in self.placed_services or
-                charm in self.deployed_services)
+    def is_assigned(self, charm):
+        return charm in self.assigned_services
+
+    def is_deployed(self, charm):
+        return charm in self.deployed_services
 
     def get_charm_state(self, charm):
         """Returns tuple of charm state:
@@ -385,15 +409,15 @@ class PlacementController:
 
         state is a CharmState:
 
-        - REQUIRED means that the charm still must be placed before
+        - REQUIRED means that the charm still must be assigned before
         deploying is OK.
 
         IF a charm dependency forced this, then the other charm will
         be in 'deps'.  'deps' is NOT just a list of all charms that
         depend on the given charm.
 
-        - CONFLICTED means that it can't be placed until a conflicting
-        charm is unplaced.  In this case, the conflicting charm is in
+        - CONFLICTED means that it can't be assigned until a conflicting
+        charm is unassigned.  In this case, the conflicting charm is in
         'cons'.
 
         - OPTIONAL means that it is ok either way. deps and cons are unused
@@ -413,7 +437,7 @@ class PlacementController:
         required_charms = [c for c in self.charm_classes()
                            if c.is_core or
                            c.charm_name in self.selected_storage_charms()]
-        planned_or_deployed = (self.placed_charm_classes() + required_charms
+        planned_or_deployed = (self.assigned_charm_classes() + required_charms
                                + self.deployed_charm_classes())
 
         for other_charm in planned_or_deployed:
@@ -435,7 +459,7 @@ class PlacementController:
                       " - requires {} units but does not allow "
                       "multi units.".format(charm.charm_name, n_required))
 
-        n_units = (self.placement_machine_count_for_charm(charm)
+        n_units = (self.assignment_machine_count_for_charm(charm)
                    + self.deployment_machine_count_for_charm(charm))
 
         if state == CharmState.OPTIONAL and \
@@ -446,20 +470,21 @@ class PlacementController:
 
         return (state, list(conflicting), list(depending))
 
-    def unplaced_undeployed_services(self):
+    def unassigned_undeployed_services(self):
         all_charms = set(self.charm_classes())
         return (all_charms -
-                (self.placed_services.union(self.deployed_services)))
+                (self.assigned_services.union(self.deployed_services)))
 
     def can_deploy(self):
-        unplaced_requireds = [cc for cc in self.unplaced_undeployed_services()
-                              if self.get_charm_state(cc)[0] ==
-                              CharmState.REQUIRED]
+        unassigned_requireds = [cc for cc in
+                                self.unassigned_undeployed_services()
+                                if self.get_charm_state(cc)[0] ==
+                                CharmState.REQUIRED]
 
-        return len(unplaced_requireds) == 0
+        return len(unassigned_requireds) == 0
 
-    def placement_machine_count_for_charm(self, cc):
-        """Returns the total number of placements of any type for a given
+    def assignment_machine_count_for_charm(self, cc):
+        """Returns the total number of assignments of any type for a given
         charm."""
         return sum([len(al) for al in self.get_assignments(cc).values()])
 
@@ -468,34 +493,35 @@ class PlacementController:
         charm."""
         return sum([len(al) for al in self.get_deployments(cc).values()])
 
-    def autoplace_unplaced_services(self):
-        """Attempt to find machines for all required unplaced services using
+    def autoassign_unassigned_services(self):
+        """Attempt to find machines for all required unassigned services using
         only empty machines.
 
         Returns a pair (success, message) where success is True if all
-        services are placed. message is an info message for the user.
+        services are assigned. message is an info message for the user.
 
         """
 
         empty_machines = [m for m in self.machines()
                           if len(self.assignments[m.instance_id]) == 0]
 
-        unplaced_defaults = self.gen_defaults(list(self.unplaced_services),
-                                              empty_machines)
+        unassigned_services = list(self.unassigned_undeployed_services())
+        unassigned_defaults = self.gen_defaults(unassigned_services,
+                                                empty_machines)
 
-        for mid, charm_classes in unplaced_defaults.items():
+        for mid, charm_classes in unassigned_defaults.items():
             self.assignments[mid] = charm_classes
 
         self.update_and_save()
 
-        unplaced_reqs = [c for c in self.unplaced_services if
-                         self.get_charm_state(c)[0] == CharmState.REQUIRED]
+        unassigned_reqs = [c for c in unassigned_services if
+                           self.get_charm_state(c)[0] == CharmState.REQUIRED]
 
-        if len(unplaced_reqs) > 0:
+        if len(unassigned_reqs) > 0:
             msg = ("Not enough empty machines could be found for the following"
                    "required services. Please add machines or finish "
                    "placement manually.")
-            m = ", ".join([c.charm_name for c in unplaced_reqs])
+            m = ", ".join([c.charm_name for c in unassigned_reqs])
             return (False, msg + "\n" + m)
         return (True, "")
 
@@ -561,8 +587,7 @@ class PlacementController:
 
         for charm_class in subordinate_charms:
             ad = assignments[self.sub_placeholder.instance_id]
-            # BareMetal is arbitrary, it is ignored in deploy:
-            l = ad[AssignmentType.BareMetal]
+            l = ad[AssignmentType.DEFAULT]
             l.append(charm_class)
 
         import pprint
@@ -621,12 +646,11 @@ class PlacementController:
                     pm = placeholder_for_charm(charm_class)
                     self._machines.append(pm)
                     ad = assignments[pm.instance_id]
-                    # in single, "BareMetal" is in a KVM on the host
-                    ad[AssignmentType.BareMetal].append(charm_class)
+                    ad[AssignmentType.DEFAULT].append(charm_class)
             elif charm_class.subordinate:
                 assert(not charm_class.isolate)
                 ad = assignments[self.sub_placeholder.instance_id]
-                l = ad[AssignmentType.BareMetal]
+                l = ad[AssignmentType.DEFAULT]
                 l.append(charm_class)
             else:
                 ad = assignments[controller.instance_id]

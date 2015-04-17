@@ -24,32 +24,40 @@ from cloudinstall.placement.ui.service_widget import ServiceWidget
 
 log = logging.getLogger('cloudinstall.placement.ui')
 
+
 class ServicesList(WidgetWrap):
 
-    """A list of services (charm classes) with configurable action buttons
-    for each machine.
+    """A list of services (charm classes) with flexible display options.
+
+    controller - a PlacementController
 
     actions - a list of tuples describing buttons. Passed to
     ServiceWidget.
 
-    machine - a machine instance to query for constraint checking
+    machine - a machine instance to query for constraint checking. If
+    None, no constraint checking is done. If set, only services whose
+    constraints are satisfied by 'machine' are shown.
 
-    show_constraints - bool, whether or not to show the constraints
+    show_constraints - bool, whether or not to display the constraints
     for the various services
 
     """
 
     def __init__(self, controller, actions, subordinate_actions,
-                 machine=None, unplaced_only=False, show_type='all',
-                 show_constraints=False, title="Services"):
+                 machine=None, ignore_assigned=False,
+                 ignore_deployed=False, show_type='all',
+                 show_constraints=False, show_placements=False,
+                 title="Services"):
         self.controller = controller
         self.actions = actions
         self.subordinate_actions = subordinate_actions
         self.service_widgets = []
         self.machine = machine
-        self.unplaced_only = unplaced_only
+        self.ignore_assigned = ignore_assigned
+        self.ignore_deployed = ignore_deployed
         self.show_type = show_type
         self.show_constraints = show_constraints
+        self.show_placements = show_placements
         self.title = title
         w = self.build_widgets()
         self.update()
@@ -76,15 +84,26 @@ class ServicesList(WidgetWrap):
         for cc in self.controller.charm_classes():
             if self.machine:
                 if not satisfies(self.machine, cc.constraints)[0] \
-                   or not self.controller.is_assigned(cc, self.machine):
+                   or not (self.controller.is_assigned_to(cc, self.machine) or
+                           self.controller.is_deployed_to(cc, self.machine)):
                     self.remove_service_widget(cc)
                     continue
 
-            if self.unplaced_only:
-                n = (self.controller.placement_machine_count_for_charm(cc)
-                     + self.controller.deployment_machine_count_for_charm(cc))
+            # refactor TODO:
+            # rename serviceslist unplaced_only to ignore_assigned and
+            # ignore_deployed
+
+            if self.ignore_assigned:
+                n = self.controller.assignment_machine_count_for_charm(cc)
                 if n == cc.required_num_units() \
-                   and self.controller.is_placed_or_deployed(cc):
+                   and self.controller.is_assigned(cc):
+                    self.remove_service_widget(cc)
+                    continue
+
+            if self.ignore_deployed:
+                n = self.controller.deployment_machine_count_for_charm(cc)
+                if n == cc.required_num_units() \
+                   and self.controller.is_deployed(cc):
                     self.remove_service_widget(cc)
                     continue
 
@@ -98,7 +117,8 @@ class ServicesList(WidgetWrap):
                     self.remove_service_widget(cc)
                     continue
                 if not cc.allow_multi_units and \
-                        cc not in self.controller.unplaced_services:
+                   not (self.controller.is_assigned(cc) or
+                        self.controller.is_deployed(cc)):
                     self.remove_service_widget(cc)
                     continue
 
@@ -113,7 +133,8 @@ class ServicesList(WidgetWrap):
         else:
             actions = self.actions
         sw = ServiceWidget(charm_class, self.controller, actions,
-                           self.show_constraints)
+                           self.show_constraints,
+                           show_placements=self.show_placements)
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))

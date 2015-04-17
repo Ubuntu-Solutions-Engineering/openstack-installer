@@ -201,28 +201,28 @@ class PlacementControllerTestCase(unittest.TestCase):
         lxcs = self.pc.assignments[mid][AssignmentType.LXC]
         self.assertEqual(lxcs, [])
 
-    def test_unplaced_starts_full(self):
-        self.assertEqual(len(self.pc.unplaced_undeployed_services()),
+    def test_unassigned_starts_full(self):
+        self.assertEqual(len(self.pc.unassigned_undeployed_services()),
                          len(self.pc.charm_classes()))
 
-    def test_placed_charm_classes_starts_empty(self):
-        self.assertEqual(0, len(self.pc.placed_charm_classes()))
+    def test_assigned_charm_classes_starts_empty(self):
+        self.assertEqual(0, len(self.pc.assigned_charm_classes()))
 
-    def test_reset_unplaced_undeployed_none(self):
-        """Assign all charms, ensure that unplaced is empty"""
+    def test_reset_unassigned_undeployed_none(self):
+        """Assign all charms, ensure that unassigned is empty"""
         for cc in self.pc.charm_classes():
             self.pc.assign(self.mock_machine, cc, AssignmentType.LXC)
 
-        self.pc.reset_placed_deployed()
+        self.pc.reset_assigned_deployed()
 
-        self.assertEqual(0, len(self.pc.unplaced_undeployed_services()))
+        self.assertEqual(0, len(self.pc.unassigned_undeployed_services()))
 
-    def test_reset_unplaced_undeployed_two(self):
+    def test_reset_unassigned_undeployed_two(self):
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
         self.pc.assign(self.mock_machine_2, CharmKeystone, AssignmentType.KVM)
-        self.pc.reset_placed_deployed()
+        self.pc.reset_assigned_deployed()
         self.assertEqual(len(self.pc.charm_classes()) - 2,
-                         len(self.pc.unplaced_undeployed_services()))
+                         len(self.pc.unassigned_undeployed_services()))
 
     def test_reset_excepting_compute(self):
         for cc in self.pc.charm_classes():
@@ -230,10 +230,10 @@ class PlacementControllerTestCase(unittest.TestCase):
                 continue
             self.pc.assign(self.mock_machine, cc, AssignmentType.LXC)
 
-        self.pc.reset_placed_deployed()
-        self.assertEqual(len(self.pc.unplaced_undeployed_services()), 1)
+        self.pc.reset_assigned_deployed()
+        self.assertEqual(len(self.pc.unassigned_undeployed_services()), 1)
 
-    def test_unplaced_undeployed(self):
+    def test_unassigned_undeployed(self):
         all_charms = set(self.pc.charm_classes())
         self.pc.assign(self.mock_machine, CharmKeystone, AssignmentType.KVM)
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.KVM)
@@ -241,21 +241,21 @@ class PlacementControllerTestCase(unittest.TestCase):
                               AssignmentType.KVM)
 
         self.assertTrue(CharmKeystone not in
-                        self.pc.unplaced_undeployed_services())
+                        self.pc.unassigned_undeployed_services())
         self.assertTrue(CharmNovaCompute not in
-                        self.pc.unplaced_undeployed_services())
-        self.assertTrue(self.pc.is_placed_or_deployed(CharmKeystone))
-        self.assertTrue(self.pc.is_placed_or_deployed(CharmNovaCompute))
+                        self.pc.unassigned_undeployed_services())
+        self.assertTrue(self.pc.is_deployed(CharmKeystone))
+        self.assertTrue(self.pc.is_assigned(CharmNovaCompute))
 
         self.assertTrue(len(all_charms) - 2,
-                        len(self.pc.unplaced_undeployed_services()))
+                        len(self.pc.unassigned_undeployed_services()))
 
-        n_k_pl = self.pc.placement_machine_count_for_charm(CharmKeystone)
-        self.assertEqual(n_k_pl, 0)
+        n_k_as = self.pc.assignment_machine_count_for_charm(CharmKeystone)
+        self.assertEqual(n_k_as, 0)
         n_k_dl = self.pc.deployment_machine_count_for_charm(CharmKeystone)
         self.assertEqual(n_k_dl, 1)
-        n_nc_pl = self.pc.placement_machine_count_for_charm(CharmNovaCompute)
-        self.assertEqual(n_nc_pl, 1)
+        n_nc_as = self.pc.assignment_machine_count_for_charm(CharmNovaCompute)
+        self.assertEqual(n_nc_as, 1)
         n_nc_dl = self.pc.deployment_machine_count_for_charm(CharmNovaCompute)
         self.assertEqual(n_nc_dl, 0)
 
@@ -263,21 +263,21 @@ class PlacementControllerTestCase(unittest.TestCase):
         "Initially there are no deployed charms"
         self.assertEqual(0, len(self.pc.deployed_charm_classes()))
 
-    def test_set_deployed_unsets_placement(self):
-        "Setting a placement to deployed removes it from placement dict"
+    def test_mark_deployed_unsets_assignment(self):
+        "Setting a placement to deployed removes it from assignment dict"
         self.pc.assign(self.mock_machine, CharmKeystone, AssignmentType.KVM)
-        self.assertEqual([CharmKeystone], self.pc.placed_charm_classes())
+        self.assertEqual([CharmKeystone], self.pc.assigned_charm_classes())
         self.pc.mark_deployed(self.mock_machine, CharmKeystone,
                               AssignmentType.KVM)
         self.assertEqual([CharmKeystone], self.pc.deployed_charm_classes())
-        self.assertEqual([], self.pc.placed_charm_classes())
+        self.assertEqual([], self.pc.assigned_charm_classes())
 
-    def test_set_deployed_unsets_placement_only_once(self):
-        "Setting a placement to deployed removes it from placement dict"
+    def test_set_deployed_unsets_assignment_only_once(self):
+        "Setting a placement to deployed removes it from assignment dict"
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.KVM)
         self.pc.assign(self.mock_machine_2, CharmNovaCompute,
                        AssignmentType.KVM)
-        self.assertEqual([CharmNovaCompute], self.pc.placed_charm_classes())
+        self.assertEqual([CharmNovaCompute], self.pc.assigned_charm_classes())
         ad = self.pc.get_assignments(CharmNovaCompute)
         dd = self.pc.get_deployments(CharmNovaCompute)
         from pprint import pformat
@@ -290,7 +290,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.pc.mark_deployed(self.mock_machine, CharmNovaCompute,
                               AssignmentType.KVM)
         self.assertEqual([CharmNovaCompute], self.pc.deployed_charm_classes())
-        self.assertEqual([CharmNovaCompute], self.pc.placed_charm_classes())
+        self.assertEqual([CharmNovaCompute], self.pc.assigned_charm_classes())
         ad = self.pc.get_assignments(CharmNovaCompute)
         dd = self.pc.get_deployments(CharmNovaCompute)
         self.assertEqual([self.mock_machine_2], ad[AssignmentType.KVM])
@@ -411,7 +411,7 @@ class PlacementControllerTestCase(unittest.TestCase):
                          self.pc.get_charm_state(CharmSwiftProxy)[0])
 
     def test_ceph_num_required(self):
-        "3 units of ceph should be required after having been placed"
+        "3 units of ceph should be required after having been assigned"
         state, cons, deps = self.pc.get_charm_state(CharmCeph)
         self.assertEqual(state, CharmState.OPTIONAL)
         self.pc.assign(self.mock_machine, CharmCeph, AssignmentType.KVM)
@@ -440,8 +440,8 @@ class PlacementControllerTestCase(unittest.TestCase):
             newpc.load(tempf)
         self.assertEqual(self.pc.assignments, newpc.assignments)
         self.assertEqual(self.pc.machines_pending(), newpc.machines_pending())
-        self.assertEqual(self.pc.placed_charm_classes(),
-                         newpc.placed_charm_classes())
+        self.assertEqual(self.pc.assigned_charm_classes(),
+                         newpc.assigned_charm_classes())
 
         m2 = next((m for m in newpc.machines_pending()
                    if m.instance_id == 'fake-instance-id-2'))
@@ -504,12 +504,22 @@ class PlacementControllerTestCase(unittest.TestCase):
                    if m.instance_id == 'fake_iid_2'))
         self.assertEqual(m2.constraints, {'cpu': 8})
 
-    def test_is_assigned(self):
-        self.assertFalse(self.pc.is_assigned(CharmSwiftProxy,
-                                             self.mock_machine))
+    def test_is_assigned_to_is_deployed_to(self):
+        self.assertFalse(self.pc.is_assigned_to(CharmSwiftProxy,
+                                                self.mock_machine))
+        self.assertFalse(self.pc.is_deployed_to(CharmSwiftProxy,
+                                                self.mock_machine))
         self.pc.assign(self.mock_machine, CharmSwiftProxy, AssignmentType.LXC)
-        self.assertTrue(self.pc.is_assigned(CharmSwiftProxy,
-                                            self.mock_machine))
+        self.assertFalse(self.pc.is_deployed_to(CharmSwiftProxy,
+                                                self.mock_machine))
+        self.assertTrue(self.pc.is_assigned_to(CharmSwiftProxy,
+                                               self.mock_machine))
+        self.pc.mark_deployed(self.mock_machine, CharmSwiftProxy,
+                              AssignmentType.LXC)
+        self.assertTrue(self.pc.is_deployed_to(CharmSwiftProxy,
+                                               self.mock_machine))
+        self.assertFalse(self.pc.is_assigned_to(CharmSwiftProxy,
+                                                self.mock_machine))
 
     def test_double_clear_ok(self):
         """clearing assignments for a machine that isn't assigned (anymore) is

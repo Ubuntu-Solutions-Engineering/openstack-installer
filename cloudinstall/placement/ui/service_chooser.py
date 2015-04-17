@@ -31,6 +31,11 @@ class ServiceChooser(WidgetWrap):
     """
 
     def __init__(self, controller, machine, parent_widget):
+        """
+        controller is a PlacementController
+        machine is the machine to show Services for
+        parent_widget should support 'remove_overlay()'
+        """
         self.controller = controller
         self.machine = machine
         self.parent_widget = parent_widget

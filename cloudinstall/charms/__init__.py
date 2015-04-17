@@ -271,7 +271,6 @@ class CharmQueue:
 
     def __init__(self, ui, config, juju_state=None, juju=None,
                  deployed_charms=None):
-        self.charm_deploy_q = Queue()
         self.charm_post_proc_q = Queue()
         self.is_running = False
         self.ui = ui
@@ -318,24 +317,6 @@ class CharmQueue:
                 log.info(msg)
 
         return valid_relations
-
-    def add_deploy(self, charm):
-        self.charm_deploy_q.put(charm)
-
-    def watch_deploy(self):
-        log.debug("Starting charm deploy watcher.")
-        while not self.charm_deploy_q.empty():
-            try:
-                charm = self.charm_deploy_q.get()
-                err = charm.deploy()  # TODO call with machine placement
-                if err:
-                    self.charm_deploy_q.put(charm)
-                self.charm_deploy_q.task_done()
-            except:
-                msg = "Exception in deploy watcher, re-trying."
-                log.exception(msg)
-                self.ui.status_error_message(msg)
-            time.sleep(10)
 
     @utils.async
     def watch_relations_async(self):
