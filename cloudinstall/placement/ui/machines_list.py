@@ -105,6 +105,14 @@ class MachinesList(WidgetWrap):
 
         n_satisfying_machines = len(machines)
 
+        def get_placement_filter_label(d):
+            s = ""
+            for atype, al in d.items():
+                s += " ".join(["{} {}".format(cc.charm_name,
+                                              cc.display_name)
+                               for cc in al])
+            return s
+
         for m in machines:
             if not satisfies(m, self.constraints)[0]:
                 self.remove_machine(m)
@@ -113,12 +121,12 @@ class MachinesList(WidgetWrap):
 
             assignment_names = ""
             ad = self.controller.assignments_for_machine(m)
-            for atype, al in ad.items():
-                assignment_names += " ".join(["{} {}".format(cc.charm_name,
-                                                             cc.display_name)
-                                              for cc in al])
-            filter_label = "{} {}".format(m.filter_label(),
-                                          assignment_names)
+            assignment_names = get_placement_filter_label(ad)
+            dd = self.controller.deployments_for_machine(m)
+            deployment_names = get_placement_filter_label(dd)
+            filter_label = "{} {} {}".format(m.filter_label(),
+                                             assignment_names,
+                                             deployment_names)
 
             if self.filter_string != "" and \
                self.filter_string not in filter_label:
@@ -126,6 +134,7 @@ class MachinesList(WidgetWrap):
                 continue
 
             mw = self.find_machine_widget(m)
+
             if mw is None:
                 mw = self.add_machine_widget(m)
             mw.update()
@@ -147,9 +156,9 @@ class MachinesList(WidgetWrap):
 
     def remove_machine(self, machine):
         mw = self.find_machine_widget(machine)
-
         if mw is None:
             return
+
         self.machine_widgets.remove(mw)
         mw_idx = 0
         for w, opts in self.machine_pile.contents:

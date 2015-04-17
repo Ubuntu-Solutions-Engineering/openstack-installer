@@ -23,6 +23,7 @@ import logging
 
 log = logging.getLogger('cloudinstall.ev')
 
+
 class EventLoop:
 
     """ Abstracts out event loops in different scenarios

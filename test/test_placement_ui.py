@@ -108,18 +108,18 @@ class ServiceWidgetTestCase(unittest.TestCase):
 
         self.assertFalse(search_in_widget(".* of .* placed", w))
 
-    def test_show_assignments(self):
-        """Widget with show_assignments set should show assignments"""
+    def test_show_placements(self):
+        """Widget with show_placements set should show placements"""
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        w = ServiceWidget(CharmNovaCompute, self.pc, show_assignments=True)
+        w = ServiceWidget(CharmNovaCompute, self.pc, show_placements=True)
 
         self.assertTrue(search_in_widget("LXC.*machine1-hostname", w))
 
-    def test_dont_show_assignments(self):
-        """Widget with show_assignments set to FALSE should NOT show
-        assignments"""
+    def test_dont_show_placements(self):
+        """Widget with show_placements set to FALSE should NOT show
+        placements"""
         self.pc.assign(self.mock_machine, CharmNovaCompute, AssignmentType.LXC)
-        w = ServiceWidget(CharmNovaCompute, self.pc, show_assignments=False)
+        w = ServiceWidget(CharmNovaCompute, self.pc, show_placements=False)
 
         self.assertFalse(search_in_widget("LXC.*machine1-hostname", w))
 
@@ -304,12 +304,15 @@ class MachinesListTestCase(unittest.TestCase):
         mw2.machine = self.mock_machine2
         mw3 = MagicMock(name="mw3")
         mw3.machine = self.mock_machine3
-        # the repeated fourth one is the subordinate placeholder:
-        mw4 = MagicMock(name="mw4")
-        mock_machinewidget.side_effect = [mw1, mw2, mw3, mw4]
+        # the rest are the placeholders:
+        mw4 = MagicMock(name="mock_placeholder_widget1")
+        mw4.machine = self.pc.sub_placeholder
+        mw5 = MagicMock(name="mock_placeholder_widget2")
+        mw5.machine = self.pc.def_placeholder
+        mock_machinewidget.side_effect = [mw1, mw2, mw3, mw4, mw5]
 
         ml = MachinesList(self.pc, self.actions)
-        self.assertEqual(4, len(ml.machine_widgets))
+        self.assertEqual(5, len(ml.machine_widgets))
 
         ml.filter_string = "machine1-filter_label"
         ml.update()
@@ -342,14 +345,14 @@ class ServicesListTestCase(unittest.TestCase):
 
     def test_widgets_config(self, mock_servicewidgetclass):
         for show_constraints in [False, True]:
-            ServicesList(self.pc, self.actions, self.sub_actions,
-                         show_constraints=show_constraints)
-
+            sl = ServicesList(self.pc, self.actions, self.sub_actions,
+                              show_constraints=show_constraints)
             mock_servicewidgetclass.assert_any_call(
                 CharmNovaCompute,
                 self.pc,
                 self.actions,
-                show_constraints)
+                show_constraints,
+                show_placements=sl.show_placements)
             mock_servicewidgetclass.reset_mock()
 
     def test_no_machine_no_constraints(self, mock_servicewidgetclass):

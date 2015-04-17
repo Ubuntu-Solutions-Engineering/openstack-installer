@@ -100,6 +100,10 @@ class MachineWidget(WidgetWrap):
         if self.machine == self.controller.sub_placeholder:
             self.machine_info_widget.set_text("\N{BULLET} Subordinate Charms")
             self.hardware_widget.set_text("")
+        elif self.machine == self.controller.def_placeholder:
+            self.machine_info_widget.set_text("\N{BULLET} Juju Default "
+                                              "Placement")
+            self.hardware_widget.set_text("")
         else:
             info_markup = ["\N{TAPE DRIVE} {}".format(self.machine.hostname),
                            ('label', " ({})".format(self.machine.status))]

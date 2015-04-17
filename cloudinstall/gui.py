@@ -511,6 +511,7 @@ class PegasusGUI(WidgetWrap):
 
         self.services_view = None
         self.placement_view = None
+        self.controller = None
         self.machine_wait_view = None
         super().__init__(self.frame)
 
@@ -632,11 +633,15 @@ class PegasusGUI(WidgetWrap):
         self.hide_widget_on_top()
 
     def show_add_services_dialog(self, cb):
-        widget = AddServicesDialog(cb)
-        self.show_widget_on_top(widget, width=50, height=10)
-
-    def hide_add_services_dialog(self):
-        self.hide_widget_on_top()
+        widget = AddServicesDialog(self.controller, ok_cb=cb,
+                                   cancel_cb=self.hide_widget_on_top)
+        self._w = Overlay(top_w=widget,
+                          bottom_w=self.frame,
+                          align='center',
+                          valign='middle',
+                          width=80,
+                          height='pack',
+                          min_width=40)
 
     def set_pending_deploys(self, pending_charms):
         self.frame.footer.set_pending_deploys(pending_charms)
@@ -685,17 +690,16 @@ class PegasusGUI(WidgetWrap):
         self.frame.body = NodeInstallWaitMode(message, **kwargs)
         self.frame.set_body(self.frame.body)
 
-    def render_placement_view(self, placement_controller, loop, config, cb):
+    def render_placement_view(self, loop, config, cb):
         """ render placement view
 
         :param cb: deploy callback trigger
         """
         if self.placement_view is None:
-            self.placement_view = PlacementView(self,
-                                                placement_controller,
-                                                loop,
-                                                config,
-                                                cb)
+            assert self.controller is not None
+            pc = self.controller.placement_controller
+            self.placement_view = PlacementView(self, pc, loop,
+                                                config, cb)
         self.placement_view.update()
         self.frame.body = self.placement_view
 

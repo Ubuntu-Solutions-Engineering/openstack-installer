@@ -28,7 +28,7 @@ from cloudinstall.state import ControllerState
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
                                MaasMachineStatus)
-from cloudinstall.charms import CharmQueue, get_charm
+from cloudinstall.charms import CharmQueue
 from cloudinstall.log import PrettyLog
 from cloudinstall.placement.controller import (PlacementController,
                                                AssignmentType)
@@ -60,6 +60,7 @@ class Controller:
 
     def __init__(self, ui, config, loop):
         self.ui = ui
+        self.ui.controller = self
         self.config = config
         self.loop = loop
         self.juju_state = None
@@ -79,8 +80,7 @@ class Controller:
         """
         interval = 1
         if self.config.getopt('current_state') == ControllerState.PLACEMENT:
-            self.ui.render_placement_view(self.placement_controller,
-                                          self.loop,
+            self.ui.render_placement_view(self.loop,
                                           self.config,
                                           self.commit_placement)
         elif self.config.getopt('current_state') == \
@@ -415,8 +415,8 @@ class Controller:
         """
 
         self.ui.status_info_message("Verifying service deployments")
-        placed_charm_classes = self.placement_controller.placed_charm_classes()
-        charm_classes = sorted(placed_charm_classes,
+        assigned_ccs = self.placement_controller.assigned_charm_classes()
+        charm_classes = sorted(assigned_ccs,
                                key=attrgetter('deploy_priority'))
 
         def undeployed_charm_classes():
@@ -486,6 +486,7 @@ class Controller:
                 if mspec is None:
                     errs.append(machine)
                     continue
+
                 if first_deploy:
                     msg = "Deploying {c}".format(c=charm_class.display_name)
                     if mspec != '':
@@ -506,6 +507,10 @@ class Controller:
                     deploy_err = charm.add_unit(machine_spec=mspec)
                     if deploy_err:
                         errs.append(machine)
+                if not deploy_err:
+                    self.placement_controller.mark_deployed(machine,
+                                                            charm_class,
+                                                            atype)
 
         had_err = len(errs) > 0
         if had_err and not self.config.getopt('headless'):
@@ -518,8 +523,8 @@ class Controller:
 
         Returns None on errors, and '' for the subordinate char placeholder.
         """
-        if maas_machine == self.placement_controller.sub_placeholder:
-            # subordinate charms do not use a machine spec
+        if self.placement_controller.is_placeholder(maas_machine.instance_id):
+            # placeholder machines do not use a machine spec
             return ""
 
         jm = next((m for m in self.juju_state.machines()
@@ -532,7 +537,8 @@ class Controller:
 
             return None
 
-        if atype == AssignmentType.BareMetal:
+        if atype == AssignmentType.BareMetal \
+           or atype == AssignmentType.DEFAULT:
             return jm.machine_id
         elif atype == AssignmentType.LXC:
             return "lxc:{}".format(jm.machine_id)
@@ -604,61 +610,14 @@ class Controller:
                                      self.maas_state, self.config)
         self.loop.redraw_screen()
 
-    # FIXME: Use try_deploy and handle charm depends?
-    def add_charm(self, count=0, charm=None):
-        if not charm:
-            self.ui.hide_add_charm_info()
-            return
-        svc = self.juju_state.service(charm)
-        if svc.service:
-            self.ui.status_info_message("Adding {n} units of {charm}".format(
-                n=count, charm=charm))
-            self.juju.add_unit(charm, num_units=int(count))
-        else:
-            charm_q = CharmQueue(ui=self.ui, config=self.config,
-                                 juju=self.juju, juju_state=self.juju_state,
-                                 deployed_charms=self.deployed_charm_classes)
-            charm_sel = get_charm(charm,
-                                  self.juju,
-                                  self.juju_state,
-                                  self.ui,
-                                  config=self.config)
-            log.debug("Add charm: {}".format(charm_sel))
-            if not charm_sel.isolate:
-                charm_sel.machine_id = 'lxc:{mid}'.format(mid="1")
-
-            self.ui.status_info_message("Adding {} to environment".format(
-                charm_sel))
-            charm_q.add_deploy(charm_sel)
-
-            # Add charm dependencies
-            if len(charm_sel.related) > 0:
-                for c in charm_sel.related:
-                    svc = self.juju_state.service(charm_sel)
-                    if not svc.service:
-                        self.ui.status_info_message("Adding dependent "
-                                                    "charm {c}".format(c=c))
-                        charm_dep = get_charm(c,
-                                              self.juju,
-                                              self.juju_state,
-                                              self.ui,
-                                              config=self.config)
-                        if not charm_dep.isolate:
-                            charm_dep.machine_id = 'lxc:{mid}'.format(mid="1")
-                        charm_q.add_deploy(charm_dep)
-
-            if not charm_q.is_running:
-                charm_q.watch_deploy()
-                if self.config.getopt('headless'):
-                    charm_q.watch_relations()
-                    charm_q.watch_post_proc()
-                else:
-                    charm_q.watch_relations_async()
-                    charm_q.watch_post_proc_async()
-                charm_q.is_running = True
-
-        self.ui.hide_add_charm_info()
-        return
+    @utils.async
+    def deploy_new_services(self):
+        """Deploys newly added services in background thread.
+        Does not attempt to create new machines.
+        """
+        self.deploy_using_placement()
+        self.wait_for_deployed_services_ready()
+        self.enqueue_deployed_charms()
 
     def start(self):
         """ Starts UI loop
@@ -668,7 +627,8 @@ class Controller:
         else:
             self.ui.status_info_message("Welcome")
             self.initialize()
-            self.loop.register_callback('add_services', self.add_charm)
+            self.loop.register_callback('add_services',
+                                        self.deploy_new_services)
             self.loop.register_callback('refresh_display', self.update)
             self.loop.set_alarm_in(0, self.update)
             self.loop.run()
