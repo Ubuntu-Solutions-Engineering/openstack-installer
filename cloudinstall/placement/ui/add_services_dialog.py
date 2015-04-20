@@ -35,11 +35,11 @@ class AddServicesDialog(WidgetWrap):
     :param cb: callback routine to process submit/cancel actions
     """
 
-    def __init__(self, install_controller, ok_cb, cancel_cb):
+    def __init__(self, install_controller, deploy_cb, cancel_cb):
         self.install_controller = install_controller
         self.placement_controller = install_controller.placement_controller
         self.charms = []
-        self.ok_cb = ok_cb
+        self.deploy_cb = deploy_cb
         self.cancel_cb = cancel_cb
         self.boxes = []
 
@@ -51,10 +51,12 @@ class AddServicesDialog(WidgetWrap):
         actions = [('Add', self.do_add)]
         self.services_list = ServicesList(self.placement_controller,
                                           actions, actions,
-                                          unplaced_only=True,
+                                          ignore_assigned=False,
+                                          ignore_deployed=True,
                                           show_placements=True)
-        self.buttons = Columns([Button("OK", self.handle_ok),
-                                Button("Cancel", self.handle_cancel)])
+
+        self.buttons = Columns([Button("Cancel", self.handle_cancel),
+                                Button("Deploy", self.handle_deploy)])
 
         self.main_pile = Pile([self.services_list,
                                Divider(), self.buttons])
@@ -72,8 +74,8 @@ class AddServicesDialog(WidgetWrap):
                                          AssignmentType.DEFAULT)
         self.update()
 
-    def handle_ok(self, button):
-        self.ok_cb()
+    def handle_deploy(self, button):
+        self.deploy_cb()
 
     def handle_cancel(self, button):
         self.cancel_cb()

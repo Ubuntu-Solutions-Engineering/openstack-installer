@@ -38,6 +38,12 @@ class ServicesList(WidgetWrap):
     None, no constraint checking is done. If set, only services whose
     constraints are satisfied by 'machine' are shown.
 
+    ignore_assigned - bool, whether or not to display services that
+    have already been assigned to a machine (but not yet deployed)
+
+    ignore_deployed - bool, whether or not to display services that
+    have already been deployed
+
     show_constraints - bool, whether or not to display the constraints
     for the various services
 
@@ -88,10 +94,6 @@ class ServicesList(WidgetWrap):
                            self.controller.is_deployed_to(cc, self.machine)):
                     self.remove_service_widget(cc)
                     continue
-
-            # refactor TODO:
-            # rename serviceslist unplaced_only to ignore_assigned and
-            # ignore_deployed
 
             if self.ignore_assigned:
                 n = self.controller.assignment_machine_count_for_charm(cc)

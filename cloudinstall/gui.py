@@ -633,7 +633,7 @@ class PegasusGUI(WidgetWrap):
         self.hide_widget_on_top()
 
     def show_add_services_dialog(self, cb):
-        widget = AddServicesDialog(self.controller, ok_cb=cb,
+        widget = AddServicesDialog(self.controller, deploy_cb=cb,
                                    cancel_cb=self.hide_widget_on_top)
         self._w = Overlay(top_w=widget,
                           bottom_w=self.frame,
