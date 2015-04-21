@@ -25,7 +25,7 @@ class CharmCeilometerAgent(CharmBase):
     """ Ceilometer-agent directives """
 
     charm_name = 'ceilometer-agent'
-    charm_rev = 3
+    charm_rev = 4
     display_name = 'Ceilometer-Agent'
     subordinate = True
     contrib = True
