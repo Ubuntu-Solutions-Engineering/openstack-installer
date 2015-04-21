@@ -127,8 +127,8 @@ class ServiceWidget(WidgetWrap):
             self.charm_info_widget.set_text(self.title_markup)
 
         def string_for_placement_dict(d):
-            s = [""]
-            for atype, ml in ad.items():
+            s = []
+            for atype, ml in d.items():
                 n = len(ml)
                 s.append(('label', "    {} ({}): ".format(atype.name, n)))
                 if len(ml) == 0:
@@ -136,13 +136,15 @@ class ServiceWidget(WidgetWrap):
                 else:
                     s.append(", ".join(["\N{TAPE DRIVE} {}".format(m.hostname)
                                         for m in ml]))
+            if len(s) == 0:
+                return [('label', "None")]
             return s
-        mstr.append("Assignments:")
+        mstr += ["    ", ('label', "Assignments: ")]
         ad = self.controller.get_assignments(self.charm_class)
-        mstr.append(string_for_placement_dict(ad))
-        mstr.append("\nDeployments")
         dd = self.controller.get_deployments(self.charm_class)
-        mstr.append(string_for_placement_dict(dd))
+        mstr += string_for_placement_dict(ad)
+        mstr += ["\n    ", ('label', "Deployments: ")]
+        mstr += string_for_placement_dict(dd)
 
         self.placements_widget.set_text(mstr)
 

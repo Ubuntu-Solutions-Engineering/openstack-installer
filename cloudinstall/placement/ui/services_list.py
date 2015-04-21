@@ -29,6 +29,8 @@ class ServicesList(WidgetWrap):
 
     """A list of services (charm classes) with flexible display options.
 
+    Note that not all combinations of display options make sense. YMMV.
+
     controller - a PlacementController
 
     actions - a list of tuples describing buttons. Passed to
@@ -44,14 +46,20 @@ class ServicesList(WidgetWrap):
     ignore_deployed - bool, whether or not to display services that
     have already been deployed
 
+    deployed_only - bool, only show deployed services
+
     show_constraints - bool, whether or not to display the constraints
     for the various services
+
+    show_type - string, one of 'all', 'required' or 'non-required',
+    controls which charm states should be shown. default is 'all'.
 
     """
 
     def __init__(self, controller, actions, subordinate_actions,
                  machine=None, ignore_assigned=False,
-                 ignore_deployed=False, show_type='all',
+                 ignore_deployed=False, deployed_only=False,
+                 show_type='all',
                  show_constraints=False, show_placements=False,
                  title="Services"):
         self.controller = controller
@@ -61,6 +69,7 @@ class ServicesList(WidgetWrap):
         self.machine = machine
         self.ignore_assigned = ignore_assigned
         self.ignore_deployed = ignore_deployed
+        self.deployed_only = deployed_only
         self.show_type = show_type
         self.show_constraints = show_constraints
         self.show_placements = show_placements
@@ -106,6 +115,10 @@ class ServicesList(WidgetWrap):
                 n = self.controller.deployment_machine_count_for_charm(cc)
                 if n == cc.required_num_units() \
                    and self.controller.is_deployed(cc):
+                    self.remove_service_widget(cc)
+                    continue
+            elif self.deployed_only:
+                if not self.controller.is_deployed(cc):
                     self.remove_service_widget(cc)
                     continue
 

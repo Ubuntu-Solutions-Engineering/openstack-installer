@@ -639,7 +639,7 @@ class PegasusGUI(WidgetWrap):
                           bottom_w=self.frame,
                           align='center',
                           valign='middle',
-                          width=80,
+                          width=('relative', 75),
                           height='pack',
                           min_width=40)
 
