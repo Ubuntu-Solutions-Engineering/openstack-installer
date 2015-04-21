@@ -129,6 +129,30 @@ class PlacementController:
         self.autosave_filename = None
         self.reset_assigned_deployed()
 
+    def get_temp_copy(self):
+        """Returns another PlacementController that can be used to track
+        assignments temporarily, e.g. for supporting cancellable
+        assignments in a dialog box.
+
+        Pairs with read_from_controller() to 'commit' those temporary
+        assignments to the 'main' controller.
+        """
+        newpc = PlacementController(maas_state=self.maas_state,
+                                    config=self.config)
+        newpc.assignments = self.assignments
+        newpc.deployments = self.deployments
+        newpc._machines = self._machines
+        newpc.reset_assigned_deployed()
+        return newpc
+
+    def update_from_controller(self, other):
+        """Updates internal structures based on other's.
+        For integrating temporarily tracked updates."""
+
+        self.assignments = other.assignments
+        self.deployments = other.deployments
+        self.reset_assigned_deployed()
+
     def __repr__(self):
         return "<PlacementController {}>".format(id(self))
 
@@ -299,13 +323,17 @@ class PlacementController:
 
         machines_by_atype = defaultdict(list)
         for m_id, d in a_dict.items():
+            m = next((m for m in all_machines
+                      if m.instance_id == m_id), None)
+            if not m:
+                log.debug("can't find machine for m_id '{}'".format(m_id))
+                continue
+
             for atype, assignment_list in d.items():
-                for a in assignment_list:
-                    if a == charm_class:
-                        m = next((m for m in all_machines
-                                  if m.instance_id == m_id), None)
-                        if m:
-                            machines_by_atype[atype].append(m)
+                for c in assignment_list:
+                    if c == charm_class:
+                        machines_by_atype[atype].append(m)
+
         return machines_by_atype
 
     def get_assignments(self, charm_class):
@@ -437,8 +465,9 @@ class PlacementController:
         required_charms = [c for c in self.charm_classes()
                            if c.is_core or
                            c.charm_name in self.selected_storage_charms()]
-        planned_or_deployed = (self.assigned_charm_classes() + required_charms
-                               + self.deployed_charm_classes())
+        planned_or_deployed = (self.assigned_charm_classes() +
+                               required_charms +
+                               self.deployed_charm_classes())
 
         for other_charm in planned_or_deployed:
             if conflicts_with(other_charm):
@@ -459,8 +488,8 @@ class PlacementController:
                       " - requires {} units but does not allow "
                       "multi units.".format(charm.charm_name, n_required))
 
-        n_units = (self.assignment_machine_count_for_charm(charm)
-                   + self.deployment_machine_count_for_charm(charm))
+        n_units = (self.assignment_machine_count_for_charm(charm) +
+                   self.deployment_machine_count_for_charm(charm))
 
         if state == CharmState.OPTIONAL and \
            n_units > 0 and n_units < n_required:
@@ -481,7 +510,11 @@ class PlacementController:
                                 if self.get_charm_state(cc)[0] ==
                                 CharmState.REQUIRED]
 
-        return len(unassigned_requireds) == 0
+        underassigned = [cc for cc in self.assigned_services if
+                         (self.assignment_machine_count_for_charm(cc) +
+                          self.deployment_machine_count_for_charm(cc)) <
+                         cc.required_num_units()]
+        return len(unassigned_requireds) + len(underassigned) == 0
 
     def assignment_machine_count_for_charm(self, cc):
         """Returns the total number of assignments of any type for a given

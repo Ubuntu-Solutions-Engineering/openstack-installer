@@ -15,8 +15,8 @@
 
 import logging
 
-from urwid import (Button, Columns, Divider, LineBox, Pile,
-                   WidgetWrap)
+from urwid import (AttrMap, Button, Columns, Divider, GridFlow,
+                   LineBox, Pile, SelectableIcon, WidgetWrap)
 
 from cloudinstall.placement.controller import AssignmentType
 from cloudinstall.placement.ui.services_list import ServicesList
@@ -37,44 +37,91 @@ class AddServicesDialog(WidgetWrap):
 
     def __init__(self, install_controller, deploy_cb, cancel_cb):
         self.install_controller = install_controller
-        self.placement_controller = install_controller.placement_controller
+        self.orig_pc = install_controller.placement_controller
+        self.pc = self.orig_pc.get_temp_copy()
         self.charms = []
         self.deploy_cb = deploy_cb
         self.cancel_cb = cancel_cb
         self.boxes = []
-
         w = self.build_widget()
-        super().__init__(w)
         self.update()
 
+        super().__init__(w)
+
     def build_widget(self, **kwargs):
-        actions = [('Add', self.do_add)]
-        self.services_list = ServicesList(self.placement_controller,
-                                          actions, actions,
-                                          ignore_assigned=False,
-                                          ignore_deployed=True,
-                                          show_placements=True)
 
-        self.buttons = Columns([Button("Cancel", self.handle_cancel),
-                                Button("Deploy", self.handle_deploy)])
+        def remove_p(charm_class):
+            n = self.pc.assignment_machine_count_for_charm(charm_class)
+            return n > 0
 
-        self.main_pile = Pile([self.services_list,
-                               Divider(), self.buttons])
-        return LineBox(self.main_pile, title="Add Services")
+        def add_p(charm_class):
+            return True
+
+        actions = [(remove_p, 'Remove', self.do_remove),
+                   (add_p, 'Add', self.do_add)]
+        self.required_sl = ServicesList(self.pc,
+                                        actions, actions,
+                                        show_type='required',
+                                        title="Required for Deploy")
+        self.unrequired_undeployed_sl = ServicesList(self.pc,
+                                                     actions, actions,
+                                                     ignore_deployed=True,
+                                                     title="Un-Deployed")
+        self.deployed_sl = ServicesList(self.pc,
+                                        actions, actions,
+                                        deployed_only=True,
+                                        show_placements=True,
+                                        title="Deployed Services")
+        self.buttons = []
+        self.button_grid = GridFlow(self.buttons, 22, 1, 1, 'center')
+        self.left_pile = Pile([self.required_sl,
+                               self.unrequired_undeployed_sl])
+        self.right_pile = Pile([self.deployed_sl])
+        return LineBox(Pile([Columns([self.left_pile, self.right_pile]),
+                             Divider(),
+                             self.button_grid]),
+                       title="Add Services")
 
     def update(self):
-        self.services_list.update()
+        self.required_sl.update()
+        self.unrequired_undeployed_sl.update()
+        self.deployed_sl.update()
+        self.update_buttons()
+
+    def update_buttons(self):
+        buttons = [(AttrMap(Button("Cancel", self.handle_cancel),
+                            'button_primary', 'button_primary focus'),
+                    self.button_grid.options())]
+        n_assigned = len(self.pc.assigned_services)
+        if n_assigned > 0 and self.pc.can_deploy():
+            b = AttrMap(Button("Deploy", self.handle_deploy),
+                        'button_primary', 'button_primary focus')
+        else:
+            b = AttrMap(SelectableIcon("(Deploy)"),
+                        'disabled_button',
+                        'disabled_button_focus')
+        buttons.append((b, self.button_grid.options()))
+        self.button_grid.contents = buttons
 
     def do_add(self, sender, charm_class):
         """Add the selected charm using default juju location.
         Equivalent to a simple 'juju deploy foo'
         """
-        m = self.placement_controller.def_placeholder
-        self.placement_controller.assign(m, charm_class,
-                                         AssignmentType.DEFAULT)
+        self.pc.assign(self.pc.def_placeholder, charm_class,
+                       AssignmentType.DEFAULT)
+        self.update()
+
+    def do_remove(self, sender, charm_class):
+        "Undo an assignment"
+        self.pc.remove_one_assignment(self.pc.def_placeholder,
+                                      charm_class)
         self.update()
 
     def handle_deploy(self, button):
+        """Commits changes to the main placement controller, and calls the
+        deploy callback to do the rest.
+        """
+        self.orig_pc.update_from_controller(self.pc)
         self.deploy_cb()
 
     def handle_cancel(self, button):
