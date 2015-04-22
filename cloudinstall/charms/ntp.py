@@ -25,7 +25,7 @@ class CharmNtp(CharmBase):
     """ NTP directives """
 
     charm_name = 'ntp'
-    charm_rev = 6
+    charm_rev = 8
     display_name = 'NTP'
     subordinate = True
     deploy_priority = 0
