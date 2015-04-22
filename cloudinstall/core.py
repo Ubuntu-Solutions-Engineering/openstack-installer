@@ -157,6 +157,8 @@ class Controller:
             with open(self.config.placements_filename, 'r') as pf:
                 self.placement_controller.load(pf)
             self.ui.status_info_message("Loaded placements from file.")
+            log.info("Loaded placements from "
+                     "'{}'".format(self.config.placements_filename))
 
         else:
             if self.config.is_multi():
@@ -264,6 +266,12 @@ class Controller:
 
             time.sleep(1)
 
+        # Sanity check to ensure we have at least one juju machine
+        if len(self.placement_controller.machines_pending()) == 0:
+            raise Exception("Stale machine placement info. Please remove"
+                            " ~/.cloud-install/placements.yaml and "
+                            "re-attempt install.")
+
         self.config.setopt('current_state', ControllerState.SERVICES.value)
         if self.config.is_single():
             controller_machine = self.juju_m_idmap['controller']
@@ -348,6 +356,7 @@ class Controller:
         return n_allocated >= n_needed
 
     def add_machines_to_juju_single(self):
+        self.juju_state.invalidate_status_cache()
         self.juju_m_idmap = {}
         for jm in self.juju_state.machines():
             response = self.juju.get_annotations(jm.machine_id,
