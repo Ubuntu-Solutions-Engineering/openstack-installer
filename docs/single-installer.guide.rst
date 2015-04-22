@@ -32,11 +32,8 @@ Install the OpenStack installer via `apt-get`
 
 .. code::
 
-   $ sudo apt-get install openstack --extra-ppa ppa:cloud-installer/experimental
+   $ sudo apt-get install openstack
 
-.. important::
-
-   Passing **--extra-ppa** is required when installing from experimental ppa.
 
 Start the installation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -45,11 +42,14 @@ To start the installation run the following command
 
 .. code::
 
-   $ sudo openstack-install
+   $ sudo openstack-install --extra-ppa ppa:cloud-installer/experimental
 
 .. important::
 
     The installer should be run with sudo.
+
+    Passing **--extra-ppa** is required when installing from experimental ppa.
+
 
 Optional Flags
 
