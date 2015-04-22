@@ -277,9 +277,8 @@ class Controller:
             controller_machine = self.juju_m_idmap['controller']
             self.configure_lxc_network(controller_machine)
 
-        # FIXME: this is never populated during a multi_install
-        # for juju_machine_id in self.juju_m_idmap.values():
-        #    self.run_apt_go_fast(juju_machine_id)
+            for juju_machine_id in self.juju_m_idmap.values():
+                self.run_apt_go_fast(juju_machine_id)
 
         if self.config.is_single():
             # FIXME: Remove once http://pad.lv/1326091 is fixed
