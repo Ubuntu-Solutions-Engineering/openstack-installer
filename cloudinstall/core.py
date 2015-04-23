@@ -79,16 +79,23 @@ class Controller:
         PegasusGUI only.
         """
         interval = 1
-        if self.config.getopt('current_state') == ControllerState.PLACEMENT:
+
+        current_state = self.config.getopt('current_state')
+        if current_state == ControllerState.PLACEMENT:
             self.ui.render_placement_view(self.loop,
                                           self.config,
                                           self.commit_placement)
-        elif self.config.getopt('current_state') == \
-                ControllerState.INSTALL_WAIT:
+
+        elif current_state == ControllerState.INSTALL_WAIT:
             self.ui.render_node_install_wait(message="Waiting...")
             interval = self.config.node_install_wait_interval
-        else:
+        elif current_state == ControllerState.ADD_SERVICES:
+            self.ui.render_add_services_dialog(self.deploy_new_services)
+        elif current_state == ControllerState.SERVICES:
             self.update_node_states()
+        else:
+            raise Exception("Internal error, unexpected display "
+                            "state '{}'".format(current_state))
 
         self.loop.redraw_screen()
         self.loop.set_alarm_in(interval, self.update)
@@ -630,6 +637,11 @@ class Controller:
         """Deploys newly added services in background thread.
         Does not attempt to create new machines.
         """
+        self.config.setopt('current_state', ControllerState.SERVICES.value)
+        self.ui.render_services_view(self.nodes, self.juju_state,
+                                     self.maas_state, self.config)
+        self.loop.redraw_screen()
+
         self.deploy_using_placement()
         self.wait_for_deployed_services_ready()
         self.enqueue_deployed_charms()
@@ -642,8 +654,6 @@ class Controller:
         else:
             self.ui.status_info_message("Welcome")
             self.initialize()
-            self.loop.register_callback('add_services',
-                                        self.deploy_new_services)
             self.loop.register_callback('refresh_display', self.update)
             self.loop.set_alarm_in(0, self.update)
             self.loop.run()

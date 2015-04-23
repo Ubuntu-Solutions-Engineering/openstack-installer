@@ -74,8 +74,8 @@ class EventLoop:
                 if self.config.getopt('current_state') != \
                    ControllerState.SERVICES:
                     return
-                cb = self._callback_map['add_services']
-                self.ui.show_add_services_dialog(cb)
+                self.config.setopt('current_state',
+                                   ControllerState.ADD_SERVICES.value)
             if key in ['q', 'Q']:
                 self.exit(0)
             if key in ['r', 'R', 'f5']:
