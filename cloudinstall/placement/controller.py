@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict, Counter
+import copy
 from enum import Enum
 import logging
 import yaml
@@ -139,8 +140,8 @@ class PlacementController:
         """
         newpc = PlacementController(maas_state=self.maas_state,
                                     config=self.config)
-        newpc.assignments = self.assignments
-        newpc.deployments = self.deployments
+        newpc.assignments = copy.copy(self.assignments)
+        newpc.deployments = copy.copy(self.deployments)
         newpc._machines = self._machines
         newpc.reset_assigned_deployed()
         return newpc
