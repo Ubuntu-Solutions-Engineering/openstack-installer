@@ -63,7 +63,7 @@ class ServicesColumn(WidgetWrap):
 
         actions = [(not_conflicted_p, "Choose Machine",
                     self.placement_view.do_show_machine_chooser)]
-        subordinate_actions = [("Add",
+        subordinate_actions = [(not_conflicted_p, "Add",
                                 self.do_place_subordinate)]
         self.required_services_list = ServicesList(self.placement_controller,
                                                    actions,

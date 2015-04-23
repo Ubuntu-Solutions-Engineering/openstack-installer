@@ -20,8 +20,7 @@ from urwid import (AttrMap, Button, Columns, Divider, GridFlow,
 
 from cloudinstall.placement.controller import AssignmentType
 from cloudinstall.placement.ui.services_list import ServicesList
-# from cloudinstall.ui import InfoDialog
-# from cloudinstall.state import CharmState
+from cloudinstall.state import CharmState
 
 log = logging.getLogger('cloudinstall.placement')
 
@@ -54,14 +53,16 @@ class AddServicesDialog(WidgetWrap):
             n = self.pc.assignment_machine_count_for_charm(charm_class)
             return n > 0
 
-        def add_p(charm_class):
-            return True
+        def not_conflicted_p(cc):
+            state, _, _ = self.pc.get_charm_state(cc)
+            return state != CharmState.CONFLICTED
 
         actions = [(remove_p, 'Remove', self.do_remove),
-                   (add_p, 'Add', self.do_add)]
+                   (not_conflicted_p, 'Add', self.do_add)]
         self.required_sl = ServicesList(self.pc,
                                         actions, actions,
                                         show_type='required',
+                                        show_placements=True,
                                         title="Required for Deploy")
         self.unrequired_undeployed_sl = ServicesList(self.pc,
                                                      actions, actions,
@@ -72,12 +73,20 @@ class AddServicesDialog(WidgetWrap):
                                         deployed_only=True,
                                         show_placements=True,
                                         title="Deployed Services")
+
+        self.assigned_sl = ServicesList(self.pc,
+                                        actions, actions,
+                                        assigned_only=True,
+                                        show_placements=True,
+                                        title="Services to be Deployed")
+
         self.buttons = []
         self.button_grid = GridFlow(self.buttons, 22, 1, 1, 'center')
-        self.left_pile = Pile([self.required_sl,
+        self.pile1 = Pile([self.required_sl,
                                self.unrequired_undeployed_sl])
-        self.right_pile = Pile([self.deployed_sl])
-        return LineBox(Pile([Columns([self.left_pile, self.right_pile]),
+        self.pile2 = Pile([self.deployed_sl])
+        self.pile3 = Pile([self.assigned_sl])
+        return LineBox(Pile([Columns([self.pile1, self.pile2, self.pile3]),
                              Divider(),
                              self.button_grid]),
                        title="Add Services")
@@ -86,6 +95,7 @@ class AddServicesDialog(WidgetWrap):
         self.required_sl.update()
         self.unrequired_undeployed_sl.update()
         self.deployed_sl.update()
+        self.assigned_sl.update()
         self.update_buttons()
 
     def update_buttons(self):
