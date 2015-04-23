@@ -15,7 +15,7 @@
 
 import logging
 
-from urwid import (AttrMap, Button, Columns, Divider, GridFlow,
+from urwid import (AttrMap, Button, Columns, GridFlow,
                    LineBox, Pile, SelectableIcon, WidgetWrap)
 
 from cloudinstall.placement.controller import AssignmentType
@@ -59,11 +59,6 @@ class AddServicesDialog(WidgetWrap):
 
         actions = [(remove_p, 'Remove', self.do_remove),
                    (not_conflicted_p, 'Add', self.do_add)]
-        self.required_sl = ServicesList(self.pc,
-                                        actions, actions,
-                                        show_type='required',
-                                        show_placements=True,
-                                        title="Required for Deploy")
         self.unrequired_undeployed_sl = ServicesList(self.pc,
                                                      actions, actions,
                                                      ignore_deployed=True,
@@ -82,17 +77,13 @@ class AddServicesDialog(WidgetWrap):
 
         self.buttons = []
         self.button_grid = GridFlow(self.buttons, 22, 1, 1, 'center')
-        self.pile1 = Pile([self.required_sl,
-                               self.unrequired_undeployed_sl])
+        self.pile1 = Pile([self.button_grid, self.assigned_sl,
+                           self.unrequired_undeployed_sl])
         self.pile2 = Pile([self.deployed_sl])
-        self.pile3 = Pile([self.assigned_sl])
-        return LineBox(Pile([Columns([self.pile1, self.pile2, self.pile3]),
-                             Divider(),
-                             self.button_grid]),
+        return LineBox(Columns([self.pile1, self.pile2]),
                        title="Add Services")
 
     def update(self):
-        self.required_sl.update()
         self.unrequired_undeployed_sl.update()
         self.deployed_sl.update()
         self.assigned_sl.update()
