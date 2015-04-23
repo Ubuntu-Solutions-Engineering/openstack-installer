@@ -107,9 +107,30 @@ class AddServicesDialog(WidgetWrap):
     def do_add(self, sender, charm_class):
         """Add the selected charm using default juju location.
         Equivalent to a simple 'juju deploy foo'
+
+        Attempt to also add any charms that are required as a result
+        of the newly added charm.
         """
-        self.pc.assign(self.pc.def_placeholder, charm_class,
-                       AssignmentType.DEFAULT)
+
+        def num_to_auto_add(charm_class):
+            return (charm_class.required_num_units() -
+                    self.pc.assignment_machine_count_for_charm(charm_class))
+
+        for i in range(num_to_auto_add(charm_class)):
+            self.pc.assign(self.pc.def_placeholder, charm_class,
+                           AssignmentType.DEFAULT)
+
+        def get_unassigned_requireds():
+            return [cc for cc in
+                    self.pc.unassigned_undeployed_services()
+                    if self.pc.get_charm_state(cc)[0] ==
+                    CharmState.REQUIRED]
+
+        while len(get_unassigned_requireds()) > 0:
+            for u_r_cc in get_unassigned_requireds():
+                for i in range(num_to_auto_add(u_r_cc)):
+                    self.pc.assign(self.pc.def_placeholder, u_r_cc,
+                                   AssignmentType.DEFAULT)
         self.update()
 
     def do_remove(self, sender, charm_class):
