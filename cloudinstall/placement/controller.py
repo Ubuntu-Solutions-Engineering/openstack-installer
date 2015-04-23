@@ -134,7 +134,7 @@ class PlacementController:
         assignments temporarily, e.g. for supporting cancellable
         assignments in a dialog box.
 
-        Pairs with read_from_controller() to 'commit' those temporary
+        Pairs with update_from_controller() to 'commit' those temporary
         assignments to the 'main' controller.
         """
         newpc = PlacementController(maas_state=self.maas_state,
@@ -151,6 +151,14 @@ class PlacementController:
 
         self.assignments = other.assignments
         self.deployments = other.deployments
+        self.reset_assigned_deployed()
+
+    def set_assignments_from_deployments(self):
+        """Reset deployment state of all services. Useful after reading a file
+        from a previous install.
+        """
+        self.assignments = self.deployments
+        self.deployments = defaultdict(lambda: defaultdict(list))
         self.reset_assigned_deployed()
 
     def __repr__(self):
