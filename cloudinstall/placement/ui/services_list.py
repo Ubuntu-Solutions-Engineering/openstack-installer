@@ -58,8 +58,8 @@ class ServicesList(WidgetWrap):
 
     def __init__(self, controller, actions, subordinate_actions,
                  machine=None, ignore_assigned=False,
-                 ignore_deployed=False, deployed_only=False,
-                 show_type='all',
+                 ignore_deployed=False, assigned_only=False,
+                 deployed_only=False, show_type='all',
                  show_constraints=False, show_placements=False,
                  title="Services"):
         self.controller = controller
@@ -69,6 +69,7 @@ class ServicesList(WidgetWrap):
         self.machine = machine
         self.ignore_assigned = ignore_assigned
         self.ignore_deployed = ignore_deployed
+        self.assigned_only = assigned_only
         self.deployed_only = deployed_only
         self.show_type = show_type
         self.show_constraints = show_constraints
@@ -104,12 +105,22 @@ class ServicesList(WidgetWrap):
                     self.remove_service_widget(cc)
                     continue
 
+            if self.ignore_assigned and self.assigned_only:
+                raise Exception("Can't both ignore and only show assigned.")
+
             if self.ignore_assigned:
                 n = self.controller.assignment_machine_count_for_charm(cc)
                 if n == cc.required_num_units() \
                    and self.controller.is_assigned(cc):
                     self.remove_service_widget(cc)
                     continue
+            elif self.assigned_only:
+                if not self.controller.is_assigned(cc):
+                    self.remove_service_widget(cc)
+                    continue
+
+            if self.ignore_deployed and self.deployed_only:
+                raise Exception("Can't both ignore and only show deployed.")
 
             if self.ignore_deployed:
                 n = self.controller.deployment_machine_count_for_charm(cc)
