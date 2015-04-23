@@ -513,6 +513,7 @@ class PegasusGUI(WidgetWrap):
         self.placement_view = None
         self.controller = None
         self.machine_wait_view = None
+        self.add_services_dialog = None
         super().__init__(self.frame)
 
     def _build_overlay_widget(self,
@@ -550,16 +551,20 @@ class PegasusGUI(WidgetWrap):
                                              min_height=min_height)
 
     def focus_next(self):
-        self.frame.body.scroll_down()
+        if hasattr(self.frame.body, 'scroll_down'):
+            self.frame.body.scroll_down()
 
     def focus_previous(self):
-        self.frame.body.scroll_up()
+        if hasattr(self.frame.body, 'scroll_up'):
+            self.frame.body.scroll_up()
 
     def focus_first(self):
-        self.frame.body.scroll_top()
+        if hasattr(self.frame.body, 'scroll_top'):
+            self.frame.body.scroll_top()
 
     def focus_last(self):
-        self.frame.body.scroll_bottom()
+        if hasattr(self.frame.body, 'scroll_bottom'):
+            self.frame.body.scroll_bottom()
 
     def hide_widget_on_top(self):
         """Hide the topmost widget (if any)."""
@@ -632,17 +637,6 @@ class PegasusGUI(WidgetWrap):
     def hide_show_landscape_input(self):
         self.hide_widget_on_top()
 
-    def show_add_services_dialog(self, cb):
-        widget = AddServicesDialog(self.controller, deploy_cb=cb,
-                                   cancel_cb=self.hide_widget_on_top)
-        self._w = Overlay(top_w=widget,
-                          bottom_w=self.frame,
-                          align='center',
-                          valign='middle',
-                          width=('relative', 75),
-                          height='pack',
-                          min_width=40)
-
     def set_pending_deploys(self, pending_charms):
         self.frame.footer.set_pending_deploys(pending_charms)
 
@@ -709,6 +703,21 @@ class PegasusGUI(WidgetWrap):
                 self, self.current_installer, config)
         self.machine_wait_view.update()
         self.frame.body = self.machine_wait_view
+
+    def render_add_services_dialog(self, deploy_cb):
+        def reset():
+            self.add_services_dialog = None
+
+        def deploy():
+            reset()
+            deploy_cb()
+
+        if self.add_services_dialog is None:
+            self.add_services_dialog = AddServicesDialog(self.controller,
+                                                         deploy_cb=deploy,
+                                                         cancel_cb=reset)
+        self.add_services_dialog.update()
+        self.frame.body = Filler(self.add_services_dialog)
 
     def show_exception_message(self, ex, logpath="~/.cloud-install/commands"):
         def handle_done(*args, **kwargs):

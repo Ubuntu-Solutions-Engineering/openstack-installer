@@ -32,6 +32,7 @@ class ControllerState(IntEnum):
     INSTALL_WAIT = 0
     PLACEMENT = 1
     SERVICES = 2
+    ADD_SERVICES = 3
 
 
 class CharmState(Enum):
