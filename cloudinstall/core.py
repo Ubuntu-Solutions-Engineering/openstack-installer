@@ -160,6 +160,16 @@ class Controller:
             log.info("Loaded placements from "
                      "'{}'".format(self.config.placements_filename))
 
+            # If we have no machines (so we are a fresh install) but
+            # are reading a placements.yaml from a previous install,
+            # so it has no assignments, only deployments, tell the
+            # controller to use the deployments in the file as
+            # assignments:
+            if len(self.placement_controller.machines_pending()) == 0 and \
+               len(self.juju_state.machines()) == 0:
+                self.placement_controller.set_assignments_from_deployments()
+                log.info("Using deployments saved from previous install"
+                         " as new assignments.")
         else:
             if self.config.is_multi():
                 def_assignments = self.placement_controller.gen_defaults()
@@ -266,11 +276,8 @@ class Controller:
 
             time.sleep(1)
 
-        # Sanity check to ensure we have at least one juju machine
-        if len(self.placement_controller.machines_pending()) == 0:
-            raise Exception("Stale machine placement info. Please remove"
-                            " ~/.cloud-install/placements.yaml and "
-                            "re-attempt install.")
+        if len(self.juju_state.machines()) == 0:
+            raise Exception("Expected some juju machines started.")
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
         if self.config.is_single():
