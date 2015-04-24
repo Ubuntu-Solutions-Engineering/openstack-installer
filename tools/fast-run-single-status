@@ -1,0 +1,48 @@
+#!/usr/bin/python3
+
+# a simple script to build and copy a new deb into an existing
+# container to test changes to openstack-status quickly.
+
+# assumes that you've got a running single install
+# and you're running in the source tree
+
+import glob
+import logging
+import os
+import shutil
+import subprocess
+import yaml
+
+from cloudinstall.utils import container_run, container_run_status
+
+logging.basicConfig(level=logging.DEBUG)
+
+startdir = os.getcwd()
+os.chdir("..")
+
+with open(os.path.expanduser("~/.cloud-install/config.yaml")) as cfg_file:
+    cfg = yaml.load(cfg_file)
+    container_name = cfg['container_name']
+
+print("building deb")
+os.chdir(startdir)
+subprocess.check_call("make deb", shell=True, stdout=subprocess.DEVNULL,
+                      stderr=subprocess.DEVNULL)
+
+deb_name = glob.glob("../openstack_0.99*all.deb")[0]
+shutil.copy(deb_name, os.path.expanduser("~/.cloud-install/"))
+
+print("removing old version")
+r = container_run(container_name, "sudo apt-get -y remove openstack")
+print(r)
+
+print("installing in container")
+r = container_run(container_name,
+                  'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
+                      os.path.basename(deb_name)))
+
+print("r is {}".format(r))
+
+
+config_is_ignored = {}
+container_run_status(container_name, 'openstack-status', config_is_ignored)

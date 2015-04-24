@@ -31,6 +31,11 @@ class ServiceChooser(WidgetWrap):
     """
 
     def __init__(self, controller, machine, parent_widget):
+        """
+        controller is a PlacementController
+        machine is the machine to show Services for
+        parent_widget should support 'remove_overlay()'
+        """
         self.controller = controller
         self.machine = machine
         self.parent_widget = parent_widget
@@ -47,7 +52,7 @@ class ServiceChooser(WidgetWrap):
                                             show_hardware=True)
 
         def show_remove_p(cc):
-            md = self.controller.machines_for_charm(cc)
+            md = self.controller.get_assignments(cc)
             for atype, ms in md.items():
                 hostnames = [m.hostname for m in ms]
                 if self.machine.hostname in hostnames:

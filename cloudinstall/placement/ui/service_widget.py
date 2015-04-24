@@ -39,13 +39,14 @@ class ServiceWidget(WidgetWrap):
 
     show_constraints - display the charm's constraints
 
-    show_assignments - display the machine(s) currently assigned to
-    host this service
+    show_placements - display the machine(s) currently assigned to
+    host this service, both planned deployments (aka 'assignments',
+    and already-deployed, called 'deployments').
 
     """
 
     def __init__(self, charm_class, controller, actions=None,
-                 show_constraints=False, show_assignments=False):
+                 show_constraints=False, show_placements=False):
         self.charm_class = charm_class
         self.controller = controller
         if actions is None:
@@ -53,7 +54,7 @@ class ServiceWidget(WidgetWrap):
         else:
             self.actions = actions
         self.show_constraints = show_constraints
-        self.show_assignments = show_assignments
+        self.show_placements = show_placements
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -66,7 +67,7 @@ class ServiceWidget(WidgetWrap):
         self.title_markup = ["\N{GEAR} {}".format(dn), ""]
 
         self.charm_info_widget = Text(self.title_markup)
-        self.assignments_widget = Text("")
+        self.placements_widget = Text("")
 
         if self.charm_class.subordinate:
             c_str = [('label', "  (subordinate charm)")]
@@ -83,8 +84,9 @@ class ServiceWidget(WidgetWrap):
         self.button_grid = GridFlow(self.buttons, 22, 1, 1, 'right')
 
         pl = [self.charm_info_widget]
-        if self.show_assignments:
-            pl.append(self.assignments_widget)
+
+        if self.show_placements:
+            pl.append(self.placements_widget)
         if self.show_constraints:
             pl.append(self.constraints_widget)
         pl.append(self.button_grid)
@@ -93,18 +95,22 @@ class ServiceWidget(WidgetWrap):
         return Padding(p, left=2, right=2)
 
     def update(self):
-        md = self.controller.machines_for_charm(self.charm_class)
         mstr = [""]
 
         state, cons, deps = self.controller.get_charm_state(self.charm_class)
 
         if state == CharmState.REQUIRED:
-            np = self.controller.machine_count_for_charm(self.charm_class)
+            p = self.controller.get_assignments(self.charm_class)
+            d = self.controller.get_deployments(self.charm_class)
             nr = self.charm_class.required_num_units()
-            info_str = " ({} of {} placed)".format(np, nr)
+            info_str = " ({} of {} placed".format(len(p), nr)
+            if len(d) > 0:
+                info_str += ", {} deployed)".format(len(d))
+            else:
+                info_str += ")"
 
             # Add hint to explain why a dep showed up in required
-            if np == 0 and len(deps) > 0:
+            if len(p) == 0 and len(deps) > 0:
                 dep_str = ", ".join([c.display_name for c in deps])
                 info_str += " - required by {}".format(dep_str)
 
@@ -120,16 +126,27 @@ class ServiceWidget(WidgetWrap):
             self.title_markup[1] = ""
             self.charm_info_widget.set_text(self.title_markup)
 
-        for atype, ml in md.items():
-            n = len(ml)
-            mstr.append(('label', "    {} ({}): ".format(atype.name, n)))
-            if len(ml) == 0:
-                mstr.append("\N{DOTTED CIRCLE}")
-            else:
-                mstr.append(", ".join(["\N{TAPE DRIVE} {}".format(m.hostname)
-                                       for m in ml]))
-            mstr.append("\n")
-        self.assignments_widget.set_text(mstr)
+        def string_for_placement_dict(d):
+            s = []
+            for atype, ml in d.items():
+                n = len(ml)
+                s.append(('label', "    {} ({}): ".format(atype.name, n)))
+                if len(ml) == 0:
+                    s.append("\N{DOTTED CIRCLE}")
+                else:
+                    s.append(", ".join(["\N{TAPE DRIVE} {}".format(m.hostname)
+                                        for m in ml]))
+            if len(s) == 0:
+                return [('label', "None")]
+            return s
+        mstr += ["    ", ('label', "Assignments: ")]
+        ad = self.controller.get_assignments(self.charm_class)
+        dd = self.controller.get_deployments(self.charm_class)
+        mstr += string_for_placement_dict(ad)
+        mstr += ["\n    ", ('label', "Deployments: ")]
+        mstr += string_for_placement_dict(dd)
+
+        self.placements_widget.set_text(mstr)
 
         self.update_buttons()
 

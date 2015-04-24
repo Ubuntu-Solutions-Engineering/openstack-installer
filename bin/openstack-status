@@ -112,9 +112,10 @@ if __name__ == '__main__':
         import atexit
         atexit.register(partial(utils.cleanup, config))
         core.start()
-    except:
+    except Exception as e:
         if opts.debug and not config.getopt('headless'):
             import pdb
             pdb.post_mortem()
+        raise e
     finally:
         sys.exit(ev.error_code)

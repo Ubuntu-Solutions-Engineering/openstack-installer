@@ -19,6 +19,10 @@ import sys
 import cloudinstall.utils as utils
 from cloudinstall.state import ControllerState
 
+import logging
+
+log = logging.getLogger('cloudinstall.ev')
+
 
 class EventLoop:
 
@@ -70,14 +74,8 @@ class EventLoop:
                 if self.config.getopt('current_state') != \
                    ControllerState.SERVICES:
                     return
-                charm_modules = utils.load_charms(
-                    self.config.getopt('charm_plugin_dir'))
-                charm_classes = [m.__charm_class__ for m in charm_modules
-                                 if m.__charm_class__.allow_multi_units and
-                                 not m.__charm_class__.disabled]
-                # FIXME: Add unecessary confusion
-                self.ui.show_add_charm_info(charm_classes,
-                                            self._callback_map['add_charm'])
+                self.config.setopt('current_state',
+                                   ControllerState.ADD_SERVICES.value)
             if key in ['q', 'Q']:
                 self.exit(0)
             if key in ['r', 'R', 'f5']:
@@ -115,7 +113,11 @@ class EventLoop:
         :param func cb: (optional) callback
         """
         if not self.config.getopt('headless'):
-            self.loop.run()
+            try:
+                self.loop.run()
+            except:
+                log.exception("Exception in ev.run():")
+                raise
         return
 
     def __repr__(self):

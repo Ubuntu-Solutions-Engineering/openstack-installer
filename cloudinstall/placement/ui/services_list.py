@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from urwid import (AttrMap, Divider, Padding, Pile, Text,
                    WidgetWrap)
 
@@ -20,33 +22,58 @@ from cloudinstall.maas import satisfies
 from cloudinstall.state import CharmState
 from cloudinstall.placement.ui.service_widget import ServiceWidget
 
+log = logging.getLogger('cloudinstall.placement.ui')
+
 
 class ServicesList(WidgetWrap):
 
-    """A list of services (charm classes) with configurable action buttons
-    for each machine.
+    """A list of services (charm classes) with flexible display options.
+
+    Note that not all combinations of display options make sense. YMMV.
+
+    controller - a PlacementController
 
     actions - a list of tuples describing buttons. Passed to
     ServiceWidget.
 
-    machine - a machine instance to query for constraint checking
+    machine - a machine instance to query for constraint checking. If
+    None, no constraint checking is done. If set, only services whose
+    constraints are satisfied by 'machine' are shown.
 
-    show_constraints - bool, whether or not to show the constraints
+    ignore_assigned - bool, whether or not to display services that
+    have already been assigned to a machine (but not yet deployed)
+
+    ignore_deployed - bool, whether or not to display services that
+    have already been deployed
+
+    deployed_only - bool, only show deployed services
+
+    show_constraints - bool, whether or not to display the constraints
     for the various services
+
+    show_type - string, one of 'all', 'required' or 'non-required',
+    controls which charm states should be shown. default is 'all'.
 
     """
 
     def __init__(self, controller, actions, subordinate_actions,
-                 machine=None, unplaced_only=False, show_type='all',
-                 show_constraints=False, title="Services"):
+                 machine=None, ignore_assigned=False,
+                 ignore_deployed=False, assigned_only=False,
+                 deployed_only=False, show_type='all',
+                 show_constraints=False, show_placements=False,
+                 title="Services"):
         self.controller = controller
         self.actions = actions
         self.subordinate_actions = subordinate_actions
         self.service_widgets = []
         self.machine = machine
-        self.unplaced_only = unplaced_only
+        self.ignore_assigned = ignore_assigned
+        self.ignore_deployed = ignore_deployed
+        self.assigned_only = assigned_only
+        self.deployed_only = deployed_only
         self.show_type = show_type
         self.show_constraints = show_constraints
+        self.show_placements = show_placements
         self.title = title
         w = self.build_widgets()
         self.update()
@@ -73,14 +100,36 @@ class ServicesList(WidgetWrap):
         for cc in self.controller.charm_classes():
             if self.machine:
                 if not satisfies(self.machine, cc.constraints)[0] \
-                   or not self.controller.is_assigned(cc, self.machine):
+                   or not (self.controller.is_assigned_to(cc, self.machine) or
+                           self.controller.is_deployed_to(cc, self.machine)):
                     self.remove_service_widget(cc)
                     continue
 
-            if self.unplaced_only:
-                n_units = self.controller.machine_count_for_charm(cc)
-                if n_units == cc.required_num_units() \
-                   and cc not in self.controller.unplaced_services:
+            if self.ignore_assigned and self.assigned_only:
+                raise Exception("Can't both ignore and only show assigned.")
+
+            if self.ignore_assigned:
+                n = self.controller.assignment_machine_count_for_charm(cc)
+                if n == cc.required_num_units() \
+                   and self.controller.is_assigned(cc):
+                    self.remove_service_widget(cc)
+                    continue
+            elif self.assigned_only:
+                if not self.controller.is_assigned(cc):
+                    self.remove_service_widget(cc)
+                    continue
+
+            if self.ignore_deployed and self.deployed_only:
+                raise Exception("Can't both ignore and only show deployed.")
+
+            if self.ignore_deployed:
+                n = self.controller.deployment_machine_count_for_charm(cc)
+                if n == cc.required_num_units() \
+                   and self.controller.is_deployed(cc):
+                    self.remove_service_widget(cc)
+                    continue
+            elif self.deployed_only:
+                if not self.controller.is_deployed(cc):
                     self.remove_service_widget(cc)
                     continue
 
@@ -94,7 +143,8 @@ class ServicesList(WidgetWrap):
                     self.remove_service_widget(cc)
                     continue
                 if not cc.allow_multi_units and \
-                        cc not in self.controller.unplaced_services:
+                   not (self.controller.is_assigned(cc) or
+                        self.controller.is_deployed(cc)):
                     self.remove_service_widget(cc)
                     continue
 
@@ -109,7 +159,8 @@ class ServicesList(WidgetWrap):
         else:
             actions = self.actions
         sw = ServiceWidget(charm_class, self.controller, actions,
-                           self.show_constraints)
+                           self.show_constraints,
+                           show_placements=self.show_placements)
         self.service_widgets.append(sw)
         options = self.service_pile.options()
         self.service_pile.contents.append((sw, options))
