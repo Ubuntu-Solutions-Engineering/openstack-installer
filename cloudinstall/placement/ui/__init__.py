@@ -63,12 +63,13 @@ class ServicesColumn(WidgetWrap):
 
         actions = [(not_conflicted_p, "Choose Machine",
                     self.placement_view.do_show_machine_chooser)]
-        subordinate_actions = [("Add",
+        subordinate_actions = [(not_conflicted_p, "Add",
                                 self.do_place_subordinate)]
         self.required_services_list = ServicesList(self.placement_controller,
                                                    actions,
                                                    subordinate_actions,
-                                                   unplaced_only=True,
+                                                   ignore_assigned=True,
+                                                   ignore_deployed=True,
                                                    show_type='required',
                                                    show_constraints=True,
                                                    title="Required Services")
@@ -118,8 +119,8 @@ class ServicesColumn(WidgetWrap):
         self.additional_services_list.update()
 
         top_buttons = []
-
-        if len(self.placement_controller.unplaced_services) == 0:
+        unplaced = self.placement_controller.unassigned_undeployed_services()
+        if len(unplaced) == 0:
             icon = SelectableIcon(" (Auto-place Remaining Services) ")
             top_buttons.append((AttrMap(icon,
                                         'disabled_button',
@@ -170,7 +171,7 @@ class DeployView(WidgetWrap):
             'button_primary', 'button_primary focus')
         self.deploy_grid = GridFlow([self.deploy_button], 10, 1, 0, 'center')
 
-        self.unplaced_msg = "Some required services are still unplaced."
+        self.unplaced_msg = "Some required services are still unassigned."
 
         self.main_pile = Pile([Divider()])
         return self.main_pile
@@ -372,7 +373,7 @@ class PlacementView(WidgetWrap):
         self.machines_column.update()
 
     def do_autoplace(self, sender):
-        ok, msg = self.placement_controller.autoplace_unplaced_services()
+        ok, msg = self.placement_controller.autoassign_unassigned_services()
         if not ok:
             self.show_overlay(InfoDialog(msg, self.remove_overlay))
 
