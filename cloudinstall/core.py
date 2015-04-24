@@ -295,7 +295,6 @@ class Controller:
                 self.run_apt_go_fast(juju_machine_id)
 
         if self.config.is_single():
-            # FIXME: Remove once http://pad.lv/1326091 is fixed
             self.set_unique_hostnames()
 
         self.deploy_using_placement()
@@ -303,19 +302,28 @@ class Controller:
         self.enqueue_deployed_charms()
 
     def set_unique_hostnames(self):
+        """checks for and ensures unique hostnames, so e.g. ceph can assume
+        that.
+
+        FIXME: Remove once http://pad.lv/1326091 is fixed
+        """
         count = 0
         for machine in self.juju_state.machines():
             count += 1
-            hostname = "{}-{}".format('ubuntu', count)
-            log.debug("Setting hostname: {}".format(machine))
+            hostname = machine.machine.get('InstanceId',
+                                           "ubuntu-{}".format(count))
+
+            log.debug("Setting hostname of {} to {}".format(machine,
+                                                            hostname))
+            juju_home = self.config.juju_home(use_expansion=True)
             utils.remote_run(
                 machine.machine_id,
-                cmds="echo {} |sudo tee /etc/hostname".format(hostname),
-                juju_home=self.config.juju_home(use_expansion=True))
+                cmds="echo {} | sudo tee /etc/hostname".format(hostname),
+                juju_home=juju_home)
             utils.remote_run(
                 machine.machine_id,
                 cmds="sudo hostname {}".format(hostname),
-                juju_home=self.config.juju_home(use_expansion=True))
+                juju_home=juju_home)
 
     def all_maas_machines_ready(self):
         self.maas_state.invalidate_nodes_cache()
@@ -594,7 +602,7 @@ class Controller:
             time.sleep(3)
 
         self.ui.status_info_message(
-            "Processing Relations and finalizing services")
+            "Processing relations and finalizing services")
 
     def enqueue_deployed_charms(self):
         """Send all deployed charms to CharmQueue for relation setting and
@@ -644,6 +652,7 @@ class Controller:
 
         self.deploy_using_placement()
         self.wait_for_deployed_services_ready()
+        self.set_unique_hostnames()
         self.enqueue_deployed_charms()
 
     def start(self):
