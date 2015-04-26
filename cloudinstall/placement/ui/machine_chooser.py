@@ -50,7 +50,7 @@ class MachineChooser(WidgetWrap):
         self.service_widget = ServiceWidget(self.charm_class,
                                             self.controller,
                                             show_constraints=True,
-                                            show_assignments=True)
+                                            show_placements=True)
 
         all_actions = [(AssignmentType.BareMetal,
                         'Add as Bare Metal',
@@ -69,7 +69,7 @@ class MachineChooser(WidgetWrap):
                                           actions,
                                           constraints=constraints,
                                           show_hardware=True,
-                                          show_placements=False)
+                                          show_assignments=False)
         self.machines_list.update()
         close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
