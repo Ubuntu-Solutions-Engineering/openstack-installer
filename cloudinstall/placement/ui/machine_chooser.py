@@ -69,7 +69,7 @@ class MachineChooser(WidgetWrap):
                                           actions,
                                           constraints=constraints,
                                           show_hardware=True,
-                                          show_assignments=False)
+                                          show_placements=False)
         self.machines_list.update()
         close_button = AttrMap(Button('X',
                                       on_press=self.close_pressed),
