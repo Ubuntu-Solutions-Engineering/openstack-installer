@@ -116,6 +116,9 @@ def parse_options(argv):
     parser.add_argument('--debug', action='store_true',
                         dest='debug',
                         help='Debug mode')
+    parser.add_argument('--next-charms', dest='next_charms',
+                        action='store_true',
+                        help="Use /next charms to test upcoming features.")
     # TODO: currently only works for single installs. Use
     # SHOW_JUJU_LOGS=1 in the env to enable. See github issue #421
     # parser.add_argument('--show-logs', action='store_true',
