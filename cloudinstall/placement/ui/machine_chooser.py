@@ -50,7 +50,7 @@ class MachineChooser(WidgetWrap):
         self.service_widget = ServiceWidget(self.charm_class,
                                             self.controller,
                                             show_constraints=True,
-                                            show_assignments=True)
+                                            show_placements=True)
 
         all_actions = [(AssignmentType.BareMetal,
                         'Add as Bare Metal',
