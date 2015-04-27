@@ -7,36 +7,44 @@ keys if there are no values for them, e.g. ceph is only included if
 openstack_origin is defined.
 #}
 
-{% if openstack_origin is defined %}
+{# Openstack Tip common yaml strings #}
+{% macro render_tip_repo(service) %}
+{repositories: [
+ {name: requirements,
+  repository: 'git://git.openstack.org/openstack/requirements',
+  branch: stable/{{openstack_release}}
+ },
+ {name: {{service}},
+  repository: 'git://git.openstack.org/openstack/{{ service }}',
+  branch: stable/{{openstack_release}}
+ }
+]}
+{%- endmacro %}
+
 ceilometer:
   openstack-origin: {{openstack_origin}}
-{% endif %}
 
-{% if openstack_origin is defined %}
 ceilometer-agent:
   openstack-origin: {{openstack_origin}}
-{% endif %}
 
-{% if openstack_origin is defined %}
 heat:
   openstack-origin: {{openstack_origin}}
-{% endif %}
 
 cinder:
   glance-api-version: 2
-{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
-{% endif %}
 {% if storage_backend == 'ceph' %}
   block-device: None
 {% else %}
   block-device: /var/lib/cinder-sdb.img|5G
 {% endif %}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('cinder') }}"
+{% endif %}
 
 ceph-radosgw:
-{% if openstack_origin is defined %}
   source: {{openstack_origin}}
-{% endif %}
   use-embedded-webserver: True
 
 ceph:
@@ -50,14 +58,14 @@ ceph-osd:
   osd-devices: /dev/sdb
   osd-reformat: "yes"
 
-{% if openstack_origin is defined or worker_multiplier is defined %}
 glance:
-{% endif %}
-{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
-{% endif %}
 {% if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
+{% endif %}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('glance') }}"
 {% endif %}
 
 glance-simplestreams-sync:
@@ -69,11 +77,13 @@ juju-gui:
 keystone:
   admin-password: {{openstack_password}}
   admin-user: 'admin'
-{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
-{% endif %}
 {% if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
+{% endif %}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('keystone') }}"
 {% endif %}
 
 mysql:
@@ -83,46 +93,55 @@ mysql:
 neutron-api:
   l2-population: False
   neutron-security-groups: True
-{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('neutron-api') }}"
 {% endif %}
 
 nova-cloud-controller:
   network-manager: Neutron
   quantum-security-groups: "yes"
-{% if openstack_origin is defined %}
   {% if openstack_release[0] >= 'j' %}
   console-access-protocol: novnc
   {% endif %}
   openstack-origin: {{openstack_origin}}
-{% endif %}
 {% if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
 {% endif %}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('nova') }}"
+{% endif %}
 
-{% if openstack_origin is defined %}
 nova-compute:
   openstack-origin: {{openstack_origin}}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('nova') }}"
+{% endif %}
+
 openstack-dashboard:
   openstack-origin: {{openstack_origin}}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('horizon') }}"
 {% endif %}
 
 quantum-gateway:
   instance-mtu: 1400
-{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{% if openstack_tip is defined %}
+  options:
+    openstack-origin-git: "{{ render_tip_repo('neutron') }}"
 {% endif %}
 
 swift-proxy:
   zone-assignment: auto
   replicas: 3
-{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
-{% endif %}
 
 swift-storage:
   zone: 1
   block-device: /etc/swift/storage.img|2G
-{% if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
-{% endif %}

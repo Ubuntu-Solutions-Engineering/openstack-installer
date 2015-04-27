@@ -81,6 +81,9 @@ def parse_options(argv):
                         dest='openstack_release', default="juno",
                         help="Specify a specific OpenStack release by "
                         "code-name, e.g. 'icehouse' or 'juno'")
+    parser.add_argument('--openstack-tip', action="store_true",
+                        dest='openstack_tip', default=False,
+                        help="Deploy from OpenStack master branches.")
     parser.add_argument('-a', type=str, default=None,
                         help='<arch, ..> comma-separated list of '
                         'architectures to filter available cloud '

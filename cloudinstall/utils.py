@@ -264,12 +264,14 @@ def render_charm_config(config):
         install_type=config.getopt('install_type'),
         openstack_password=config.getopt('openstack_password'))
 
-    if config.getopt('openstack_release'):
-        template_args['openstack_release'] = config.getopt(
-            'openstack_release')
-        openstack_origin = ("cloud:trusty-" +
-                            config.getopt('openstack_release'))
-        template_args['openstack_origin'] = openstack_origin
+    if config.getopt('openstack_tip'):
+        template_args['openstack_tip'] = config.getopt(
+            'openstack_tip')
+    template_args['openstack_release'] = config.getopt(
+        'openstack_release')
+    openstack_origin = ("cloud:trusty-" +
+                        config.getopt('openstack_release'))
+    template_args['openstack_origin'] = openstack_origin
 
     if config.is_single():
         template_args['worker_multiplier'] = '1'
@@ -817,13 +819,16 @@ def container_wait(name):
     return out['status']
 
 
-def load_template(name):
+def load_template(name, path=None):
     """ load template file
 
     :param str name: name of template file
+    :param str path: alternate location of template location
     """
+    if path is None:
+        path = '/usr/share/openstack/templates'
     env = Environment(
-        loader=FileSystemLoader('/usr/share/openstack/templates'))
+        loader=FileSystemLoader(path))
     return env.get_template(name)
 
 
