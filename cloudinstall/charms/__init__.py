@@ -216,6 +216,10 @@ export OS_REGION_NAME=RegionOne
         if self.charm_rev:
             _charm_name_rev = "{}-{}".format(self.charm_name, self.charm_rev)
 
+        if self.config.getopt('next_charms'):
+            _charm_name_rev = ("cs:~openstack-charmers/charms/trusty/{}"
+                               "/next".format(self.charm_name))
+
         if self.subordinate:
             assert(num_units is None)
             num_units = 0
