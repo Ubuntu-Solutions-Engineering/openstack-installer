@@ -156,7 +156,6 @@ class SingleInstall:
 
         utils.container_create(self.container_name, self.userdata)
 
-        # cache dir in container
         with open(os.path.join(self.container_abspath, 'fstab'), 'w') as f:
             f.write("{0} {1} none bind,create=dir\n".format(
                 self.config.cfg_path,
@@ -186,7 +185,8 @@ class SingleInstall:
         with open(os.path.join(self.container_abspath, 'config'), 'a') as f:
             f.write("lxc.mount.auto = cgroup:mixed\n"
                     "lxc.start.auto = 1\n"
-                    "lxc.start.delay = 5\n")
+                    "lxc.start.delay = 5\n"
+                    "lxc.mount = {}/fstab\n".format(self.container_abspath))
 
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 
