@@ -76,9 +76,6 @@ class TestRenderCharmConfig(unittest.TestCase):
             else:
                 self.assertEqual(d[oscharmname]['openstack-origin'], expected)
 
-    def test_render_openstack_release_default(self, mockspew):
-        self._do_test_osrel(None, None, mockspew)
-
     def test_render_openstack_release_given(self, mockspew):
         self._do_test_osrel('klaxon', 'cloud:trusty-klaxon', mockspew)
 
