@@ -18,9 +18,11 @@
 
 import logging
 from os import path
+import os
 import sys
 import yaml
 from queue import Queue
+import subprocess
 import time
 import requests
 
@@ -216,9 +218,21 @@ export OS_REGION_NAME=RegionOne
         if self.charm_rev:
             _charm_name_rev = "{}-{}".format(self.charm_name, self.charm_rev)
 
-        if self.config.getopt('next_charms'):
-            _charm_name_rev = ("cs:~openstack-charmers/charms/trusty/{}"
-                               "/next".format(self.charm_name))
+        have_nextbranch = ['heat', 'nova-cloud-controller',
+                           'swift-proxy', 'rabbitmq-server', 'ceph',
+                           'swift-storage', 'ceilometer',
+                           'ceilometer-agent', 'cinder-ceph',
+                           'quantum-gateway', 'openstack-dashboard',
+                           'neutron-openvswitch', 'neutron-api',
+                           'keystone', 'glance', 'cinder',
+                           'nova-compute', 'ceph-osd', 'ceph-radosgw']
+
+        if self.config.getopt('next_charms') and \
+           self.charm_name in have_nextbranch:
+            self.bzr_get("lp:~openstack-charmers/charms/trusty/{}"
+                         "/next".format(self.charm_name))
+            self.local_deploy(machine_spec)
+            return False
 
         if self.subordinate:
             assert(num_units is None)
@@ -245,6 +259,53 @@ export OS_REGION_NAME=RegionOne
 
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
         return False
+
+    def bzr_get(self, branch_name):
+        localrepo = os.path.join(self.config.cfg_path,
+                                 'local-charms',
+                                 'trusty', self.charm_name)
+        os.makedirs(localrepo, exist_ok=True)
+        try:
+            subprocess.check_output(['bzr', 'co', '--lightweight',
+                                     branch_name, localrepo])
+        except Exception as e:
+            log.warning("error checking out charm: "
+                        "rc={} out={}".format(e.returncode,
+                                              e.output))
+            raise e
+
+    def local_deploy(self, mspec):
+        localrepo = os.path.join(self.config.cfg_path,
+                                 'local-charms')
+        kwds = dict(constraints=self.constraints_arg(),
+                    repodir=localrepo,
+                    charm_name=self.charm_name,
+                    distro='trusty',
+                    mspec=mspec)
+
+        # TODO: See if this is supported by juju api
+        juju_home = self.config.juju_home(use_expansion=True)
+        cmd = ('{juju_home} juju deploy --repository={repodir}'
+               ' local:{distro}/{charm_name}'
+               ' --constraints {constraints} '
+               '--to {mspec}').format(juju_home=juju_home, **kwds)
+
+        charm_config, _ = get_charm_config()
+        if self.charm_name in charm_config:
+            cmd += ' --config ' + CHARM_CONFIG_FILENAME
+
+        try:
+            log.debug("Deploying {} from local: {}".format(self.charm_name,
+                                                           cmd))
+            cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT,
+                                                 shell=True)
+
+            log.debug("Deploy output: " + cmd_output.decode('utf-8'))
+
+        except subprocess.CalledProcessError as e:
+            log.warning("Deploy error. rc={} out={}".format(e.returncode,
+                                                            e.output))
+            return True
 
     def add_unit(self, machine_spec, num_units=1):
         """Add num_units of an already-deployed service onto machine_spec.
