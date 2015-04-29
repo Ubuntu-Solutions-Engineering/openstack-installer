@@ -184,7 +184,10 @@ export OS_REGION_NAME=RegionOne
         """ converts self.constraints into arg form for juju CLI"""
         args = []
         for k, v in self.constraints.items():
-            args.append("{}={}".format(k, ','.join(v)))
+            try:
+                args.append("{}={}".format(k, ','.join(v)))
+            except TypeError:
+                args.append("{}={}".format(k, v))
         all_args = " ".join(args)
         return "\"{}\"".format(all_args)
 
