@@ -79,8 +79,8 @@ def parse_options(argv):
                         'Use with care!')
     parser.add_argument('--openstack-release',
                         dest='openstack_release', default="juno",
-                        help="Specify a specific OpenStack release by "
-                        "code-name, e.g. 'icehouse' or 'juno'")
+                        choices=['icehouse', 'juno', 'kilo'],
+                        help="Specify a specific OpenStack release.")
     parser.add_argument('--openstack-tip', action="store_true",
                         dest='openstack_tip', default=False,
                         help="Deploy from OpenStack master branches.")
