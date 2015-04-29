@@ -39,8 +39,7 @@ cinder:
   block-device: /var/lib/cinder-sdb.img|5G
 {% endif %}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('cinder') }}"
+  openstack-origin-git: "{{ render_tip_repo('cinder') }}"
 {% endif %}
 
 ceph-radosgw:
@@ -64,8 +63,7 @@ glance:
   worker-multiplier: {{worker_multiplier}}
 {% endif %}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('glance') }}"
+   openstack-origin-git: "{{ render_tip_repo('glance') }}"
 {% endif %}
 
 glance-simplestreams-sync:
@@ -82,8 +80,7 @@ keystone:
   worker-multiplier: {{worker_multiplier}}
 {% endif %}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('keystone') }}"
+  openstack-origin-git: "{{ render_tip_repo('keystone') }}"
 {% endif %}
 
 mysql:
@@ -95,8 +92,7 @@ neutron-api:
   neutron-security-groups: True
   openstack-origin: {{openstack_origin}}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('neutron-api') }}"
+  openstack-origin-git: "{{ render_tip_repo('neutron-api') }}"
 {% endif %}
 
 nova-cloud-controller:
@@ -110,30 +106,26 @@ nova-cloud-controller:
   worker-multiplier: {{worker_multiplier}}
 {% endif %}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('nova') }}"
+  openstack-origin-git: "{{ render_tip_repo('nova') }}"
 {% endif %}
 
 nova-compute:
   openstack-origin: {{openstack_origin}}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('nova') }}"
+  openstack-origin-git: "{{ render_tip_repo('nova') }}"
 {% endif %}
 
 openstack-dashboard:
   openstack-origin: {{openstack_origin}}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('horizon') }}"
+  openstack-origin-git: "{{ render_tip_repo('horizon') }}"
 {% endif %}
 
 quantum-gateway:
   instance-mtu: 1400
   openstack-origin: {{openstack_origin}}
 {% if openstack_tip is defined %}
-  options:
-    openstack-origin-git: "{{ render_tip_repo('neutron') }}"
+  openstack-origin-git: "{{ render_tip_repo('neutron') }}"
 {% endif %}
 
 swift-proxy:
