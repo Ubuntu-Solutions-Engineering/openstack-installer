@@ -21,6 +21,34 @@ openstack_origin is defined.
 ]}
 {%- endmacro %}
 
+{%- macro render_tip_neutron() %}
+{repositories: [
+ {name: requirements,
+  repository: 'git://github.com/openstack/requirements',
+  branch: stable/{{openstack_release}}
+ },
+ {name: neutron-fwaas,
+  repository: 'git://github.com/openstack/neutron-fwaas',
+  branch: stable/{{openstack_release}}
+ },
+ {name: neutron-lbaas,
+  repository: 'git://github.com/openstack/neutron-lbaas',
+  branch: stable/{{openstack_release}}
+ },
+ {name: neutron-vpnaas,
+  repository: 'git://github.com/openstack/neutron-vpnaas',
+  branch: stable/{{openstack_release}}
+ },
+ {name: neutron,
+  repository: 'git://github.com/openstack/neutron',
+  branch: stable/{{openstack_release}}
+ }
+],
+http_proxy: 'http://squid.internal:3128',
+https_proxy: 'http://squid.internal:3128'
+}
+{%- endmacro %}
+
 ceilometer:
   openstack-origin: {{openstack_origin}}
 
@@ -87,12 +115,18 @@ mysql:
   dataset-size: 512M
   max-connections: 25000
 
+neutron-openvswitch:
+  openstack-origin: {{openstack_origin}}
+{% if openstack_tip is defined %}
+  openstack-origin-git: "{{ render_tip_neutron() }}"
+{% endif %}
+
 neutron-api:
   l2-population: False
   neutron-security-groups: True
   openstack-origin: {{openstack_origin}}
 {% if openstack_tip is defined %}
-  openstack-origin-git: "{{ render_tip_repo('neutron-api') }}"
+  openstack-origin-git: "{{ render_tip_neutron() }}"
 {% endif %}
 
 nova-cloud-controller:
@@ -125,7 +159,7 @@ quantum-gateway:
   instance-mtu: 1400
   openstack-origin: {{openstack_origin}}
 {% if openstack_tip is defined %}
-  openstack-origin-git: "{{ render_tip_repo('neutron') }}"
+  openstack-origin-git: "{{ render_tip_neutron() }}"
 {% endif %}
 
 swift-proxy:
