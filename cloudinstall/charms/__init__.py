@@ -261,6 +261,7 @@ export OS_REGION_NAME=RegionOne
         return False
 
     def bzr_get(self, branch_name):
+        self.ui.status_info_message("BZR branching '{}'".format(branch_name))
         localrepo = os.path.join(self.config.cfg_path,
                                  'local-charms',
                                  'trusty', self.charm_name)
@@ -295,8 +296,11 @@ export OS_REGION_NAME=RegionOne
             cmd += ' --config ' + CHARM_CONFIG_FILENAME
 
         try:
-            log.debug("Deploying {} from local: {}".format(self.charm_name,
-                                                           cmd))
+            infostr = ("Deploying {} from local: {}".format(self.charm_name,
+                                                            cmd))
+            log.debug(infostr)
+            self.ui.status_info_message(infostr)
+
             cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT,
                                                  shell=True)
 
