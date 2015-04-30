@@ -185,7 +185,7 @@ class ServicesView(ScrollableWidgetWrap):
         """ builds columns of node status """
         node_cols = []
 
-        status_txt = "[{}] ".format(unit.agent_state)
+        status_txt = "{:20}".format("[{}]".format(unit.agent_state))
 
         # unit.agent_state may be "pending" despite errors elsewhere,
         # so we check for error_info first.
@@ -195,7 +195,8 @@ class ServicesView(ScrollableWidgetWrap):
         if error_info:
             status = ("error_icon", "\N{TETRAGRAM FOR FAILURE} ")
             if unit.agent_state != "error":
-                status_txt = "[{} (error)] ".format(unit.agent_state)
+                status_txt = "{:20}".format("[{} (error)]"
+                                            "".format(unit.agent_state))
         elif unit.agent_state == "pending":
             pending_status = [("pending_icon", "\N{CIRCLED BULLET} "),
                               ("pending_icon", "\N{CIRCLED WHITE BULLET} "),
