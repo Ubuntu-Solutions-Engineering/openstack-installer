@@ -51,7 +51,7 @@ from cloudinstall.placement.ui.add_services_dialog import AddServicesDialog
 log = logging.getLogger('cloudinstall.gui')
 sys.excepthook = utils.global_exchandler
 
-TITLE_TEXT = "Ubuntu Openstack Installer - Dashboard"
+TITLE_TEXT = "Ubuntu OpenStack Installer - Dashboard"
 
 # - Properties ----------------------------------------------------------------
 IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['output'])
