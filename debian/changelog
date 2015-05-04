@@ -1,3 +1,11 @@
+openstack (0.99.8-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+
+  * New add-unit dialog
+  * Fix breakage with lxc 1.1+
+  * Start work on OpenStack charm from upstream
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Mon, 04 May 2015 10:33:47 -0400
+
 openstack (0.99.7-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
 
   * Fix swift charm relation
