@@ -5,7 +5,11 @@
 if [[ "$2" == "Single" ]]; then
     if neutron net-list|grep -q ubuntu-net; then exit 0; fi
     # configure external network for Single install path
+    {% if openstack_release in ['icehouse', 'juno'] %}
     neutron net-create --router:external=True ext-net
+    {% else %}
+    neutron net-create --router:external ext-net
+    {% endif %}
     neutron subnet-create --name ext-subnet --gateway 10.0.{{N}}.1 --allocation-pool start=10.0.{{N}}.200,end=10.0.{{N}}.254 --disable-dhcp ext-net 10.0.{{N}}.0/24
 fi
 

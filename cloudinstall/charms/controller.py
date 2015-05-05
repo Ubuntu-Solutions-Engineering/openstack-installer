@@ -102,9 +102,11 @@ class CharmNovaCloudController(CharmBase):
 
         setup_script_path = os.path.join(self.config.cfg_path,
                                          "nova-controller-setup.sh")
-
+        osrel = self.config.getopt('openstack_release')
+        template_args = dict(N=N,
+                             openstack_release=osrel)
         utils.spew(setup_script_path,
-                   setup_template.render(dict(N=N)))
+                   setup_template.render(template_args))
         return setup_script_path
 
 
