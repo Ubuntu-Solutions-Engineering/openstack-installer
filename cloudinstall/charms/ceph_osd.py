@@ -25,7 +25,7 @@ class CharmCephOSD(CharmBase):
     """ Ceph OSD directives """
 
     charm_name = 'ceph-osd'
-    charm_rev = 8
+    charm_rev = 10
     display_name = 'Ceph OSD'
     allow_multi_units = True
     related = [('ceph:osd', 'ceph-osd:mon'),

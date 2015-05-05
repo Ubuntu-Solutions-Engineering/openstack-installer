@@ -25,7 +25,7 @@ class CharmCeph(CharmBase):
     """ Ceph directives """
 
     charm_name = 'ceph'
-    charm_rev = 34
+    charm_rev = 36
     display_name = 'Ceph'
     display_priority = DisplayPriorities.Storage
     related = [('ceph:client', 'cinder-ceph:ceph'),
