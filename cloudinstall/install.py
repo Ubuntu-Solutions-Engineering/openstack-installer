@@ -49,8 +49,10 @@ class InstallController:
         if not self.config.getopt('headless'):
             if self.config.getopt('openstack_release') == 'icehouse':
                 self.ui.set_openstack_rel("Icehouse (2014.1.3)")
-            else:
+            elif self.config.getopt('openstack_release') == 'juno':
                 self.ui.set_openstack_rel("Juno (2014.2.2)")
+            else:
+                self.ui.set_openstack_rel("Kilo (2015.1.0)")
 
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
