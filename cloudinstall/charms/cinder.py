@@ -26,7 +26,7 @@ class CharmCinder(CharmBase):
     """ Cinder directives """
 
     charm_name = 'cinder'
-    charm_rev = 17
+    charm_rev = 22
     display_name = 'Cinder'
     related = [('cinder:image-service', 'glance:image-service'),
                ('cinder:storage-backend',

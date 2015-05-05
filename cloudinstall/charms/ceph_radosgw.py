@@ -25,7 +25,7 @@ class CharmCephRadosGw(CharmBase):
     """ Ceph radosgw directives """
 
     charm_name = 'ceph-radosgw'
-    charm_rev = 9
+    charm_rev = 12
     display_name = 'Ceph RADOS Gateway'
     related = [('ceph:radosgw', 'ceph-radosgw:mon'),
                ('ceph-radosgw:identity-service',
