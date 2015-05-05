@@ -116,7 +116,6 @@ mysql:
   max-connections: 25000
 
 neutron-openvswitch:
-  openstack-origin: {{openstack_origin}}
 {% if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
 {% endif %}
