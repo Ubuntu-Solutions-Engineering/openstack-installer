@@ -159,8 +159,8 @@ class ServicesList(WidgetWrap):
                           "state is REQUIRED.")
                     continue
                 if not cc.allow_multi_units and \
-                   not (self.controller.is_assigned(cc) or
-                        self.controller.is_deployed(cc)):
+                   (self.controller.is_assigned(cc) or
+                    self.controller.is_deployed(cc)):
                     self.remove_service_widget(cc)
                     trace(cc, "removed because it doesn't allow multiple units"
                           " and is not assigned or deployed.")
