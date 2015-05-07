@@ -119,6 +119,7 @@ class ServicesList(WidgetWrap):
             if self.ignore_assigned:
                 n = self.controller.assignment_machine_count_for_charm(cc)
                 if n == cc.required_num_units() \
+                   and not cc.allow_multi_units \
                    and self.controller.is_assigned(cc):
                     self.remove_service_widget(cc)
                     trace(cc, "removed because max units are "
