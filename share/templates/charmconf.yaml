@@ -3,8 +3,7 @@ duplicating charm default values in installer code, which could then
 get out of sync.
 
 To avoid None values in the top-level dict, we also do not include
-keys if there are no values for them, e.g. ceph is only included if
-openstack_origin is defined.
+keys if there are no values for them.
 #}
 
 {# Openstack Tip common yaml strings #}
