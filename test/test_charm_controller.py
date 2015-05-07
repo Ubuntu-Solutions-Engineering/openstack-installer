@@ -61,7 +61,8 @@ class TestController(unittest.TestCase):
         self.mock_config.getopt.return_value = '10.0.90210.0/24'
         self.charm.render_setup_script()
         name, (path, script_text), kwargs = mock_spew.mock_calls[0]
-        self.mock_config.getopt.assert_called_with('lxc_network')
+        self.mock_config.getopt.assert_any_call('lxc_network'),
+        self.mock_config.getopt.assert_any_call('openstack_release')
         self.assertEqual(path, 'fake-cfg-path/nova-controller-setup.sh')
         self.assertTrue('--gateway 10.0.90210.1' in script_text)
 
@@ -72,6 +73,6 @@ class TestController(unittest.TestCase):
 
         self.charm.render_setup_script()
         name, (path, script_text), kwargs = mock_spew.mock_calls[0]
-        self.assertFalse(self.mock_config.getopt.called)
+        self.mock_config.getopt.assert_called_with('openstack_release')
         self.assertEqual(path, 'fake-cfg-path/nova-controller-setup.sh')
         self.assertTrue('--gateway 10.0.0.1' in script_text)
