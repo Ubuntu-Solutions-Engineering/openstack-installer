@@ -75,6 +75,7 @@ ceph-radosgw:
   use-embedded-webserver: True
 
 ceph:
+  source: {{openstack_origin}}
   fsid: 4df47d30-cbf3-45d9-a485-27996ab6998e
   monitor-secret: AQBilclUKG9RIRAAlFP9bohec06c+e7lfCRGrw==
 {% if install_type == 'Single' %}
@@ -82,6 +83,7 @@ ceph:
 {% endif %}
 
 ceph-osd:
+  source: {{openstack_origin}}
   osd-devices: /dev/sdb
   osd-reformat: "yes"
 
