@@ -45,6 +45,7 @@ class InstallController:
         self.ui = ui
         self.config = config
         self.loop = loop
+        self.install_type = None
         self.config.setopt('current_state', InstallState.RUNNING.value)
         if not self.config.getopt('headless'):
             if self.config.getopt('openstack_release') == 'icehouse':
@@ -53,6 +54,12 @@ class InstallController:
                 self.ui.set_openstack_rel("Juno (2014.2.2)")
             else:
                 self.ui.set_openstack_rel("Kilo (2015.1.0)")
+
+    def _set_install_type(self, install_type):
+        self.install_type = install_type
+        self.ui.show_password_input(
+            'Create a new Openstack Password for %s install'.format(
+                self.install_type), self._save_password)
 
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
@@ -65,13 +72,13 @@ class InstallController:
             self.loop.redraw_screen()
             self.config.setopt('openstack_password', password)
             self.ui.hide_show_password_input()
-            self.ui.select_install_type(
-                self.config.install_types(), self.do_install)
+            self.do_install()
         else:
             self.ui.flash('Passwords did not match')
             self.loop.redraw_screen()
             return self.ui.show_password_input(
-                'Create a new Openstack Password', self._save_password)
+                'Create a new Openstack Password for %s install'.format(
+                    self.install_type), self._save_password)
 
     def _save_maas_creds(self, creds):
         self.ui.hide_widget_on_top()
@@ -103,21 +110,20 @@ class InstallController:
 
         self.loop.set_alarm_in(1, self.update)
 
-    def do_install(self, install_type):
-        """ Callback for install type selector
+    def do_install(self):
+        """ Perform install
         """
-
         if not self.config.getopt('headless'):
             self.ui.hide_selector_info()
 
         # Set installed placeholder
         utils.spew(os.path.join(
             self.config.cfg_path, 'installed'), 'auto-generated')
-        if install_type == INSTALL_TYPE_SINGLE[0]:
+        if self.install_type == INSTALL_TYPE_SINGLE[0]:
             self.ui.status_info_message("Performing a Single Install")
             self.SingleInstall(
                 self.loop, self.ui, self.config).run()
-        elif install_type == INSTALL_TYPE_MULTI[0]:
+        elif self.install_type == INSTALL_TYPE_MULTI[0]:
             # TODO: Clean this up a bit more I dont like relying on
             # opts.headless but in a few places
             if self.config.getopt('headless'):
@@ -131,13 +137,14 @@ class InstallController:
                         self.loop, self.ui, self.config).run()
             else:
                 self.ui.select_maas_type(self._save_maas_creds)
-        elif install_type == INSTALL_TYPE_LANDSCAPE[0]:
+        elif self.install_type == INSTALL_TYPE_LANDSCAPE[0]:
             log.info("Performing a Landscape OpenStack Autopilot install")
             self.LandscapeInstall(
                 self.loop, self.ui, self.config).run()
         else:
             os.remove(os.path.join(self.config.cfg_path, 'installed'))
-            raise ValueError("Unknown install type: {}".format(install_type))
+            raise ValueError("Unknown install type: {}".format(
+                self.install_type))
 
     def start(self):
         """ Start installer eventloop
@@ -155,10 +162,11 @@ class InstallController:
                 self.loop.exit(1)
 
         else:
-            self.ui.status_info_message("Get started by entering an OpenStack "
-                                        "password for your cloud")
+            self.ui.status_info_message(
+                "Choose the OpenStack installation path")
 
-            self.ui.show_password_input(
-                'Create a new Openstack Password', self._save_password)
+            self.ui.select_install_type(
+                self.config.install_types(), self._set_install_type)
+
         self.update()
         self.loop.run()
