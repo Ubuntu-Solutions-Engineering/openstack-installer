@@ -159,9 +159,9 @@ class ServicesList(WidgetWrap):
                     trace(cc, "removed because show_type is 'non-required' and"
                           "state is REQUIRED.")
                     continue
-                if not cc.allow_multi_units and \
-                   (self.controller.is_assigned(cc) or
-                    self.controller.is_deployed(cc)):
+                assigned_or_deployed = (self.controller.is_assigned(cc) or
+                                        self.controller.is_deployed(cc))
+                if not cc.allow_multi_units and assigned_or_deployed:
                     self.remove_service_widget(cc)
                     trace(cc, "removed because it doesn't allow multiple units"
                           " and is not assigned or deployed.")
