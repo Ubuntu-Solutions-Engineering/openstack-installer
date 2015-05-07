@@ -76,6 +76,7 @@ class ServicesColumn(WidgetWrap):
         self.additional_services_list = ServicesList(self.placement_controller,
                                                      actions,
                                                      subordinate_actions,
+                                                     ignore_assigned=True,
                                                      show_type='non-required',
                                                      show_constraints=True,
                                                      title="Additional "
