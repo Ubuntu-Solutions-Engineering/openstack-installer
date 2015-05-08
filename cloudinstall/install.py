@@ -58,8 +58,7 @@ class InstallController:
     def _set_install_type(self, install_type):
         self.install_type = install_type
         self.ui.show_password_input(
-            'Create a new Openstack Password for %s install'.format(
-                self.install_type), self._save_password)
+            'Create a New OpenStack Password', self._save_password)
 
     def _save_password(self, creds):
         """ Checks passwords match and proceeds
@@ -77,8 +76,7 @@ class InstallController:
             self.ui.flash('Passwords did not match')
             self.loop.redraw_screen()
             return self.ui.show_password_input(
-                'Create a new Openstack Password for %s install'.format(
-                    self.install_type), self._save_password)
+                'Create a New OpenStack Password', self._save_password)
 
     def _save_maas_creds(self, creds):
         self.ui.hide_widget_on_top()
