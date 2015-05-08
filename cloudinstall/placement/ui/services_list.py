@@ -54,6 +54,8 @@ class ServicesList(WidgetWrap):
     show_type - string, one of 'all', 'required' or 'non-required',
     controls which charm states should be shown. default is 'all'.
 
+    trace_updates - bool, enable verbose update logging
+
     """
 
     def __init__(self, controller, actions, subordinate_actions,
@@ -61,7 +63,7 @@ class ServicesList(WidgetWrap):
                  ignore_deployed=False, assigned_only=False,
                  deployed_only=False, show_type='all',
                  show_constraints=False, show_placements=False,
-                 title="Services"):
+                 title="Services", trace_updates=False):
         self.controller = controller
         self.actions = actions
         self.subordinate_actions = subordinate_actions
@@ -75,6 +77,7 @@ class ServicesList(WidgetWrap):
         self.show_constraints = show_constraints
         self.show_placements = show_placements
         self.title = title
+        self.trace = trace_updates
         w = self.build_widgets()
         self.update()
         super().__init__(w)
@@ -97,12 +100,17 @@ class ServicesList(WidgetWrap):
 
     def update(self):
 
+        def trace(cc, s):
+            if self.trace:
+                log.debug("{}: {} {}".format(self.title, cc, s))
+
         for cc in self.controller.charm_classes():
             if self.machine:
                 if not satisfies(self.machine, cc.constraints)[0] \
                    or not (self.controller.is_assigned_to(cc, self.machine) or
                            self.controller.is_deployed_to(cc, self.machine)):
                     self.remove_service_widget(cc)
+                    trace(cc, "removed because machine doesn't match")
                     continue
 
             if self.ignore_assigned and self.assigned_only:
@@ -111,12 +119,17 @@ class ServicesList(WidgetWrap):
             if self.ignore_assigned:
                 n = self.controller.assignment_machine_count_for_charm(cc)
                 if n == cc.required_num_units() \
+                   and not cc.allow_multi_units \
                    and self.controller.is_assigned(cc):
                     self.remove_service_widget(cc)
+                    trace(cc, "removed because max units are "
+                          "assigned")
                     continue
             elif self.assigned_only:
                 if not self.controller.is_assigned(cc):
                     self.remove_service_widget(cc)
+                    trace(cc, "removed because it is not assigned and "
+                          "assigned_only is True")
                     continue
 
             if self.ignore_deployed and self.deployed_only:
@@ -127,6 +140,8 @@ class ServicesList(WidgetWrap):
                 if n == cc.required_num_units() \
                    and self.controller.is_deployed(cc):
                     self.remove_service_widget(cc)
+                    trace(cc, "removed because the required number of units"
+                          " has been deployed")
                     continue
             elif self.deployed_only:
                 if not self.controller.is_deployed(cc):
@@ -141,16 +156,21 @@ class ServicesList(WidgetWrap):
             elif self.show_type == 'non-required':
                 if state == CharmState.REQUIRED:
                     self.remove_service_widget(cc)
+                    trace(cc, "removed because show_type is 'non-required' and"
+                          "state is REQUIRED.")
                     continue
-                if not cc.allow_multi_units and \
-                   not (self.controller.is_assigned(cc) or
-                        self.controller.is_deployed(cc)):
+                assigned_or_deployed = (self.controller.is_assigned(cc) or
+                                        self.controller.is_deployed(cc))
+                if not cc.allow_multi_units and assigned_or_deployed:
                     self.remove_service_widget(cc)
+                    trace(cc, "removed because it doesn't allow multiple units"
+                          " and is not assigned or deployed.")
                     continue
 
             sw = self.find_service_widget(cc)
             if sw is None:
                 sw = self.add_service_widget(cc)
+                trace(cc, "added widget")
             sw.update()
 
     def add_service_widget(self, charm_class):
