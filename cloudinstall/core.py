@@ -90,7 +90,8 @@ class Controller:
             self.ui.render_node_install_wait(message="Waiting...")
             interval = self.config.node_install_wait_interval
         elif current_state == ControllerState.ADD_SERVICES:
-            self.ui.render_add_services_dialog(self.deploy_new_services)
+            self.ui.render_add_services_dialog(self.deploy_new_services,
+                                               self.cancel_add_services)
         elif current_state == ControllerState.SERVICES:
             self.update_node_states()
         else:
@@ -654,6 +655,16 @@ class Controller:
         self.wait_for_deployed_services_ready()
         self.set_unique_hostnames()
         self.enqueue_deployed_charms()
+
+    def cancel_add_services(self):
+        """User cancelled add-services screen.
+        Just redisplay services view.
+        """
+        self.config.setopt('current_state',
+                           ControllerState.SERVICES.value)
+        self.ui.render_services_view(self.nodes, self.juju_state,
+                                     self.maas_state, self.config)
+        self.loop.redraw_screen()
 
     def start(self):
         """ Starts UI loop
