@@ -21,7 +21,7 @@ class CharmGlance(CharmBase):
     """ Openstack Glance directives """
 
     charm_name = 'glance'
-    charm_rev = 19
+    charm_rev = 20
     display_name = 'Glance'
     related = [('mysql:shared-db', 'glance:shared-db'),
                ('keystone:identity-service', 'glance:identity-service'),
