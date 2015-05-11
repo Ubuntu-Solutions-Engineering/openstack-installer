@@ -1,2 +1,3 @@
 --ignore-dir=debian
 --ignore-dir=.pybuild
+--ignore-dir=.tox
