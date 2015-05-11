@@ -80,6 +80,7 @@ password: ubuntu
 chpasswd: { expire: False }
 ssh_pwauth: True
 manage_etc_hosts: localhost
+resize_rootfs: False
 
 
 # Make sure we load our modules on first creation
