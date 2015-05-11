@@ -126,7 +126,7 @@ def parse_options(argv):
     #                     help="Show Juju log tails for deploying services.",
     #                     dest='show_logs')
     parser.add_argument('--series', dest='ubuntu_series',
-                        default=platform.dist()[-1],
+                        default='trusty',
                         help="Ubuntu series codename (eg. 'trusty', 'utopic') "
                         "for juju default")
     parser.add_argument(
