@@ -705,9 +705,13 @@ class PegasusGUI(WidgetWrap):
         self.machine_wait_view.update()
         self.frame.body = self.machine_wait_view
 
-    def render_add_services_dialog(self, deploy_cb):
+    def render_add_services_dialog(self, deploy_cb, cancel_cb):
         def reset():
             self.add_services_dialog = None
+
+        def cancel():
+            reset()
+            cancel_cb()
 
         def deploy():
             reset()
@@ -716,7 +720,7 @@ class PegasusGUI(WidgetWrap):
         if self.add_services_dialog is None:
             self.add_services_dialog = AddServicesDialog(self.controller,
                                                          deploy_cb=deploy,
-                                                         cancel_cb=reset)
+                                                         cancel_cb=cancel)
         self.add_services_dialog.update()
         self.frame.body = Filler(self.add_services_dialog)
 
