@@ -1,4 +1,4 @@
-openstack (0.99.8-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+openstack (0.99.9-0ubuntu1~15.04.1~bleed1) vivid; urgency=medium
 
   * New add-unit dialog
   * Fix breakage with lxc 1.1+
