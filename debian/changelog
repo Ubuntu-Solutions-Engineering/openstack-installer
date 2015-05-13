@@ -1,4 +1,10 @@
-openstack (0.99.9-0ubuntu1~15.04.1~bleed1) vivid; urgency=medium
+openstack (0.99.11-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+
+  * Improve threading support in macumba
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 13 May 2015 10:09:09 -0400
+
+openstack (0.99.10-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
 
   * New add-unit dialog
   * Fix breakage with lxc 1.1+
