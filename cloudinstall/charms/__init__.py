@@ -260,11 +260,17 @@ export OS_REGION_NAME=RegionOne
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
         return False
 
-    def bzr_get(self, branch_name):
+    def bzr_get(self, branch_name, series="trusty"):
+        """ checkout charms outside of charmstore
+
+        :params str branch_name: bzr repository path,
+                eg. lp:~openstack-charmers/charms/trusty/nova-compute
+        :params str series: series, defaults trusty
+        """
         self.ui.status_info_message("BZR branching '{}'".format(branch_name))
         localrepo = os.path.join(self.config.cfg_path,
                                  'local-charms',
-                                 'trusty', self.charm_name)
+                                 series, self.charm_name)
         os.makedirs(localrepo, exist_ok=True)
         try:
             subprocess.check_output(['bzr', 'co', '--lightweight',
@@ -275,13 +281,13 @@ export OS_REGION_NAME=RegionOne
                                               e.output))
             raise e
 
-    def local_deploy(self, mspec):
+    def local_deploy(self, mspec, distro="trusty"):
         localrepo = os.path.join(self.config.cfg_path,
                                  'local-charms')
         kwds = dict(constraints=self.constraints_arg(),
                     repodir=localrepo,
                     charm_name=self.charm_name,
-                    distro='trusty',
+                    distro=distro,
                     mspec=mspec)
 
         # TODO: See if this is supported by juju api
