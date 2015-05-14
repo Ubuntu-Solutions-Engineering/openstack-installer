@@ -38,5 +38,6 @@ class CharmCeilometer(CharmBase):
                ('ceilometer:ceilometer-service',
                 'ceilometer-agent:ceilometer-service')]
     depends = ['ceilometer-agent', 'mongodb']
+    have_nextbranch = True
 
 __charm_class__ = CharmCeilometer

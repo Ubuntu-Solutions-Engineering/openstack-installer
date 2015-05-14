@@ -27,5 +27,6 @@ class CharmGlance(CharmBase):
                ('keystone:identity-service', 'glance:identity-service'),
                ('rabbitmq-server:amqp', 'glance:amqp')]
     is_core = True
+    have_nextbranch = True
 
 __charm_class__ = CharmGlance
