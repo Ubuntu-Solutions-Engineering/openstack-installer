@@ -41,5 +41,6 @@ class CharmCinder(CharmBase):
 
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
+    have_nextbranch = True
 
 __charm_class__ = CharmCinder

@@ -26,5 +26,6 @@ class CharmHorizon(CharmBase):
     related = [('keystone:identity-service',
                 'openstack-dashboard:identity-service')]
     is_core = True
+    have_nextbranch = True
 
 __charm_class__ = CharmHorizon
