@@ -281,19 +281,19 @@ export OS_REGION_NAME=RegionOne
                                               e.output))
             raise e
 
-    def local_deploy(self, mspec, distro="trusty"):
+    def local_deploy(self, mspec, series="trusty"):
         localrepo = os.path.join(self.config.cfg_path,
                                  'local-charms')
         kwds = dict(constraints=self.constraints_arg(),
                     repodir=localrepo,
                     charm_name=self.charm_name,
-                    distro=distro,
+                    series=series,
                     mspec=mspec)
 
         # TODO: See if this is supported by juju api
         juju_home = self.config.juju_home(use_expansion=True)
         cmd = ('{juju_home} juju deploy --repository={repodir}'
-               ' local:{distro}/{charm_name}'
+               ' local:{series}/{charm_name}'
                ' --constraints {constraints} '
                '--to {mspec}').format(juju_home=juju_home, **kwds)
 
