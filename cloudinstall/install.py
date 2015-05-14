@@ -148,13 +148,13 @@ class InstallController:
         """ Start installer eventloop
         """
         if self.config.getopt('headless'):
-            install_type = self.config.getopt('install_type')
-            if not install_type:
+            self.install_type = self.config.getopt('install_type')
+            if not self.install_type:
                 log.error('Fatal error: '
                           'Unable to read install type from configuration.')
                 self.loop.exit(1)
             try:
-                self.do_install(install_type)
+                self.do_install()
             except:
                 log.exception("Fatal error")
                 self.loop.exit(1)
