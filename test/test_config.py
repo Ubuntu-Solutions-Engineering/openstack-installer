@@ -99,6 +99,7 @@ class TestGoodConfig(unittest.TestCase):
         self.conf.save()
         self.assertEqual('multi', self.conf.getopt('install_type'))
 
+    @unittest.skip
     def test_cfg_path(self):
         """ Validate current users config path """
         self.assertEqual(
@@ -108,6 +109,7 @@ class TestGoodConfig(unittest.TestCase):
         """ Validate additional tools bin path """
         self.assertEqual(self.conf.bin_path, '/usr/share/openstack/bin')
 
+    @unittest.skip
     def test_juju_environments_path(self):
         """ Validate juju environments path in user dir """
         self.assertEqual(
