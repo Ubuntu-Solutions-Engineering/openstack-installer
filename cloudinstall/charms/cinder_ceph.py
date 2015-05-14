@@ -30,5 +30,6 @@ class CharmCinderCeph(CharmBase):
     deploy_priority = 5
     subordinate = True
     depends = ['ceph', 'cinder']
+    have_nextbranch = True
 
 __charm_class__ = CharmCinderCeph

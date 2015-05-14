@@ -32,5 +32,6 @@ class CharmCephOSD(CharmBase):
                ('ntp:juju-info', 'ceph-osd:juju-info')]
     depends = ['ntp', 'ceph']
     isolate = True
+    have_nextbranch = True
 
 __charm_class__ = CharmCephOSD

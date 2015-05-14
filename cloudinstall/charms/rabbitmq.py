@@ -27,5 +27,6 @@ class CharmRabbitMQ(CharmBase):
     related = [('rabbitmq-server:amqp',
                 'neutron-openvswitch:amqp')]
     is_core = True
+    have_nextbranch = True
 
 __charm_class__ = CharmRabbitMQ
