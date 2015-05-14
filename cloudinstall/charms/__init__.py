@@ -288,8 +288,11 @@ export OS_REGION_NAME=RegionOne
         juju_home = self.config.juju_home(use_expansion=True)
         cmd = ('{juju_home} juju deploy --repository={repodir}'
                ' local:{distro}/{charm_name}'
-               ' --constraints {constraints} '
-               '--to {mspec}').format(juju_home=juju_home, **kwds)
+               ' --constraints {constraints} ').format(
+            juju_home=juju_home, **kwds)
+
+        if not self.subordinate:
+            cmd += ' --to ' + mspec
 
         charm_config, _ = get_charm_config()
         if self.charm_name in charm_config:
