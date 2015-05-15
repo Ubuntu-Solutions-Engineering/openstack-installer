@@ -60,11 +60,7 @@ heat:
 cinder:
   glance-api-version: 2
   openstack-origin: {{openstack_origin}}
-{% if storage_backend == 'ceph' %}
-  block-device: None
-{% else %}
   block-device: /var/lib/cinder-sdb.img|5G
-{% endif %}
 {% if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_repo('cinder') }}"
 {% endif %}

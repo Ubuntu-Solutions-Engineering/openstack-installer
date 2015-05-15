@@ -472,8 +472,8 @@ class PlacementController:
             return b_charm.charm_name in a_charm.depends
 
         required_charms = [c for c in self.charm_classes()
-                           if c.is_core or
-                           c.charm_name in self.selected_storage_charms()]
+                           if c.is_core]
+
         planned_or_deployed = (self.assigned_charm_classes() +
                                required_charms +
                                self.deployed_charm_classes())
@@ -635,20 +635,6 @@ class PlacementController:
         import pprint
         log.debug(pprint.pformat(assignments))
         return assignments
-
-    def selected_storage_charms(self):
-        """returns minimal list of charm names that are required by user
-        selection. Other requirements are sorted using deps and
-        conflicts.
-        """
-        selected_backend = self.config.getopt('storage_backend')
-        if selected_backend == 'none':
-            return []
-        if selected_backend == 'ceph':
-            return ['ceph']
-        if selected_backend == 'swift':
-            return ['swift-proxy', 'swift-storage']
-        raise Exception("unexpected backend: {}".format(selected_backend))
 
     def gen_single(self):
         """Generates an assignment for the single installer."""

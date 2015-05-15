@@ -44,10 +44,6 @@ Ubuntu OpenStack Installer configuration file
 
     Type of installation, choices: Single, Multi, Landscape OpenStack Autopilot
 
-**storage_backend**
-
-    Type of storage to use, default: none, choices: ceph, swift, none
-
 **upstream_deb**
 
     Provide an upstream openstack debian package, mostly used during development to
