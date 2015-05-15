@@ -225,6 +225,13 @@ export OS_REGION_NAME=RegionOne
             self.local_deploy(machine_spec)
             return False
 
+        if self.config.getopt('use_nclxd'):
+            branch = "lp:charms/trusty/{}".format(self.charm_name)
+            current_series = self.config.getopt('ubuntu_series')
+            self.bzr_get(branch, current_series)
+            self.local_deploy(machine_spec, current_series)
+            return False
+
         if self.subordinate:
             assert(num_units is None)
             num_units = 0
