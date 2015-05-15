@@ -269,8 +269,12 @@ def render_charm_config(config):
             'openstack_tip')
     template_args['openstack_release'] = config.getopt(
         'openstack_release')
-    openstack_origin = ("cloud:trusty-" +
-                        config.getopt('openstack_release'))
+
+    ubuntu_series = config.getopt('ubuntu_series')
+    openstack_release = config.getopt('openstack_release')
+    openstack_origin = ("cloud:{}-{}".format(ubuntu_series,
+                                             openstack_release))
+
     template_args['openstack_origin'] = openstack_origin
 
     if config.is_single():
