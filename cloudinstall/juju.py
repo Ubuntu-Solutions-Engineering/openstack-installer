@@ -23,6 +23,8 @@ import time
 from cloudinstall.machine import Machine
 from cloudinstall.service import Service
 
+from macumba import RequestTimeout
+
 log = logging.getLogger('cloudinstall.juju')
 
 
@@ -65,10 +67,22 @@ class JujuState:
 
         Call invalidate_status_cache() to force next status call to
         fetch from server.
+
+        If request times out (macumba default is 60 seconds), retries
+        5 times.
+
         """
         elapsed_time = time.time() - self.start_time
+        n_retries = 0
         if not self._juju_status or elapsed_time > 20:
-            self._juju_status = self.juju.status()
+            self._juju_status = None
+            while self._juju_status is None:
+                try:
+                    self._juju_status = self.juju.status()
+                except RequestTimeout:
+                    n_retries += 1
+                    if n_retries == 5:
+                        raise Exception("Connection failure with juju API")
             self.start_time = time.time()
         return self._juju_status
 
