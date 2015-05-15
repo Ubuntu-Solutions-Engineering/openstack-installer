@@ -21,7 +21,6 @@
 import argparse
 import sys
 import os
-import platform
 import logging
 import signal
 from functools import partial
@@ -121,6 +120,9 @@ def parse_options(argv):
     parser.add_argument('--next-charms', dest='next_charms',
                         action='store_true',
                         help="Use /next charms to test upcoming features.")
+    parser.add_argument('--use-nclxd', dest='use_nclxd', action="store_true",
+                        help="Enable LXD support for Nova Compute. Requires"
+                        "--series vivid to be set.")
     # TODO: currently only works for single installs. Use
     # SHOW_JUJU_LOGS=1 in the env to enable. See github issue #421
     # parser.add_argument('--show-logs', action='store_true',
@@ -156,6 +158,11 @@ if __name__ == '__main__':
     # see github issue #421:
     if os.environ.get("SHOW_JUJU_LOGS", False):
         cfg.setopt('show_logs', True)
+
+    # validate series exists for nclxd
+    if opts.use_nclxd and opts.ubuntu_series[0] < 'v':
+        print("You must pass --series vivid or higher in order to use nclxd.")
+        sys.exit(1)
 
     try:
         setup_logger(headless=cfg.getopt('headless'))
