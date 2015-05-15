@@ -63,6 +63,8 @@ class TestCharmBase(unittest.TestCase):
         self.get_config_patcher.stop()
 
     def test_subordinate_deploy_success(self):
+        self.mock_config.getopt = MagicMock(name='getopt')
+        self.mock_config.getopt.return_value = False
         self.charm.subordinate = True
         self.charm.charm_name = 'fake'
         self.charm.deploy('fake mspec')
