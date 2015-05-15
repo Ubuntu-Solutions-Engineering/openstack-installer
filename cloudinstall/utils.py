@@ -264,7 +264,6 @@ def render_charm_config(config):
         install_type=config.getopt('install_type'),
         openstack_password=config.getopt('openstack_password'))
 
-
     if config.getopt('openstack_tip'):
         template_args['openstack_tip'] = config.getopt(
             'openstack_tip')
