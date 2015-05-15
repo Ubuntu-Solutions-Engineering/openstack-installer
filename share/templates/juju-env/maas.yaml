@@ -6,7 +6,7 @@ environments:
     maas-server: 'http://{{maas_server}}/MAAS/'
     maas-oauth: '{{maas_apikey}}'
     admin-secret: "{{openstack_password}}"
-    default-series: trusty
+    default-series: {{ubuntu_series}}
     authorized-keys-path: ~/.ssh/id_rsa.pub
 {%- if http_proxy %}
     apt-http-proxy: {{http_proxy}}

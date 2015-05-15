@@ -60,9 +60,10 @@ class TestRenderCharmConfig(unittest.TestCase):
     def tearDown(self):
         self.ltp.stop()
 
-    def _do_test_osrel(self, optsvalue, expected, mockspew):
+    def _do_test_osrel(self, series, optsvalue, expected, mockspew):
         "check that opts.openstack_release is rendered correctly"
         self.config.setopt('openstack_release', optsvalue)
+        self.config.setopt('ubuntu_series', series)
 
         render_charm_config(self.config)
         (fake_path, generated_yaml), kwargs = mockspew.call_args
@@ -77,7 +78,8 @@ class TestRenderCharmConfig(unittest.TestCase):
                 self.assertEqual(d[oscharmname]['openstack-origin'], expected)
 
     def test_render_openstack_release_given(self, mockspew):
-        self._do_test_osrel('klaxon', 'cloud:trusty-klaxon', mockspew)
+        self._do_test_osrel('trusty', 'klaxon',
+                            'cloud:trusty-klaxon', mockspew)
 
     def _do_test_multiplier(self, is_single, mockspew, expected=None):
         if is_single:
