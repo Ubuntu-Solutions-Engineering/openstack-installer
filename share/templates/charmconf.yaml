@@ -61,9 +61,9 @@ cinder:
   glance-api-version: 2
   openstack-origin: {{openstack_origin}}
   block-device: /var/lib/cinder-sdb.img|5G
-{% if openstack_tip is defined %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_repo('cinder') }}"
-{% endif %}
+{%- endif %}
 
 ceph-radosgw:
   source: {{openstack_origin}}
@@ -73,9 +73,9 @@ ceph:
   source: {{openstack_origin}}
   fsid: 4df47d30-cbf3-45d9-a485-27996ab6998e
   monitor-secret: AQBilclUKG9RIRAAlFP9bohec06c+e7lfCRGrw==
-{% if install_type == 'Single' %}
+{%- if install_type == 'Single' %}
   osd-devices: /home/ubuntu/ceph-osd/
-{% endif %}
+{%- endif %}
 
 ceph-osd:
   source: {{openstack_origin}}
@@ -84,12 +84,12 @@ ceph-osd:
 
 glance:
   openstack-origin: {{openstack_origin}}
-{% if worker_multiplier is defined %}
+{%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
-{% endif %}
-{% if openstack_tip is defined %}
+{%- endif %}
+{%- if openstack_tip is defined %}
    openstack-origin-git: "{{ render_tip_repo('glance') }}"
-{% endif %}
+{%- endif %}
 
 glance-simplestreams-sync:
   use_swift: False
@@ -101,29 +101,29 @@ keystone:
   admin-password: {{openstack_password}}
   admin-user: 'admin'
   openstack-origin: {{openstack_origin}}
-{% if worker_multiplier is defined %}
+{%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
-{% endif %}
-{% if openstack_tip is defined %}
+{%- endif %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_repo('keystone') }}"
-{% endif %}
+{%- endif %}
 
 mysql:
   dataset-size: 512M
   max-connections: 25000
 
 neutron-openvswitch:
-{% if openstack_tip is defined %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
-{% endif %}
+{%- endif %}
 
 neutron-api:
   l2-population: False
   neutron-security-groups: True
   openstack-origin: {{openstack_origin}}
-{% if openstack_tip is defined %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
-{% endif %}
+{%- endif %}
 
 nova-cloud-controller:
   network-manager: Neutron
@@ -132,31 +132,31 @@ nova-cloud-controller:
   console-access-protocol: novnc
   {% endif %}
   openstack-origin: {{openstack_origin}}
-{% if worker_multiplier is defined %}
+{%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
-{% endif %}
-{% if openstack_tip is defined %}
+{%- endif %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_repo('nova') }}"
-{% endif %}
+{%- endif %}
 
 nova-compute:
   openstack-origin: {{openstack_origin}}
-{% if openstack_tip is defined %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_repo('nova') }}"
-{% endif %}
+{%- endif %}
 
 openstack-dashboard:
   openstack-origin: {{openstack_origin}}
-{% if openstack_tip is defined %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_repo('horizon') }}"
-{% endif %}
+{%- endif %}
 
 quantum-gateway:
   instance-mtu: 1400
   openstack-origin: {{openstack_origin}}
-{% if openstack_tip is defined %}
+{%- if openstack_tip is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
-{% endif %}
+{%- endif %}
 
 swift-proxy:
   zone-assignment: auto
