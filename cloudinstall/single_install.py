@@ -20,6 +20,8 @@ import os
 import json
 import time
 import shutil
+from subprocess import check_output, STDOUT
+
 from cloudinstall import utils, netutils
 
 
@@ -37,6 +39,7 @@ class SingleInstall:
         self.config = config
         self.loop = loop
         self.tasker = self.display_controller.tasker(loop, config)
+        self.progress_output = ""
         username = utils.install_user()
         self.container_name = 'openstack-single-{}'.format(username)
         self.container_path = '/var/lib/lxc'
@@ -154,7 +157,8 @@ class SingleInstall:
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
-        self.tasker.start_task("Creating Container")
+        self.tasker.start_task("Creating Container",
+                               self.read_container_status)
 
         utils.container_create(self.container_name, self.userdata)
 
@@ -197,6 +201,8 @@ class SingleInstall:
         utils.container_wait_checked(self.container_name,
                                      lxc_logfile)
 
+        self.tasker.start_task("Initializing Container",
+                               self.read_cloud_init_output)
         tries = 0
         while not self.cloud_init_finished(tries):
             time.sleep(1)
@@ -209,14 +215,44 @@ class SingleInstall:
         lxc_network = self.write_lxc_net_config()
         self.add_static_route(lxc_network)
 
-        self.tasker.start_task("Installing Dependencies")
+        self.tasker.start_task("Installing Dependencies",
+                               self.read_progress_output)
         log.debug("Installing openstack & openstack-single directly, "
                   "and juju-local, libvirt-bin and lxc via deps")
         utils.container_run(self.container_name,
                             "env DEBIAN_FRONTEND=noninteractive apt-get -qy "
                             "-o Dpkg::Options::=--force-confdef "
                             "-o Dpkg::Options::=--force-confold "
-                            "install openstack openstack-single")
+                            "install openstack openstack-single ",
+                            output_cb=self.set_progress_output)
+        log.debug("done installing deps")
+
+    def read_container_status(self):
+        return check_output("lxc-info -n {} -s "
+                            "|| true".format(self.container_name),
+                            shell=True, stderr=STDOUT).decode('utf-8')
+
+    def read_cloud_init_output(self):
+        try:
+            s = utils.container_run(self.container_name, 'tail -n 10 '
+                                    '/var/log/cloud-init-output.log')
+            return s.replace('\r', '')
+        except Exception:
+            return "Waiting..."
+
+    def set_progress_output(self, output):
+        self.progress_output = output
+
+    def read_progress_output(self):
+        return self.progress_output
+
+    def read_juju_log(self):
+        try:
+            return utils.container_run(self.container_name, 'tail -n 10 '
+                                       '/var/log/juju-ubuntu-local'
+                                       '/all-machines.log')
+        except Exception:
+            return "Waiting..."
 
     def cloud_init_finished(self, tries, maxlenient=20):
         """checks cloud-init result.json in container to find out status
@@ -259,7 +295,13 @@ class SingleInstall:
         if result_json == '':
             return False
 
-        ret = json.loads(result_json)
+        try:
+            ret = json.loads(result_json)
+        except Exception as e:
+            log.error(str(e))
+            log.debug("exception trying to parse '{}'".format(result_json))
+            raise e
+
         errors = ret['v1']['errors']
         if len(errors):
             log.error("Container cloud-init finished with "
@@ -274,13 +316,15 @@ class SingleInstall:
         try:
             utils.container_run(
                 self.container_name,
-                'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
-                    filename))
+                'dpkg -i /home/ubuntu/.cloud-install/{}'.format(
+                    filename),
+                output_cb=self.set_progress_output)
         except:
             # Make sure deps are installed if any new ones introduced by
             # the upstream packaging.
             utils.container_run(
-                self.container_name, 'sudo apt-get install -qyf')
+                self.container_name, 'apt-get install -qyf',
+                output_cb=self.set_progress_output)
 
     def set_perms(self):
         """ sets permissions
@@ -306,6 +350,7 @@ class SingleInstall:
         self.tasker.register_tasks([
             "Initializing Environment",
             "Creating Container",
+            "Initializing Container",
             "Installing Dependencies",
             "Bootstrapping Juju"])
 
@@ -372,11 +417,12 @@ class SingleInstall:
 
         # start the party
         cloud_status_bin = ['openstack-status']
-        self.tasker.start_task("Bootstrapping Juju")
+        self.tasker.start_task("Bootstrapping Juju",
+                               self.read_progress_output)
         utils.container_run(self.container_name,
-                            "{0} juju bootstrap".format(
+                            "{0} juju --debug bootstrap".format(
                                 self.config.juju_home(use_expansion=True)),
-                            use_ssh=True)
+                            use_ssh=True, output_cb=self.set_progress_output)
         utils.container_run(
             self.container_name,
             "{0} juju status".format(
