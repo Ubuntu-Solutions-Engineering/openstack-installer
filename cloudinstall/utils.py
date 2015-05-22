@@ -26,6 +26,7 @@ except ImportError:
     Mapping = dict
 
 from jinja2 import Environment, FileSystemLoader
+import codecs
 import os
 import re
 import string
@@ -48,6 +49,7 @@ import shutil
 import subprocess
 import json
 import yaml
+import pty
 import requests
 
 log = logging.getLogger('cloudinstall.utils')
@@ -640,7 +642,7 @@ class ContainerRunException(Exception):
     "Running cmd in container failed"
 
 
-def container_run(name, cmd, use_ssh=False):
+def container_run(name, cmd, use_ssh=False, output_cb=None):
     """ run command in container
 
     :param str name: name of container
@@ -663,21 +665,61 @@ def container_run(name, cmd, use_ssh=False):
                        "{cmd}".format(container_name=name,
                                       cmd=cmd))
 
-    log.debug("Running in container: {0}".format(wrapped_cmd))
-
+    stdoutmaster, stdoutslave = pty.openpty()
     subproc = subprocess.Popen(wrapped_cmd, shell=True,
-                               stdout=subprocess.PIPE,
+                               stdout=stdoutslave,
                                stderr=subprocess.PIPE)
+    os.close(stdoutslave)
+    decoder = codecs.getincrementaldecoder('utf-8')()
 
-    outs, errs = subproc.communicate()
+    def last_ten_lines(s):
+        chunk = s[-1500:]
+        lines = chunk.splitlines(True)
+        return ''.join(lines[-10:]).replace('\r', '')
+
+    decoded_output = ""
+    try:
+        while subproc.poll() is None:
+            try:
+                b = os.read(stdoutmaster, 512)
+            except OSError as e:
+                if e.errno != errno.EIO:
+                    raise
+                break
+            else:
+                final = False
+                if not b:
+                    final = True
+                decoded_chars = decoder.decode(b, final)
+                if decoded_chars is None:
+                    continue
+
+                decoded_output += decoded_chars
+                if output_cb:
+                    ls = last_ten_lines(decoded_output)
+
+                    output_cb(ls)
+                if final:
+                    break
+    finally:
+        os.close(stdoutmaster)
+        if subproc.poll() is None:
+            subproc.kill()
+        subproc.wait()
+
+    errors = [l.decode('utf-8') for l in subproc.stderr.readlines()]
+    if output_cb:
+        output_cb(last_ten_lines(decoded_output))
+
+    errors = ''.join(errors)
 
     if subproc.returncode == 0:
-        return outs.strip().decode('utf-8')
+        return decoded_output.strip()
     else:
         log.debug("Error with command: "
-                  "[Output] {} [Error] {}".format(
-                      outs.strip().decode('utf-8'),
-                      errs.strip().decode('utf-8')))
+                  "[Output] '{}' [Error] '{}'".format(
+                      decoded_output.strip(),
+                      errors.strip()))
 
         raise ContainerRunException("Problem running {0} in container "
                                     "{1}:{2}".format(quoted_cmd, name, ip),
