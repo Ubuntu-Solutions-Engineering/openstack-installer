@@ -95,3 +95,4 @@ runcmd:
   - echo "export https_proxy={{ https_proxy }}" >> /home/ubuntu/.bashrc
   - echo "export HTTPS_PROXY={{ https_proxy }}" >> /home/ubuntu/.bashrc
 {%- endif %}
+  - "chown ubuntu:ubuntu /home/ubuntu /home/ubuntu/.bashrc"
