@@ -55,12 +55,14 @@ class Tasker:
         # stopped to tell update to not reschedule itself.
         self.stopped = False
         self.alarm = None
+        self.task_info_func = None
 
     def register_tasks(self, tasks):
         self.tasks = [(n, None, None) for n in tasks]
         self.max_width = max([len(n) for n in tasks])
 
-    def start_task(self, newtaskname):
+    def start_task(self, newtaskname, task_info_func=None):
+        self.task_info_func = task_info_func
         self.tasks_started_debug.append(newtaskname)
 
         if len(self.tasks) <= self.current_task_index:
@@ -134,6 +136,9 @@ class Tasker:
                 ts = "{:6.2f} sec elapsed".format(e - s)
                 m.append("{n:>{mw}}: {ts:<22}"
                          "\n".format(n=n, mw=self.max_width, ts=ts))
+                if self.task_info_func:
+                    m.append(('label',
+                              "\n{}\n\n".format(self.task_info_func())))
             else:
                 ts = "{:6.2f} sec".format(e - s)
                 m.append(('label', "{n:>{mw}}: {ts:<22}"
