@@ -20,6 +20,7 @@ import cloudinstall.utils as utils
 from cloudinstall.state import ControllerState
 
 import logging
+import threading
 
 log = logging.getLogger('cloudinstall.ev')
 
@@ -35,10 +36,17 @@ class EventLoop:
     def __init__(self, ui, config, log):
         self.ui = ui
         self.config = config
-        self.loop = self._build_loop()
         self.log = log
         self.error_code = 0
         self._callback_map = {}
+
+        self.loop = None
+
+        if not self.config.getopt('headless'):
+            self.loop = self._build_loop()
+            self.loop.set_alarm_in(2, self.check_thread_exit_event)
+            self._loop_thread = threading.current_thread()
+            self._thread_exit_event = threading.Event()
 
     def register_callback(self, key, val):
         """ Registers some additional callbacks that didn't make sense
@@ -50,14 +58,11 @@ class EventLoop:
         self._callback_map[key] = val
 
     def _build_loop(self):
-        """ Returns event loop depending on output stream """
-        if self.config.getopt('headless'):
-            loop = None
-        else:
-            loop = urwid.MainLoop(self.ui, self.config.STYLES,
-                                  unhandled_input=self.header_hotkeys)
-            utils.make_screen_hicolor(loop.screen)
-            loop.screen.register_palette(self.config.STYLES)
+        """ Returns event loop configured with color palette """
+        loop = urwid.MainLoop(self.ui, self.config.STYLES,
+                              unhandled_input=self.header_hotkeys)
+        utils.make_screen_hicolor(loop.screen)
+        loop.screen.register_palette(self.config.STYLES)
         return loop
 
     def header_hotkeys(self, key):
@@ -87,9 +92,19 @@ class EventLoop:
         self.log.info("Stopping eventloop")
         if self.config.getopt('headless'):
             sys.exit(err)
-        else:
+
+        if threading.current_thread() == self._loop_thread:
             raise urwid.ExitMainLoop()
-        return
+        else:
+            self._thread_exit_event.set()
+            log.debug("{} exiting, deferred UI exit "
+                      "to main thread.".format(
+                          threading.current_thread().name))
+
+    def check_thread_exit_event(self, *args, **kwargs):
+        if self._thread_exit_event.is_set():
+            raise urwid.ExitMainLoop()
+        self.loop.set_alarm_in(2, self.check_thread_exit_event)
 
     def close(self):
         pass
