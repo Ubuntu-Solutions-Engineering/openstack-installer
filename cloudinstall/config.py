@@ -28,10 +28,8 @@ INSTALL_TYPE_SINGLE = ("Single", "Fully containerized OpenStack installation "
                        "on a single machine.")
 INSTALL_TYPE_MULTI = ("Multi", "OpenStack installation utilizing MAAS.")
 INSTALL_TYPE_LANDSCAPE = ("Landscape OpenStack Autopilot",
-                          "Benefit from best practices in cloud building, "
-                          "and get up and running within minutes, all from "
-                          "an intuitive web UI.")
-
+                          "The Canonical Distribution "
+                          "- Enterprise Openstack Install and Management.")
 
 class ConfigException(Exception):
     pass
