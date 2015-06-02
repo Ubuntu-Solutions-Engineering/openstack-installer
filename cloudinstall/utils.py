@@ -1,7 +1,5 @@
 #
-# utils.py - Helper utilies for cloud installer
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -655,6 +653,8 @@ def container_run(name, cmd, use_ssh=False, output_cb=None):
         wrapped_cmd = ("sudo -H -u {3} TERM=xterm256-color ssh -t -q "
                        "-l ubuntu -o \"StrictHostKeyChecking=no\" "
                        "-o \"UserKnownHostsFile=/dev/null\" "
+                       "-o \"ControlMaster=auto\" "
+                       "-o \"ControlPersist=600\" "
                        "-i {2} "
                        "{0} {1}".format(ip, quoted_cmd, ssh_privkey(),
                                         install_user()))
@@ -733,6 +733,8 @@ def container_run_status(name, cmd, config):
     cmd = ("sudo -H -u {2} TERM=xterm256-color ssh -t -q "
            "-l ubuntu -o \"StrictHostKeyChecking=no\" "
            "-o \"UserKnownHostsFile=/dev/null\" "
+           "-o \"ControlMaster=auto\" "
+           "-o \"ControlPersist=600\" "
            "-i {1} "
            "{0} {3}".format(ip, ssh_privkey(), install_user(), cmd))
     log.debug("Running command without waiting for response.: {}".format(cmd))
