@@ -9,10 +9,11 @@ environments:
     network-bridge: lxcbr0
     default-series: {{ubuntu_series}}
     admin-secret: "{{openstack_password}}"
-{%- if http_proxy %}
-    apt-http-proxy: {{http_proxy}}
-{%- else %}
-    apt-http-proxy: 'http://{{maas_server}}:8000/'
+{%- if apt_proxy %}
+    apt-http-proxy: {{apt_proxy}}
+{%- endif %}
+{%- if apt_https_proxy %}
+    apt-https-proxy: {{apt_https_proxy}}
 {%- endif %}
 {%- if http_proxy %}
     http-proxy: {{http_proxy}}
