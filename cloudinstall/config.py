@@ -31,6 +31,7 @@ INSTALL_TYPE_LANDSCAPE = ("Landscape OpenStack Autopilot",
                           "The Canonical Distribution "
                           "- Enterprise Openstack Install and Management.")
 
+
 class ConfigException(Exception):
     pass
 

@@ -103,6 +103,10 @@ def parse_options(argv):
     parser.add_argument('--upstream-deb', dest='upstream_deb',
                         help='Upload a local copy of openstack debian package '
                         'to be used in a single install. (DEVELOPERS)')
+    parser.add_argument('--apt-proxy', dest='apt_proxy',
+                        help='Specify APT proxy')
+    parser.add_argument('--apt-https-proxy', dest='apt_https_proxy',
+                        help='Specify APT HTTPS proxy')
     parser.add_argument('--http-proxy', dest='http_proxy',
                         help='Specify HTTP proxy')
     parser.add_argument('--https-proxy', dest='https_proxy',

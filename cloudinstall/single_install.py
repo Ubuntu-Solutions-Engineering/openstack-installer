@@ -75,7 +75,18 @@ class SingleInstall:
 
         render_parts['seed_command'] = self._proxy_pollinate()
 
-        for opt in ['http_proxy', 'https_proxy', 'no_proxy',
+        apt_proxy = self.config.getopt('apt_proxy')
+        http_proxy = self.config.getopt('http_proxy')
+        if not apt_proxy and http_proxy:
+            self.config.setopt('apt_proxy', http_proxy)
+
+        apt_https_proxy = self.config.getopt('apt_https_proxy')
+        https_proxy = self.config.getopt('https_proxy')
+        if not apt_https_proxy and https_proxy:
+            self.config.setopt('apt_https_proxy', https_proxy)
+
+        for opt in ['apt_proxy', 'apt_https_proxy', 'http_proxy',
+                    'https_proxy', 'no_proxy',
                     'image_metadata_url', 'tools_metadata_url',
                     'apt_mirror']:
             val = self.config.getopt(opt)
