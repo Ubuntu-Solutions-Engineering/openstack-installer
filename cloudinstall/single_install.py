@@ -51,6 +51,18 @@ class SingleInstall:
         # Sets install type
         self.config.setopt('install_type', 'Single')
 
+    def setup_apt_proxy(self):
+        "Use http_proxy unless apt_proxy is explicitly set"
+        apt_proxy = self.config.getopt('apt_proxy')
+        http_proxy = self.config.getopt('http_proxy')
+        if not apt_proxy and http_proxy:
+            self.config.setopt('apt_proxy', http_proxy)
+
+        apt_https_proxy = self.config.getopt('apt_https_proxy')
+        https_proxy = self.config.getopt('https_proxy')
+        if not apt_https_proxy and https_proxy:
+            self.config.setopt('apt_https_proxy', https_proxy)
+
     def _proxy_pollinate(self):
         """ Proxy pollinate if http/s proxy is set """
         # pass proxy through to pollinate
@@ -75,7 +87,8 @@ class SingleInstall:
 
         render_parts['seed_command'] = self._proxy_pollinate()
 
-        for opt in ['http_proxy', 'https_proxy', 'no_proxy',
+        for opt in ['apt_proxy', 'apt_https_proxy', 'http_proxy',
+                    'https_proxy', 'no_proxy',
                     'image_metadata_url', 'tools_metadata_url',
                     'apt_mirror']:
             val = self.config.getopt(opt)
@@ -97,11 +110,11 @@ class SingleInstall:
                         'ubuntu_series':
                         self.config.getopt('ubuntu_series')}
 
-        if self.config.getopt('http_proxy'):
-            render_parts['http_proxy'] = self.config.getopt('http_proxy')
-
-        if self.config.getopt('https_proxy'):
-            render_parts['https_proxy'] = self.config.getopt('https_proxy')
+        for opt in ['apt_proxy', 'apt_https_proxy', 'http_proxy',
+                    'https_proxy']:
+            val = self.config.getopt(opt)
+            if val:
+                render_parts[opt] = val
 
         # configure juju environment for bootstrap
         single_env = utils.load_template('juju-env/single.yaml')
@@ -377,6 +390,8 @@ class SingleInstall:
                             "not found.".format(upstream_deb))
 
         utils.ssh_genkey()
+
+        self.setup_apt_proxy()
 
         self.prep_userdata()
 
