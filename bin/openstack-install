@@ -97,9 +97,9 @@ def parse_options(argv):
     parser.add_argument('--edit-placement', action='store_true',
                         dest='edit_placement',
                         help='Show machine placement UI before deploying')
-    parser.add_argument('--extra-ppa', nargs='+', dest='extra_ppa',
-                        help='Append additional ppas to the single installers '
-                        'cloud-init configuration.')
+    parser.add_argument('--upstream-ppa', action="store_true",
+                        dest='upstream_ppa',
+                        help='Use upstream experimental ppa.')
     parser.add_argument('--upstream-deb', dest='upstream_deb',
                         help='Upload a local copy of openstack debian package '
                         'to be used in a single install. (DEVELOPERS)')
