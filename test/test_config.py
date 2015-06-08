@@ -50,7 +50,8 @@ def parse_opts(argv):
     parser.add_argument('-r', type=str, default=None, dest='release')
     parser.add_argument('-p', '--placement', action='store_true',
                         dest='edit_placement')
-    parser.add_argument('--extra-ppa', nargs='+', dest='extra_ppa')
+    parser.add_argument('--upstream-ppa', action="store_true",
+                        dest='upstream_ppa')
     parser.add_argument('--upstream-deb', dest='upstream_deb')
     parser.add_argument('--http-proxy', dest='http_proxy')
     parser.add_argument('--https-proxy', dest='https_proxy')
