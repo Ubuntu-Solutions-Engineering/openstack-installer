@@ -51,7 +51,7 @@ Ubuntu OpenStack Installer configuration file
 
 **upstream_ppa**
 
-    Use experimental PPA.
+    Use experimental PPA (ppa:cloud-installer/experimental).
 
 # EXAMPLE
 
