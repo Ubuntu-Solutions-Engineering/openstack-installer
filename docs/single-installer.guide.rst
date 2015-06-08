@@ -42,13 +42,13 @@ To start the installation run the following command
 
 .. code::
 
-   $ sudo openstack-install --extra-ppa ppa:cloud-installer/experimental
+   $ sudo openstack-install --upstream-ppa
 
 .. important::
 
     The installer should be run with sudo.
 
-    Passing **--extra-ppa** is required when installing from experimental ppa.
+    Passing **--upstream-ppa** is required when installing from experimental ppa.
 
 
 Optional Flags
@@ -60,7 +60,7 @@ Optional Flags
                              [-k] [--killcloud-noprompt]
                              [--openstack-release OPENSTACK_RELEASE] [-a ARCH]
                              [-r RELEASE] [-p]
-                             [--extra-ppa EXTRA_PPA [EXTRA_PPA ...]]
+                             [--upstream-ppa]
                              [--upstream-deb UPSTREAM_DEB]
                              [--http-proxy HTTP_PROXY] [--https-proxy HTTPS_PROXY]
                              [--headless] [--storage {ceph,swift}] [--version]
@@ -96,9 +96,7 @@ Optional Flags
                             filter available cloud images with which to populate
                             Glance, e.g. precise,trusty
       -p, --placement       Show machine placement UI before deploying
-      --extra-ppa EXTRA_PPA [EXTRA_PPA ...]
-                            Append additional ppas to the single installers cloud-
-                            init configuration.
+      --upstream-ppa        Use experimental PPA.
       --upstream-deb UPSTREAM_DEB
                             Upload a local copy of openstack debian package to be
                             used in a single install. (DEVELOPERS)

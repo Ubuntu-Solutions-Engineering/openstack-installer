@@ -82,8 +82,8 @@ class SingleInstall:
         """
         render_parts = {'extra_sshkeys': [utils.ssh_readkey()]}
 
-        if self.config.getopt('extra_ppa'):
-            render_parts['extra_ppa'] = self.config.getopt('extra_ppa')
+        if self.config.getopt('upstream_ppa'):
+            render_parts['upstream_ppa'] = self.config.getopt('upstream_ppa')
 
         render_parts['seed_command'] = self._proxy_pollinate()
 
