@@ -49,10 +49,9 @@ Ubuntu OpenStack Installer configuration file
     Provide an upstream openstack debian package, mostly used during development to
     quickly test changes in a Single installation.
 
-**extra_ppa**
+**upstream_ppa**
 
-    Provide additional ppa's for the installer to look for when installing package
-    dependencies.
+    Use experimental PPA (ppa:cloud-installer/experimental).
 
 # EXAMPLE
 
