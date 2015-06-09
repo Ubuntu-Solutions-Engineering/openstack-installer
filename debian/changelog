@@ -1,3 +1,15 @@
+openstack (0.99.14-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+
+  * Alpha 3
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 09 Jun 2015 09:51:29 -0400
+
+openstack (0.99.13-0ubuntu1~14.10.1~bleed1) wily; urgency=medium
+
+  * Alpha 2
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Tue, 09 Jun 2015 09:49:13 -0400
+
 openstack (0.99.12-0ubuntu1~15.04.1~bleed1) vivid; urgency=medium
 
   * Alpha 1
