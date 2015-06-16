@@ -247,8 +247,7 @@ class MachinesColumn(WidgetWrap):
 
         bc = self.placement_view.config.juju_env['bootstrap-config']
         maasname = "'{}' <{}>".format(bc['name'], bc['maas-server'])
-        maastitle = "Connected to MAAS {} l:root p:{}".format(
-            maasname, self.placement_view.config.getopt('openstack_password'))
+        maastitle = "Connected to MAAS {}".format(maasname)
         tw = Columns([Text(maastitle),
                       Padding(self.open_maas_button, align='right',
                               width=BUTTON_SIZE, right=2)])
