@@ -178,6 +178,7 @@ if __name__ == '__main__':
 
     logger = logging.getLogger('cloudinstall')
     logger.info('Starting OpenStack Installer v{}'.format(version))
+    logger.info('Start command: {}'.format(sys.argv))
 
     if os.geteuid() != 0:
         sys.exit(
