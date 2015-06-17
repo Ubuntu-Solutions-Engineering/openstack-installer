@@ -138,7 +138,9 @@ def populate_config(opts):
         presaved_config = os.path.join(
             install_home(), '.cloud-install/config.yaml')
         if os.path.exists(presaved_config):
-            cfg.update(yaml.load(slurp(presaved_config)))
+            config_d = yaml.load(slurp(presaved_config))
+            if config_d is not None:
+                cfg.update(config_d)
         scrub = sanitize_config_items(cfg_cli_opts)
         verbose_update(cfg, 'pre-existing config file',
                        scrub, 'command-line options')
