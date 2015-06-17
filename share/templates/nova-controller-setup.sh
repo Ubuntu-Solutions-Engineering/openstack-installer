@@ -15,7 +15,6 @@ fi
 
 # adjust tiny image
 nova flavor-delete m1.tiny
-nova flavor-create m1.tiny 1 512 8 1
 
 # create ubuntu user
 keystone tenant-create --name ubuntu --description "Created by Juju"
