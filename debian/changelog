@@ -1,3 +1,9 @@
+openstack (0.99.15-0ubuntu1~15.10.1~bleed1) wily; urgency=medium
+
+  * Alpha 4
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 18 Jun 2015 15:04:27 -0400
+
 openstack (0.99.14-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
 
   * Alpha 3
