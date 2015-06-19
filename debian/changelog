@@ -1,3 +1,15 @@
+openstack (0.99.17-0ubuntu1~15.10.1~bleed1) wily; urgency=medium
+
+  * Fix typo in deploy command
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Fri, 19 Jun 2015 17:01:14 -0400
+
+openstack (0.99.16-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+
+  * Fix yaml indention error
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Fri, 19 Jun 2015 14:45:24 -0400
+
 openstack (0.99.15-0ubuntu1~15.10.1~bleed1) wily; urgency=medium
 
   * Alpha 4
