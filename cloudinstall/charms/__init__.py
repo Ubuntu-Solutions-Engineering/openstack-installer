@@ -291,7 +291,7 @@ export OS_REGION_NAME=RegionOne
         # TODO: See if this is supported by juju api
         juju_home = self.config.juju_home(use_expansion=True)
         cmd = ('{juju_home} juju deploy --repository={repodir}'
-               ' local:{distro}/{charm_name}'
+               ' local:{series}/{charm_name}'
                ' --constraints {constraints} ').format(
             juju_home=juju_home, **kwds)
 
