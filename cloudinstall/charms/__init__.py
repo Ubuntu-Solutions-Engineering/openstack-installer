@@ -219,15 +219,27 @@ export OS_REGION_NAME=RegionOne
         if self.charm_rev:
             _charm_name_rev = "{}-{}".format(self.charm_name, self.charm_rev)
 
+        if self.config.getopt('use_nclxd'):
+            # nclxd support is only enabled on vivid and later, and we
+            # need to deploy from a local repo that has the right
+            # series in its path. The charmstore uses the LTS series
+            # name even for charms that support later series.
+
+            # Note, the constraint of vivid or later is checked in
+            # bin/openstack-install.
+            current_series = self.config.getopt('ubuntu_series')
+        else:
+            current_series = 'trusty'
+
         if self.config.getopt('next_charms') and self.have_nextbranch:
             self.bzr_get("lp:~openstack-charmers/charms/trusty/{}"
-                         "/next".format(self.charm_name))
-            self.local_deploy(machine_spec)
+                         "/next".format(self.charm_name), current_series)
+            self.local_deploy(machine_spec, current_series)
             return False
 
+        # if --use-nclxd and not --next-charms, just download LTS charms
         if self.config.getopt('use_nclxd'):
             branch = "lp:charms/trusty/{}".format(self.charm_name)
-            current_series = self.config.getopt('ubuntu_series')
             self.bzr_get(branch, current_series)
             self.local_deploy(machine_spec, current_series)
             return False
@@ -269,6 +281,9 @@ export OS_REGION_NAME=RegionOne
         localrepo = os.path.join(self.config.cfg_path,
                                  'local-charms',
                                  series, self.charm_name)
+        log.debug("{}: branching {} into dir {}".format(self.charm_name,
+                                                        branch_name,
+                                                        localrepo))
         os.makedirs(localrepo, exist_ok=True)
         try:
             subprocess.check_output(['bzr', 'co', '--lightweight',
