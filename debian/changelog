@@ -1,3 +1,9 @@
+openstack (0.99.18-0ubuntu1~14.04.1~bleed1) trusty; urgency=medium
+
+  * Fix nclxd
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 25 Jun 2015 10:25:15 -0400
+
 openstack (0.99.17-0ubuntu1~15.10.1~bleed1) wily; urgency=medium
 
   * Fix typo in deploy command
