@@ -17,7 +17,14 @@ keys if there are no values for them.
   repository: 'git://git.openstack.org/openstack/{{ service }}',
   branch: stable/{{openstack_release}}
  }
-]}
+],
+{%- if http_proxy is defined %}
+http_proxy: '{{http_proxy}}',
+{%- endif %}
+{%- if https_proxy is defined %}
+https_proxy: '{{https_proxy}}'
+{%- endif %}
+}
 {%- endmacro %}
 
 {%- macro render_tip_neutron() %}
@@ -43,8 +50,12 @@ keys if there are no values for them.
   branch: stable/{{openstack_release}}
  }
 ],
-http_proxy: 'http://squid.internal:3128',
-https_proxy: 'http://squid.internal:3128'
+{%- if http_proxy is defined %}
+http_proxy: '{{http_proxy}}',
+{%- endif %}
+{%- if https_proxy is defined %}
+https_proxy: '{{https_proxy}}'
+{%- endif %}
 }
 {%- endmacro %}
 

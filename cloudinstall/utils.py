@@ -282,6 +282,15 @@ def render_charm_config(config):
     if config.is_single():
         template_args['worker_multiplier'] = '1'
 
+    # add http proxy settings - should not be necessary as juju sets
+    # these in the charm execution environment, but required for
+    # openstack-origin-git. See: https://launchpad.net/bugs/1472357
+
+    for pk in ['http_proxy', 'https_proxy']:
+        pv = config.getopt(pk)
+        if pv:
+            template_args[pk] = pv
+
     charm_conf_modified = charm_conf.render(**template_args)
     dest_yaml_path = os.path.join(config.cfg_path, 'charmconf.yaml')
     spew(dest_yaml_path, charm_conf_modified)

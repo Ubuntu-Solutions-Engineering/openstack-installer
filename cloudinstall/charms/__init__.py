@@ -22,6 +22,7 @@ import os
 import sys
 import yaml
 from queue import Queue
+import shutil
 import subprocess
 import time
 import requests
@@ -284,10 +285,13 @@ export OS_REGION_NAME=RegionOne
         log.debug("{}: branching {} into dir {}".format(self.charm_name,
                                                         branch_name,
                                                         localrepo))
+
+        shutil.rmtree(os.path.join(self.config.cfg_path, 'local-charms'))
         os.makedirs(localrepo, exist_ok=True)
         try:
             subprocess.check_output(['bzr', 'co', '--lightweight',
-                                     branch_name, localrepo])
+                                     branch_name, localrepo],
+                                    stderr=subprocess.STDOUT)
         except Exception as e:
             log.warning("error checking out charm: "
                         "rc={} out={}".format(e.returncode,
