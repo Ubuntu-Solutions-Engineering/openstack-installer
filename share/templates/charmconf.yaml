@@ -10,11 +10,11 @@ keys if there are no values for them.
 {% macro render_tip_repo(service) %}
 {repositories: [
  {name: requirements,
-  repository: 'git://git.openstack.org/openstack/requirements',
+  repository: 'git://github.com/openstack/requirements',
   branch: stable/{{openstack_release}}
  },
  {name: {{service}},
-  repository: 'git://git.openstack.org/openstack/{{ service }}',
+  repository: 'git://github.com/openstack/{{ service }}',
   branch: stable/{{openstack_release}}
  }
 ],
