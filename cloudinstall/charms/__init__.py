@@ -286,7 +286,8 @@ export OS_REGION_NAME=RegionOne
                                                         branch_name,
                                                         localrepo))
 
-        shutil.rmtree(os.path.join(self.config.cfg_path, 'local-charms'))
+        shutil.rmtree(os.path.join(self.config.cfg_path, 'local-charms'),
+                      ignore_errors=True)
         os.makedirs(localrepo, exist_ok=True)
         try:
             subprocess.check_output(['bzr', 'co', '--lightweight',
