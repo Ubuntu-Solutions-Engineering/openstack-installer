@@ -311,6 +311,11 @@ class SingleInstall:
         try:
             ret = json.loads(result_json)
         except Exception as e:
+            if tries < maxlenient + 10:
+                log.debug("exception trying to parse '{}'"
+                          " - retrying".format(result_json))
+                return False
+
             log.error(str(e))
             log.debug("exception trying to parse '{}'".format(result_json))
             raise e
