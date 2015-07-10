@@ -20,7 +20,7 @@ import os
 import json
 import time
 import shutil
-from subprocess import check_output, STDOUT
+from subprocess import call, check_call, check_output, STDOUT
 
 from cloudinstall import utils, netutils
 
@@ -359,6 +359,45 @@ class SingleInstall:
             log.exception(msg)
             raise Exception(msg)
 
+    def ensure_nested_kvm(self):
+        """kvm_intel module defaults to nested OFF. If qemu_system_x86 is not
+        installed, this may stay off. Our package installs a
+        modprobe.d/openstack.conf file to fix this after reboots, but
+        we also try to reload the module to work now.
+        """
+
+        if 0 == call("lsmod | grep kvm_amd", shell=True):
+            return              # we're fine, kvm_amd has nested on by default
+        if 0 != call("lsmod | grep kvm_intel", shell=True):
+            raise Exception("kvm_intel kernel module not loaded, "
+                            "nested VMs will fail to launch")
+
+        try:
+            nested_on = check_output("cat "
+                                     "/sys/module/kvm_intel/parameters/nested"
+                                     "".format(self.container_name),
+                                     shell=True, stderr=STDOUT).decode('utf-8')
+            if nested_on.strip() == 'Y':
+                return
+        except:
+            log.exception("can't cat /sys/module/kvm_intel/parameters/nested")
+            raise Exception("error inspecting kvm_intel module params, nested"
+                            "VMs likely will not work")
+
+        # need to unload and reload module
+        try:
+            check_call("modprobe -r kvm_intel", shell=True)
+        except Exception as e:
+            log.exception("couldn't unload kvm_intel: {}".format(e.output))
+            raise Exception("Could not automatically unload kvm_intel module "
+                            "to enable nested VMs. A manual reboot or reload"
+                            "will be required.")
+
+        if 0 != call("modprobe kvm_intel", shell=True):
+            raise Exception("Could not automatically reload kvm_intel kernel"
+                            "module to enable nested VMs. A manual reboot or "
+                            "reload will be required.")
+
     def run(self):
         self.tasker.register_tasks([
             "Initializing Environment",
@@ -368,6 +407,7 @@ class SingleInstall:
             "Bootstrapping Juju"])
 
         self.tasker.start_task("Initializing Environment")
+        self.ensure_nested_kvm()
         if self.config.getopt('headless'):
             self.do_install()
         else:
