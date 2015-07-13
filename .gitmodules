@@ -4,6 +4,3 @@
 [submodule "macumba"]
 	path = macumba
 	url = https://github.com/Ubuntu-Solutions-Engineering/macumba.git
-[submodule "debian"]
-	path = debian
-	url = git@github.com:Ubuntu-Solutions-Engineering/openstack-installer-deb.git
