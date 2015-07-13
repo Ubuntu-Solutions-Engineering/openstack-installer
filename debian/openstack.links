@@ -1,0 +1,3 @@
+/usr/share/openstack/openstack-install		/usr/bin/openstack-install
+/usr/share/openstack/openstack-status 		/usr/bin/openstack-status
+/usr/share/openstack/openstack-juju             /usr/bin/openstack-juju
