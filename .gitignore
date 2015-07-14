@@ -7,15 +7,7 @@ dist
 *.substvars
 *.debhelper
 *.pybuild
-debian/files
-debian/openstack/
-debian/openstack-single/
-debian/openstack-multi/
-debian/openstack-landscape/
-debian/cloud-installer/
-debian/cloud-install-single/
-debian/cloud-install-multi/
-debian/cloud-install-landscape/
+debian
 
 *.swp
 # the dependencies deb
@@ -25,3 +17,4 @@ debian/cloud-install-landscape/
 cover
 *~
 .tox
+tmp
