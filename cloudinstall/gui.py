@@ -19,7 +19,6 @@
 """ Pegasus - gui interface to  Installer """
 
 from __future__ import unicode_literals
-import re
 import sys
 import logging
 import functools
@@ -52,12 +51,6 @@ log = logging.getLogger('cloudinstall.gui')
 sys.excepthook = utils.global_exchandler
 
 TITLE_TEXT = "Ubuntu OpenStack Installer - Dashboard"
-
-# - Properties ----------------------------------------------------------------
-IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')['output'])
-
-# Time to lock in seconds
-LOCK_TIME = 120
 
 padding = functools.partial(Padding, left=2, right=2)
 
