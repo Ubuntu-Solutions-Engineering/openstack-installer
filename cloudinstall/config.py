@@ -88,7 +88,8 @@ class Config:
         """ Saves configuration """
         try:
             utils.spew(self.cfg_file,
-                       yaml.safe_dump(self._config, default_flow_style=False))
+                       yaml.safe_dump(dict(self._config),
+                                      default_flow_style=False))
         except IOError:
             raise ConfigException("Unable to save configuration.")
 
