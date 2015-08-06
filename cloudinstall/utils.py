@@ -139,7 +139,7 @@ def populate_config(opts):
     :param opts: argparse Namespace class of options
     """
     cfg_from_cli = sanitize_cli_opts(opts)
-    if not opts.config_file:
+    if 'config_file' not in opts:
         return cfg_from_cli
 
     # Override config items from local config
