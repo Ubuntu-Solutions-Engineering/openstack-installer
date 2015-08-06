@@ -17,7 +17,7 @@
 from subprocess import (Popen, PIPE, call, check_output,
                         check_call, DEVNULL, CalledProcessError)
 from contextlib import contextmanager
-from collections import deque
+from collections import deque, ChainMap
 try:
     from collections import Mapping
 except ImportError:
@@ -70,6 +70,24 @@ def register_async_exception_callback(cb):
     _async_exception_callback = cb
 
 
+class DeepChainMap(ChainMap):
+    'Variant of ChainMap that allows direct updates to inner scopes'
+
+    def __setitem__(self, key, value):
+        for mapping in self.maps:
+            if key in mapping:
+                mapping[key] = value
+                return
+        self.maps[0][key] = value
+
+    def __delitem__(self, key):
+        for mapping in self.maps:
+            if key in mapping:
+                del mapping[key]
+                return
+        raise KeyError(key)
+
+
 class ExceptionLoggingThread(Thread):
 
     def run(self):
@@ -109,56 +127,25 @@ def write_status_file(status='', msg=''):
     spew(status_file, json.dumps(dict(status=status, msg=msg)))
 
 
+def sanitize_cli_opts(opts):
+    """ removes false and null items from argument list """
+    return {k: v for k, v in vars(opts).items() if v}
+
+
 def populate_config(opts):
     """ populate configuration suitable for loading in the config
     object merging in cli options.
 
     :param opts: argparse Namespace class of options
     """
-    cfg_cli_opts = vars(opts)
-    cfg = {}
+    cfg_from_cli = sanitize_cli_opts(opts)
+    if not opts.config_file:
+        return cfg_from_cli
 
-    def sanitize_config_items(_cfg):
-        """ remove false and null items """
-        return {k: v for (k, v) in _cfg.items()
-                if v is not None}
-
-    def verbose_update(main, main_name, new, new_name):
-        for nk, nv in new.items():
-            if nk in main and nv != main[nk]:
-                log.info("*** config: '{}: {}' from {} "
-                         "overriding '{}: {}' from {}".format(nk, nv,
-                                                              new_name,
-                                                              nk, main[nk],
-                                                              main_name))
-            main[nk] = nv
-
-    if 'config_file' not in cfg_cli_opts:
-        # Check for a pre-existing install config
-        presaved_config = os.path.join(
-            install_home(), '.cloud-install/config.yaml')
-        if os.path.exists(presaved_config):
-            config_d = yaml.load(slurp(presaved_config))
-            if config_d is not None:
-                cfg.update(config_d)
-        scrub = sanitize_config_items(cfg_cli_opts)
-        verbose_update(cfg, 'pre-existing config file',
-                       scrub, 'command-line options')
-        return cfg
-
-    # Always override presaved config if defined in cli switch
-    elif 'config_file' in cfg_cli_opts:
-        _cfg_copy = merge_dicts(cfg,
-                                yaml.load(
-                                    slurp(cfg_cli_opts['config_file'])))
-        scrub = sanitize_config_items(cfg_cli_opts)
-        verbose_update(_cfg_copy,
-                       "contents of --config-file: "
-                       "'{}'".format(cfg_cli_opts['config_file']),
-                       scrub, 'command-line options')
-        return _cfg_copy
-    else:
-        return sanitize_config_items(cfg_cli_opts)
+    # Override config items from local config
+    if opts.config_file:
+        cfg_override = yaml.load(slurp(opts.config_file))
+        return merge_dicts(cfg_from_cli, cfg_override)
 
 
 def load_ext_charms(plug_path, charm_modules):
@@ -231,27 +218,8 @@ def merge_dicts(*dicts):
     together.
     In case of conflicts, later arguments take precedence over earlier
     arguments.
-
-    Shamelessly copied from: http://stackoverflow.com/a/8795331/3170835
     """
-    updated = {}
-    # grab all keys
-    keys = set()
-    for d in dicts:
-        keys = keys.union(set(d))
-
-    for key in keys:
-        values = [d[key] for d in dicts if key in d]
-        # which ones are mapping types? (aka dict)
-        maps = [value for value in values if isinstance(value, Mapping)]
-        if maps:
-            # if we have any mapping types, call recursively to merge them
-            updated[key] = merge_dicts(*maps)
-        else:
-            # otherwise, just grab the last value we have, since later
-            # arguments take precedence over earlier arguments
-            updated[key] = values[-1]
-    return updated
+    return DeepChainMap(*dicts)
 
 
 def render_charm_config(config):
