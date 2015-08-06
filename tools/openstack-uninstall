@@ -2,9 +2,9 @@
 
 echo -n Ubuntu Openstack Installer Uninstalling ...
 
-WHAT=$(openstack-install -g install_type)
-CONTAINER_NAME=$(openstack-install -g container_name)
-CONTAINER_NETWORK=$(openstack-install -g lxc_network)
+WHAT=$(openstack-config install_type)
+CONTAINER_NAME=$(openstack-config container_name)
+CONTAINER_NETWORK=$(openstack-config lxc_network)
 
 if [ -f ~/.cloud-install/new-maas ]; then
   MAAS_TYPE=new
@@ -16,7 +16,7 @@ apt_purge() {
   DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
 }
 
-CFG_HOME=$(openstack-install -g cfg_path)
+CFG_HOME=$(openstack-config cfg_path)
 case $WHAT in
   "Landscape OpenStack Autopilot")
     echo Landscape OpenStack Autopilot environment

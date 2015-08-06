@@ -33,6 +33,9 @@ from cloudinstall.config import Config
 from cloudinstall.ev import EventLoop
 from cloudinstall import __version__ as version
 
+CFG_FILE = os.path.join(utils.install_home(),
+                        '.cloud-install/config.yaml')
+
 
 def sig_handler(signum, frame):
     sys.exit(1)
@@ -139,6 +142,7 @@ def parse_options(argv):
 
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
+    cfg = Config(utils.populate_config(opts))
     if any([flag in opts for flag in ['uninstall', 'killcloud',
                                       'killcloud_noprompt']]):
         msg = ("Warning:\n\nThis will uninstall OpenStack and "
@@ -153,7 +157,6 @@ if __name__ == '__main__':
         else:
             print("Uninstall cancelled.")
             sys.exit(1)
-    cfg = Config(utils.populate_config(opts))
 
     if sys.getdefaultencoding() != 'utf-8':
         print("Ubuntu OpenStack Installer requires unicode support. "
@@ -165,10 +168,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if opts.get_config:
-        val = cfg.getopt(opts.get_config)
-        if val:
-            sys.stdout.write(val)
-        sys.exit(0)
+        conf_bin = "/usr/bin/openstack-config"
+        os.execl(conf_bin, conf_bin, opts.get_config)
 
     # see github issue #421:
     if os.environ.get("SHOW_JUJU_LOGS", False):
