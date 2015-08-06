@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+# -*- mode: python; -*-
+#
+# Copyright 2015 Canonical, Ltd.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+""" Small utility to print current installer configuration settings """
+
+import sys
+import os
+import argparse
+import cloudinstall.utils as utils
+from cloudinstall.config import Config
+
+CFG_FILE = os.path.join(utils.install_home(),
+                        '.cloud-install/config.yaml')
+
+if __name__ == '__main__':
+    if not os.path.isfile(CFG_FILE):
+        print("No existing config file found.")
+        sys.exit(1)
+    if len(sys.argv) > 2:
+        print("Only pass in 1 config item to query.")
+        sys.exit(1)
+    config_name = sys.argv[1]
+    opts = argparse.Namespace(config_file=CFG_FILE)
+    cfg = Config(utils.populate_config(opts))
+    val = cfg.getopt(config_name)
+    print(val)
+    sys.exit(0)
