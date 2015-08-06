@@ -15,9 +15,7 @@
 
 import logging
 import time
-import random
 import sys
-import requests
 
 from os import path, getenv
 
@@ -206,38 +204,6 @@ class Controller:
                 self.begin_deployment()
             else:
                 self.begin_deployment_async()
-
-    @utils.async
-    def wait_for_maas_async(self):
-        """ explicit async method
-        """
-        self.wait_for_maas()
-
-    def wait_for_maas(self):
-        """ install and configure maas """
-        random_status = ["Packages are being installed to a MAAS container.",
-                         "There's a few packages, it'll take just a minute",
-                         "Checkout http://maas.ubuntu.com/ while you wait."]
-        is_connected = False
-        count = 0
-        while not is_connected:
-            self.ui.render_node_install_wait(message="Waiting...")
-            self.ui.status_info_message(
-                random_status[random.randrange(len(random_status))])
-            count = count + 1
-            self.ui.status_info_message(
-                "Waiting for MAAS (tries {0})".format(count))
-            uri = path.join('http://', utils.container_ip('maas'), 'MAAS')
-            log.debug("Checking MAAS availability ({0})".format(uri))
-            try:
-                res = requests.get(uri)
-                is_connected = res.ok
-            except:
-                self.ui.status_info_message("Waiting for MAAS to be installed")
-            time.sleep(10)
-
-        # Render nodeview, even though nothing is there yet.
-        self.initialize()
 
     def commit_placement(self):
         self.config.setopt('current_state', ControllerState.SERVICES.value)
