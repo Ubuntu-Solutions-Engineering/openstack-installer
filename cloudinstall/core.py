@@ -164,7 +164,7 @@ class Controller:
         if path.exists(self.config.placements_filename):
             with open(self.config.placements_filename, 'r') as pf:
                 self.placement_controller.load(pf)
-            self.ui.status_info_message("Loaded placements from file.")
+            self.ui.status_info_message("Loaded placements from file")
             log.info("Loaded placements from "
                      "'{}'".format(self.config.placements_filename))
 
@@ -288,19 +288,22 @@ class Controller:
             raise Exception("Expected some juju machines started.")
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
-        if self.config.is_single():
-            controller_machine = self.juju_m_idmap['controller']
-            self.configure_lxc_network(controller_machine)
+        if not self.config.getopt("deploy_complete"):
+            if self.config.is_single():
+                controller_machine = self.juju_m_idmap['controller']
+                self.configure_lxc_network(controller_machine)
 
-            for juju_machine_id in self.juju_m_idmap.values():
-                self.run_apt_go_fast(juju_machine_id)
+                for juju_machine_id in self.juju_m_idmap.values():
+                    self.run_apt_go_fast(juju_machine_id)
 
-        if self.config.is_single():
-            self.set_unique_hostnames()
+            if self.config.is_single():
+                self.set_unique_hostnames()
 
-        self.deploy_using_placement()
-        self.wait_for_deployed_services_ready()
-        self.enqueue_deployed_charms()
+            self.deploy_using_placement()
+            self.wait_for_deployed_services_ready()
+            self.enqueue_deployed_charms()
+        else:
+            self.ui.status_info_message("Ready")
 
     def set_unique_hostnames(self):
         """checks for and ensures unique hostnames, so e.g. ceph can assume
