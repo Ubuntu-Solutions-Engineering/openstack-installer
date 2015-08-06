@@ -148,8 +148,7 @@ class TestGoodConfig(unittest.TestCase):
         self.assertEqual(True, cfg['killcloud_noprompt'])
 
     def test_config_overrides_from_cli(self):
-        """ Config object item is not overridden
-        by unset cli option
+        """ Config object item is not overridden by unset cli option
         """
         cfg_file = path.join(DATA_DIR, 'good_config.yaml')
         cfg = utils.populate_config(
@@ -166,10 +165,7 @@ class TestGoodConfig(unittest.TestCase):
         """
         cfg_file = path.join(DATA_DIR, 'good_config.yaml')
         cfg_opts_raw = parse_opts(['--config', cfg_file])
-        cfg_opts_raw = vars(cfg_opts_raw)
-        self.assertEqual(True, 'headless' not in cfg_opts_raw)
-
-        cfg = utils.populate_config(parse_opts(['--config', cfg_file]))
+        cfg = utils.populate_config(cfg_opts_raw)
         self.assertEqual(True, cfg['headless'])
 
     def test_default_opts_no_config(self):
@@ -177,8 +173,7 @@ class TestGoodConfig(unittest.TestCase):
         and that no options set to False or None exist
         in the config object
         """
-        cfg = utils.populate_config(parse_opts([]))
-        print(cfg)
+        cfg = utils.sanitize_cli_opts(parse_opts([]))
         self.assertEqual(True, 'headless' not in cfg)
 
 
