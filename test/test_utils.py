@@ -112,6 +112,7 @@ class TestRenderCharmConfig(unittest.TestCase):
                         'mysql': {'dataset-size': '2048M'}}
         charm_conf = yaml.load(slurp(os.path.join(DATA_DIR, 'charmconf.yaml')))
         merged_dicts = merge_dicts(charm_conf, charm_custom)
+        print(merged_dicts)
         self.assertEqual(merged_dicts['mysql']['max-connections'], 25000)
         self.assertEqual(merged_dicts['swift-proxy']['zone-assignment'],
                          'auto')
