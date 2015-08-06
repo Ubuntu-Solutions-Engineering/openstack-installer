@@ -139,6 +139,20 @@ def parse_options(argv):
 
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
+    if any([flag in opts for flag in ['uninstall', 'killcloud',
+                                      'killcloud_noprompt']]):
+        msg = ("Warning:\n\nThis will uninstall OpenStack and "
+               "make a best effort to return the system back "
+               "to its original state.")
+        print(msg)
+        yn = input("Proceed? [y/N] ")
+
+        if "y" in yn or "Y" in yn:
+            print("Restoring system to last known state.")
+            os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
+        else:
+            print("Uninstall cancelled.")
+            sys.exit(1)
     cfg = Config(utils.populate_config(opts))
 
     if sys.getdefaultencoding() != 'utf-8':

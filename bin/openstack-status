@@ -37,6 +37,9 @@ from cloudinstall import log
 from cloudinstall.config import Config
 from cloudinstall import __version__ as version
 
+CFG_FILE = os.path.join(utils.install_home(),
+                        '.cloud-install/config.yaml')
+
 
 def sig_handler(signum, frame):
     sys.exit(1)
@@ -53,7 +56,8 @@ def parse_options(argv):
                         dest='edit_placement',
                         help='Show machine placement UI before deploying')
     parser.add_argument('-c', '--config', type=str, dest='config_file',
-                        help="Custom configuration for OpenStack installer.")
+                        help="Custom configuration for OpenStack installer.",
+                        default=CFG_FILE)
     parser.add_argument('--headless', action='store_true',
                         help="Run deployment without prompts/gui",
                         dest='headless')
@@ -64,9 +68,17 @@ def parse_options(argv):
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)
 
-
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
+    is_cfg_present = os.path.isfile(opts.config_file)
+
+    if not is_cfg_present:
+        print("No configuration found in ~/.cloud-install/config.yaml\n"
+              "and no --config option passed. Please verify your\n"
+              "installation and make sure ~/.cloud-install/config.yaml\n"
+              "is there and correct.")
+        sys.exit(1)
+
     config = Config(utils.populate_config(opts))
 
     try:
