@@ -134,7 +134,7 @@ def parse_options(argv):
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
     cfg = Config(utils.populate_config(opts))
-    if opts.uninstall:
+    if 'uninstall' in opts:
         msg = ("Warning:\n\nThis will uninstall OpenStack and "
                "make a best effort to return the system back "
                "to its original state.")
