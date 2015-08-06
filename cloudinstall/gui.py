@@ -63,7 +63,7 @@ class Banner(ScrollableWidgetWrap):
         self.BANNER = [
             "",
             "",
-            "Ubuntu Openstack Installer",
+            "Ubuntu OpenStack Installer",
             "",
             "By Canonical, Ltd.",
             ""
