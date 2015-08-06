@@ -72,15 +72,6 @@ def parse_options(argv):
                         default=None,
                         help="with arg <key>, prints config value for 'key' "
                         "to stdout and exits.")
-    parser.add_argument('-k', '--killcloud', action='store_true',
-                        dest='killcloud',
-                        help='Tear down existing cloud leaving userdata '
-                        'in place. Useful for iterative deploys.')
-    parser.add_argument('--killcloud-noprompt', action='store_true',
-                        dest='killcloud_noprompt',
-                        help='Tear down existing cloud leaving userdata '
-                        'in place. CAUTION: Does not confirm teardown, '
-                        'Use with care!')
     parser.add_argument('--openstack-release',
                         dest='openstack_release', default="kilo",
                         choices=['icehouse', 'juno', 'kilo'],
@@ -143,8 +134,7 @@ def parse_options(argv):
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
     cfg = Config(utils.populate_config(opts))
-    if any([flag in opts for flag in ['uninstall', 'killcloud',
-                                      'killcloud_noprompt']]):
+    if opts.uninstall:
         msg = ("Warning:\n\nThis will uninstall OpenStack and "
                "make a best effort to return the system back "
                "to its original state.")
@@ -153,7 +143,7 @@ if __name__ == '__main__':
 
         if "y" in yn or "Y" in yn:
             print("Restoring system to last known state.")
-            os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
+            os.execl('/usr/bin/openstack-uninstall', '')
         else:
             print("Uninstall cancelled.")
             sys.exit(1)
@@ -212,24 +202,6 @@ if __name__ == '__main__':
     if not cfg.getopt('container_name'):
         cfg.setopt('container_name',
                    'openstack-single-{}'.format(utils.install_user()))
-
-    if any([cfg.getopt(flag) for flag in ['uninstall', 'killcloud',
-                                          'killcloud_noprompt']]):
-        msg = ("Warning:\n\nThis will uninstall OpenStack and "
-               "make a best effort to return the system back "
-               "to its original state.")
-        print(msg)
-        if cfg.getopt('killcloud_noprompt'):
-            yn = "Y"
-        else:
-            yn = input("Proceed? [y/N] ")
-
-        if "y" in yn or "Y" in yn:
-            print("Restoring system to last known state.")
-            os.execl('/usr/share/openstack/tools/openstack-uninstall', '')
-        else:
-            print("Uninstall cancelled.")
-            sys.exit(1)
 
     if os.path.isfile(os.path.join(cfg.cfg_path, 'installed')):
         msg = ("\n\nError:\n\n"
