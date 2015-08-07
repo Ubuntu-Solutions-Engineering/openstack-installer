@@ -1,5 +1,5 @@
 #
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,9 @@ import shutil
 from subprocess import call, check_call, check_output, STDOUT
 
 from cloudinstall import utils, netutils
+from cloudinstall.api.container import (Container,
+                                        NoContainerIPException,
+                                        ContainerRunException)
 
 
 log = logging.getLogger('cloudinstall.single_install')
@@ -155,7 +158,7 @@ class SingleInstall:
         """ Adds static route to host system
         """
         # Store container IP in config
-        ip = utils.container_ip(self.container_name)
+        ip = Container.ip(self.container_name)
         self.config.setopt('container_ip', ip)
 
         log.info("Adding static route for {} via {}".format(lxc_net,
@@ -173,7 +176,7 @@ class SingleInstall:
         self.tasker.start_task("Creating Container",
                                self.read_container_status)
 
-        utils.container_create(self.container_name, self.userdata)
+        Container.create(self.container_name, self.userdata)
 
         with open(os.path.join(self.container_abspath, 'fstab'), 'w') as f:
             f.write("{0} {1} none bind,create=dir\n".format(
@@ -209,10 +212,10 @@ class SingleInstall:
 
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 
-        utils.container_start(self.container_name, lxc_logfile)
+        Container.start(self.container_name, lxc_logfile)
 
-        utils.container_wait_checked(self.container_name,
-                                     lxc_logfile)
+        Container.wait_checked(self.container_name,
+                               lxc_logfile)
 
         self.tasker.start_task("Initializing Container",
                                self.read_cloud_init_output)
@@ -232,12 +235,12 @@ class SingleInstall:
                                self.read_progress_output)
         log.debug("Installing openstack & openstack-single directly, "
                   "and juju-local, libvirt-bin and lxc via deps")
-        utils.container_run(self.container_name,
-                            "env DEBIAN_FRONTEND=noninteractive apt-get -qy "
-                            "-o Dpkg::Options::=--force-confdef "
-                            "-o Dpkg::Options::=--force-confold "
-                            "install openstack openstack-single ",
-                            output_cb=self.set_progress_output)
+        Container.run(self.container_name,
+                      "env DEBIAN_FRONTEND=noninteractive apt-get -qy "
+                      "-o Dpkg::Options::=--force-confdef "
+                      "-o Dpkg::Options::=--force-confold "
+                      "install openstack openstack-single ",
+                      output_cb=self.set_progress_output)
         log.debug("done installing deps")
 
     def read_container_status(self):
@@ -247,8 +250,8 @@ class SingleInstall:
 
     def read_cloud_init_output(self):
         try:
-            s = utils.container_run(self.container_name, 'tail -n 10 '
-                                    '/var/log/cloud-init-output.log')
+            s = Container.run(self.container_name, 'tail -n 10 '
+                              '/var/log/cloud-init-output.log')
             return s.replace('\r', '')
         except Exception:
             return "Waiting..."
@@ -261,9 +264,9 @@ class SingleInstall:
 
     def read_juju_log(self):
         try:
-            return utils.container_run(self.container_name, 'tail -n 10 '
-                                       '/var/log/juju-ubuntu-local'
-                                       '/all-machines.log')
+            return Container.run(self.container_name, 'tail -n 10 '
+                                 '/var/log/juju-ubuntu-local'
+                                 '/all-machines.log')
         except Exception:
             return "Waiting..."
 
@@ -281,14 +284,14 @@ class SingleInstall:
         """
         cmd = 'sudo cat /run/cloud-init/result.json'
         try:
-            result_json = utils.container_run(self.container_name, cmd)
+            result_json = Container.run(self.container_name, cmd)
 
-        except utils.NoContainerIPException as e:
+        except NoContainerIPException as e:
             log.debug("Container has no IPs according to lxc-info. "
                       "Will retry.")
             return False
 
-        except utils.ContainerRunException as e:
+        except ContainerRunException as e:
             _, returncode = e.args
             if returncode == 255:
                 if tries < maxlenient:
@@ -332,7 +335,7 @@ class SingleInstall:
         log.info('Found upstream deb, installing that instead')
         filename = os.path.basename(self.config.getopt('upstream_deb'))
         try:
-            utils.container_run(
+            Container.run(
                 self.container_name,
                 'dpkg -i /home/ubuntu/.cloud-install/{}'.format(
                     filename),
@@ -340,7 +343,7 @@ class SingleInstall:
         except:
             # Make sure deps are installed if any new ones introduced by
             # the upstream packaging.
-            utils.container_run(
+            Container.run(
                 self.container_name, 'apt-get install -qyf',
                 output_cb=self.set_progress_output)
 
@@ -449,9 +452,9 @@ class SingleInstall:
         self.create_container_and_wait()
 
         # Copy over host ssh keys
-        utils.container_cp(self.container_name,
-                           os.path.join(utils.install_home(), '.ssh/id_rsa*'),
-                           '.ssh/.')
+        Container.cp(self.container_name,
+                     os.path.join(utils.install_home(), '.ssh/id_rsa*'),
+                     '.ssh/.')
 
         # Install local copy of openstack installer if provided
         if upstream_deb:
@@ -472,18 +475,18 @@ class SingleInstall:
             self.config.update_environments_yaml(
                 key='no-proxy',
                 val='{},localhost,{}'.format(
-                    utils.container_ip(self.container_name),
+                    Container.ip(self.container_name),
                     netutils.get_ip_set(lxc_net)))
 
         # start the party
         cloud_status_bin = ['openstack-status']
         self.tasker.start_task("Bootstrapping Juju",
                                self.read_progress_output)
-        utils.container_run(self.container_name,
-                            "{0} juju --debug bootstrap".format(
-                                self.config.juju_home(use_expansion=True)),
-                            use_ssh=True, output_cb=self.set_progress_output)
-        utils.container_run(
+        Container.run(self.container_name,
+                      "{0} juju --debug bootstrap".format(
+                          self.config.juju_home(use_expansion=True)),
+                      use_ssh=True, output_cb=self.set_progress_output)
+        Container.run(
             self.container_name,
             "{0} juju status".format(
                 self.config.juju_home(use_expansion=True)),
@@ -492,5 +495,5 @@ class SingleInstall:
 
         self.display_controller.status_info_message(
             "Starting cloud deployment")
-        utils.container_run_status(
+        Container.run_status(
             self.container_name, " ".join(cloud_status_bin), self.config)
