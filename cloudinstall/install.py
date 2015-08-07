@@ -23,8 +23,7 @@ from cloudinstall.config import (INSTALL_TYPE_SINGLE,
 from cloudinstall.state import InstallState
 from cloudinstall.single_install import SingleInstall
 from cloudinstall.landscape_install import LandscapeInstall
-from cloudinstall.multi_install import (MultiInstallNewMaas,
-                                        MultiInstallExistingMaas)
+from cloudinstall.multi_install import MultiInstallExistingMaas
 import cloudinstall.utils as utils
 
 
@@ -38,7 +37,6 @@ class InstallController:
     # These are overriden in tests
     SingleInstall = SingleInstall
     MultiInstallExistingMaas = MultiInstallExistingMaas
-    MultiInstallNewMaas = MultiInstallNewMaas
     LandscapeInstall = LandscapeInstall
 
     def __init__(self, ui, config, loop):
@@ -94,9 +92,9 @@ class InstallController:
             return self.MultiInstallExistingMaas(
                 self.loop, self.ui, self.config).run()
         else:
-            log.info("Performing a Multi Install with new MAAS")
-            return self.MultiInstallNewMaas(
-                self.loop, self.ui, self.config).run()
+            self.ui.flash('Please enter the MAAS server\'s '
+                          'IP address and API key to proceed.')
+            return self.ui.select_maas_type(self._save_maas_creds)
 
     def update(self, *args, **kwargs):
         "periodically check for display changes"
