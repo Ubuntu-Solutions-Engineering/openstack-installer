@@ -17,7 +17,6 @@
 import logging
 
 from cloudinstall.multi_install import (MultiInstall,
-                                        MultiInstallNewMaas,
                                         MultiInstallExistingMaas)
 
 
@@ -46,12 +45,6 @@ class LandscapeInstall:
             MultiInstallExistingMaas(
                 self.loop, self.display_controller,
                 self.config, post_tasks=self.landscape_tasks).run()
-
-    def _do_install_new_maas(self):
-        """ Prepare new maas environment for landscape
-        """
-        MultiInstallNewMaas(self.loop, self.display_controller,
-                            self.config, post_tasks=self.landscape_tasks).run()
 
     def _save_lds_creds(self, creds):
         admin_name = creds['admin_name'].value
