@@ -32,6 +32,7 @@ from cloudinstall.gui import PegasusGUI
 from cloudinstall.core import Controller
 from cloudinstall.consoleui import ConsoleUI
 from cloudinstall.ev import EventLoop
+from cloudinstall.api.container import Container
 from cloudinstall import utils
 from cloudinstall import log
 from cloudinstall.config import Config
@@ -106,8 +107,8 @@ if __name__ == '__main__':
     hostname = out['output'].rstrip()
     if config.is_single() and config.getopt('container_name') not in hostname:
         logger.info("Running status within container")
-        utils.container_run_status(config.getopt('container_name'),
-                                   'openstack-status', config)
+        Container.run_status(config.getopt('container_name'),
+                             'openstack-status', config)
 
     if config.getopt('headless'):
         ui = ConsoleUI()
