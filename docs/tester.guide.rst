@@ -79,7 +79,7 @@ A sample configuration file for Multi install path, save this as **config-multi.
         assignments:
           KVM:
           - nova-compute
-          - quantum-gateway
+          - neutron-gateway
           LXC:
           - nova-cloud-controller
           - glance
@@ -94,7 +94,7 @@ A sample configuration file for Multi install path, save this as **config-multi.
 
    The **placements** directive is obtained by pulling the node id of a machine you wish to deploy the cloud
    to. In the above example there is 1 machine in the MAAS with an id of `node-24ac63e0-a122-11e4-b67e-a0cec8006f97`.
-   We're telling the installer that we should place nova-compute, quantum-gateway on separate KVM's within that
+   We're telling the installer that we should place nova-compute, neutron-gateway on separate KVM's within that
    system and the rest of the OpenStack services within LXC's also within that same system.
 
    This placements directive is required for a complete unattended installation of OpenStack within MAAS.

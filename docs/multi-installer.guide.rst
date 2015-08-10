@@ -119,12 +119,12 @@ should be selected during placement.
 
    .. code::
 
-      $ JUJU_HOME=~/.cloud-install/juju juju set quantum-gateway ext-port=<interface>
+      $ JUJU_HOME=~/.cloud-install/juju juju set neutron-gateway ext-port=<interface>
 
    Or define the option in a separate **charm-config.yaml** file:
 
    .. code::
-      quantum-gateway:
+      neutron-gateway:
         ext-port: <interface>
 
    Then before you run the install append this option:

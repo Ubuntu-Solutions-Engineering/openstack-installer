@@ -19,24 +19,22 @@ from cloudinstall import utils
 from cloudinstall.charms import CharmBase
 from cloudinstall.placement.controller import AssignmentType
 
-log = logging.getLogger('cloudinstall.charms.quantum')
+log = logging.getLogger('cloudinstall.charms.neutron')
 
 
-class CharmQuantum(CharmBase):
+class CharmNeutron(CharmBase):
 
-    """ quantum directives """
+    """ neutron directives """
 
-    charm_name = 'quantum-gateway'
-    charm_rev = 16
-    # TODO: Charms are still called quantum, we want to display
-    # them as Neutron
+    charm_name = 'neutron-gateway'
+    charm_rev = 3
     display_name = 'Neutron'
     deploy_priority = 99
-    related = [('mysql:shared-db', 'quantum-gateway:shared-db'),
+    related = [('mysql:shared-db', 'neutron-gateway:shared-db'),
                ('nova-cloud-controller:quantum-network-service',
-                'quantum-gateway:quantum-network-service'),
-               ('ntp:juju-info', 'quantum-gateway:juju-info'),
-               ('rabbitmq-server:amqp', 'quantum-gateway:amqp')]
+                'neutron-gateway:quantum-network-service'),
+               ('ntp:juju-info', 'neutron-gateway:juju-info'),
+               ('rabbitmq-server:amqp', 'neutron-gateway:amqp')]
     isolate = True
     constraints = {'mem': 2048,
                    'root-disk': 20480}
@@ -57,20 +55,20 @@ class CharmQuantum(CharmBase):
                                     "for Neutron")
         utils.remote_cp(
             unit.machine_id,
-            src=os.path.join(self.config.tmpl_path, "quantum-network.sh"),
-            dst="/tmp/quantum-network.sh",
+            src=os.path.join(self.config.tmpl_path, "neutron-network.sh"),
+            dst="/tmp/neutron-network.sh",
             juju_home=self.config.juju_home(use_expansion=True))
         utils.remote_run(
             unit.machine_id,
-            cmds="sudo chmod +x /tmp/quantum-network.sh",
+            cmds="sudo chmod +x /tmp/neutron-network.sh",
             juju_home=self.config.juju_home(use_expansion=True))
         utils.remote_run(
             unit.machine_id,
-            cmds="sudo /tmp/quantum-network.sh {}".format(
+            cmds="sudo /tmp/neutron-network.sh {}".format(
                 self.config.getopt('install_type')),
             juju_home=self.config.juju_home(use_expansion=True))
         self.ui.status_info_message("Done.")
         return False
 
 
-__charm_class__ = CharmQuantum
+__charm_class__ = CharmNeutron
