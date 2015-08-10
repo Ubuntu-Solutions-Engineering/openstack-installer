@@ -15,9 +15,9 @@ neutron-api:
   neutron-security-groups: true
 nova-cloud-controller:
   network-manager: Neutron
-  quantum-security-groups: 'yes'
+  neutron-security-groups: 'yes'
   worker-multiplier: 1
-quantum-gateway:
+neutron-gateway:
   instance-mtu: 1400
 swift-proxy:
   replicas: 3

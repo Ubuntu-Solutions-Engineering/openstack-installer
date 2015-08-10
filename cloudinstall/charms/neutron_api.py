@@ -33,7 +33,7 @@ class CharmNeutronAPI(CharmBase):
                ('mysql:shared-db', 'neutron-api:shared-db'),
                ('rabbitmq-server:amqp',
                 'neutron-api:amqp'),
-               ('quantum-gateway:neutron-plugin-api',
+               ('neutron-gateway:neutron-plugin-api',
                 'neutron-api:neutron-plugin-api'),
                ('nova-cloud-controller:neutron-api',
                 'neutron-api:neutron-api')]
