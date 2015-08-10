@@ -31,8 +31,8 @@ class CharmNeutron(CharmBase):
     display_name = 'Neutron'
     deploy_priority = 99
     related = [('mysql:shared-db', 'neutron-gateway:shared-db'),
-               ('nova-cloud-controller:neutron-network-service',
-                'neutron-gateway:neutron-network-service'),
+               ('nova-cloud-controller:quantum-network-service',
+                'neutron-gateway:quantum-network-service'),
                ('ntp:juju-info', 'neutron-gateway:juju-info'),
                ('rabbitmq-server:amqp', 'neutron-gateway:amqp')]
     isolate = True
