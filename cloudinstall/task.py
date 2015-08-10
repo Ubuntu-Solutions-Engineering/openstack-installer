@@ -160,7 +160,7 @@ class TaskerConsole:
         self.display_controller = display_controller
         self.tasks = []
 
-    def start_task(self, taskname):
+    def start_task(self, taskname, task_info_func=None):
         log.info(taskname)
 
     def stop_current_task(self):
