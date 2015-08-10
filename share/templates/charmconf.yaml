@@ -138,7 +138,7 @@ neutron-api:
 
 nova-cloud-controller:
   network-manager: Neutron
-  quantum-security-groups: "yes"
+  neutron-security-groups: "yes"
   {% if openstack_release[0] >= 'j' %}
   console-access-protocol: novnc
   {% endif %}
@@ -162,7 +162,7 @@ openstack-dashboard:
   openstack-origin-git: "{{ render_tip_repo('horizon') }}"
 {%- endif %}
 
-quantum-gateway:
+neutron-gateway:
   instance-mtu: 1400
   openstack-origin: {{openstack_origin}}
 {%- if openstack_tip is defined %}
