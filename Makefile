@@ -59,7 +59,7 @@ git-clone-debian:
 		git clone -q https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git tmp/debian-git; \
 	fi
 	@if [ ! -h "debian" ]; then \
-		ln -sf tmp/debian-git/debian debian; \
+		ln -sf tmp/debian-git/debian/* debian; \
 	fi
 
 git_rev:
