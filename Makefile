@@ -27,7 +27,7 @@ uninstall: uninstall-dependencies
 	sudo tools/openstack-uninstall ${type}
 
 clean:
-	@debian/rules clean
+	@-debian/rules clean
 	@rm -rf debian/cloud-install
 	@rm -rf docs/_build/*
 	@rm -rf ../openstack_*.deb ../cloud-*.deb ../openstack_*.tar.gz ../openstack_*.dsc ../openstack_*.changes \
@@ -59,7 +59,7 @@ git-clone-debian:
 		git clone -q https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git tmp/debian-git; \
 	fi
 	@if [ ! -h "debian" ]; then \
-		ln -sf tmp/debian-git/debian/* debian; \
+		ln -sf tmp/debian-git/debian debian; \
 	fi
 
 git_rev:
