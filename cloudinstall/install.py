@@ -62,6 +62,11 @@ class InstallController:
         """ Checks passwords match and proceeds
         """
         password = creds['password'].value
+        if password.isdigit():
+            self.ui.flash("Password must not be a number")
+            self.loop.redraw_screen()
+            return self.ui.show_password_input(
+                'Create a New OpenStack Password', self._save_password)
         if 'confirm_password' in creds:
             confirm_password = creds['confirm_password'].value
         if password and password == confirm_password:
