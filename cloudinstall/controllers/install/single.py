@@ -1,4 +1,3 @@
-#
 # Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,6 +13,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Single Install Controller """
+
 from ipaddress import IPv4Network
 import logging
 import os
@@ -28,7 +29,7 @@ from cloudinstall.api.container import (Container,
                                         ContainerRunException)
 
 
-log = logging.getLogger('cloudinstall.single_install')
+log = logging.getLogger('cloudinstall.c.i.single')
 
 
 class SingleInstallException(Exception):

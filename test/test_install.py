@@ -52,15 +52,14 @@ class InstallControllerTestCase(unittest.TestCase):
         ui = StubUI()
         self.controller = InstallController(ui=ui)
 
-    @patch('cloudinstall.single_install.SingleInstall')
+    @patch('cloudinstall.controllers.install.SingleInstall')
     def test_do_install_single_openstack_release(self, SingleInstall):
         """do_install will set the OpenStack release for Single"""
         self.controller.SingleInstall = SingleInstall
         self.controller.do_install("Single")
         self.assertEqual(self.controller.ui.release, "Icehouse (2014.1.3)")
 
-    @patch('cloudinstall.multi_install.MultiInstallNewMaas')
-    @patch('cloudinstall.multi_install.MultiInstallExistingMaas')
+    @patch('cloudinstall.controllers.install.MultiInstallExistingMaas')
     def test_do_install_multi_openstack_release(
             self, MultiInstallNewMaas, MultiInstallExistingMaas):
         """do_install will set the OpenStack release for Multi"""
@@ -69,7 +68,7 @@ class InstallControllerTestCase(unittest.TestCase):
         self.controller.do_install("Multi")
         self.assertEqual(self.controller.ui.release, "Icehouse (2014.1.3)")
 
-    @patch('cloudinstall.landscape_install.LandscapeInstall')
+    @patch('cloudinstall.controllers.install.LandscapeInstall')
     def test_do_install_landscape_openstack_release(self, LandscapeInstall):
         """do_install will not set the OpenStack release for Landscape"""
         self.controller.LandscapeInstall = LandscapeInstall

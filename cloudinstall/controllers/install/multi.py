@@ -31,33 +31,7 @@ from cloudinstall.netutils import get_ip_set
 from cloudinstall import utils
 
 
-log = logging.getLogger('cloudinstall.multi_install')
-
-BRIDGE_MODIFIED_WARNING = """
-# WARNING: This file has been modified by openstack-install
-#
-# openstack-install redefines interfaces in
-# /etc/network/interfaces.d/openstack.cfg.
-# You must edit or remove /etc/network/interfaces.d/openstack.cfg if you
-# want to re-enable interfaces here.
-# See 'openstack-install -u', which will uninstall these changes.
-"""
-
-
-DNS_CONF_TEMPLATE = """
-options {{
-        directory "/var/cache/bind";
-        dnssec-validation auto;
-
-        forwarders {{
-        {}
-        }};
-
-        include "/etc/bind/maas/named.conf.options.inside.maas";
-        auth-nxdomain no;
-        listen-on-v6 {{ any; }};
-}};
-"""
+log = logging.getLogger('cloudinstall.c.i.multi')
 
 
 class MultiInstall:

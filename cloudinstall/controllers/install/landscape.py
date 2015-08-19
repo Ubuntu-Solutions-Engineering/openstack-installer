@@ -1,5 +1,4 @@
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -16,11 +15,11 @@
 
 import logging
 
-from cloudinstall.multi_install import (MultiInstall,
-                                        MultiInstallExistingMaas)
+from .multi import (MultiInstall,
+                    MultiInstallExistingMaas)
 
 
-log = logging.getLogger('cloudinstall.landscape_install')
+log = logging.getLogger('cloudinstall.c.i.landscape')
 
 
 class LandscapeInstall:
@@ -80,10 +79,7 @@ class LandscapeInstall:
 
     def run(self):
         if self.config.getopt('headless'):
-            if self.config.getopt('landscapecreds'):
-                self._do_install_existing_maas()
-            else:
-                self._do_install_new_maas()
+            self._do_install_existing_maas()
         else:
             self.display_controller.status_info_message(
                 "Please enter your Landscape information and "
