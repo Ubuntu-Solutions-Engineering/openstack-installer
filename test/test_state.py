@@ -87,7 +87,7 @@ class MultiInstallStateTestCase(unittest.TestCase):
             self.conf = Config({}, tempf.name)
         self.mock_ui = MagicMock(name='ui')
 
-    @patch('cloudinstall.multi_install.MultiInstall')
+    @patch('cloudinstall.controllers.install.MultiInstall')
     def test_do_install_sets_state(self, MultiInstall):
         """ Validate installstate in multi install """
         mi = MultiInstall(self.mock_ui, config=self.conf)

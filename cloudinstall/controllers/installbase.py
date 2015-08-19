@@ -1,4 +1,3 @@
-#
 # Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,10 +20,11 @@ from cloudinstall.config import (INSTALL_TYPE_SINGLE,
                                  INSTALL_TYPE_MULTI,
                                  INSTALL_TYPE_LANDSCAPE)
 from cloudinstall.state import InstallState
-from cloudinstall.single_install import SingleInstall
-from cloudinstall.landscape_install import LandscapeInstall
-from cloudinstall.multi_install import MultiInstallExistingMaas
 import cloudinstall.utils as utils
+
+from cloudinstall.controllers.install import (SingleInstall,
+                                              LandscapeInstall,
+                                              MultiInstallExistingMaas)
 
 
 log = logging.getLogger('cloudinstall.install')
@@ -128,14 +128,10 @@ class InstallController:
             # TODO: Clean this up a bit more I dont like relying on
             # opts.headless but in a few places
             if self.config.getopt('headless'):
-                if self.config.getopt('maascreds'):
-                    self.ui.status_info_message(
-                        "Performing a Multi install with existing MAAS")
-                    self.MultiInstallExistingMaas(
-                        self.loop, self.ui, self.config).run()
-                else:
-                    self.MultiInstallNewMaas(
-                        self.loop, self.ui, self.config).run()
+                self.ui.status_info_message(
+                    "Performing a Multi install with existing MAAS")
+                self.MultiInstallExistingMaas(
+                    self.loop, self.ui, self.config).run()
             else:
                 self.ui.select_maas_type(self._save_maas_creds)
         elif self.install_type == INSTALL_TYPE_LANDSCAPE[0]:

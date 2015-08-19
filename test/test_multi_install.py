@@ -18,7 +18,7 @@
 import unittest
 from unittest.mock import MagicMock, patch, call
 
-from cloudinstall.multi_install import MultiInstall
+from cloudinstall.controllers.install import MultiInstall
 from cloudinstall.config import Config
 from tempfile import NamedTemporaryFile
 

@@ -21,14 +21,15 @@ import logging
 import unittest
 from unittest.mock import ANY, MagicMock, patch, PropertyMock
 
-from cloudinstall.multi_install import LandscapeInstallFinal
+from cloudinstall.controllers.install import LandscapeInstallFinal
 from cloudinstall.config import Config
 from tempfile import NamedTemporaryFile
 
 log = logging.getLogger('cloudinstall.test_landscape_install')
 
 
-@patch('cloudinstall.multi_install.utils')  # mocks everything in utils
+# mocks everything in utils
+@patch('cloudinstall.controllers.install.multi.utils')
 class LandscapeInstallFinalTestCase(unittest.TestCase):
 
     def setUp(self):
