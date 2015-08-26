@@ -1,0 +1,263 @@
+ceilometer:
+  openstack-origin: cloud:trusty-kilo
+ceilometer-agent:
+  openstack-origin: cloud:trusty-kilo
+ceph:
+  ceph-public-network: 10.16.100.0/24
+  fsid: f649b7fa-1f21-11e4-8efd-685b358b0b5c
+  monitor-secret: AQC6COVTsLKSABAA1Xjw8B0Hnv0KJzDEQuGpdw==
+  source: cloud:trusty-kilo
+ceph-osd:
+  ceph-public-network: 10.16.100.0/24
+  ceph-cluster-network: 10.16.102.0/24
+  osd-devices: /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh /dev/sdi
+  osd-format: xfs
+  osd-journal-size: 10240
+  osd-reformat: 'true'
+  source: cloud:trusty-kilo
+ceph-osd2:
+  ceph-public-network: 10.16.100.0/24
+  ceph-cluster-network: 10.16.102.0/24
+  osd-devices: /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh /dev/sdi
+  osd-format: xfs
+  osd-journal-size: 10240
+  osd-reformat: 'true'
+  source: cloud:trusty-kilo
+ceph-radosgw:
+  cache-size: 500
+  region: RegionOne
+  revocation-check-interval: 600
+  source: cloud:trusty-kilo
+  use-ceph-optimised-packages: 'true'
+  use-embedded-webserver: 'true'
+  use-syslog: 'false'
+cinder:
+  api-listening-port: 8776
+  block-device: None
+  ceph-osd-replication-count: 2
+  database: cinder
+  database-user: cinder
+  debug: 'false'
+  enabled-services: all
+  glance-api-version: 2
+  openstack-origin: cloud:trusty-kilo
+  os-admin-network: 10.16.100.0/24
+  overwrite: 'false'
+  rabbit-vhost: openstack
+  region: RegionOne
+  use-syslog: 'false'
+  verbose: 'false'
+  worker-multiplier: 2
+cinder-ceph:
+  ceph-osd-replication-count: 2
+glance:
+  ceph-osd-replication-count: 2
+  database: glance
+  database-user: glance
+  debug: 'false'
+  openstack-origin: cloud:trusty-kilo
+  os-admin-network: 10.16.100.0/24
+  prefer-ipv6: 'false'
+  rabbit-user: glance
+  rabbit-vhost: openstack
+  region: RegionOne
+  use-syslog: 'false'
+  verbose: 'false'
+  worker-multiplier: 2
+glance-simplestreams-sync:
+  use_swift: false
+heat:
+  database: heat
+  database-user: heat
+  openstack-origin: cloud:trusty-kilo
+  rabbit-user: heat
+  rabbit-vhost: openstack
+  region: RegionOne
+  use-syslog: 'false'
+juju-gui:
+  password: bdx
+keystone:
+  admin-password: bdx
+  admin-port: 35357
+  admin-role: Admin
+  admin-user: admin
+  assignment-backend: sql
+  database: keystone
+  database-user: keystone
+  debug: 'false'
+  enable-pki: 'false'
+  https-service-endpoints: 'false'
+  identity-backend: sql
+  keystone-admin-role: Admin
+  keystone-service-admin-role: KeystoneServiceAdmin
+  ldap-config-flags: None
+  ldap-password: None
+  ldap-readonly: 'true'
+  ldap-server: None
+  ldap-suffix: None
+  log-level: WARNING
+  openstack-origin: cloud:trusty-kilo
+  prefer-ipv6: 'false'
+  region: RegionOne
+  service-port: 5000
+  service-tenant: services
+  token-expiration: 10000
+  use-https: 'no'
+  use-syslog: 'false'
+  verbose: 'false'
+  worker-multiplier: 2
+mysql:
+  dataset-size: 512M
+  max-connections: 25000
+neutron-api:
+  database: neutron
+  database-user: neutron
+  debug: 'false'
+  enable-dvr: 'true'
+  enable-l3ha: 'false'
+  l2-population: 'true'
+  min-l3-agents-per-router: 2
+  neutron-plugin: ovs
+  neutron-security-groups: 'true'
+  openstack-origin: cloud:trusty-kilo
+  os-admin-network: 10.16.100.0/24
+  overlay-network-type: vxlan
+  prefer-ipv6: 'false'
+  quota-floatingip: -1
+  quota-health-monitors: -1
+  quota-member: -1
+  quota-network: -1
+  quota-pool: -1
+  quota-port: -1
+  quota-router: -1
+  quota-security-group: -1
+  quota-security-group-rule: -1
+  quota-subnet: -1
+  rabbit-user: neutron
+  rabbit-vhost: openstack
+  region: RegionOne
+  use-syslog: 'false'
+  verbose: 'false'
+  vlan-ranges: physnet1 vnet1:110:112
+  worker-multiplier: 2
+neutron-openvswitch:
+  bridge-mappings: physnet1:br-ex vnet1:br-vlan
+  data-port: br-ex:eth0 br-vlan:eth1
+  debug: 'false'
+  disable-security-groups: 'false'
+  ext-port: eth0
+  rabbit-user: neutron
+  rabbit-vhost: openstack
+  use-syslog: 'false'
+  verbose: 'false'
+  vlan-ranges: physnet1 vnet1:110:112
+nova-cloud-controller:
+  console-access-protocol: novnc
+  console-keymap: en-us
+  cpu-allocation-ratio: 16.0
+  database: nova
+  database-user: nova
+  debug: 'false'
+  network-manager: Neutron
+  neutron-database: neutron
+  neutron-database-user: neutron
+  neutron-external-network: null
+  openstack-origin: cloud:trusty-kilo
+  os-admin-network: 10.16.0.0/24
+  prefer-ipv6: 'false'
+  quantum-plugin: ovs
+  quantum-security-groups: 'yes'
+  rabbit-user: nova
+  rabbit-vhost: openstack
+  region: RegionOne
+  service-guard: 'true'
+  use-syslog: 'false'
+  verbose: 'false'
+  worker-multiplier: 2
+nova-compute2:
+  ceph-osd-replication-count: 2
+  config-flags: libvirt_live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST"
+  database: nova
+  database-user: nova
+  disable-neutron-security-groups: 'false'
+  disk-cachemodes: network=writeback,block=writeback
+  enable-live-migration: 'true'
+  enable-resize: 'true'
+  libvirt-image-backend: rbd
+  migration-auth-type: ssh
+  multi-host: 'no'
+  neutron-database: neutron
+  neutron-database-user: neutron
+  openstack-origin: cloud:trusty-kilo
+  rabbit-user: nova
+  rabbit-vhost: openstack
+  use-syslog: 'false'
+  verbose: 'false'
+  virt-type: kvm
+nova-compute:
+  ceph-osd-replication-count: 2
+  config-flags: libvirt_live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST"
+  database: nova
+  database-user: nova
+  disable-neutron-security-groups: 'false'
+  disk-cachemodes: network=writeback,block=writeback
+  enable-live-migration: 'true'
+  enable-resize: 'true'
+  libvirt-image-backend: rbd
+  migration-auth-type: ssh
+  multi-host: 'no'
+  neutron-database: neutron
+  neutron-database-user: neutron
+  openstack-origin: cloud:trusty-kilo
+  rabbit-user: nova
+  rabbit-vhost: openstack
+  use-syslog: 'false'
+  verbose: 'false'
+  virt-type: kvm
+openstack-dashboard:
+  debug: 'no'
+  default-role: Member
+  neutron-network-firewall: 'true'
+  neutron-network-lb: 'true'
+  neutron-network-vpn: 'true'
+  offline-compression: 'yes'
+  openstack-origin: cloud:trusty-kilo
+  prefer-ipv6: 'false'
+  ubuntu-theme: 'yes'
+  use-syslog: 'false'
+  webroot: /horizon
+neutron-gateway:
+  bridge-mappings: physnet1:br-ex vnet1:br-vlan
+  data-port: br-ex:eth0 br-vlan:eth1
+  database: nova
+  database-user: nova
+  debug: 'false'
+  enable-l3-agent: 'true'
+  ext-port: eth0
+  flat-network-providers: physnet1
+  ha-bindiface: eth0
+  ha-legacy-mode: 'false'
+  ha-mcastport: 5409
+  instance-mtu: 1400
+  nagios_context: juju
+  nagios_servicegroups: null
+  nova-rabbit-user: nova
+  nova-rabbit-vhost: openstack
+  openstack-origin: cloud:trusty-kilo
+  plugin: ovs
+  rabbit-user: neutron
+  rabbit-vhost: openstack
+  run-internal-router: leader
+  use-syslog: 'false'
+  verbose: 'false'
+  vlan-ranges: physnet1 vnet1:110:112
+swift-proxy:
+  openstack-origin: cloud:trusty-kilo
+  replicas: 3
+  zone-assignment: auto
+swift-storage:
+  block-device: /etc/swift/storage.img|2G
+  openstack-origin: cloud:trusty-kilo
+  zone: 1
+central-monitor:
+  enable_livestatus: 'true'

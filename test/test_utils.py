@@ -116,6 +116,15 @@ class TestRenderCharmConfig(unittest.TestCase):
         self.assertEqual(merged_dicts['swift-proxy']['zone-assignment'],
                          'auto')
 
+    def test_charmconfig_custom_overwrite(self, mockspew):
+        """ Verify complex yaml can safely overwrite existing defined keys
+        """
+        charm_conf = yaml.load(slurp(os.path.join(DATA_DIR, 'charmconf.yaml')))
+        charm_conf_custom = yaml.load(slurp(
+            os.path.join(DATA_DIR, 'charmconf-deepchainmap-fail.yaml')))
+        merged_dicts = merge_dicts(charm_conf_custom, charm_conf)
+        self.assertEqual(merged_dicts['glance']['database'], 'glance')
+
 
 @patch('cloudinstall.utils.os.environ')
 @patch('cloudinstall.utils.Popen')
