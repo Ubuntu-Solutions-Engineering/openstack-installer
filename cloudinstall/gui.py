@@ -717,7 +717,8 @@ class PegasusGUI(WidgetWrap):
         self.add_services_dialog.update()
         self.frame.body = Filler(self.add_services_dialog)
 
-    def show_exception_message(self, ex, logpath="~/.cloud-install/commands"):
+    def show_exception_message(self, ex,
+                               logpath="~/.cloud-install/commands.log"):
         def handle_done(*args, **kwargs):
             raise urwid.ExitMainLoop()
         self.hide_widget_on_top()
