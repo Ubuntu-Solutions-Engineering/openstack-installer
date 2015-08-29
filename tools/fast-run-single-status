@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import yaml
 
-from cloudinstall.utils import container_run, container_run_status
+from cloudinstall.api.container import Container
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -33,11 +33,11 @@ deb_name = glob.glob("../openstack_0.99*all.deb")[0]
 shutil.copy(deb_name, os.path.expanduser("~/.cloud-install/"))
 
 print("removing old version")
-r = container_run(container_name, "sudo apt-get -y remove openstack")
+r = Container.run(container_name, "sudo apt-get -y remove openstack")
 print(r)
 
 print("installing in container")
-r = container_run(container_name,
+r = Container.run(container_name,
                   'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
                       os.path.basename(deb_name)))
 
@@ -45,4 +45,4 @@ print("r is {}".format(r))
 
 
 config_is_ignored = {}
-container_run_status(container_name, 'openstack-status', config_is_ignored)
+Container.run_status(container_name, 'openstack-status', config_is_ignored)
