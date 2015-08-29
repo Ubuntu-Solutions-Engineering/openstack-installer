@@ -116,7 +116,7 @@ class AddServicesDialog(WidgetWrap):
             return (charm_class.required_num_units() -
                     self.pc.assignment_machine_count_for_charm(charm_class))
 
-        for i in range(num_to_auto_add(charm_class)):
+        for i in range(max(1, num_to_auto_add(charm_class))):
             self.pc.assign(self.pc.def_placeholder, charm_class,
                            AssignmentType.DEFAULT)
 
