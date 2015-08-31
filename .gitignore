@@ -7,7 +7,6 @@ dist
 *.substvars
 *.debhelper
 *.pybuild
-debian
 
 *.swp
 # the dependencies deb
@@ -18,3 +17,11 @@ cover
 *~
 .tox
 tmp
+*.debhelper
+debian/files
+debian/openstack
+debian/*substvars
+debian/*debhelper.log
+debian/openstack-landscape
+debian/openstack-multi
+debian/openstack-single

@@ -1,10 +1,16 @@
 #
 # Makefile for openstack-install
 #
-NAME        = openstack
-TOPDIR      := $(shell basename `pwd`)
-GIT_REV     := $(shell git log --oneline -n1| cut -d" " -f1)
-VERSION     := $(shell ./tools/version)
+NAME                = openstack
+TOPDIR              := $(shell basename `pwd`)
+GIT_REV		    := $(shell git log --oneline -n1| cut -d" " -f1)
+VERSION             := $(shell ./tools/version)
+UPSTREAM_DEB        := https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git
+UPSTREAM_DEB_COMMIT := b4cd7c1
+UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.git
+UPSTREAM_MACUMBA_COMMIT := 5fe890a
+UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
+UPSTREAM_MAASCLIENT_COMMIT := 357db23
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
 	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude=debian --exclude='.tox*'
@@ -36,13 +42,13 @@ clean:
 	@rm -rf .coverage
 
 DPKGBUILDARGS = -us -uc -i'.git.*|.tox|.bzr.*|.editorconfig|.travis-yaml|macumba\/debian|maasclient\/debian'
-deb-src: git-clone-debian clean update_version tarball
+deb-src: clean update_version tarball
 	@dpkg-buildpackage -S -sa $(DPKGBUILDARGS)
 
-deb-release: git-clone-debian
+deb-release:
 	@dpkg-buildpackage -S -sd $(DPKGBUILDARGS)
 
-deb: git-clone-debian clean update_version man-pages tarball
+deb: clean update_version man-pages tarball
 	@dpkg-buildpackage -b $(DPKGBUILDARGS)
 
 man-pages:
@@ -54,13 +60,21 @@ man-pages:
 current_version:
 	@echo $(VERSION)
 
-git-clone-debian:
-	@if [ ! -d "tmp/debian-git" ]; then \
-		git clone -q https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git tmp/debian-git; \
-	fi
-	@if [ ! -h "debian" ]; then \
-		ln -sf tmp/debian-git/debian debian; \
-	fi
+git-sync-requirements:
+	@echo Syncing git repos
+	rm -rf tmp && mkdir -p tmp
+	rm -rf debian
+	rm -rf macumba
+	rm -rf maasclient
+	git clone -q $(UPSTREAM_DEB) tmp/debian
+	git clone -q $(UPSTREAM_MACUMBA) tmp/macumba
+	git clone -q $(UPSTREAM_MAASCLIENT) tmp/maasclient
+	cd tmp/debian && git checkout $(UPSTREAM_DEB_COMMIT)
+	cd tmp/maasclient && git checkout $(UPSTREAM_MAASCLIENT_COMMIT)
+	cd tmp/macumba && git checkout $(UPSTREAM_MACUMBA_COMMIT)
+	rsync -az --delete tmp/debian/debian .
+	rsync -az --delete tmp/macumba/macumba .
+	rsync -az --delete tmp/maasclient/maasclient .
 
 git_rev:
 	@echo $(GIT_REV)
