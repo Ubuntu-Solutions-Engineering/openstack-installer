@@ -29,7 +29,7 @@ import yaml
 
 
 from cloudinstall.utils import (render_charm_config,
-                                merge_dicts, slurp, get_command_output)
+                                merge_dicts, slurp, spew, get_command_output)
 from cloudinstall.config import Config
 
 
@@ -122,8 +122,15 @@ class TestRenderCharmConfig(unittest.TestCase):
         charm_conf = yaml.load(slurp(os.path.join(DATA_DIR, 'charmconf.yaml')))
         charm_conf_custom = yaml.load(slurp(
             os.path.join(DATA_DIR, 'charmconf-deepchainmap-fail.yaml')))
-        merged_dicts = merge_dicts(charm_conf_custom, charm_conf)
-        self.assertEqual(merged_dicts['glance']['database'], 'glance')
+        merged_dicts = merge_dicts(charm_conf, charm_conf_custom)
+        with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
+            spew(tempf.name, yaml.safe_dump(
+                merged_dicts, default_flow_style=False))
+            modified_charm_conf = yaml.load(slurp(tempf.name))
+            self.assertEqual(modified_charm_conf['mysql']['dataset-size'],
+                             '512M')
+            self.assertEqual(modified_charm_conf['swift-storage']['zone'],
+                             1)
 
 
 @patch('cloudinstall.utils.os.environ')

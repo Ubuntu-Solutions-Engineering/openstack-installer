@@ -16,7 +16,6 @@
 from subprocess import (Popen, PIPE, call,
                         check_call, DEVNULL, CalledProcessError)
 from contextlib import contextmanager
-from collections import ChainMap
 try:
     from collections import Mapping
 except ImportError:
@@ -63,24 +62,6 @@ _async_exception_callback = None
 def register_async_exception_callback(cb):
     global _async_exception_callback
     _async_exception_callback = cb
-
-
-class DeepChainMap(ChainMap):
-    'Variant of ChainMap that allows direct updates to inner scopes'
-
-    def __setitem__(self, key, value):
-        for mapping in self.maps:
-            if key in mapping:
-                mapping[key] = value
-                return
-        self.maps[0][key] = value
-
-    def __delitem__(self, key):
-        for mapping in self.maps:
-            if key in mapping:
-                del mapping[key]
-                return
-        raise KeyError(key)
 
 
 class ExceptionLoggingThread(Thread):
@@ -213,8 +194,27 @@ def merge_dicts(*dicts):
     together.
     In case of conflicts, later arguments take precedence over earlier
     arguments.
+
+    ref:  http://stackoverflow.com/a/8795331/3170835
     """
-    return DeepChainMap(*dicts)
+    updated = {}
+    # grab all keys
+    keys = set()
+    for d in dicts:
+        keys = keys.union(set(d))
+
+    for key in keys:
+        values = [d[key] for d in dicts if key in d]
+        # which ones are mapping types? (aka dict)
+        maps = [value for value in values if isinstance(value, Mapping)]
+        if maps:
+            # if we have any mapping types, call recursively to merge them
+            updated[key] = merge_dicts(*maps)
+        else:
+            # otherwise, just grab the last value we have, since later
+            # arguments take precedence over earlier arguments
+            updated[key] = values[-1]
+    return updated
 
 
 def render_charm_config(config):
