@@ -67,6 +67,8 @@ class MultiInstall:
                     "Unable to set ownership for {}".format(d))
 
     def do_install(self):
+        # Install package deps
+        utils.apt_install('openstack-multi')
         self.tasker.start_task("Bootstrapping Juju")
         self.config.setopt('current_state', InstallState.RUNNING.value)
 
