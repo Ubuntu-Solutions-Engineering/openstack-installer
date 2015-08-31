@@ -297,6 +297,7 @@ class LandscapeInstallFinal:
 
     def deploy_landscape(self):
         self.multi_installer.tasker.start_task("Preparing Landscape")
+        utils.apt_install('openstack-landscape')
         self.display_controller.status_info_message(
             "Running")
         # FIXME: not sure if deployer is failing to access the juju
