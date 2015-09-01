@@ -5,12 +5,7 @@ echo -n Ubuntu Openstack Installer Uninstalling ...
 WHAT=$(openstack-config install_type)
 CONTAINER_NAME=$(openstack-config container_name)
 CONTAINER_NETWORK=$(openstack-config lxc_network)
-
-if [ -f ~/.cloud-install/new-maas ]; then
-  MAAS_TYPE=new
-else
-  MAAS_TYPE=existing
-fi
+MAAS_TYPE=existing
 
 apt_purge() {
   DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
@@ -26,46 +21,6 @@ case $WHAT in
     echo Multi install environment
 
     JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || exit 1
-
-    if [ "$MAAS_TYPE" == "new" ]; then
-        rm -r ~/.maascli.db
-
-        whiptail --msgbox "MAAS packaging requires manual interaction.\nPlease answer YES to the questions in the next two screens." 15 30
-
-        apt-get -y purge '.*maas.*'
-        apt_purge 'bind9'
-        sudo -u postgres psql -c 'drop database maasdb;'
-
-        # Sometimes the twisted process just hangs with 100% cpu when uninstalling,
-        # so we kill it explicitly.
-        sudo killall -u maas twistd
-
-        virsh destroy juju-bootstrap
-        virsh undefine juju-bootstrap
-        virsh vol-delete juju-bootstrap.qcow2
-        virsh pool-refresh default
-
-        # clean up the networking
-        interface=$(cat /etc/openstack/interface)
-        ifconfig br0 down
-        brctl delbr br0
-        if [ -n "$interface" ]; then
-            ifdown $interface
-        fi
-
-        cp /etc/openstack/interfaces.cloud.bak /etc/network/interfaces
-        cp -r /etc/openstack/interfaces.cloud.d.bak/* /etc/network/interfaces.d
-        rm /etc/network/interfaces.d/openstack.cfg
-
-        # iptables rule
-        cp /etc/network/iptables.rules /etc/network/iptables.rules.bak
-        rm /etc/network/iptables.rules
-
-        if [ -n "$interface" ]; then
-            ifup $interface
-        fi
-        ifdown lo && ifup lo
-    fi
 
     # Multi places backup network settings here.
     rm -rf /etc/openstack || true
