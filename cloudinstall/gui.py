@@ -740,9 +740,8 @@ class PegasusGUI(WidgetWrap):
         MAAS or if a new MAAS will be installed
         """
         self.status_info_message(
-            "If a MAAS exists please enter the Server IP and your "
-            "administrator's API Key. Otherwise leave blank and a new "
-            "MAAS will be created for you")
+            "Please enter the Server IP and your "
+            "administrator's API Key of the existing MAAS server")
         self.show_maas_input("MAAS Setup", cb)
 
     def __repr__(self):
