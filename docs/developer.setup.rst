@@ -31,8 +31,7 @@ installer:
 
    $ git clone https://github.com/Ubuntu-Solutions-Engineering/openstack-installer.git ~/openstack-installer
    $ cd ~/openstack-installer
-   $ git submodule init
-   $ git submodule update
+   $ make git-sync-requirements
 
 Use the target 'install-dependencies' to install a custom binary package for the build dependencies:
 
