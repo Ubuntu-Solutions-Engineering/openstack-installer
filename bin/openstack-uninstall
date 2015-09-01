@@ -5,7 +5,6 @@ echo -n Ubuntu Openstack Installer Uninstalling ...
 WHAT=$(openstack-config install_type)
 CONTAINER_NAME=$(openstack-config container_name)
 CONTAINER_NETWORK=$(openstack-config lxc_network)
-MAAS_TYPE=existing
 
 apt_purge() {
   DEBIAN_FRONTEND=noninteractive apt-get -yy purge $@
