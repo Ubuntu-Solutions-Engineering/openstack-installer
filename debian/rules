@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=cloudinstall
+export PYBUILD_DISABLE_python2=1
+export PYBUILD_INSTALL_DIR=usr/share/openstack/
+export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/openstack/ \
+	--install-data=usr/ \
+	--install-scripts=usr/share/openstack/bin/ \
+	--root=$(CURDIR)/debian/openstack/ \
+	--no-compile -O0
+
+%:
+	dh $@ --with python2,python3 --buildsystem=pybuild
+
+override_dh_python2:
+	dh_python2 --ignore-shebangs -X cloudinstall\.gui
+override_dh_python3:
+	dh_python3 --ignore-shebangs
+override_dh_installinit:
+	dh_installinit --no-start
+
+override_dh_auto_test:
+	@echo "No tests."
