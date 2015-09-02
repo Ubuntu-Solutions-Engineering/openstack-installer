@@ -8,7 +8,7 @@ VERSION             := $(shell ./tools/version)
 UPSTREAM_DEB        := https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git
 UPSTREAM_DEB_COMMIT := 139cbe8
 UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.git
-UPSTREAM_MACUMBA_COMMIT := 5fe890a
+UPSTREAM_MACUMBA_COMMIT := 5674861
 UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
 UPSTREAM_MAASCLIENT_COMMIT := 357db23
 
@@ -69,9 +69,9 @@ git-sync-requirements:
 	git clone -q $(UPSTREAM_DEB) tmp/debian
 	git clone -q $(UPSTREAM_MACUMBA) tmp/macumba
 	git clone -q $(UPSTREAM_MAASCLIENT) tmp/maasclient
-	cd tmp/debian && git checkout $(UPSTREAM_DEB_COMMIT)
-	cd tmp/maasclient && git checkout $(UPSTREAM_MAASCLIENT_COMMIT)
-	cd tmp/macumba && git checkout $(UPSTREAM_MACUMBA_COMMIT)
+	(cd tmp/debian && git checkout -f $(UPSTREAM_DEB_COMMIT))
+	(cd tmp/maasclient && git checkout -f $(UPSTREAM_MAASCLIENT_COMMIT))
+	(cd tmp/macumba && git checkout -f $(UPSTREAM_MACUMBA_COMMIT))
 	rsync -az --delete tmp/debian/debian .
 	rsync -az --delete tmp/macumba/macumba .
 	rsync -az --delete tmp/maasclient/maasclient .
