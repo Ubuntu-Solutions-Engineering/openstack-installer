@@ -119,6 +119,8 @@ def parse_options(argv):
                         default='trusty',
                         help="Ubuntu series codename (eg. 'trusty', 'utopic') "
                         "for juju default")
+    parser.add_argument('--maas-tag', dest='maas_tag',
+                        help="Only operate on machines in MAAS with this tag")
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)

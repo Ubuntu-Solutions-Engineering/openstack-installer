@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     try:
         log.setup_logger(headless=config.getopt('headless'))
-    except PermissionError:
+    except PermissionError:  # NOQA
         print("Permission error accessing log file.\n"
               "This probably indicates a broken partial install.\n"
               "Please use 'openstack-install -u' to uninstall, "
