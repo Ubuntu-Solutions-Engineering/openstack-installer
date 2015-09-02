@@ -266,7 +266,7 @@ class PlacementController:
         are excluded.
         """
         if self.maas_state:
-            ms = self.maas_state.machines()
+            ms = self.maas_state.machines(tag=self.config.getopt('maas_tag'))
         else:
             ms = self._machines
 
@@ -587,7 +587,7 @@ class PlacementController:
         assignments = defaultdict(lambda: defaultdict(list))
 
         if maas_machines is None:
-            maas_machines = self.maas_state.machines(MaasMachineStatus.READY)
+            maas_machines = self.maas_state.machines(MaasMachineStatus.READY, tag=self.config.getopt('maas_tag'))
 
         def satisfying_machine(constraints):
             for machine in maas_machines:

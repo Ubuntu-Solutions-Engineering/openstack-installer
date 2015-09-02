@@ -321,7 +321,7 @@ class MaasState:
                 return m
         return None
 
-    def machines(self, state=None):
+    def machines(self, state=None, tag=None):
         """Maas Machines
 
         :param state
@@ -332,9 +332,13 @@ class MaasState:
         :rtype: list of MaasMachine
 
         """
+        nodes = [n for n in self.nodes()
+                 if n['hostname'] != 'juju-bootstrap.maas']
 
-        all_machines = [MaasMachine(-1, m) for m in self.nodes()
-                        if m['hostname'] != 'juju-bootstrap.maas']
+        if tag:
+            nodes = [n for n in nodes if tag in n['tag_names']]
+
+        all_machines = [MaasMachine(-1, m) for m in nodes]
         if state:
             return [m for m in all_machines if m.status == state]
         else:
