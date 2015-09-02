@@ -138,7 +138,7 @@ class JujuWS(WebSocketClient):
             self.messages[msg_req_id] = msg
 
     def closed(self, code, reason=None):
-        log.debug("socket closed")
+        log.debug("socket closed: code:{} reason:{}".format(code, reason))
 
     # actions for users of the class:
     def get_current_request_id(self):
