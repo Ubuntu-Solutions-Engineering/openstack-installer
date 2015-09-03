@@ -89,7 +89,7 @@ class ServicesColumn(WidgetWrap):
                                         'button_secondary focus')
 
         clear_all_func = self.placement_view.do_clear_all
-        self.clear_all_button = AttrMap(Button("Clear all Placements",
+        self.clear_all_button = AttrMap(Button("Clear All Placements",
                                                on_press=clear_all_func),
                                         'button_secondary',
                                         'button_secondary focus')
