@@ -37,40 +37,6 @@ class ConfigException(Exception):
 
 
 class Config:
-    STYLES = [
-        ('body', 'white', 'black'),
-        ('header_menu', 'light gray', 'dark gray'),
-        ('header_title', 'light gray,bold', 'dark magenta'),
-        ('subheading', 'dark gray,bold', 'default'),
-        ('deploy_highlight_start', 'dark gray', 'light green'),
-        ('deploy_highlight_end', 'dark gray', 'dark green'),
-        ('disabled_button', 'black', 'white'),
-        ('disabled_button_focus', 'black', 'light gray'),
-        ('divider_line', 'light gray', 'default'),
-        ('filter', 'dark gray,underline', 'white'),
-        ('filter_focus', 'dark gray,underline', 'light gray'),
-        ('focus', 'white', 'dark gray'),
-        ('radio focus', 'white,bold', 'dark magenta'),
-        ('input', 'white', 'dark gray'),
-        ('input focus', 'dark magenta,bold', 'dark gray'),
-        ('dialog', 'white', 'dark gray'),
-        ('status_extra', 'light gray,bold', 'dark gray'),
-        ('error', 'white', 'dark red'),
-        ('info', 'light green', 'default'),
-        ('label', 'dark gray', 'default'),
-        ('error_icon', 'light red,bold', 'default'),
-        ('pending_icon_on', 'light blue,bold', 'default'),
-        ('pending_icon', 'dark blue', 'default'),
-        ('success_icon', 'light green', 'default'),
-        ('button_primary', 'white', 'dark gray', 'default', 'white', '#d51'),
-        ('button_primary focus', 'dark blue,bold', 'dark gray', 'default',
-         'white', '#b30'),
-        ('button_secondary', 'white', 'dark gray', 'default',
-         '#aaa', 'dark gray'),
-        ('button_secondary focus', 'dark blue,bold', 'dark gray', 'default',
-         'white', 'dark gray')
-    ]
-
     def __init__(self, cfg_obj=None, cfg_file=None):
         if os.getenv("FAKE_API_DATA"):
             self._juju_env = {"bootstrap-config": {'name': "fake",

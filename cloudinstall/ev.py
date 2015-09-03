@@ -16,8 +16,8 @@
 
 import urwid
 import sys
-import cloudinstall.utils as utils
 from cloudinstall.state import ControllerState
+from cloudinstall.ui.palette import STYLES
 
 import logging
 import threading
@@ -59,10 +59,14 @@ class EventLoop:
 
     def _build_loop(self):
         """ Returns event loop configured with color palette """
-        loop = urwid.MainLoop(self.ui, self.config.STYLES,
-                              unhandled_input=self.header_hotkeys)
-        utils.make_screen_hicolor(loop.screen)
-        loop.screen.register_palette(self.config.STYLES)
+        additional_opts = {
+            'screen': urwid.raw_display.Screen(),
+            'unhandled_input': self.header_hotkeys,
+            'handle_mouse': False
+        }
+        additional_opts['screen'].set_terminal_properties(colors=256)
+        additional_opts['screen'].reset_default_terminal_palette()
+        loop = urwid.MainLoop(self.ui, STYLES, **additional_opts)
         return loop
 
     def header_hotkeys(self, key):

@@ -19,6 +19,7 @@
 from __future__ import unicode_literals
 from urwid import Text, AttrWrap, LineBox, BoxAdapter
 from cloudinstall.ui import ScrollableListBox, ScrollableWidgetWrap
+from cloudinstall.ui.utils import Color
 
 
 class HelpScreen(ScrollableWidgetWrap):
@@ -84,7 +85,7 @@ along with detail about what those constraints were.
             """,
             ('header_title', "End of Help Screen")]
         w = self._create_text()
-        w = AttrWrap(w, 'dialog')
+        w = Color.dialog(w)
         super().__init__(w)
 
     def _create_text(self):

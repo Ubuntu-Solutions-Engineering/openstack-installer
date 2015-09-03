@@ -38,7 +38,7 @@ class Palette:
 
 STYLES = [
     ('frame_header', '', '', '',
-     Palette.white, Palette.dark_magenta),
+     Palette.white, Palette.orange),
     ('frame_subheader', '', '', '',
      Palette.white, Palette.warm_gray),
     ('frame_excerpt', '', '', '',
