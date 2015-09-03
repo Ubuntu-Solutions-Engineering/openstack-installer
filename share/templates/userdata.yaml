@@ -63,7 +63,7 @@ apt_sources:
       u9j+vBKs9toPKDN1ybKu61k4lCrxoDUo9QDp
       =4LP9
       -----END PGP PUBLIC KEY BLOCK-----
-{%- for repo in ['stable', 'testing'] %}
+{%- for repo in ['stable'] %}
   {{ render_ci_ppa(repo) }}
 {%- endfor %}
 {%- if upstream_ppa %}
