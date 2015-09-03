@@ -78,7 +78,7 @@ class SingleInstall:
             pollinate.append('http_proxy={}'.format(http_proxy))
         if https_proxy:
             pollinate.append('https_proxy={}'.format(https_proxy))
-        pollinate.extend(['pollinate', '-q'])
+        pollinate.extend(['pollinate', '-q', '--curl-opts', '-k'])
         return pollinate
 
     def prep_userdata(self):
