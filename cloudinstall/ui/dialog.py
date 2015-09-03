@@ -20,6 +20,7 @@ from urwid import (AttrWrap, LineBox,
                    signals, emit_signal, connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
+from cloudinstall.ui.utils import Color
 
 import logging
 
@@ -85,8 +86,8 @@ class Dialog(WidgetWrap):
 
         total_items = []
         for _item in self.input_items.keys():
-            total_items.append(AttrWrap(
-                self.input_items[_item], 'input', 'input focus'))
+            total_items.append(Color.string_input(
+                self.input_items[_item], focus_map='string_input focus'))
         self.input_lbox = ListBox(SimpleListWalker(total_items))
 
         # Add buttons

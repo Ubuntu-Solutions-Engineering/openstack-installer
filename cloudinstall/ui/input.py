@@ -16,6 +16,7 @@
 """ re-usable input widgets """
 
 from urwid import (Edit, WidgetWrap)
+from cloudinstall.ui.utils import Color
 
 import logging
 
@@ -32,7 +33,8 @@ class EditInput(WidgetWrap):
 
     def __init__(self, caption, **kwargs):
         self._edit = Edit(caption=caption, **kwargs)
-        super().__init__(self._edit)
+        super().__init__(Color.string_input(self._edit,
+                                            focus_map="string_input focus"))
 
     @property
     def value(self):

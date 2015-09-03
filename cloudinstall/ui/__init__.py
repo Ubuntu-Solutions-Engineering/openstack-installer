@@ -23,6 +23,7 @@ from urwid import (Button, LineBox, ListBox, Pile, AttrWrap,
                    BoxAdapter, Divider)
 from collections import OrderedDict
 from cloudinstall.ui.dialog import Dialog
+from cloudinstall.ui.utils import Color
 
 log = logging.getLogger('cloudinstall.ui')
 
@@ -187,11 +188,13 @@ class SelectorWithDescription(Dialog):
     def _build_widget(self, **kwargs):
         total_items = []
         for _item in self.radio_items.keys():
-            desc = AttrWrap(
+            desc = Color.string_input(
                 Text("  {}".format(
-                    self.radio_items[_item][1])), 'input', 'input focus')
+                    self.radio_items[_item][1])),
+                focus_map='string_input focus')
             total_items.append(
-                AttrWrap(self.radio_items[_item][0], 'input', 'input focus'))
+                Color.string_input(self.radio_items[_item][0],
+                                   focus_map='string_input focus'))
             total_items.append(AttrWrap(desc, 'input'))
             total_items.append(Divider('-'))
 
