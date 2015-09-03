@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from urwid import Text, AttrWrap, LineBox, BoxAdapter
+from urwid import Text, LineBox, BoxAdapter
 from cloudinstall.ui import ScrollableListBox, ScrollableWidgetWrap
 from cloudinstall.ui.utils import Color
 
