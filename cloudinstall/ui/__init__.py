@@ -141,31 +141,6 @@ class InfoDialog(WidgetWrap):
         self.close_func(self)
 
 
-class Selector(Dialog):
-
-    """
-    Simple selector box
-
-    :param str title: title of selections
-    :param list opts: items to select
-    :param cb: callback
-    :returns: item selected from dialog
-    """
-
-    def __init__(self, title, opts, cb):
-        log.debug("In selector dialog")
-        for item in opts:
-            self.add_radio(item)
-        super().__init__(title, cb)
-
-    def submit(self, button):
-        for item in self.input_items.keys():
-            _item = self.input_items[item]
-            if _item.get_state():
-                selected_item = _item.label
-        self.emit_done_signal(selected_item)
-
-
 class SelectorWithDescription(WidgetWrap):
 
     """
