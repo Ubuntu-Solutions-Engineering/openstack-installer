@@ -71,6 +71,8 @@ STYLES = [
      Palette.white, Palette.warm_gray),
     ('radio_input focus', '', '', '',
      Palette.orange, Palette.warm_gray),
+    ('header_title', '', '', '',
+     Palette.orange, ''),
     ('deploy_highlight_start', 'dark gray', 'light green'),
     ('deploy_highlight_end', 'dark gray', 'dark green'),
     ('disabled_button', 'black', 'white'),

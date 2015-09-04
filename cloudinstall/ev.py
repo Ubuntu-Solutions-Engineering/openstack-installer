@@ -90,6 +90,10 @@ class EventLoop:
             if key in ['r', 'R', 'f5']:
                 self.ui.status_info_message("View was refreshed")
                 self._callback_map['refresh_display']()
+            if key in ['esc']:
+                log.debug("setting previous controller: {}".format(
+                    self.ui.controller))
+                self.ui.frame.body = self.ui.controller
 
     def exit(self, err=0):
         self.error_code = err
