@@ -14,13 +14,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from urwid import (AttrWrap, LineBox,
-                   ListBox, BoxAdapter, WidgetWrap,
-                   Pile, RadioButton, SimpleListWalker, Divider, Button,
+from urwid import (Pile, WidgetWrap, Text,
+                   Button,
                    signals, emit_signal, connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
-from cloudinstall.ui.utils import Color
+from cloudinstall.ui.lists import SimpleList
+from cloudinstall.ui.utils import Color, Padding
 
 import logging
 
@@ -34,79 +34,58 @@ class Dialog(WidgetWrap):
 
     __metaclass__ = signals.MetaSignals
     signals = ['done']
-    key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
+    # key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
+
+    input_items = []
 
     def __init__(self, title, cb):
         self.title = title
         self.cb = cb
-        self.input_items = OrderedDict()
-        self.input_lbox = []
-        self.container_lbox = []
-        self.btn_pile = None
-        self.btn_confirm = None
-        self.btn_cancel = None
-
-    def show(self):
-        w = self._build_widget()
-        w = AttrWrap(w, 'dialog')
-
+        self.input_selection = OrderedDict()
         connect_signal(self, 'done', self.cb)
-        super().__init__(w)
+        super().__init__(self._build_widget())
 
-    def keypress(self, size, key):
-        key = self.key_conversion_map.get(key, key)
-        return super().keypress(size, key)
+    # def keypress(self, size, key):
+    #     key = self.key_conversion_map.get(key, key)
+    #     return super().keypress(size, key)
 
-    def add_buttons(self):
-        """ Adds default CONFIRM/Cancel buttons for dialog
-        """
-        self.btn_confirm = AttrWrap(Button("Confirm", self.submit),
-                                    'button_primary',
-                                    'button_primary focus')
-        self.btn_cancel = AttrWrap(Button("Cancel", self.cancel),
-                                   'button_secondary',
-                                   'button_secondary focus')
-        self.btn_pile = Pile([self.btn_confirm, self.btn_cancel])
-
-    def add_input(self, key, caption, **kwargs):
-        """ Adds input boxes while setting their label attributes for
-        easy retrieval of data
-
-        :param str caption: viewable label of input
-        :param dict **kwargs: additional Edit attributes
-        """
-        self.input_items[key] = EditInput(caption=caption, **kwargs)
-
-    def add_radio(self, item, group=[]):
-        """ Adds radio selections
-        """
-        self.input_items[item] = RadioButton(group, item)
+    def _build_buttons(self):
+        buttons = [
+            Color.button_primary(
+                Button("Confirm", self.submit),
+                focus_map='button_primary focus'),
+            Color.button_secondary(
+                Button("Cancel", self.cancel),
+                focus_map='button_secondary focus')
+        ]
+        return Pile(buttons)
 
     def _build_widget(self, **kwargs):
+        total_items = [
+            Padding.center_85(Text(self.title)),
+            Padding.line_break("")
+        ]
+        if self.input_items:
+            for item in self.input_items:
+                key = item[0]
+                caption = item[1]
+                try:
+                    mask = item[2]
+                except:
+                    mask = None
+                self.input_selection[key] = EditInput(caption=caption,
+                                                      mask=mask)
 
-        total_items = []
-        for _item in self.input_items.keys():
-            total_items.append(Color.string_input(
-                self.input_items[_item], focus_map='string_input focus'))
-        self.input_lbox = ListBox(SimpleListWalker(total_items))
-
-        # Add buttons
-        self.add_buttons()
-        self.container_box_adapter = BoxAdapter(self.input_lbox,
-                                                len(total_items))
-        self.container_lbox = ListBox(
-            [self.container_box_adapter,
-             Divider(),
-             self.btn_pile])
-
-        return LineBox(
-            BoxAdapter(self.container_lbox,
-                       height=len(total_items) + 1 +
-                       len(self.btn_pile.contents)),
-            title=self.title)
+        for item in self.input_selection.keys():
+            total_items.append(
+                Padding.center_60(
+                    Color.string_input(self.input_selection[item],
+                                       focus_map="string_input focus")))
+        total_items.append(Padding.center_20(self._build_buttons()))
+        return SimpleList(total_items)
 
     def submit(self, button):
-        self.emit_done_signal(self.input_items)
+        self.emit_done_signal(self.input_selection)
 
     def cancel(self, button):
         raise SystemExit("Installation cancelled.")

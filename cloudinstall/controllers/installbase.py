@@ -63,43 +63,39 @@ class InstallController:
         """
         password = creds['password'].value
         if password.isdigit():
-            self.ui.flash("Password must not be a number")
-            self.loop.redraw_screen()
+            self.ui.status_error_message("Password must not be a number")
             return self.ui.show_password_input(
                 'Create a New OpenStack Password', self._save_password)
         if 'confirm_password' in creds:
             confirm_password = creds['confirm_password'].value
         if password and password == confirm_password:
-            self.ui.flash_reset()
-            self.loop.redraw_screen()
             self.config.setopt('openstack_password', password)
-            self.ui.hide_show_password_input()
             self.do_install()
         else:
-            self.ui.flash('Passwords did not match')
-            self.loop.redraw_screen()
+            self.ui.status_error_message('Passwords did not match')
             return self.ui.show_password_input(
                 'Create a New OpenStack Password', self._save_password)
 
     def _save_maas_creds(self, creds):
-        self.ui.hide_widget_on_top()
         maas_server = creds['maas_server'].value
         maas_apikey = creds['maas_apikey'].value
 
         if maas_server and maas_apikey:
             if maas_server.startswith("http"):
-                self.ui.flash('Please enter the MAAS server\'s '
-                              'IP address only, not a full URL')
-                return self.ui.select_maas_type(self._save_maas_creds)
+                self.ui.status_error_message('Please enter the MAAS server\'s '
+                                             'IP address only, not a full URL')
+                return self.ui.show_maas_input("Enter MAAS IP and API Key",
+                                               self._save_maas_creds)
             self.config.setopt('maascreds', dict(api_host=maas_server,
                                                  api_key=maas_apikey))
             log.info("Performing a Multi Install with existing MAAS")
             return self.MultiInstallExistingMaas(
                 self.loop, self.ui, self.config).run()
         else:
-            self.ui.flash('Please enter the MAAS server\'s '
-                          'IP address and API key to proceed.')
-            return self.ui.select_maas_type(self._save_maas_creds)
+            self.ui.status_error_message('Please enter the MAAS server\'s '
+                                         'IP address and API key to proceed.')
+            return self.ui.show_maas_input("Enter MAAS IP and API Key",
+                                           self._save_maas_creds)
 
     def update(self, *args, **kwargs):
         "periodically check for display changes"
@@ -133,7 +129,9 @@ class InstallController:
                 self.MultiInstallExistingMaas(
                     self.loop, self.ui, self.config).run()
             else:
-                self.ui.select_maas_type(self._save_maas_creds)
+                self.ui.show_maas_input(
+                    "Enter MAAS IP and API Key",
+                    self._save_maas_creds)
         elif self.install_type == INSTALL_TYPE_LANDSCAPE[0]:
             log.info("Performing a Landscape OpenStack Autopilot install")
             self.LandscapeInstall(

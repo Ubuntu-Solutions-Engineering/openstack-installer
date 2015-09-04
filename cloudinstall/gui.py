@@ -40,7 +40,6 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              PasswordInput,
                              MaasServerInput,
                              LandscapeInput,
-                             DhcpRangeInput,
                              InfoDialog)
 from cloudinstall.ui.utils import Color
 from cloudinstall.ui.helpscreen import HelpScreen
@@ -488,6 +487,7 @@ def _check_encoding():
 
 
 class PegasusGUI(WidgetWrap):
+    key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
 
     def __init__(self, header=None, body=None, footer=None):
         _check_encoding()  # Make sure terminal supports utf8
@@ -507,6 +507,10 @@ class PegasusGUI(WidgetWrap):
         self.machine_wait_view = None
         self.add_services_dialog = None
         super().__init__(self.frame)
+
+    def keypress(self, size, key):
+        key = self.key_conversion_map.get(key, key)
+        return super().keypress(size, key)
 
     def _build_overlay_widget(self,
                               top_w,
@@ -591,8 +595,7 @@ class PegasusGUI(WidgetWrap):
         self.hide_widget_on_top()
 
     def show_selector_with_desc(self, title, opts, cb):
-        widget = SelectorWithDescription(title, opts, cb)
-        self.show_widget_on_top(widget, width=80, height=14)
+        self.frame.body = SelectorWithDescription(title, opts, cb)
 
     def hide_selector_with_desc(self):
         self.hide_widget_on_top()
@@ -602,32 +605,13 @@ class PegasusGUI(WidgetWrap):
         self.show_widget_on_top(w, width=50, height=20)
 
     def show_password_input(self, title, cb):
-        widget = PasswordInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=7)
-
-    def hide_show_password_input(self):
-        self.hide_widget_on_top()
+        self.frame.body = PasswordInput(title, cb)
 
     def show_maas_input(self, title, cb):
-        widget = MaasServerInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=10)
-
-    def hide_show_maas_input(self):
-        self.hide_widget_on_top()
-
-    def show_dhcp_range(self, range_low, range_high, title, cb):
-        widget = DhcpRangeInput(range_low, range_high, title, cb)
-        self.show_widget_on_top(widget, width=50, height=10)
-
-    def hide_show_dhcp_range(self):
-        self.hide_widget_on_top()
+        self.frame.body = MaasServerInput(title, cb)
 
     def show_landscape_input(self, title, cb):
-        widget = LandscapeInput(title, cb)
-        self.show_widget_on_top(widget, width=50, height=9)
-
-    def hide_show_landscape_input(self):
-        self.hide_widget_on_top()
+        self.frame.body = LandscapeInput(title, cb)
 
     def set_pending_deploys(self, pending_charms):
         self.frame.footer.set_pending_deploys(pending_charms)
@@ -732,15 +716,6 @@ class PegasusGUI(WidgetWrap):
         self.show_selector_with_desc('Install Type',
                                      install_types,
                                      cb)
-
-    def select_maas_type(self, cb):
-        """ Perform multi install based on existing
-        MAAS or if a new MAAS will be installed
-        """
-        self.status_info_message(
-            "Please enter the Server IP and your "
-            "administrator's API Key of the existing MAAS server")
-        self.show_maas_input("MAAS Setup", cb)
 
     def __repr__(self):
         return "<Ubuntu OpenStack Installer GUI Interface>"
