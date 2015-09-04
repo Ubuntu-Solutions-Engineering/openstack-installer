@@ -298,12 +298,15 @@ class Controller:
     def all_maas_machines_ready(self):
         self.maas_state.invalidate_nodes_cache()
 
+        cons = self.config.getopt('constraints')
         needed = set([m.instance_id for m in
                       self.placement_controller.machines_pending()])
         ready = set([m.instance_id for m in
-                     self.maas_state.machines(MaasMachineStatus.READY)])
+                     self.maas_state.machines(MaasMachineStatus.READY,
+                                              constraints=cons)])
         allocated = set([m.instance_id for m in
-                         self.maas_state.machines(MaasMachineStatus.ALLOCATED)
+                         self.maas_state.machines(MaasMachineStatus.ALLOCATED,
+                                                  constraints=cons)
                          ])
 
         summary = ", ".join(["{} {}".format(v, k) for k, v in

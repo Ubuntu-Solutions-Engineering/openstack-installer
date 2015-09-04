@@ -296,14 +296,34 @@ class MaasState:
         self._maas_client_nodes = None
         self.start_time = time.time()
 
-    def nodes(self):
+    def nodes(self, constraints=None):
         """ Cache MAAS nodes
         """
         elapsed_time = time.time() - self.start_time
         if not self._maas_client_nodes or elapsed_time > 20:
             self._maas_client_nodes = self.maas_client.nodes
+            self._filtered_nodes = self._maas_client_nodes
+            if constraints:
+                cd = dict(x.split('=') for x in constraints.split(' '))
+                arch = cd.get('arch', None)
+                tagstr = cd.get('tags', None)
+                satisfying_nodes = []
+                for n in self._maas_client_nodes:
+                    if arch:
+                        n_arch = n['architecture'].split('/')[0]
+                        if n_arch != arch:
+                            continue
+                    if tagstr:
+                        c_tags = set(cd['tags'].split(','))
+                        n_tags = set(n['tag_names'])
+                        if not c_tags.issubset(n_tags):
+                            continue
+                    satisfying_nodes.append(n)
+
+                self._filtered_nodes = satisfying_nodes
+
             self.start_time = time.time()
-        return self._maas_client_nodes
+        return self._filtered_nodes
 
     def invalidate_nodes_cache(self):
         """Force reload on next access"""
@@ -321,10 +341,13 @@ class MaasState:
                 return m
         return None
 
-    def machines(self, state=None, tag=None):
+    def machines(self, state=None, constraints=None):
         """Maas Machines
 
         :param state
+
+        :param str constraints: a juju style constraints string that
+        we parse for arch and tags
 
         :returns: machines known to Maas, except for juju bootstrap
             machine, matching state type, or all if state=None
@@ -332,11 +355,8 @@ class MaasState:
         :rtype: list of MaasMachine
 
         """
-        nodes = [n for n in self.nodes()
+        nodes = [n for n in self.nodes(constraints)
                  if n['hostname'] != 'juju-bootstrap.maas']
-
-        if tag:
-            nodes = [n for n in nodes if tag in n['tag_names']]
 
         all_machines = [MaasMachine(-1, m) for m in nodes]
         if state:
