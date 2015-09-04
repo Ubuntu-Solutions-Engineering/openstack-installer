@@ -15,7 +15,7 @@
 
 from __future__ import unicode_literals
 from urwid import (Pile, WidgetWrap, Text,
-                   Button, Filler,
+                   Button, Filler, Columns, Divider,
                    signals, emit_signal, connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
@@ -73,15 +73,17 @@ class Dialog(WidgetWrap):
                     mask = item[2]
                 except:
                     mask = None
-                self.input_selection[key] = EditInput(caption=caption,
+                self.input_selection[key] = EditInput(caption="",
                                                       mask=mask)
-
-        for item in self.input_selection.keys():
-            total_items.append(
-                Padding.center_60(
-                    Color.string_input(self.input_selection[item],
-                                       focus_map="string_input focus")))
-            total_items.append(Padding.line_break(""))
+                col = Columns(
+                    [
+                        ("weight", 0.4, Text(caption)),
+                        Color.string_input(self.input_selection[key],
+                                           focus_map="string_input focus")
+                    ]
+                )
+                total_items.append(Padding.center_60(col))
+                total_items.append(Padding.center_60(Divider('-', 1, 1)))
         total_items.append(Padding.center_20(self._build_buttons()))
         return Filler(Pile(total_items), valign='middle')
 
