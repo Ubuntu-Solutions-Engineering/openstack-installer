@@ -109,10 +109,14 @@ class MultiInstall:
             dbgflags = "--debug"
 
         bsflags = ""
-        #    bsflags = " --constraints tags=physical"
+
         bstarget = os.getenv("JUJU_BOOTSTRAP_TO")
         if bstarget:
             bsflags += " --to {}".format(bstarget)
+
+        cons = self.config.getopt('constraints')
+        if cons:
+            bsflags += " --constraints \"{}\"".format(cons)
 
         cmd = ("{0} juju {1} bootstrap {2}".format(
             self.config.juju_home(), dbgflags, bsflags))

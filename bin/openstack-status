@@ -67,8 +67,12 @@ def parse_options(argv):
                         help='Debug mode')
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
-    parser.add_argument('--maas-tag', dest='maas_tag',
-                        help="Only operate on machines in MAAS with this tag")
+    parser.add_argument('--constraints', dest='constraints',
+                        help="Constraints to pass to Juju to control what "
+                        "machines are used. A single string with key=value "
+                        "pairs separated by spaces. "
+                        "e.g. \"arch=amd64 tags=foo\". Also limits MAAS "
+                        "machines used for service placement.")
     return parser.parse_args(argv)
 
 if __name__ == '__main__':
