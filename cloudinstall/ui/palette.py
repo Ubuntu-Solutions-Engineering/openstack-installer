@@ -62,7 +62,7 @@ STYLES = [
     ('error_major', '', '', '',
      Palette.light_red, ''),
     ('string_input', '', '', '',
-     Palette.white, Palette.warm_gray),
+     Palette.white, Palette.cool_gray),
     ('string_input focus', '', '', '',
      Palette.white, Palette.orange),
     ('dialog', '', '', '',

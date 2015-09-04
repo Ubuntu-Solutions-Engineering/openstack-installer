@@ -15,11 +15,10 @@
 
 from __future__ import unicode_literals
 from urwid import (Pile, WidgetWrap, Text,
-                   Button,
+                   Button, Filler,
                    signals, emit_signal, connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
-from cloudinstall.ui.lists import SimpleList
 from cloudinstall.ui.utils import Color, Padding
 
 import logging
@@ -51,18 +50,19 @@ class Dialog(WidgetWrap):
 
     def _build_buttons(self):
         buttons = [
+            Padding.line_break(""),
             Color.button_primary(
                 Button("Confirm", self.submit),
                 focus_map='button_primary focus'),
             Color.button_secondary(
                 Button("Cancel", self.cancel),
-                focus_map='button_secondary focus')
+                focus_map='button_secondary focus'),
         ]
         return Pile(buttons)
 
     def _build_widget(self, **kwargs):
         total_items = [
-            Padding.center_85(Text(self.title)),
+            Padding.center_65(Text(self.title, align="center")),
             Padding.line_break("")
         ]
         if self.input_items:
@@ -81,8 +81,9 @@ class Dialog(WidgetWrap):
                 Padding.center_60(
                     Color.string_input(self.input_selection[item],
                                        focus_map="string_input focus")))
+            total_items.append(Padding.line_break(""))
         total_items.append(Padding.center_20(self._build_buttons()))
-        return SimpleList(total_items)
+        return Filler(Pile(total_items), valign='middle')
 
     def submit(self, button):
         self.emit_done_signal(self.input_selection)
