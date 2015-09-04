@@ -18,12 +18,14 @@
 from __future__ import unicode_literals
 
 import logging
-from urwid import (Button, LineBox, ListBox, Pile, AttrWrap,
+from urwid import (Button, LineBox, ListBox, Pile,
                    RadioButton, SimpleListWalker, Text, WidgetWrap,
-                   BoxAdapter, Divider)
+                   Divider, Columns, signals, emit_signal,
+                   connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.dialog import Dialog
-from cloudinstall.ui.utils import Color
+from cloudinstall.ui.lists import SimpleList
+from cloudinstall.ui.utils import Color, Padding
 
 log = logging.getLogger('cloudinstall.ui')
 
@@ -151,10 +153,10 @@ class Selector(Dialog):
     """
 
     def __init__(self, title, opts, cb):
-        super().__init__(title, cb)
+        log.debug("In selector dialog")
         for item in opts:
             self.add_radio(item)
-        self.show()
+        super().__init__(title, cb)
 
     def submit(self, button):
         for item in self.input_items.keys():
@@ -164,7 +166,7 @@ class Selector(Dialog):
         self.emit_done_signal(selected_item)
 
 
-class SelectorWithDescription(Dialog):
+class SelectorWithDescription(WidgetWrap):
 
     """
     Simple selector box
@@ -174,44 +176,43 @@ class SelectorWithDescription(Dialog):
     :param cb: callback
     :returns: item selected from dialog
     """
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
 
     def __init__(self, title, opts, cb):
-        super().__init__(title, cb)
         self.radio_items = OrderedDict()
         for item, desc in opts:
             self.add_radio(item, desc)
-        self.show()
+        connect_signal(self, 'done', cb)
+        super().__init__(self._build_widget())
 
     def add_radio(self, item, desc, group=[]):
         self.radio_items[item] = (RadioButton(group, item), desc)
 
-    def _build_widget(self, **kwargs):
-        total_items = []
-        for _item in self.radio_items.keys():
-            desc = Color.string_input(
-                Text("  {}".format(
-                    self.radio_items[_item][1])),
-                focus_map='string_input focus')
-            total_items.append(
-                Color.string_input(self.radio_items[_item][0],
-                                   focus_map='string_input focus'))
-            total_items.append(AttrWrap(desc, 'input'))
-            total_items.append(Divider('-'))
+    def _build_buttons(self):
+        buttons = [
+            Color.button_primary(
+                Button("Confirm", self.submit),
+                focus_map='button_primary focus'),
+            Color.button_secondary(
+                Button("Cancel", self.cancel),
+                focus_map='button_secondary focus')
+        ]
+        return Pile(buttons)
 
-        self.input_lbox = ListBox(SimpleListWalker(total_items[:-1]))
-        self.add_buttons()
-
-        self.container_box_adapter = BoxAdapter(self.input_lbox,
-                                                len(total_items))
-        self.container_lbox = ListBox(
-            [self.container_box_adapter,
-             Divider(),
-             self.btn_pile])
-
-        return LineBox(
-            BoxAdapter(self.container_lbox,
-                       height=len(total_items) + 3),
-            title=self.title)
+    def _build_widget(self):
+        total_items = [Padding.line_break("")]
+        for item in self.radio_items.keys():
+            opt, desc = self.radio_items[item]
+            col = Columns(
+                [
+                    ("weight", 0.4, opt),
+                    Color.body(Text(desc))
+                ], dividechars=1)
+            total_items.append(Padding.center_79(col))
+            total_items.append(Padding.center_79(Divider('-', 1, 1)))
+        total_items.append(Padding.center_20(self._build_buttons()))
+        return SimpleList(total_items)
 
     def submit(self, button):
         for item in self.radio_items.keys():
@@ -220,55 +221,42 @@ class SelectorWithDescription(Dialog):
                 selected_item = _item.label
         self.emit_done_signal(selected_item)
 
+    def cancel(self, button):
+        raise SystemExit("Installation cancelled.")
+
+    def emit_done_signal(self, *args):
+        emit_signal(self, 'done', *args)
+
 
 class PasswordInput(Dialog):
 
     """ Password input dialog
     """
 
-    def __init__(self, title, cb):
-        super().__init__(title, cb)
-        self.add_input('password', 'Password: ', mask='*')
-        self.add_input('confirm_password', 'Confirm Password: ',
-                       mask='*')
-        self.show()
+    input_items = [
+        ('password', 'Password: ', '*'),
+        ('confirm_password', 'Confirm Password: ',
+         '*')
+    ]
 
 
 class MaasServerInput(Dialog):
 
     """ Maas Server input dialog
     """
-
-    def __init__(self, title, cb):
-        super().__init__(title, cb)
-        self.add_input('maas_server', 'MAAS Server IP: ')
-        self.add_input('maas_apikey', 'MAAS API Key: ')
-        self.show()
+    input_items = [
+        ('maas_server', 'MAAS Server IP: '),
+        ('maas_apikey', 'MAAS API Key: ')
+    ]
 
 
 class LandscapeInput(Dialog):
 
     """ Landscape input dialog
     """
-
-    def __init__(self, title, cb):
-        super().__init__(title, cb)
-        self.add_input('admin_email', 'Admin Email: ')
-        self.add_input('admin_name', 'Admin Name: ')
-        self.add_input('maas_server', 'MAAS Server IP: ')
-        self.add_input('maas_apikey', 'MAAS API Key: ')
-        self.show()
-
-
-class DhcpRangeInput(Dialog):
-
-    """ DHCP Range dialog
-    """
-
-    def __init__(self, low, high, title, cb):
-        super().__init__(title, cb)
-        self.add_input('dhcp_low', 'DHCP IP range low: ', edit_text=low)
-        self.add_input('dhcp_high', 'DHCP IP range high: ', edit_text=high)
-        self.add_input('static_low', 'Static IP range low (optional): ')
-        self.add_input('static_high', 'Static IP range high (optional): ')
-        self.show()
+    input_items = [
+        ('admin_email', 'Admin Email: '),
+        ('admin_name', 'Admin Name: '),
+        ('maas_server', 'MAAS Server IP: '),
+        ('maas_apikey', 'MAAS API Key: ')
+    ]
