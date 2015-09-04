@@ -70,7 +70,9 @@ class MachineWaitView(WidgetWrap):
     def get_status(self):
         " returns (global_ok, [ok, condition])"
         self.maas_state.invalidate_nodes_cache()
-        machines = self.maas_state.machines(state=MaasMachineStatus.READY)
+        cons = self.config.getopt('constraints')
+        machines = self.maas_state.machines(state=MaasMachineStatus.READY,
+                                            constraints=cons)
         powerable_machines = [m for m in machines if m.power_type is not None]
         n_powerable = len(powerable_machines)
 
