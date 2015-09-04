@@ -110,9 +110,6 @@ class InstallController:
     def do_install(self):
         """ Perform install
         """
-        if not self.config.getopt('headless'):
-            self.ui.hide_selector_info()
-
         # Set installed placeholder
         utils.spew(os.path.join(
             self.config.cfg_path, 'installed'), 'auto-generated')
