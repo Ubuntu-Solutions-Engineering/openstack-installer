@@ -62,8 +62,9 @@ class Dialog(WidgetWrap):
 
     def _build_widget(self, **kwargs):
         total_items = [
-            Padding.center_65(Text(self.title, align="center")),
-            Padding.line_break("")
+            Padding.center_60(Text(self.title, align="center")),
+            Padding.center_60(
+                Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1))
         ]
         if self.input_items:
             for item in self.input_items:
@@ -77,13 +78,15 @@ class Dialog(WidgetWrap):
                                                       mask=mask)
                 col = Columns(
                     [
-                        ("weight", 0.4, Text(caption)),
+                        ("weight", 0.4, Text(caption, align="right")),
                         Color.string_input(self.input_selection[key],
                                            focus_map="string_input focus")
                     ]
                 )
                 total_items.append(Padding.center_60(col))
-                total_items.append(Padding.center_60(Divider('-', 1, 1)))
+        total_items.append(
+            Padding.center_60(
+                Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1)))
         total_items.append(Padding.center_20(self._build_buttons()))
         return Filler(Pile(total_items), valign='middle')
 

@@ -154,6 +154,7 @@ class SelectorWithDescription(WidgetWrap):
     signals = ['done']
 
     def __init__(self, title, opts, cb):
+        self.title = title
         self.radio_items = OrderedDict()
         for item, desc in opts:
             self.add_radio(item, desc)
@@ -175,7 +176,11 @@ class SelectorWithDescription(WidgetWrap):
         return Pile(buttons)
 
     def _build_widget(self):
-        total_items = [Padding.line_break("")]
+        total_items = [
+            Padding.center_60(Text(self.title, align="center")),
+            Padding.center_60(
+                Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1))
+        ]
         for item in self.radio_items.keys():
             opt, desc = self.radio_items[item]
             col = Columns(
@@ -183,8 +188,10 @@ class SelectorWithDescription(WidgetWrap):
                     ("weight", 0.4, opt),
                     Color.body(Text(desc))
                 ], dividechars=1)
-            total_items.append(Padding.center_79(col))
-            total_items.append(Padding.center_79(Divider('-', 1, 1)))
+            total_items.append(Padding.center_60(col))
+        total_items.append(
+            Padding.center_60(
+                Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1)))
         total_items.append(Padding.center_20(self._build_buttons()))
         return Filler(Pile(total_items), valign='middle')
 

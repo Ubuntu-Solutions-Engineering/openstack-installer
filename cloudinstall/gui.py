@@ -687,10 +687,10 @@ class PegasusGUI(WidgetWrap):
     def select_install_type(self, install_types, cb):
         """ Dialog for selecting installation type
         """
-        self.status_info_message("Choose your installation path")
-        self.show_selector_with_desc('Install Type',
-                                     install_types,
-                                     cb)
+        self.show_selector_with_desc(
+            'Select the type of installation to perform',
+            install_types,
+            cb)
 
     def __repr__(self):
         return "<Ubuntu OpenStack Installer GUI Interface>"

@@ -154,9 +154,6 @@ class InstallController:
                 self.loop.exit(1)
 
         else:
-            self.ui.status_info_message(
-                "Choose the OpenStack installation path")
-
             self.ui.select_install_type(
                 self.config.install_types(), self._set_install_type)
 
