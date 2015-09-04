@@ -18,13 +18,12 @@
 from __future__ import unicode_literals
 
 import logging
-from urwid import (Button, LineBox, ListBox, Pile,
+from urwid import (Button, LineBox, ListBox, Pile, Filler,
                    RadioButton, SimpleListWalker, Text, WidgetWrap,
                    Divider, Columns, signals, emit_signal,
                    connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.dialog import Dialog
-from cloudinstall.ui.lists import SimpleList
 from cloudinstall.ui.utils import Color, Padding
 
 log = logging.getLogger('cloudinstall.ui')
@@ -187,7 +186,7 @@ class SelectorWithDescription(WidgetWrap):
             total_items.append(Padding.center_79(col))
             total_items.append(Padding.center_79(Divider('-', 1, 1)))
         total_items.append(Padding.center_20(self._build_buttons()))
-        return SimpleList(total_items)
+        return Filler(Pile(total_items), valign='middle')
 
     def submit(self, button):
         for item in self.radio_items.keys():
