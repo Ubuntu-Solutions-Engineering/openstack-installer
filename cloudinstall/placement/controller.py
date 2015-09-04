@@ -544,7 +544,7 @@ class PlacementController:
 
         """
 
-        empty_machines = [m for m in self.machines()
+        empty_machines = [m for m in self.machines(include_placeholders=False)
                           if len(self.assignments[m.instance_id]) == 0]
 
         unassigned_services = list(self.unassigned_undeployed_services())
@@ -560,9 +560,9 @@ class PlacementController:
                            self.get_charm_state(c)[0] == CharmState.REQUIRED]
 
         if len(unassigned_reqs) > 0:
-            msg = ("Not enough empty machines could be found for the following"
-                   "required services. Please add machines or finish "
-                   "placement manually.")
+            msg = ("Not enough empty machines could be found for the "
+                   "following required services. Please add machines and "
+                   "try again, or finish placement manually.")
             m = ", ".join([c.charm_name for c in unassigned_reqs])
             return (False, msg + "\n" + m)
         return (True, "")
