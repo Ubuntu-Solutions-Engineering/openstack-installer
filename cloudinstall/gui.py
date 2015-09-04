@@ -566,25 +566,11 @@ class PegasusGUI(WidgetWrap):
         self._w = self.frame
 
     def show_help_info(self):
-        widget = HelpScreen()
-        self.show_widget_on_top(widget, width=80, height=22,
-                                align="center", valign="middle",
-                                min_height=10)
-
-    def hide_help_info(self):
-        self.hide_widget_on_top()
+        self.controller = self.frame.body
+        self.frame.body = HelpScreen()
 
     def show_step_info(self, msg):
-        self.hide_step_info()
-        widget = StepInfo(msg)
-        self.show_widget_on_top(widget, width=60,
-                                height=14,
-                                align="center",
-                                valign="middle",
-                                min_height=10)
-
-    def hide_step_info(self):
-        self.hide_widget_on_top()
+        self.frame.body = StepInfo(msg)
 
     def show_selector_with_desc(self, title, opts, cb):
         self.frame.body = SelectorWithDescription(title, opts, cb)
