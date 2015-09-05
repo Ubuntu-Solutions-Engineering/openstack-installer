@@ -82,7 +82,7 @@ class Banner(ScrollableWidgetWrap):
         self.text.append(text)
 
     def flash(self, msg):
-        self.flash_text.set_text([('error', msg)])
+        self.flash_text.set_text([('error_major', msg)])
 
     def flash_reset(self):
         self.flash_text.set_text('')
@@ -393,20 +393,24 @@ class StatusBar(WidgetWrap):
 
     def __init__(self, text=''):
         self._pending_deploys = Text('')
-        self._status_line = Text(text)
+        self._status_line = Text(text, align="center")
         self._horizon_url = Text('')
         self._jujugui_url = Text('')
-        self._openstack_rel = Text('')
+        self._openstack_rel = Text('', align="right")
         self._status_extra = self._build_status_extra()
         status = Pile([self._pending_deploys,
-                       self._status_line, self._status_extra])
+                       self._status_extra])
         super().__init__(status)
 
     def _build_status_extra(self):
-        status = []
-        status.append(Pile([self._horizon_url, self._jujugui_url]))
-        status.append(('pack', self._openstack_rel))
-        return Color.frame_footer(Columns(status))
+        col = Columns([
+            ('weight', 0.3, self._horizon_url),
+            ('weight', 0.3, self._jujugui_url),
+            self._openstack_rel
+        ], dividechars=1)
+        return Color.frame_footer(Pile([
+            col, self._status_line
+        ]))
 
     def set_openstack_rel(self, text="Icehouse (2014.1.1)"):
         """ Updates openstack release text
@@ -437,12 +441,12 @@ class StatusBar(WidgetWrap):
         self._status_line.set_text(text)
 
     def error_message(self, text):
-        self.message([('error', self.ERROR),
-                      ('default', self.ARROW + text)])
+        self.message([('status_error', self.ERROR),
+                      self.ARROW + text])
 
     def info_message(self, text):
-        self.message([('info', self.INFO),
-                      ('default', self.ARROW + text)])
+        self.message([('status_info', self.INFO),
+                      self.ARROW + text])
 
     def set_pending_deploys(self, pending_deploys):
         if len(pending_deploys) > 0:
