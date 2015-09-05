@@ -56,20 +56,18 @@ class LandscapeInstall:
                                                   system_email=system_email,
                                                   maas_server=maas_server,
                                                   maas_apikey=maas_apikey))
-        self.display_controller.hide_widget_on_top()
 
         # Validate
         if not maas_server:
-            log.debug("No MAAS server entered.")
-            self.display_controller.flash("Missing required MAAS Server")
+            self.display_controller.status_error_message(
+                "Missing required MAAS Server")
             return self.run()
 
         if not maas_apikey:
-            log.debug("No MAAS api key entered.")
-            self.display_controller.flash("Missing required MAAS API Key")
+            self.display_controller.status_error_message(
+                "Missing required MAAS API Key")
             return self.run()
 
-        # self.display_controller.flash_reset()
         log.debug("Existing MAAS defined, doing a LDS "
                   "installation with existing MAAS.")
         self.config.setopt('maascreds', dict(api_host=maas_server,

@@ -1,7 +1,4 @@
-#
-# gui.py - Cloud install gui components
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -16,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Pegasus - gui interface to  Installer """
+""" UI interface to the OpenStack Installer """
 
 from __future__ import unicode_literals
 import sys
@@ -27,8 +24,8 @@ import random
 
 import urwid
 from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
-                   ListBox, Filler, BoxAdapter, Frame, WidgetWrap,
-                   Padding, Pile)
+                   Filler, Frame, WidgetWrap, Button,
+                   Padding, Pile, Divider)
 
 from cloudinstall.task import Tasker
 from cloudinstall import utils
@@ -462,13 +459,28 @@ class StatusBar(WidgetWrap):
 
 class StepInfo(WidgetWrap):
 
-    def __init__(self, msg=None, height=10):
+    def __init__(self, msg=None):
         if not msg:
             msg = "Processing."
-        listbox = ListBox([Text(msg)])
-        box_adapter = BoxAdapter(listbox, height=height)
-        linebox = LineBox(box_adapter, title="Info")
-        super().__init__(AttrWrap(linebox, 'dialog'))
+        items = [
+            Padding.center_60(Text("Information", align="center")),
+            Padding.center_60(
+                Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1)),
+            Padding.center_60(Text(msg))
+        ]
+        super().__init__(Filler(Pile(items), valign='middle'))
+
+    def _build_buttons(self):
+        buttons = [
+            Padding.line_break(""),
+            Color.button_secondary(
+                Button("Quit", self.cancel),
+                focus_map='button_secondary focus'),
+        ]
+        return Pile(buttons)
+
+    def cancel(self, button):
+        raise SystemExit("Installation cancelled.")
 
 
 def _check_encoding():
