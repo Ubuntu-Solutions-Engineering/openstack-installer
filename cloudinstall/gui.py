@@ -18,14 +18,13 @@
 from __future__ import unicode_literals
 import sys
 import logging
-import functools
 from operator import attrgetter
 import random
 
 import urwid
 from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
                    Filler, Frame, WidgetWrap, Button,
-                   Padding, Pile, Divider)
+                   Pile, Divider)
 
 from cloudinstall.task import Tasker
 from cloudinstall import utils
@@ -37,7 +36,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              MaasServerInput,
                              LandscapeInput,
                              InfoDialog)
-from cloudinstall.ui.utils import Color
+from cloudinstall.ui.utils import Color, Padding
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.machinewait import MachineWaitView
 from cloudinstall.placement.ui import PlacementView
@@ -47,8 +46,6 @@ log = logging.getLogger('cloudinstall.gui')
 sys.excepthook = utils.global_exchandler
 
 TITLE_TEXT = "Ubuntu OpenStack Installer - Dashboard"
-
-padding = functools.partial(Padding, left=2, right=2)
 
 
 class Banner(ScrollableWidgetWrap):
@@ -159,7 +156,7 @@ class ServicesView(ScrollableWidgetWrap):
                     node_cols = self._build_node_columns(u, charm_class)
                     node_pile.append(node_cols)
 
-                unit_info.append(padding(LineBox(
+                unit_info.append(Padding.center_96(LineBox(
                     Pile(node_pile),
                     title=charm_class.display_name,
                     lline=' ',
@@ -348,7 +345,8 @@ class ServicesView(ScrollableWidgetWrap):
 class Header(WidgetWrap):
 
     def __init__(self):
-        self.title_widget = Color.frame_header(padding(Text(TITLE_TEXT)))
+        self.title_widget = Color.frame_header(
+            Padding.center_96(Text(TITLE_TEXT)))
         self.pile = Pile([self.title_widget, Text("")])
         self.set_show_add_units_hotkey(False)
         super().__init__(self.pile)
@@ -372,8 +370,8 @@ class InstallHeader(WidgetWrap):
 
     def __init__(self):
         w = []
-        w.append(Color.frame_header(padding(
-            Text("Ubuntu Openstack Installer - Software Installation"))))
+        w.append(Color.frame_header(
+            Text("Ubuntu Openstack Installer - Software Installation")))
         w.append(Color.frame_subheader(Text(
             '(Q)uit', align='center')))
         w = Pile(w)
