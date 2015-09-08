@@ -29,6 +29,10 @@ from cloudinstall.controllers.install import (SingleInstall,
 
 log = logging.getLogger('cloudinstall.install')
 
+OPENSTACK_RELEASE_LABELS = dict(icehouse="Icehouse (2014.1.3)",
+                                juno="Juno (2014.2.2)",
+                                kilo="Kilo (2015.1.0)",
+                                liberty="Liberty (2015.2.0)")
 
 class InstallController:
 
@@ -46,12 +50,9 @@ class InstallController:
         self.install_type = None
         self.config.setopt('current_state', InstallState.RUNNING.value)
         if not self.config.getopt('headless'):
-            if self.config.getopt('openstack_release') == 'icehouse':
-                self.ui.set_openstack_rel("Icehouse (2014.1.3)")
-            elif self.config.getopt('openstack_release') == 'juno':
-                self.ui.set_openstack_rel("Juno (2014.2.2)")
-            else:
-                self.ui.set_openstack_rel("Kilo (2015.1.0)")
+            rel = self.config.getopt('openstack_release')
+            label = OPENSTACK_RELEASE_LABELS[rel]
+            self.ui.set_openstack_rel(label)
 
     def _set_install_type(self, install_type):
         self.install_type = install_type

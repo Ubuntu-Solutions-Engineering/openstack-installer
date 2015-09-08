@@ -66,7 +66,7 @@ def parse_options(argv):
                         "to stdout and exits.")
     parser.add_argument('--openstack-release',
                         dest='openstack_release', default="kilo",
-                        choices=['icehouse', 'juno', 'kilo'],
+                        choices=['icehouse', 'juno', 'kilo', 'liberty'],
                         help="Specify a specific OpenStack release.")
     parser.add_argument('--openstack-tip', action="store_true",
                         dest='openstack_tip', default=False,
