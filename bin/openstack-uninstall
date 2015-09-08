@@ -19,7 +19,14 @@ case $WHAT in
   Multi)
     echo Multi install environment
 
-    JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || exit 1
+    if [ `JUJU_HOME="$CFG_HOME/juju" juju status` ]; then
+	JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || \
+	    { echo "error in destroy-environment, exiting without further cleanup"
+	      exit 1
+	    }
+    else
+	echo "Environment not bootstrapped, continuing with other cleanup."
+    fi
 
     # Multi places backup network settings here.
     rm -rf /etc/openstack || true
