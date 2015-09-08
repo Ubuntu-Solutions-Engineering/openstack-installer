@@ -29,14 +29,14 @@ CFG_FILE = os.path.join(utils.install_home(),
 
 if __name__ == '__main__':
     if not os.path.isfile(CFG_FILE):
-        print("No existing config file found.")
+        sys.stderr.write("No existing config file found.\n")
         sys.exit(1)
     if len(sys.argv) > 2:
-        print("Only pass in 1 config item to query.")
+        sys.stderr.write("Only pass in 1 config item to query.\n")
         sys.exit(1)
     config_name = sys.argv[1]
     opts = argparse.Namespace(config_file=CFG_FILE)
     cfg = Config(utils.populate_config(opts))
     val = cfg.getopt(config_name)
-    print(val)
+    sys.stdout.write(str(val))
     sys.exit(0)
