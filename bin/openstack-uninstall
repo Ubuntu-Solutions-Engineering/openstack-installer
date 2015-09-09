@@ -19,7 +19,8 @@ case $WHAT in
   Multi)
     echo Multi install environment
 
-    if [ `JUJU_HOME="$CFG_HOME/juju" juju status` ]; then
+    JUJU_HOME="$CFG_HOME/juju" juju status  > /dev/null 2>&1
+    if [ 0 = $? ]; then
 	JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || \
 	    { echo "error in destroy-environment, exiting without further cleanup"
 	      exit 1
