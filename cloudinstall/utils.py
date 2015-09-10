@@ -229,11 +229,15 @@ def render_charm_config(config):
         install_type=config.getopt('install_type'),
         openstack_password=config.getopt('openstack_password'))
 
-    if config.getopt('openstack_tip'):
-        template_args['openstack_tip'] = config.getopt(
-            'openstack_tip')
-    template_args['openstack_release'] = config.getopt(
-        'openstack_release')
+    os_branch = config.getopt('openstack_git_branch')
+    os_release = config.getopt('openstack_release')
+    if os_branch:
+        if os_branch == 'master':
+            template_args['openstack_git_branch'] = os_branch
+        else:
+            template_args['openstack_git_branch'] = "{}/{}".format(os_branch,
+                                                                   os_release)
+    template_args['openstack_release'] = os_release
 
     ubuntu_series = config.getopt('ubuntu_series')
     openstack_release = config.getopt('openstack_release')
