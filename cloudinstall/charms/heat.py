@@ -22,7 +22,7 @@ class CharmHeat(CharmBase):
     """ Openstack Heat directives """
 
     charm_name = 'heat'
-    charm_rev = 7
+    charm_rev = 9
     display_name = 'Heat'
     related = [('keystone:identity-service',
                 'heat:identity-service'),
