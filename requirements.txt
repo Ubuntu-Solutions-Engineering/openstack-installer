@@ -21,3 +21,4 @@ netaddr
 tox
 coveralls
 bson
+tornado
