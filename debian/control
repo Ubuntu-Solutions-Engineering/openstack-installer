@@ -20,6 +20,7 @@ Build-Depends: debhelper (>= 9),
                python3-requests,
                python3-requests-oauthlib,
                python3-setuptools,
+               python3-tornado,
                python3-urwid,
                python3-ws4py,
                python3-yaml
@@ -33,8 +34,8 @@ Vcs-Git: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer.git
 Package: openstack
 Architecture: all
 Depends: gawk,
-         nmap,
          juju-core,
+         nmap,
          pwgen,
          python-kombu,
          python3-all,
@@ -49,6 +50,7 @@ Depends: gawk,
          python3-requests,
          python3-requests-oauthlib,
          python3-setuptools,
+         python3-tornado,
          python3-urwid,
          python3-ws4py,
          python3-yaml,
@@ -69,12 +71,7 @@ Description: Ubuntu Openstack Installer
 Package: openstack-multi
 Section: admin
 Architecture: all
-Depends: juju-core,
-         lxc,
-         qemu-kvm,
-         virtinst,
-         vlan,
-         ${misc:Depends}
+Depends: juju-core, lxc, qemu-kvm, virtinst, vlan, ${misc:Depends}
 Replaces: cloud-install-multi
 Conflicts: cloud-install-multi
 Description: Ubuntu Openstack Installer (multi-system) - dependency package
