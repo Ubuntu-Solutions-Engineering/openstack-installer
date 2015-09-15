@@ -24,5 +24,6 @@ class CharmJujuGui(CharmBase):
     display_name = 'Juju GUI'
     display_priority = DisplayPriorities.Other
     deploy_priority = 1
+    available_sources = ['charmstore']
 
 __charm_class__ = CharmJujuGui

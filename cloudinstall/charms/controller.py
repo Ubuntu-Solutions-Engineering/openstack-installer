@@ -39,7 +39,7 @@ class CharmNovaCloudController(CharmBase):
                 'nova-cloud-controller:identity-service')]
     allow_multi_units = False
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
     def post_proc(self):
         """ post processing for nova-cloud-controller """

@@ -31,6 +31,6 @@ class CharmHeat(CharmBase):
                ('rabbitmq-server:amqp',
                 'heat:amqp')]
     contrib = True
-    have_nextbranch = True
+    available_sources = ['charmstore']
 
 __charm_class__ = CharmHeat

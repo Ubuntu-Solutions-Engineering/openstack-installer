@@ -26,5 +26,6 @@ class CharmMongo(CharmBase):
     display_name = 'MongoDB'
     deploy_priority = 0
     contrib = True
+    available_sources = ['charmstore']
 
 __charm_class__ = CharmMongo

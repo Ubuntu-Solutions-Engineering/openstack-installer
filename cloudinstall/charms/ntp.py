@@ -30,5 +30,6 @@ class CharmNtp(CharmBase):
     subordinate = True
     deploy_priority = 0
     is_core = True
+    available_sources = ['charmstore']
 
 __charm_class__ = CharmNtp

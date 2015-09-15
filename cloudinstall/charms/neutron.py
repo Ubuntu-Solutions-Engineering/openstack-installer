@@ -41,7 +41,7 @@ class CharmNeutron(CharmBase):
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
     def post_proc(self):
         """ performs additional network configuration for charm """

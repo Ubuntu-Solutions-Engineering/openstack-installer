@@ -41,6 +41,6 @@ class CharmCinder(CharmBase):
 
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmCinder

@@ -66,10 +66,19 @@ class TestCharmBase(unittest.TestCase):
         self.mock_config.getopt.return_value = False
         self.charm.subordinate = True
         self.charm.charm_name = 'fake'
+        self.charm.available_sources = ['charmstore']
         self.charm.deploy('fake mspec')
         self.mock_jujuclient.deploy.assert_called_with('fake', 'fake',
                                                        0, ANY, None,
                                                        None)
+
+    def test_no_available_sources(self):
+        """ Exception raised when no available sources defined
+        """
+        self.mock_config.getopt.return_value = False
+        self.charm.charm_name = 'fake'
+        self.charm.available_sources = []
+        self.assertRaises(Exception, self.charm.deploy)
 
 
 class PrepCharmTest(unittest.TestCase):
