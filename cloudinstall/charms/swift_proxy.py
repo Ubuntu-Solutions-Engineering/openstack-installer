@@ -34,6 +34,6 @@ class CharmSwiftProxy(CharmBase):
     allow_multi_units = False
     depends = ['swift-storage']
     conflicts = ['ceph-radosgw']
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmSwiftProxy

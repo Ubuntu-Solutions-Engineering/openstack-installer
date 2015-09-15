@@ -49,6 +49,6 @@ class CharmNovaCompute(CharmBase):
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmNovaCompute

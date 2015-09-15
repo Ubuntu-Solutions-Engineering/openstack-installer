@@ -110,7 +110,7 @@ class CharmBase:
     conflicts = []
     is_core = False
     contrib = False
-    have_nextbranch = False
+    available_sources = []
 
     def __init__(self, config, ui, juju, juju_state,
                  machine=None):
@@ -232,11 +232,17 @@ export OS_REGION_NAME=RegionOne
         else:
             current_series = 'trusty'
 
-        if self.config.getopt('next_charms') and self.have_nextbranch:
+        if self.config.getopt('next_charms') and 'next' \
+           in self.available_sources:
             self.bzr_get("lp:~openstack-charmers/charms/trusty/{}"
                          "/next".format(self.charm_name), current_series)
             self.local_deploy(machine_spec, current_series)
             return False
+
+        if 'charmstore' not in self.available_sources:
+            raise Exception("{} is not found in available "
+                            "sources: {}".format(self.charm_name,
+                                                 self.available_sources))
 
         # if --use-nclxd and not --next-charms, just download LTS charms
         if self.config.getopt('use_nclxd'):

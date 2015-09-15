@@ -32,6 +32,6 @@ class CharmCephRadosGw(CharmBase):
                 'keystone:identity-service')]
     depends = ['ceph']
     conflicts = ['swift-proxy', 'swift-storage']
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmCephRadosGw

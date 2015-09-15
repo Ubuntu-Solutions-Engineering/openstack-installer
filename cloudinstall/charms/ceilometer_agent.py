@@ -31,6 +31,6 @@ class CharmCeilometerAgent(CharmBase):
     contrib = True
     deploy_priority = 0
     depends = ['ceilometer']
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmCeilometerAgent
