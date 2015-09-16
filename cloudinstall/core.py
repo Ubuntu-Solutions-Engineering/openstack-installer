@@ -20,8 +20,10 @@ import sys
 from os import path, getenv
 
 from operator import attrgetter
+from functools import partial
 
 from cloudinstall import utils
+from cloudinstall.notify import Observer
 from cloudinstall.state import ControllerState
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
@@ -52,7 +54,7 @@ class FakeJujuState:
         "does nothing"
 
 
-class Controller:
+class Controller(Observer):
 
     """ Controller for Juju deployments and Maas machine init """
 
@@ -70,6 +72,7 @@ class Controller:
         self.deployed_charm_classes = []
         self.placement_controller = None
         self.config.setopt('current_state', ControllerState.INSTALL_WAIT.value)
+        Observer.__init__(self)
 
     def update(self, *args, **kwargs):
         """Render UI according to current state and reset timer
@@ -97,7 +100,7 @@ class Controller:
                             "state '{}'".format(current_state))
 
         self.loop.redraw_screen()
-        self.loop.set_alarm_in(interval, self.update)
+        self.alarm = self.loop.set_alarm_in(interval, self.update)
 
     def update_node_states(self):
         """ Updating node states
@@ -647,6 +650,8 @@ class Controller:
             self.ui.status_info_message("Welcome")
             self.initialize()
             self.loop.register_callback('refresh_display', self.update)
-            self.loop.set_alarm_in(0, self.update)
+            self.alarm = self.loop.set_alarm_in(0, self.update)
+            self.observe('stop alarm', partial(self.loop.remove_alarm,
+                                               self.alarm))
             self.loop.run()
             self.loop.close()

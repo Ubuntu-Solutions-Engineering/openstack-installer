@@ -15,11 +15,13 @@
 
 import logging
 import os
+from functools import partial
 
 from cloudinstall.config import (INSTALL_TYPE_SINGLE,
                                  INSTALL_TYPE_MULTI,
                                  INSTALL_TYPE_LANDSCAPE)
 from cloudinstall.state import InstallState
+from cloudinstall.notify import Observer
 import cloudinstall.utils as utils
 
 from cloudinstall.controllers.install import (SingleInstall,
@@ -35,7 +37,7 @@ OPENSTACK_RELEASE_LABELS = dict(icehouse="Icehouse (2014.1.3)",
                                 liberty="Liberty (2015.2.0)")
 
 
-class InstallController:
+class InstallController(Observer):
 
     """ Install controller """
 
@@ -54,6 +56,7 @@ class InstallController:
             rel = self.config.getopt('openstack_release')
             label = OPENSTACK_RELEASE_LABELS[rel]
             self.ui.set_openstack_rel(label)
+        Observer.__init__(self)
 
     def _set_install_type(self, install_type):
         self.install_type = install_type
@@ -107,7 +110,7 @@ class InstallController:
             self.ui.render_machine_wait_view(self.config)
             self.loop.redraw_screen()
 
-        self.loop.set_alarm_in(1, self.update)
+        self.alarm = self.loop.set_alarm_in(1, self.update)
 
     def do_install(self):
         """ Perform install
@@ -159,5 +162,7 @@ class InstallController:
             self.ui.select_install_type(
                 self.config.install_types(), self._set_install_type)
 
-        self.update()
+        self.alarm = self.loop.set_alarm_in(1, self.update)
+        self.observe('stop alarm', partial(self.loop.remove_alarm,
+                                           self.alarm))
         self.loop.run()
