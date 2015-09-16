@@ -186,7 +186,7 @@ class SelectorWithDescription(WidgetWrap):
             col = Columns(
                 [
                     ("weight", 0.4, opt),
-                    Color.body(Text(desc))
+                    Text(desc)
                 ], dividechars=1)
             total_items.append(Padding.center_60(col))
         total_items.append(
