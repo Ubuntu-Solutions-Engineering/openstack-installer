@@ -94,7 +94,7 @@ class SingleInstall:
         for opt in ['apt_proxy', 'apt_https_proxy', 'http_proxy',
                     'https_proxy', 'no_proxy',
                     'image_metadata_url', 'tools_metadata_url',
-                    'apt_mirror']:
+                    'apt_mirror', 'next_charms']:
             val = self.config.getopt(opt)
             if val:
                 render_parts[opt] = val
