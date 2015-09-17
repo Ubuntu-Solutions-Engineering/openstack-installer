@@ -125,7 +125,12 @@ class EventLoop:
 
     def set_alarm_in(self, interval, cb):
         if not self.config.getopt('headless'):
-            self.loop.set_alarm_in(interval, cb)
+            return self.loop.set_alarm_in(interval, cb)
+        return
+
+    def remove_alarm(self, handle):
+        if not self.config.getopt('headless'):
+            self.loop.remove_alarm(handle)
         return
 
     def run(self, cb=None):
