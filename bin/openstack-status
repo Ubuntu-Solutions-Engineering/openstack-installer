@@ -32,6 +32,7 @@ from cloudinstall.gui import PegasusGUI
 from cloudinstall.core import Controller
 from cloudinstall.consoleui import ConsoleUI
 from cloudinstall.ev import EventLoop
+from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.api.container import Container
 from cloudinstall import utils
 from cloudinstall import log
@@ -122,6 +123,7 @@ if __name__ == '__main__':
         ui = PegasusGUI()
 
     ev = EventLoop(ui, config, logger)
+    AlarmMonitor.loop = ev
 
     core = Controller(ui=ui, config=config, loop=ev)
     # Create pidfile

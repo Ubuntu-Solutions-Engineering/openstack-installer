@@ -176,7 +176,6 @@ class SingleInstall:
         """
         self.tasker.start_task("Creating Container",
                                self.read_container_status)
-
         Container.create(self.container_name, self.userdata)
 
         with open(os.path.join(self.container_abspath, 'fstab'), 'w') as f:

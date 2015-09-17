@@ -41,5 +41,7 @@ class Event:
     def emit(self):
         for observer in Observer._observers:
             if self.name in observer._observables:
-                log.debug("Event called: {}".format(self.name))
-                observer._observables[self.name]()
+                log.debug("Event called: {}".format(
+                    observer._observables[self.name]))
+                ret = observer._observables[self.name]()
+                log.debug("Processed event: {}".format(ret))

@@ -37,6 +37,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              LandscapeInput,
                              InfoDialog)
 from cloudinstall.notify import Event
+from cloudinstall.ui.views import ErrorView
 from cloudinstall.ui.utils import Color, Padding
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.machinewait import MachineWaitView
@@ -689,15 +690,10 @@ class PegasusGUI(WidgetWrap):
         self.add_services_dialog.update()
         self.frame.body = Filler(self.add_services_dialog)
 
-    def show_exception_message(self, ex,
-                               logpath="~/.cloud-install/commands.log"):
-        def handle_done(*args, **kwargs):
-            raise urwid.ExitMainLoop()
-        self.hide_widget_on_top()
-        msg = ("A fatal error has occurred: {}\n"
-               "See {} for further info.".format(ex.args[0],
-                                                 logpath))
-        self.show_fatal_error_message(msg, handle_done)
+    def show_exception_message(self, ex):
+        msg = ("A fatal error has occurred: {}\n".format(ex.args[0]))
+        log.error(msg)
+        self.frame.body = ErrorView(ex.args[0])
         Event('stop alarm')
 
     def select_install_type(self, install_types, cb):
