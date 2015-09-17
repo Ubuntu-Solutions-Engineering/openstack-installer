@@ -118,6 +118,9 @@ class Tasker:
         self.stopped = True
         self.write_timings()
 
+    def abort(self):
+        self.loop.remove_alarm(self.alarm)
+
     def update_progress(self, loop=None, userdata=None):
         self.alarm = None
         if self.stopped:

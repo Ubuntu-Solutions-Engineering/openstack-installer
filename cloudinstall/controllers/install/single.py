@@ -428,6 +428,7 @@ class SingleInstall:
 
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
+        self.tasker.abort()
         raise Exception("I SHOULD DIE AND SHOW THE ERRORVIEW@!")
         if os.path.exists(self.container_abspath):
             raise Exception("Container exists, please uninstall or kill "
