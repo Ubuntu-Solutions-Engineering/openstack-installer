@@ -691,11 +691,10 @@ class PegasusGUI(WidgetWrap):
         self.frame.body = Filler(self.add_services_dialog)
 
     def show_exception_message(self, ex):
-        msg = ("A fatal error has occurred: {}\n"
-               "See {} for further info.".format(ex.args[0]))
+        msg = ("A fatal error has occurred: {}\n".format(ex.args[0]))
         log.error(msg)
-        self.frame.body = ErrorView(ex.args[0])
         Event('stop alarm')
+        self.frame.body = ErrorView(ex.args[0])
 
     def select_install_type(self, install_types, cb):
         """ Dialog for selecting installation type

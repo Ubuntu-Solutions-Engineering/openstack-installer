@@ -17,7 +17,6 @@
 
 from ipaddress import IPv4Network
 import logging
-import sys
 import os
 import json
 import time
@@ -31,7 +30,6 @@ from cloudinstall.api.container import (Container,
 
 
 log = logging.getLogger('cloudinstall.c.i.single')
-sys.excepthook = utils.global_exchandler
 
 
 class SingleInstallException(Exception):
