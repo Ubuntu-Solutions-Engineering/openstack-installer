@@ -18,7 +18,6 @@ log output, and where to file a bug.
 """
 
 import logging
-import traceback
 from urwid import (Pile, Text, Filler, WidgetWrap, Divider)
 from cloudinstall.ui.buttons import cancel_btn
 from cloudinstall.ui.utils import Color, Padding
@@ -34,8 +33,6 @@ class ErrorViewException(Exception):
 class ErrorView(WidgetWrap):
     def __init__(self, error):
         log.debug("showing error view for: {}".format(error))
-        # tb = traceback.format_exc()
-        # log.exception(tb)
         bug_url = ("https://github.com/Ubuntu-Solutions-Engineering"
                    "/openstack-installer/issues/new")
         body = [
