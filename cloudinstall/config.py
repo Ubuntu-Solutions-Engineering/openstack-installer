@@ -27,7 +27,7 @@ log = logging.getLogger('cloudinstall.config')
 INSTALL_TYPE_SINGLE = ("Single", "Fully containerized OpenStack installation "
                        "on a single machine.")
 INSTALL_TYPE_MULTI = ("Multi", "OpenStack installation utilizing MAAS.")
-INSTALL_TYPE_LANDSCAPE = ("Landscape OpenStack Autopilot",
+INSTALL_TYPE_LANDSCAPE = ("OpenStack Autopilot",
                           "The Canonical Distribution "
                           "- Enterprise Openstack Install and Management.")
 
@@ -116,7 +116,7 @@ class Config:
 
     def is_landscape(self):
         if self.getopt('install_type') and \
-           'Landscape OpenStack Autopilot' in self.getopt('install_type'):
+           'OpenStack Autopilot' in self.getopt('install_type'):
             return True
         return False
 

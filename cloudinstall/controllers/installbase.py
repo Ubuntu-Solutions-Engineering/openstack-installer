@@ -137,7 +137,7 @@ class InstallController(Observer):
                     "Enter MAAS IP and API Key",
                     self._save_maas_creds)
         elif self.install_type == INSTALL_TYPE_LANDSCAPE[0]:
-            log.info("Performing a Landscape OpenStack Autopilot install")
+            log.info("Performing a OpenStack Autopilot install")
             self.LandscapeInstall(
                 self.loop, self.ui, self.config).run()
         else:
