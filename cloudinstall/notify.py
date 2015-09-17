@@ -33,12 +33,12 @@ class Observer:
 
 
 class Event:
-    def __init__(self, name, autofire=True):
+    def __init__(self, name, autoemit=True):
         self.name = name
-        if autofire:
-            self.fire()
+        if autoemit:
+            self.emit()
 
-    def fire(self):
+    def emit(self):
         for observer in Observer._observers:
             if self.name in observer._observables:
                 log.debug("Event called: {}".format(self.name))
