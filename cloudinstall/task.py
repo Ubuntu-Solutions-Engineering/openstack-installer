@@ -1,5 +1,4 @@
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -20,6 +19,7 @@ import time
 import yaml
 
 from cloudinstall import utils
+from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.config import Config
 
 log = logging.getLogger('cloudinstall.task')
@@ -118,9 +118,6 @@ class Tasker:
         self.stopped = True
         self.write_timings()
 
-    def abort(self):
-        self.loop.remove_alarm(self.alarm)
-
     def update_progress(self, loop=None, userdata=None):
         self.alarm = None
         if self.stopped:
@@ -151,6 +148,7 @@ class Tasker:
         self.display_controller.render_node_install_wait(m)
         f = self.update_progress
         self.alarm = self.loop.set_alarm_in(0.3, f)
+        AlarmMonitor.add_alarm(self.alarm)
 
 
 class TaskerConsole:

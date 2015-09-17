@@ -176,7 +176,6 @@ class SingleInstall:
         """
         self.tasker.start_task("Creating Container",
                                self.read_container_status)
-
         Container.create(self.container_name, self.userdata)
 
         with open(os.path.join(self.container_abspath, 'fstab'), 'w') as f:
@@ -428,8 +427,6 @@ class SingleInstall:
 
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
-        self.tasker.abort()
-        raise Exception("I SHOULD DIE AND SHOW THE ERRORVIEW@!")
         if os.path.exists(self.container_abspath):
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
