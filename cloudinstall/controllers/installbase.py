@@ -110,7 +110,9 @@ class InstallController(Observer):
             self.ui.render_machine_wait_view(self.config)
             self.loop.redraw_screen()
 
-        self.alarm = self.loop.set_alarm_in(1, self.update)
+        alarm = self.loop.set_alarm_in(1, self.update)
+        self.observe('stop alarm', partial(self.loop.remove_alarm,
+                                           alarm))
 
     def do_install(self):
         """ Perform install
@@ -162,7 +164,5 @@ class InstallController(Observer):
             self.ui.select_install_type(
                 self.config.install_types(), self._set_install_type)
 
-        self.alarm = self.loop.set_alarm_in(1, self.update)
-        self.observe('stop alarm', partial(self.loop.remove_alarm,
-                                           self.alarm))
+        self.update()
         self.loop.run()
