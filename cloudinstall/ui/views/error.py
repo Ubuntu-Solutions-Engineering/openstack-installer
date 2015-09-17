@@ -33,7 +33,7 @@ class ErrorViewException(Exception):
 
 class ErrorView(WidgetWrap):
     def __init__(self, error):
-        log.debug("showing error view for: {}".format(error[0]))
+        log.debug("showing error view for: {}".format(error))
         tb = traceback.format_exc()
         log.exception(tb)
         bug_url = ("https://github.com/Ubuntu-Solutions-Engineering"

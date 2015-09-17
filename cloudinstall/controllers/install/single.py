@@ -17,6 +17,7 @@
 
 from ipaddress import IPv4Network
 import logging
+import sys
 import os
 import json
 import time
@@ -30,6 +31,7 @@ from cloudinstall.api.container import (Container,
 
 
 log = logging.getLogger('cloudinstall.c.i.single')
+sys.excepthook = utils.global_exchandler
 
 
 class SingleInstallException(Exception):
@@ -428,6 +430,7 @@ class SingleInstall:
 
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
+        raise Exception("I SHOULD DIE AND SHOW THE ERRORVIEW@!")
         if os.path.exists(self.container_abspath):
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
