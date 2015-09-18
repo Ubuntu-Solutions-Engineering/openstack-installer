@@ -20,9 +20,7 @@ from cloudinstall.config import (INSTALL_TYPE_SINGLE,
                                  INSTALL_TYPE_MULTI,
                                  INSTALL_TYPE_LANDSCAPE)
 from cloudinstall.state import InstallState
-from cloudinstall.notify import Observer
 from cloudinstall.alarms import AlarmMonitor
-from cloudinstall.task import Tasker
 import cloudinstall.utils as utils
 
 from cloudinstall.controllers.install import (SingleInstall,
@@ -38,7 +36,7 @@ OPENSTACK_RELEASE_LABELS = dict(icehouse="Icehouse (2014.1.3)",
                                 liberty="Liberty (2015.2.0)")
 
 
-class InstallController(Observer):
+class InstallController:
 
     """ Install controller """
 
@@ -57,8 +55,6 @@ class InstallController(Observer):
             rel = self.config.getopt('openstack_release')
             label = OPENSTACK_RELEASE_LABELS[rel]
             self.ui.set_openstack_rel(label)
-        Observer.__init__(self)
-        Tasker.loop = loop
 
     def _set_install_type(self, install_type):
         self.install_type = install_type
@@ -113,7 +109,6 @@ class InstallController(Observer):
             self.loop.redraw_screen()
 
         AlarmMonitor.add_alarm(self.loop.set_alarm_in(1, self.update))
-        self.observe('stop alarm', AlarmMonitor.abort)
 
     def do_install(self):
         """ Perform install

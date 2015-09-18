@@ -26,6 +26,6 @@ class AlarmMonitor:
         AlarmMonitor.alarms.append(handle)
 
     @classmethod
-    def abort(cls):
+    def remove_all(cls):
         for alarm in AlarmMonitor.alarms:
             AlarmMonitor.loop.remove_alarm(alarm)

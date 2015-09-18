@@ -36,7 +36,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              MaasServerInput,
                              LandscapeInput,
                              InfoDialog)
-from cloudinstall.notify import Event
+from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.ui.views import ErrorView
 from cloudinstall.ui.utils import Color, Padding
 from cloudinstall.ui.helpscreen import HelpScreen
@@ -694,7 +694,7 @@ class PegasusGUI(WidgetWrap):
         msg = ("A fatal error has occurred: {}\n".format(ex.args[0]))
         log.error(msg)
         self.frame.body = ErrorView(ex.args[0])
-        Event('stop alarm')
+        AlarmMonitor.remove_all()
 
     def select_install_type(self, install_types, cb):
         """ Dialog for selecting installation type
