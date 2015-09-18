@@ -175,28 +175,29 @@ class ServicesView(ScrollableWidgetWrap):
         error_info = self._detect_errors(unit, charm_class)
 
         if error_info:
-            status = Color.error_icon("\N{TETRAGRAM FOR FAILURE} ")
+            status = Color.error_icon(Text("\N{TETRAGRAM FOR FAILURE} "))
             if unit.agent_state != "error":
                 status_txt = "{:20}".format("[{} (error)]"
                                             "".format(unit.agent_state))
         elif unit.agent_state == "pending":
-            pending_status = [Color.pending_icon("\N{CIRCLED BULLET} "),
-                              Color.pending_icon("\N{CIRCLED WHITE BULLET} "),
-                              Color.pending_icon_on("\N{FISHEYE} ")]
+            pending_status = [Color.pending_icon(Text("\N{CIRCLED BULLET} ")),
+                              Color.pending_icon(
+                                  Text("\N{CIRCLED WHITE BULLET} ")),
+                              Color.pending_icon_on(Text("\N{FISHEYE} "))]
             status = random.choice(pending_status)
         elif unit.agent_state == "installed":
-            status = Color.pending_icon("\N{HOURGLASS} ")
+            status = Color.pending_icon(Text("\N{HOURGLASS} "))
         elif unit.agent_state == "started":
-            status = Color.success_icon("\u2713 ")
+            status = Color.success_icon(Text("\u2713 "))
         elif unit.agent_state == "stopped":
-            status = Color.error_icon("\N{BLACK FLAG} ")
+            status = Color.error_icon(Text("\N{BLACK FLAG} "))
         elif unit.agent_state == "down":
-            status = Color.error_icon("\N{DOWNWARDS BLACK ARROW} ")
+            status = Color.error_icon(Text("\N{DOWNWARDS BLACK ARROW} "))
         else:
             # shouldn't get here
             status = "? "
-
-        node_cols.append(('pack', Text([status, status_txt])))
+        node_cols.append(('pack', status))
+        node_cols.append(('pack', Text(status_txt)))
         if unit.public_address:
             node_cols.append(
                 ('pack',
