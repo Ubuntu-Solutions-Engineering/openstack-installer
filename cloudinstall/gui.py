@@ -395,14 +395,13 @@ class StatusBar(WidgetWrap):
         super().__init__(status)
 
     def _build_status_extra(self):
-        col = Columns([
-            ('weight', 0.3, self._horizon_url),
-            ('weight', 0.3, self._jujugui_url),
-            self._openstack_rel
-        ], dividechars=1)
-        return Color.frame_footer(Pile([
-            col, self._status_line
-        ]))
+        return Color.frame_footer(
+            Pile([
+                self._horizon_url,
+                self._jujugui_url,
+                self._openstack_rel,
+                self._status_line
+            ]))
 
     def set_openstack_rel(self, text="Icehouse (2014.1.1)"):
         """ Updates openstack release text
@@ -411,7 +410,7 @@ class StatusBar(WidgetWrap):
 
     def set_dashboard_url(self, ip=None, user=None, password=None):
         """ sets horizon dashboard url """
-        text = "Openstack Dashboard: "
+        text = "Horizon: "
         if not ip:
             text += "(pending)"
         else:
@@ -421,7 +420,7 @@ class StatusBar(WidgetWrap):
 
     def set_jujugui_url(self, ip=None):
         """ sets juju gui url """
-        text = "{0:<21}".format("JujuGUI:")
+        text = "{0:<21}".format("JujuGUI: ")
         if not ip:
             text += "(pending)"
         else:
