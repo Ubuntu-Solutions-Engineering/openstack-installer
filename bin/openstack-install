@@ -30,6 +30,7 @@ from cloudinstall.consoleui import ConsoleUI
 from cloudinstall.controllers.installbase import InstallController
 from cloudinstall.config import Config
 from cloudinstall.ev import EventLoop
+from cloudinstall.alarms import AlarmMonitor
 from cloudinstall import __version__ as version
 
 CFG_FILE = os.path.join(utils.install_home(),
@@ -238,6 +239,9 @@ if __name__ == '__main__':
 
     # Choose event loop
     ev = EventLoop(ui, cfg, logger)
+
+    # Bind event loops alarm tracking
+    AlarmMonitor.loop = ev
 
     try:
         install = InstallController(
