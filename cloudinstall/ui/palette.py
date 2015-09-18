@@ -20,14 +20,16 @@ def apply_default_colors(cls):
     color_map = {'orange': '#f60',
                  'light_orange': '#f80',
                  'dark_magenta': '#608',
-                 'light_magenta': 'light magenta',
-                 'light_red': 'light red',
+                 'light_magenta': '#f0f',
+                 'light_red': '#f00',
                  'light_green': '#0d0',
                  'white': 'white',
                  'black': 'black',
                  'light_gray': 'g82',
                  'cool_gray': 'g50',
-                 'warm_gray': 'g15'}
+                 'warm_gray': 'g15',
+                 'blue': '#08f',
+                 'dark_blue': '#00f'}
     for k, v in color_map.items():
         setattr(cls, k, v)
     return cls
@@ -78,6 +80,17 @@ STYLES = [
      Palette.orange, Palette.warm_gray),
     ('header_title', '', '', '',
      Palette.orange, ''),
+    ('pending_icon_on', '', '', '',
+     Palette.blue, ''),
+    ('pending_icon', '', '', '',
+     Palette.dark_blue, ''),
+    ('error_icon', '', '', '',
+     Palette.light_red, ''),
+    ('success_icon', '', '', '',
+     Palette.light_green, ''),
+
+
+    # TODO: Update colors
     ('deploy_highlight_start', 'dark gray', 'light green'),
     ('deploy_highlight_end', 'dark gray', 'dark green'),
     ('disabled_button', 'black', 'white'),
@@ -91,8 +104,4 @@ STYLES = [
     ('error', 'white', 'dark red'),
     ('info', 'light green', 'default'),
     ('label', 'dark gray', 'default'),
-    ('error_icon', 'light red,bold', 'default'),
-    ('pending_icon_on', 'light blue,bold', 'default'),
-    ('pending_icon', 'dark blue', 'default'),
-    ('success_icon', 'light green', 'default')
 ]
