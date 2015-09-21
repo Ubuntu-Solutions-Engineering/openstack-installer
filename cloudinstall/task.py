@@ -148,7 +148,7 @@ class Tasker:
         self.display_controller.render_node_install_wait(m)
         f = self.update_progress
         self.alarm = self.loop.set_alarm_in(0.3, f)
-        AlarmMonitor.add_alarm(self.alarm)
+        AlarmMonitor.add_alarm(self.alarm, "tasker-update-progress")
 
 
 class TaskerConsole:

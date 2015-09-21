@@ -108,7 +108,8 @@ class InstallController:
             self.ui.render_machine_wait_view(self.config)
             self.loop.redraw_screen()
 
-        AlarmMonitor.add_alarm(self.loop.set_alarm_in(1, self.update))
+        AlarmMonitor.add_alarm(self.loop.set_alarm_in(1, self.update),
+                               "installcontroller-update")
 
     def do_install(self):
         """ Perform install
