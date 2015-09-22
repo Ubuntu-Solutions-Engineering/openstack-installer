@@ -130,7 +130,6 @@ class EventLoop:
 
     def remove_alarm(self, handle):
         if not self.config.getopt('headless'):
-            log.debug("Removing alarm: {}".format(handle))
             return self.loop.remove_alarm(handle)
         return False
 

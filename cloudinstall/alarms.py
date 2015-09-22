@@ -18,14 +18,17 @@
 
 
 class AlarmMonitor:
-    alarms = []
+    alarms = {}
     loop = None
 
     @classmethod
-    def add_alarm(cls, handle):
-        AlarmMonitor.alarms.append(handle)
+    def add_alarm(cls, handle, name):
+        if name in cls.alarms:
+            cls.loop.remove_alarm(cls.alarms[name])
+        cls.alarms[name] = handle
 
     @classmethod
     def remove_all(cls):
-        for alarm in AlarmMonitor.alarms:
-            AlarmMonitor.loop.remove_alarm(alarm)
+        for alarm in cls.alarms.values():
+            cls.loop.remove_alarm(alarm)
+        cls.alarms = {}
