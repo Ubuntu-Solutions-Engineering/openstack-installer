@@ -70,7 +70,9 @@ class Controller:
         self.juju_m_idmap = None  # for single, {instance_id: machine id}
         self.deployed_charm_classes = []
         self.placement_controller = None
-        self.config.setopt('current_state', ControllerState.INSTALL_WAIT.value)
+        if not self.config.getopt('current_state'):
+            self.config.setopt('current_state',
+                               ControllerState.INSTALL_WAIT.value)
 
     def update(self, *args, **kwargs):
         """Render UI according to current state and reset timer
