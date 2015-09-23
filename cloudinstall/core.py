@@ -660,5 +660,6 @@ class Controller:
             self.loop.register_callback('refresh_display', self.update)
             AlarmMonitor.add_alarm(self.loop.set_alarm_in(0, self.update),
                                    "controller-start")
+            cfg.setopt("gui_started", True)
             self.loop.run()
             self.loop.close()

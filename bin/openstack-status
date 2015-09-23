@@ -140,6 +140,7 @@ if __name__ == '__main__':
         atexit.register(partial(utils.cleanup, config))
         core.start()
     except Exception as e:
+        print("Error starting openstack-status: {}".format(e.args[0]))
         if opts.debug and not config.getopt('headless'):
             import pdb
             pdb.post_mortem()
