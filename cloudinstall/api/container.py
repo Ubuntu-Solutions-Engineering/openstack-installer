@@ -133,11 +133,6 @@ class Container:
         if subproc.returncode == 0:
             return decoded_output.strip()
         else:
-            log.debug("Error with command: "
-                      "[Output] '{}' [Error] '{}'".format(
-                          decoded_output.strip(),
-                          errors.strip()))
-
             raise ContainerRunException("Problem running {0} in container "
                                         "{1}:{2}".format(quoted_cmd, name, ip),
                                         subproc.returncode)
