@@ -21,12 +21,12 @@ class CharmRabbitMQ(CharmBase):
     """ RabbitMQ directives """
 
     charm_name = 'rabbitmq-server'
-    charm_rev = 32
+    charm_rev = 34
     display_name = 'RabbitMQ Server'
     deploy_priority = 1
     related = [('rabbitmq-server:amqp',
                 'neutron-openvswitch:amqp')]
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmRabbitMQ

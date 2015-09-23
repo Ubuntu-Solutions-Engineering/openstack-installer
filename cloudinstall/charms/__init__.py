@@ -110,7 +110,7 @@ class CharmBase:
     conflicts = []
     is_core = False
     contrib = False
-    have_nextbranch = False
+    available_sources = []
 
     def __init__(self, config, ui, juju, juju_state,
                  machine=None):
@@ -232,11 +232,17 @@ export OS_REGION_NAME=RegionOne
         else:
             current_series = 'trusty'
 
-        if self.config.getopt('next_charms') and self.have_nextbranch:
+        if self.config.getopt('next_charms') and 'next' \
+           in self.available_sources:
             self.bzr_get("lp:~openstack-charmers/charms/trusty/{}"
                          "/next".format(self.charm_name), current_series)
             self.local_deploy(machine_spec, current_series)
             return False
+
+        if 'charmstore' not in self.available_sources:
+            raise Exception("{} is not found in available "
+                            "sources: {}".format(self.charm_name,
+                                                 self.available_sources))
 
         # if --use-nclxd and not --next-charms, just download LTS charms
         if self.config.getopt('use_nclxd'):
@@ -431,6 +437,8 @@ class CharmQueue:
         while len(valid_relations) != len(completed_relations):
             for relation_a, relation_b in valid_relations:
                 try:
+                    log.debug("Calling juju.add_relation({}, {})".format(
+                        relation_a, relation_b))
                     self.juju.add_relation(relation_a,
                                            relation_b)
                     completed_relations.append((relation_a,
@@ -443,6 +451,7 @@ class CharmQueue:
                     log.exception(msg)
                     self.ui.status_info_message(msg)
                     raise e
+        self.config.setopt('relations_complete', True)
 
     def _charm_classes(self):
         """ Returns instances of deployed charms """
@@ -477,4 +486,4 @@ class CharmQueue:
                 log.exception(msg)
                 self.ui.status_error_message(msg)
             time.sleep(10)
-        self.config.setopt('deploy_complete', True)
+        self.config.setopt('postproc_complete', True)

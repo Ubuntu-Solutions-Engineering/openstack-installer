@@ -1,5 +1,4 @@
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -17,6 +16,7 @@
 import urwid
 import sys
 from cloudinstall.state import ControllerState
+from tornado.ioloop import IOLoop
 from cloudinstall.ui.palette import STYLES
 
 import logging
@@ -27,10 +27,7 @@ log = logging.getLogger('cloudinstall.ev')
 
 class EventLoop:
 
-    """ Abstracts out event loops in different scenarios
-
-    TODO: finish asyncio implementation when urwid 1.3.0
-    becomes available.
+    """ Abstracts out event loop
     """
 
     def __init__(self, ui, config, log):
@@ -62,12 +59,13 @@ class EventLoop:
         additional_opts = {
             'screen': urwid.raw_display.Screen(),
             'unhandled_input': self.header_hotkeys,
-            'handle_mouse': False
+            'handle_mouse': True
         }
         additional_opts['screen'].set_terminal_properties(colors=256)
         additional_opts['screen'].reset_default_terminal_palette()
-        loop = urwid.MainLoop(self.ui, STYLES, **additional_opts)
-        return loop
+        evl = urwid.TornadoEventLoop(IOLoop())
+        return urwid.MainLoop(
+            self.ui, STYLES, event_loop=evl, **additional_opts)
 
     def header_hotkeys(self, key):
         if not self.config.getopt('headless'):
@@ -127,8 +125,13 @@ class EventLoop:
 
     def set_alarm_in(self, interval, cb):
         if not self.config.getopt('headless'):
-            self.loop.set_alarm_in(interval, cb)
+            return self.loop.set_alarm_in(interval, cb)
         return
+
+    def remove_alarm(self, handle):
+        if not self.config.getopt('headless'):
+            return self.loop.remove_alarm(handle)
+        return False
 
     def run(self, cb=None):
         """ Run eventloop
@@ -147,4 +150,4 @@ class EventLoop:
         if self.config.getopt('headless'):
             return "<eventloop disabled>"
         else:
-            return "<eventloop urwid based on select()>"
+            return "<eventloop urwid based on tornado()>"

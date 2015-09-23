@@ -22,9 +22,10 @@ class CharmMongo(CharmBase):
     """ MongoDB directives """
 
     charm_name = 'mongodb'
-    charm_rev = 18
+    charm_rev = 26
     display_name = 'MongoDB'
     deploy_priority = 0
     contrib = True
+    available_sources = ['charmstore']
 
 __charm_class__ = CharmMongo

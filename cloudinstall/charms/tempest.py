@@ -1,5 +1,4 @@
-# Copyright 2015 James Beedy jamesbeedy@gmail.com
-# Copyright 2015 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -17,20 +16,20 @@
 from cloudinstall.charms import CharmBase
 
 
-class CharmHeat(CharmBase):
+class CharmTempest(CharmBase):
 
-    """ Openstack Heat directives """
+    """ Openstack integration test suite
+    https://code.launchpad.net/~openstack-charmers/charms/trusty/tempest/next
+    """
 
-    charm_name = 'heat'
-    charm_rev = 9
-    display_name = 'Heat'
-    related = [('keystone:identity-service',
-                'heat:identity-service'),
-               ('mysql:shared-db',
-                'heat:shared-db'),
-               ('rabbitmq-server:amqp',
-                'heat:amqp')]
+    charm_name = 'tempest'
+    charm_rev = 12
+    display_name = 'Tempest'
+    deploy_priority = 1
+    openstack_release_min = 'k'
     contrib = True
-    available_sources = ['charmstore']
+    related = [('keystone:identity-admin',
+                'tempest:identity-admin')]
+    available_sources = ['next']
 
-__charm_class__ = CharmHeat
+__charm_class__ = CharmTempest

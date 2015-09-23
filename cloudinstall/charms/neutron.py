@@ -27,7 +27,7 @@ class CharmNeutron(CharmBase):
     """ neutron directives """
 
     charm_name = 'neutron-gateway'
-    charm_rev = 3
+    charm_rev = 5
     display_name = 'Neutron'
     deploy_priority = 99
     related = [('mysql:shared-db', 'neutron-gateway:shared-db'),
@@ -41,7 +41,7 @@ class CharmNeutron(CharmBase):
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
     def post_proc(self):
         """ performs additional network configuration for charm """

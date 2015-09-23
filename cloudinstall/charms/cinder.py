@@ -26,7 +26,7 @@ class CharmCinder(CharmBase):
     """ Cinder directives """
 
     charm_name = 'cinder'
-    charm_rev = 23
+    charm_rev = 26
     display_name = 'Cinder'
     related = [('cinder:image-service', 'glance:image-service'),
                ('cinder:storage-backend',
@@ -41,6 +41,6 @@ class CharmCinder(CharmBase):
 
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmCinder

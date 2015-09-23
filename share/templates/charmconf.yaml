@@ -11,11 +11,11 @@ keys if there are no values for them.
 {repositories: [
  {name: requirements,
   repository: 'http://github.com/openstack/requirements',
-  branch: stable/{{openstack_release}}
+  branch: {{openstack_git_branch}}
  },
  {name: {{service}},
   repository: 'http://github.com/openstack/{{ service }}',
-  branch: stable/{{openstack_release}}
+  branch: {{openstack_git_branch}}
  }
 ],
 {%- if http_proxy is defined %}
@@ -31,23 +31,23 @@ https_proxy: '{{https_proxy}}'
 {repositories: [
  {name: requirements,
   repository: 'http://github.com/openstack/requirements',
-  branch: stable/{{openstack_release}}
+  branch: {{openstack_git_branch}}
  },
  {name: neutron-fwaas,
   repository: 'http://github.com/openstack/neutron-fwaas',
-  branch: stable/{{openstack_release}}
+  branch: {{openstack_git_branch}}
  },
  {name: neutron-lbaas,
   repository: 'http://github.com/openstack/neutron-lbaas',
-  branch: stable/{{openstack_release}}
+  branch: {{openstack_git_branch}}
  },
  {name: neutron-vpnaas,
   repository: 'http://github.com/openstack/neutron-vpnaas',
-  branch: stable/{{openstack_release}}
+  branch: {{openstack_git_branch}}
  },
  {name: neutron,
   repository: 'http://github.com/openstack/neutron',
-  branch: stable/{{openstack_release}}
+  branch: {{openstack_git_branch}}
  }
 ],
 {%- if http_proxy is defined %}
@@ -72,7 +72,7 @@ cinder:
   glance-api-version: 2
   openstack-origin: {{openstack_origin}}
   block-device: /var/lib/cinder-sdb.img|5G
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('cinder') }}"
 {%- endif %}
 
@@ -98,7 +98,7 @@ glance:
 {%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
 {%- endif %}
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('glance') }}"
 {%- endif %}
 
@@ -115,7 +115,7 @@ keystone:
 {%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
 {%- endif %}
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('keystone') }}"
 {%- endif %}
 
@@ -124,7 +124,7 @@ mysql:
   max-connections: 25000
 
 neutron-openvswitch:
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
 {%- endif %}
 
@@ -132,7 +132,7 @@ neutron-api:
   l2-population: False
   neutron-security-groups: True
   openstack-origin: {{openstack_origin}}
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
 {%- endif %}
 
@@ -146,26 +146,26 @@ nova-cloud-controller:
 {%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
 {%- endif %}
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('nova') }}"
 {%- endif %}
 
 nova-compute:
   openstack-origin: {{openstack_origin}}
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('nova') }}"
 {%- endif %}
 
 openstack-dashboard:
   openstack-origin: {{openstack_origin}}
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('horizon') }}"
 {%- endif %}
 
 neutron-gateway:
   instance-mtu: 1400
   openstack-origin: {{openstack_origin}}
-{%- if openstack_tip is defined %}
+{%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
 {%- endif %}
 

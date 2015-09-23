@@ -3,7 +3,7 @@
 
 ### Documenation
 
-[View the Guides](http://openstack.astokes.org/guides)
+[View the Guides](http://openstack.astokes.org/guides/start)
 
 ## Support
 

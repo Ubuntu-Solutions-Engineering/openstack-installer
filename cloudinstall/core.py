@@ -22,6 +22,7 @@ from os import path, getenv
 from operator import attrgetter
 
 from cloudinstall import utils
+from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.state import ControllerState
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
@@ -69,7 +70,9 @@ class Controller:
         self.juju_m_idmap = None  # for single, {instance_id: machine id}
         self.deployed_charm_classes = []
         self.placement_controller = None
-        self.config.setopt('current_state', ControllerState.INSTALL_WAIT.value)
+        if not self.config.getopt('current_state'):
+            self.config.setopt('current_state',
+                               ControllerState.INSTALL_WAIT.value)
 
     def update(self, *args, **kwargs):
         """Render UI according to current state and reset timer
@@ -97,7 +100,8 @@ class Controller:
                             "state '{}'".format(current_state))
 
         self.loop.redraw_screen()
-        self.loop.set_alarm_in(interval, self.update)
+        AlarmMonitor.add_alarm(self.loop.set_alarm_in(interval, self.update),
+                               "core-controller-update")
 
     def update_node_states(self):
         """ Updating node states
@@ -254,7 +258,9 @@ class Controller:
             raise Exception("Expected some juju machines started.")
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
-        if not self.config.getopt("deploy_complete"):
+        ppc = self.config.getopt("postproc_complete")
+        rc = self.config.getopt("relations_complete")
+        if not ppc or not rc:
             if self.config.is_single():
                 controller_machine = self.juju_m_idmap['controller']
                 self.configure_lxc_network(controller_machine)
@@ -574,6 +580,7 @@ class Controller:
                 ", ".join(["{}:{}".format(a, b) for a, b in not_ready])))
             time.sleep(3)
 
+        self.config.setopt('deploy_complete', True)
         self.ui.status_info_message(
             "Processing relations and finalizing services")
 
@@ -596,7 +603,7 @@ class Controller:
         # Exit cleanly if we've finished all deploys, relations,
         # post processing, and running in headless mode.
         if self.config.getopt('headless'):
-            while not self.config.getopt('deploy_complete'):
+            while not self.config.getopt('postproc_complete'):
                 self.ui.status_info_message(
                     "Waiting for services to be started.")
                 # FIXME: Is this needed?
@@ -606,9 +613,9 @@ class Controller:
             self.loop.exit(0)
 
         self.ui.status_info_message(
-            "Services deployed, relationships may still be"
-            " pending. Please wait for all services to be checked before"
-            " deploying compute nodes")
+            "Services deployed, relationships still pending."
+            " Please wait for all relations to be set before"
+            " deploying additional services.")
         self.ui.render_services_view(self.nodes, self.juju_state,
                                      self.maas_state, self.config)
         self.loop.redraw_screen()
@@ -647,6 +654,7 @@ class Controller:
             self.ui.status_info_message("Welcome")
             self.initialize()
             self.loop.register_callback('refresh_display', self.update)
-            self.loop.set_alarm_in(0, self.update)
+            AlarmMonitor.add_alarm(self.loop.set_alarm_in(0, self.update),
+                                   "controller-start")
             self.loop.run()
             self.loop.close()

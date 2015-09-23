@@ -46,6 +46,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     related = [('keystone:identity-service',
                 'glance-simplestreams-sync:identity-service')]
     is_core = True
+    available_sources = ['charmstore', 'next']
 
     def download_stable(self):
         if not os.path.exists(CHARMS_DIR):

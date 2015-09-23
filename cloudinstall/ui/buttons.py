@@ -1,4 +1,3 @@
-# Copyright 2015 James Beedy jamesbeedy@gmail.com
 # Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,23 +13,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.charms import CharmBase
+from urwid import Button, Text
+from functools import partial
 
 
-class CharmHeat(CharmBase):
+class PlainButton(Button):
+    button_left = Text("[")
+    button_right = Text("]")
 
-    """ Openstack Heat directives """
-
-    charm_name = 'heat'
-    charm_rev = 9
-    display_name = 'Heat'
-    related = [('keystone:identity-service',
-                'heat:identity-service'),
-               ('mysql:shared-db',
-                'heat:shared-db'),
-               ('rabbitmq-server:amqp',
-                'heat:amqp')]
-    contrib = True
-    available_sources = ['charmstore']
-
-__charm_class__ = CharmHeat
+confirm_btn = partial(PlainButton, label="Confirm", on_press=None)
+cancel_btn = partial(PlainButton, label="Cancel", on_press=None)
+done_btn = partial(PlainButton, label="Done", on_press=None)
+reset_btn = partial(PlainButton, label="Reset", on_press=None)

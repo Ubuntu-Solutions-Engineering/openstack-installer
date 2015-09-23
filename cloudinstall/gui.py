@@ -22,7 +22,7 @@ from operator import attrgetter
 import random
 
 import urwid
-from urwid import (AttrWrap, Text, Columns, Overlay, LineBox,
+from urwid import (Text, Columns, Overlay, LineBox,
                    Filler, Frame, WidgetWrap, Button,
                    Pile, Divider)
 
@@ -36,6 +36,8 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              MaasServerInput,
                              LandscapeInput,
                              InfoDialog)
+from cloudinstall.alarms import AlarmMonitor
+from cloudinstall.ui.views import ErrorView
 from cloudinstall.ui.utils import Color, Padding
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.machinewait import MachineWaitView
@@ -82,7 +84,7 @@ class Banner(ScrollableWidgetWrap):
         self.flash_text.set_text('')
 
 
-class NodeInstallWaitMode(ScrollableWidgetWrap):
+class NodeInstallWaitMode(WidgetWrap):
 
     def __init__(self,
                  message="Installer is initializing nodes. Please wait."):
@@ -91,32 +93,26 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
 
     def _build_node_waiting(self):
         """ creates a loading screen if nodes do not exist yet """
-        text = [Text("\n\n\n"),
+        text = [Padding.line_break(""),
                 Text(self.message, align="center"),
-                Text("\n\n\n")]
+                Padding.line_break("")]
 
-        load_box = [AttrWrap(Text("\u2582",
-                                  align="center"), "pending_icon_on"),
-                    AttrWrap(Text("\u2581",
-                                  align="center"),
-                             "pending_icon_on"),
-                    AttrWrap(Text("\u2583",
-                                  align="center"), "pending_icon_on"),
-                    AttrWrap(Text("\u2584",
-                                  align="center"),
-                             "pending_icon_on"),
-                    AttrWrap(Text("\u2585",
-                                  align="center"),
-                             "pending_icon_on"),
-                    AttrWrap(Text("\u2586",
-                                  align="center"),
-                             "pending_icon_on"),
-                    AttrWrap(Text("\u2587",
-                                  align="center"),
-                             "pending_icon_on"),
-                    AttrWrap(Text("\u2588",
-                                  align="center"),
-                             "pending_icon_on")]
+        load_box = [Color.pending_icon_on(Text("\u2581",
+                                               align="center")),
+                    Color.pending_icon_on(Text("\u2582",
+                                               align="center")),
+                    Color.pending_icon_on(Text("\u2583",
+                                               align="center")),
+                    Color.pending_icon_on(Text("\u2584",
+                                               align="center")),
+                    Color.pending_icon_on(Text("\u2585",
+                                               align="center")),
+                    Color.pending_icon_on(Text("\u2586",
+                                               align="center")),
+                    Color.pending_icon_on(Text("\u2587",
+                                               align="center")),
+                    Color.pending_icon_on(Text("\u2588",
+                                               align="center"))]
 
         # Add loading boxes
         random.shuffle(load_box)
@@ -128,7 +124,8 @@ class NodeInstallWaitMode(ScrollableWidgetWrap):
         loading_boxes.append(('weight', 1, Text('')))
         loading_boxes = Columns(loading_boxes)
 
-        return ScrollableListBox(text + [loading_boxes])
+        return Filler(Pile(text + [loading_boxes]),
+                      valign="middle")
 
 
 class ServicesView(ScrollableWidgetWrap):
@@ -179,28 +176,29 @@ class ServicesView(ScrollableWidgetWrap):
         error_info = self._detect_errors(unit, charm_class)
 
         if error_info:
-            status = ("error_icon", "\N{TETRAGRAM FOR FAILURE} ")
+            status = Color.error_icon(Text("\N{TETRAGRAM FOR FAILURE} "))
             if unit.agent_state != "error":
                 status_txt = "{:20}".format("[{} (error)]"
                                             "".format(unit.agent_state))
         elif unit.agent_state == "pending":
-            pending_status = [("pending_icon", "\N{CIRCLED BULLET} "),
-                              ("pending_icon", "\N{CIRCLED WHITE BULLET} "),
-                              ("pending_icon_on", "\N{FISHEYE} ")]
+            pending_status = [Color.pending_icon(Text("\N{CIRCLED BULLET} ")),
+                              Color.pending_icon(
+                                  Text("\N{CIRCLED WHITE BULLET} ")),
+                              Color.pending_icon_on(Text("\N{FISHEYE} "))]
             status = random.choice(pending_status)
         elif unit.agent_state == "installed":
-            status = ("pending_icon", "\N{HOURGLASS} ")
+            status = Color.pending_icon(Text("\N{HOURGLASS} "))
         elif unit.agent_state == "started":
-            status = ("success_icon", "\u2713 ")
+            status = Color.success_icon(Text("\u2713 "))
         elif unit.agent_state == "stopped":
-            status = ("error_icon", "\N{BLACK FLAG} ")
+            status = Color.error_icon(Text("\N{BLACK FLAG} "))
         elif unit.agent_state == "down":
-            status = ("error_icon", "\N{DOWNWARDS BLACK ARROW} ")
+            status = Color.error_icon(Text("\N{DOWNWARDS BLACK ARROW} "))
         else:
             # shouldn't get here
             status = "? "
-
-        node_cols.append(('pack', Text([status, status_txt])))
+        node_cols.append(('pack', status))
+        node_cols.append(('pack', Text(status_txt)))
         if unit.public_address:
             node_cols.append(
                 ('pack',
@@ -398,14 +396,13 @@ class StatusBar(WidgetWrap):
         super().__init__(status)
 
     def _build_status_extra(self):
-        col = Columns([
-            ('weight', 0.3, self._horizon_url),
-            ('weight', 0.3, self._jujugui_url),
-            self._openstack_rel
-        ], dividechars=1)
-        return Color.frame_footer(Pile([
-            col, self._status_line
-        ]))
+        return Color.frame_footer(
+            Pile([
+                self._horizon_url,
+                self._jujugui_url,
+                self._openstack_rel,
+                self._status_line
+            ]))
 
     def set_openstack_rel(self, text="Icehouse (2014.1.1)"):
         """ Updates openstack release text
@@ -414,7 +411,7 @@ class StatusBar(WidgetWrap):
 
     def set_dashboard_url(self, ip=None, user=None, password=None):
         """ sets horizon dashboard url """
-        text = "Openstack Dashboard: "
+        text = "Horizon: "
         if not ip:
             text += "(pending)"
         else:
@@ -424,7 +421,7 @@ class StatusBar(WidgetWrap):
 
     def set_jujugui_url(self, ip=None):
         """ sets juju gui url """
-        text = "{0:<21}".format("JujuGUI:")
+        text = "{0:<21}".format("JujuGUI: ")
         if not ip:
             text += "(pending)"
         else:
@@ -644,10 +641,20 @@ class PegasusGUI(WidgetWrap):
         self.services_view.update(nodes)
         self.frame.set_body(self.services_view)
         self.header.set_show_add_units_hotkey(True)
+        dc = config.getopt('deploy_complete')
+        dcstr = "complete" if dc else "pending"
+        rc = config.getopt('relations_complete')
+        rcstr = "complete" if rc else "pending"
+        ppc = config.getopt('postproc_complete')
+        ppcstr = "complete" if ppc else "pending"
+        self.status_info_message("Status: Deployments {}, "
+                                 "Relations {}, "
+                                 "Post-processing {} ".format(dcstr,
+                                                              rcstr,
+                                                              ppcstr))
 
     def render_node_install_wait(self, message=None, **kwargs):
         self.frame.body = NodeInstallWaitMode(message, **kwargs)
-        self.frame.set_body(self.frame.body)
 
     def render_placement_view(self, loop, config, cb):
         """ render placement view
@@ -688,15 +695,11 @@ class PegasusGUI(WidgetWrap):
         self.add_services_dialog.update()
         self.frame.body = Filler(self.add_services_dialog)
 
-    def show_exception_message(self, ex,
-                               logpath="~/.cloud-install/commands.log"):
-        def handle_done(*args, **kwargs):
-            raise urwid.ExitMainLoop()
-        self.hide_widget_on_top()
-        msg = ("A fatal error has occurred: {}\n"
-               "See {} for further info.".format(ex.args[0],
-                                                 logpath))
-        self.show_fatal_error_message(msg, handle_done)
+    def show_exception_message(self, ex):
+        msg = ("A fatal error has occurred: {}\n".format(ex.args[0]))
+        log.error(msg)
+        self.frame.body = ErrorView(ex.args[0])
+        AlarmMonitor.remove_all()
 
     def select_install_type(self, install_types, cb):
         """ Dialog for selecting installation type

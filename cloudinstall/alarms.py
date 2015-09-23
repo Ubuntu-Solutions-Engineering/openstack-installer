@@ -1,4 +1,3 @@
-# Copyright 2015 James Beedy jamesbeedy@gmail.com
 # Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,23 +13,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.charms import CharmBase
+""" Alarm monitor
+"""
 
 
-class CharmHeat(CharmBase):
+class AlarmMonitor:
+    alarms = {}
+    loop = None
 
-    """ Openstack Heat directives """
+    @classmethod
+    def add_alarm(cls, handle, name):
+        if name in cls.alarms:
+            cls.loop.remove_alarm(cls.alarms[name])
+        cls.alarms[name] = handle
 
-    charm_name = 'heat'
-    charm_rev = 9
-    display_name = 'Heat'
-    related = [('keystone:identity-service',
-                'heat:identity-service'),
-               ('mysql:shared-db',
-                'heat:shared-db'),
-               ('rabbitmq-server:amqp',
-                'heat:amqp')]
-    contrib = True
-    available_sources = ['charmstore']
-
-__charm_class__ = CharmHeat
+    @classmethod
+    def remove_all(cls):
+        for alarm in cls.alarms.values():
+            cls.loop.remove_alarm(alarm)
+        cls.alarms = {}

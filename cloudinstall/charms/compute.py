@@ -25,7 +25,7 @@ class CharmNovaCompute(CharmBase):
     """ Openstack Nova Compute directives """
 
     charm_name = 'nova-compute'
-    charm_rev = 24
+    charm_rev = 26
     display_name = 'Compute'
     display_priority = DisplayPriorities.Compute
     related = [('nova-compute:neutron-plugin',
@@ -49,6 +49,6 @@ class CharmNovaCompute(CharmBase):
     allowed_assignment_types = [AssignmentType.BareMetal,
                                 AssignmentType.KVM]
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmNovaCompute

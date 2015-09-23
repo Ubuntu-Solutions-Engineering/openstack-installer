@@ -26,12 +26,12 @@ class CharmKeystone(CharmBase):
     """ Openstack Keystone directives """
 
     charm_name = 'keystone'
-    charm_rev = 25
+    charm_rev = 28
     display_name = 'Keystone'
     related = [('mysql:shared-db', 'keystone:shared-db')]
     deploy_priority = 1
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
     def _is_auth_url_valid(self):
         existing_yaml = yaml.load(slurp(self.config.juju_environments_path))

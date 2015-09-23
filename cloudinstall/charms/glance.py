@@ -21,12 +21,12 @@ class CharmGlance(CharmBase):
     """ Openstack Glance directives """
 
     charm_name = 'glance'
-    charm_rev = 20
+    charm_rev = 24
     display_name = 'Glance'
     related = [('mysql:shared-db', 'glance:shared-db'),
                ('keystone:identity-service', 'glance:identity-service'),
                ('rabbitmq-server:amqp', 'glance:amqp')]
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmGlance

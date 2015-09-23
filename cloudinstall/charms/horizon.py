@@ -21,11 +21,11 @@ class CharmHorizon(CharmBase):
     """ Openstack Horizon directives """
 
     charm_name = 'openstack-dashboard'
-    charm_rev = 14
+    charm_rev = 16
     display_name = 'Openstack Dashboard'
     related = [('keystone:identity-service',
                 'openstack-dashboard:identity-service')]
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmHorizon

@@ -30,6 +30,7 @@ from cloudinstall.consoleui import ConsoleUI
 from cloudinstall.controllers.installbase import InstallController
 from cloudinstall.config import Config
 from cloudinstall.ev import EventLoop
+from cloudinstall.alarms import AlarmMonitor
 from cloudinstall import __version__ as version
 
 CFG_FILE = os.path.join(utils.install_home(),
@@ -66,11 +67,16 @@ def parse_options(argv):
                         "to stdout and exits.")
     parser.add_argument('--openstack-release',
                         dest='openstack_release', default="kilo",
-                        choices=['icehouse', 'juno', 'kilo'],
+                        choices=['icehouse', 'juno', 'kilo', 'liberty'],
                         help="Specify a specific OpenStack release.")
-    parser.add_argument('--openstack-tip', action="store_true",
-                        dest='openstack_tip', default=False,
-                        help="Deploy from OpenStack master branches.")
+    parser.add_argument('--openstack-git-branch',
+                        choices=["master", "stable"],
+                        dest='openstack_git_branch', default=None,
+                        help="Specifies upstream git branch to clone for "
+                        "OpenStack services. Note that 'master' is just "
+                        " the branch 'master', while 'stable' is combined "
+                        " with the --openstack-release value, e.g."
+                        " 'stable/kilo'")
     parser.add_argument('-a', type=str, default=None,
                         help='<arch, ..> comma-separated list of '
                         'architectures to filter available cloud '
@@ -233,6 +239,9 @@ if __name__ == '__main__':
 
     # Choose event loop
     ev = EventLoop(ui, cfg, logger)
+
+    # Bind event loops alarm tracking
+    AlarmMonitor.loop = ev
 
     try:
         install = InstallController(

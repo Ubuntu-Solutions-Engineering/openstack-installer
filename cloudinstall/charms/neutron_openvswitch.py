@@ -23,11 +23,11 @@ log = logging.getLogger('cloudinstall.charms.neutron_openvswitch')
 class CharmNeutronOpenvswitch(CharmBase):
 
     charm_name = 'neutron-openvswitch'
-    charm_rev = 7
+    charm_rev = 9
     display_name = 'Neutron OpenVSwitch'
     subordinate = True
     openstack_release_min = 'j'
     is_core = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmNeutronOpenvswitch

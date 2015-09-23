@@ -30,6 +30,9 @@ write_files:
     permissions: '0755'
 packages:
   - software-properties-common
+{%- if next_charms %}
+  - bzr
+{%- endif %}
 {%- if extra_pkgs %}
 {%- for pkg in extra_pkgs %}
   - {{ pkg }}

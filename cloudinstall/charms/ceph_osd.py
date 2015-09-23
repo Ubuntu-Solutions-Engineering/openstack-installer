@@ -25,13 +25,13 @@ class CharmCephOSD(CharmBase):
     """ Ceph OSD directives """
 
     charm_name = 'ceph-osd'
-    charm_rev = 10
+    charm_rev = 12
     display_name = 'Ceph OSD'
     allow_multi_units = True
     related = [('ceph:osd', 'ceph-osd:mon'),
                ('ntp:juju-info', 'ceph-osd:juju-info')]
     depends = ['ntp', 'ceph']
     isolate = True
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmCephOSD

@@ -25,7 +25,7 @@ class CharmCeph(CharmBase):
     """ Ceph directives """
 
     charm_name = 'ceph'
-    charm_rev = 36
+    charm_rev = 38
     display_name = 'Ceph'
     display_priority = DisplayPriorities.Storage
     related = [('ceph:client', 'cinder-ceph:ceph'),
@@ -38,7 +38,7 @@ class CharmCeph(CharmBase):
     allow_multi_units = True
     constraints = {'mem': 1024,
                    'root-disk': 20480}
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
     @classmethod
     def required_num_units(self):

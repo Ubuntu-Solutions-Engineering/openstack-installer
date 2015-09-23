@@ -21,7 +21,7 @@ class CharmSwiftProxy(CharmBase):
     """ swift directives """
 
     charm_name = 'swift-proxy'
-    charm_rev = 17
+    charm_rev = 20
     display_name = 'Swift Proxy'
     display_priority = DisplayPriorities.Storage
     related = [
@@ -34,6 +34,6 @@ class CharmSwiftProxy(CharmBase):
     allow_multi_units = False
     depends = ['swift-storage']
     conflicts = ['ceph-radosgw']
-    have_nextbranch = True
+    available_sources = ['charmstore', 'next']
 
 __charm_class__ = CharmSwiftProxy
