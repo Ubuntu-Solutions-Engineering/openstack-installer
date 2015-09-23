@@ -437,6 +437,8 @@ class CharmQueue:
         while len(valid_relations) != len(completed_relations):
             for relation_a, relation_b in valid_relations:
                 try:
+                    log.debug("Calling juju.add_relation({}, {})".format(
+                        relation_a, relation_b))
                     self.juju.add_relation(relation_a,
                                            relation_b)
                     completed_relations.append((relation_a,
@@ -449,6 +451,7 @@ class CharmQueue:
                     log.exception(msg)
                     self.ui.status_info_message(msg)
                     raise e
+        self.config.setopt('relations_complete', True)
 
     def _charm_classes(self):
         """ Returns instances of deployed charms """
@@ -483,4 +486,4 @@ class CharmQueue:
                 log.exception(msg)
                 self.ui.status_error_message(msg)
             time.sleep(10)
-        self.config.setopt('deploy_complete', True)
+        self.config.setopt('postproc_complete', True)
