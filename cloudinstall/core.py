@@ -258,7 +258,9 @@ class Controller:
             raise Exception("Expected some juju machines started.")
 
         self.config.setopt('current_state', ControllerState.SERVICES.value)
-        if not self.config.getopt("deploy_complete"):
+        ppc = self.config.getopt("postproc_complete")
+        rc = self.config.getopt("relations_complete")
+        if not ppc or not rc:
             if self.config.is_single():
                 controller_machine = self.juju_m_idmap['controller']
                 self.configure_lxc_network(controller_machine)
@@ -578,6 +580,7 @@ class Controller:
                 ", ".join(["{}:{}".format(a, b) for a, b in not_ready])))
             time.sleep(3)
 
+        self.config.setopt('deploy_complete', True)
         self.ui.status_info_message(
             "Processing relations and finalizing services")
 
@@ -600,7 +603,7 @@ class Controller:
         # Exit cleanly if we've finished all deploys, relations,
         # post processing, and running in headless mode.
         if self.config.getopt('headless'):
-            while not self.config.getopt('deploy_complete'):
+            while not self.config.getopt('postproc_complete'):
                 self.ui.status_info_message(
                     "Waiting for services to be started.")
                 # FIXME: Is this needed?
@@ -610,9 +613,9 @@ class Controller:
             self.loop.exit(0)
 
         self.ui.status_info_message(
-            "Services deployed, relationships may still be"
-            " pending. Please wait for all services to be checked before"
-            " deploying compute nodes")
+            "Services deployed, relationships still pending."
+            " Please wait for all relations to be set before"
+            " deploying additional services.")
         self.ui.render_services_view(self.nodes, self.juju_state,
                                      self.maas_state, self.config)
         self.loop.redraw_screen()

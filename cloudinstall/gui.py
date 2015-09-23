@@ -641,6 +641,17 @@ class PegasusGUI(WidgetWrap):
         self.services_view.update(nodes)
         self.frame.set_body(self.services_view)
         self.header.set_show_add_units_hotkey(True)
+        dc = config.getopt('deploy_complete')
+        dcstr = "complete" if dc else "pending"
+        rc = config.getopt('relations_complete')
+        rcstr = "complete" if rc else "pending"
+        ppc = config.getopt('postproc_complete')
+        ppcstr = "complete" if ppc else "pending"
+        self.status_info_message("Status: Deployments {}, "
+                                 "Relations {}, "
+                                 "Post-processing {} ".format(dcstr,
+                                                              rcstr,
+                                                              ppcstr))
 
     def render_node_install_wait(self, message=None, **kwargs):
         self.frame.body = NodeInstallWaitMode(message, **kwargs)
