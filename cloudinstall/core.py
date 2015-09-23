@@ -168,9 +168,10 @@ class Controller:
             try:
                 with open(self.config.placements_filename, 'r') as pf:
                     self.placement_controller.load(pf)
-            except Exception as e:
+            except Exception:
                 log.exception("Exception loading placement")
-                raise Exception("Could not load placements.yaml")
+                raise Exception("Could not load "
+                                "{}.".format(self.config.placements_filename))
             self.ui.status_info_message("Loaded placements from file")
             log.info("Loaded placements from "
                      "'{}'".format(self.config.placements_filename))
@@ -664,6 +665,6 @@ class Controller:
             self.loop.register_callback('refresh_display', self.update)
             AlarmMonitor.add_alarm(self.loop.set_alarm_in(0, self.update),
                                    "controller-start")
-            cfg.setopt("gui_started", True)
+            self.config.setopt("gui_started", True)
             self.loop.run()
             self.loop.close()
