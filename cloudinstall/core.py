@@ -165,8 +165,12 @@ class Controller:
             self.maas_state, self.config)
 
         if path.exists(self.config.placements_filename):
-            with open(self.config.placements_filename, 'r') as pf:
-                self.placement_controller.load(pf)
+            try:
+                with open(self.config.placements_filename, 'r') as pf:
+                    self.placement_controller.load(pf)
+            except Exception as e:
+                log.exception("Exception loading placement")
+                raise Exception("Could not load placements.yaml")
             self.ui.status_info_message("Loaded placements from file")
             log.info("Loaded placements from "
                      "'{}'".format(self.config.placements_filename))
