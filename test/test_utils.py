@@ -49,7 +49,7 @@ class TestRenderCharmConfig(unittest.TestCase):
     def setUp(self):
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
-            self.config = Config({}, tempf.name)
+            self.config = Config({}, tempf.name, save_backups=False)
 
         type(self.config).cfg_path = PropertyMock(return_value='fake_cfg_path')
         self.config.setopt('openstack_password', 'fake_pw')

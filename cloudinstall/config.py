@@ -43,7 +43,7 @@ class ConfigException(Exception):
 
 
 class Config:
-    def __init__(self, cfg_obj=None, cfg_file=None):
+    def __init__(self, cfg_obj=None, cfg_file=None, save_backups=True):
         if os.getenv("FAKE_API_DATA"):
             self._juju_env = {"bootstrap-config": {'name': "fake",
                                                    'maas-server': "FAKE"}}
@@ -55,11 +55,12 @@ class Config:
         else:
             self._config = cfg_obj
         self._cfg_file = cfg_file
+        self.save_backups = save_backups
 
-    def save(self, backup=True):
+    def save(self):
         """ Saves configuration """
         try:
-            if backup:
+            if self.save_backups:
                 datestr = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
                 backup_path = os.path.join(self.cfg_path, "config-backups")
                 backupfilename = "{}/config-{}.yaml".format(backup_path,
@@ -97,7 +98,10 @@ class Config:
     @property
     def cfg_path(self):
         """ top level configuration path """
-        return os.path.join(utils.install_home(), '.cloud-install')
+        if self._cfg_file is None:
+            return os.path.join(utils.install_home(), '.cloud-install')
+        else:
+            return os.path.dirname(self._cfg_file)
 
     @property
     def cfg_file(self):

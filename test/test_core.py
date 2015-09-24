@@ -33,7 +33,7 @@ class WaitForDeployedServicesReadyCoreTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.conf = Config({})
+        self.conf = Config({}, save_backups=False)
         self.mock_ui = MagicMock(name='ui')
         self.mock_log = MagicMock(name='log')
         self.mock_loop = MagicMock(name='loop')
