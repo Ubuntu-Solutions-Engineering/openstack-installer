@@ -28,7 +28,7 @@ class MultiInstallTestCase(unittest.TestCase):
     def setUp(self):
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
-            self.conf = Config({}, tempf.name)
+            self.conf = Config({}, tempf.name, save_backups=False)
 
         dc = MagicMock(name="display_controller")
         loop = MagicMock(name="loop")

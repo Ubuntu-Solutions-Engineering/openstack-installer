@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import datetime
 import os
 import yaml
 import cloudinstall.utils as utils
@@ -42,7 +43,7 @@ class ConfigException(Exception):
 
 
 class Config:
-    def __init__(self, cfg_obj=None, cfg_file=None):
+    def __init__(self, cfg_obj=None, cfg_file=None, save_backups=True):
         if os.getenv("FAKE_API_DATA"):
             self._juju_env = {"bootstrap-config": {'name': "fake",
                                                    'maas-server': "FAKE"}}
@@ -54,10 +55,18 @@ class Config:
         else:
             self._config = cfg_obj
         self._cfg_file = cfg_file
+        self.save_backups = save_backups
 
     def save(self):
         """ Saves configuration """
         try:
+            if self.save_backups:
+                datestr = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+                backup_path = os.path.join(self.cfg_path, "config-backups")
+                backupfilename = "{}/config-{}.yaml".format(backup_path,
+                                                            datestr)
+                os.makedirs(backup_path, exist_ok=True)
+                os.rename(self.cfg_file, backupfilename)
             utils.spew(self.cfg_file,
                        yaml.safe_dump(dict(self._config),
                                       default_flow_style=False))
@@ -89,7 +98,10 @@ class Config:
     @property
     def cfg_path(self):
         """ top level configuration path """
-        return os.path.join(utils.install_home(), '.cloud-install')
+        if self._cfg_file is None:
+            return os.path.join(utils.install_home(), '.cloud-install')
+        else:
+            return os.path.dirname(self._cfg_file)
 
     @property
     def cfg_file(self):

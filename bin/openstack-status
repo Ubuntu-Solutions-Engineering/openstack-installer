@@ -112,10 +112,16 @@ if __name__ == '__main__':
     # Run openstack-status within container on single installs
     out = utils.get_command_output('hostname', user_sudo=True)
     hostname = out['output'].rstrip()
-    if config.is_single() and config.getopt('container_name') not in hostname:
-        logger.info("Running status within container")
-        Container.run_status(config.getopt('container_name'),
-                             'openstack-status', config)
+    if config.is_single():
+        container_name = config.getopt('container_name')
+        if container_name is False:
+            print("Error: Inconsistent config - single install "
+                  "without container_name set. Exiting.")
+            sys.exit(1)
+        if container_name not in hostname:
+            logger.info("Running status within container")
+            Container.run_status(config.getopt('container_name'),
+                                 'openstack-status', config)
 
     if config.getopt('headless'):
         ui = ConsoleUI()
@@ -134,6 +140,7 @@ if __name__ == '__main__':
         atexit.register(partial(utils.cleanup, config))
         core.start()
     except Exception as e:
+        print("Error starting openstack-status: {}".format(e.args[0]))
         if opts.debug and not config.getopt('headless'):
             import pdb
             pdb.post_mortem()

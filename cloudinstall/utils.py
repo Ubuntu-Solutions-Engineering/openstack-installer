@@ -86,7 +86,7 @@ def cleanup(cfg):
     pid = os.path.join(install_home(), '.cloud-install/openstack.pid')
     if os.path.isfile(pid):
         os.remove(pid)
-    if not cfg.getopt('headless'):
+    if not cfg.getopt('headless') and cfg.getopt('gui_started'):
         log.debug('Attempting to reset the terminal')
         sys.stderr.write("\x1b[2J\x1b[H")
         call(['stty', 'sane'])

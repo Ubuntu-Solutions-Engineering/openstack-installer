@@ -38,7 +38,7 @@ class LandscapeInstallFinalTestCase(unittest.TestCase):
         self.loop = MagicMock()
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
-            self.conf = Config({}, tempf.name)
+            self.conf = Config({}, tempf.name, save_backups=False)
 
     def make_installer_with_config(self, landscape_creds=None,
                                    maas_creds=None):
