@@ -56,8 +56,8 @@ class Config:
             utils.spew(self.cfg_file,
                        yaml.safe_dump(dict(self._config),
                                       default_flow_style=False))
-        except IOError:
-            raise ConfigException("Unable to save configuration.")
+        except IOError as e:
+            raise ConfigException("Unable to save configuration: {}".format(e))
 
     def install_types(self):
         """ Installer types
