@@ -21,6 +21,7 @@ from os import path, getenv
 
 from operator import attrgetter
 
+from cloudinstall.config import OPENSTACK_RELEASE_LABELS
 from cloudinstall import utils
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.state import ControllerState
@@ -652,6 +653,9 @@ class Controller:
             self.initialize()
         else:
             self.ui.status_info_message("Welcome")
+            rel = self.config.getopt('openstack_release')
+            label = OPENSTACK_RELEASE_LABELS[rel]
+            self.ui.set_openstack_rel(label)
             self.initialize()
             self.loop.register_callback('refresh_display', self.update)
             AlarmMonitor.add_alarm(self.loop.set_alarm_in(0, self.update),

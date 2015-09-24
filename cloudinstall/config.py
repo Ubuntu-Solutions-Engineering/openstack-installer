@@ -31,6 +31,11 @@ INSTALL_TYPE_LANDSCAPE = ("OpenStack Autopilot",
                           "The Canonical Distribution "
                           "- Enterprise Openstack Install and Management.")
 
+OPENSTACK_RELEASE_LABELS = dict(icehouse="Icehouse (2014.1.3)",
+                                juno="Juno (2014.2.2)",
+                                kilo="Kilo (2015.1.0)",
+                                liberty="Liberty (2015.2.0)")
+
 
 class ConfigException(Exception):
     pass
