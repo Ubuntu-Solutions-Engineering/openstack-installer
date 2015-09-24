@@ -48,7 +48,6 @@ log = logging.getLogger('cloudinstall.gui')
 sys.excepthook = utils.global_exchandler
 
 
-
 class Banner(ScrollableWidgetWrap):
 
     def __init__(self):

@@ -43,6 +43,7 @@ class EventLoopCoreTestCase(unittest.TestCase):
     def test_validate_loop(self):
         """ Validate eventloop runs """
         self.conf.setopt('headless', False)
+        self.conf.setopt('openstack_release', 'kilo')
         dc = Controller(
             ui=self.mock_ui, config=self.conf,
             loop=self.mock_loop)
