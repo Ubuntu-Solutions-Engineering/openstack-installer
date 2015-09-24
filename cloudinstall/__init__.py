@@ -15,4 +15,4 @@
 
 """ Ubuntu Openstack Installer """
 
-__version__ = "0.99.22"
+__version__ = "0.99.23"

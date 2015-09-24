@@ -1,4 +1,4 @@
-openstack (0.99.22-0ubuntu1) wily; urgency=medium
+openstack (0.99.23) wily; urgency=medium
 
   * Support nclxd
   * Improve threading support in macumba
@@ -11,22 +11,3 @@ openstack (0.99.22-0ubuntu1) wily; urgency=medium
   * Additional unittests
 
  -- Adam Stokes <adam.stokes@ubuntu.com>  Thu, 25 Jun 2015 10:25:15 -0400
-
-openstack (0.22-0ubuntu1~15.04) vivid; urgency=medium
-
-  * New stable release
-  * Support for MAAS 1.7
-  * Support for Juju 1.20
-  * Proxy support
-  * Machine Placement UI
-  * Single, Multi, and Landscape OpenStack Autopilot support
-
- -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 28 Jan 2015 02:55:15 -0500
-
-openstack (0.21-0ubuntu1) utopic; urgency=medium
-
-  * Start of next development release
-  * Incorporate package name change and set old name as meta
-    package dependency.
-
- -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 24 Sep 2014 10:09:38 -0400
