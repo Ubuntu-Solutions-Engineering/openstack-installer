@@ -60,7 +60,7 @@ class Config:
     def save(self):
         """ Saves configuration """
         try:
-            if self.save_backups:
+            if self.save_backups and os.path.exists(self.cfg_file):
                 datestr = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
                 backup_path = os.path.join(self.cfg_path, "config-backups")
                 backupfilename = "{}/config-{}.yaml".format(backup_path,
