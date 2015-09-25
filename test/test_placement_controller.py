@@ -51,7 +51,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         self.mock_maas_state = MagicMock()
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             utils.spew(tempf.name, yaml.dump(dict()))
-            self.conf = Config({}, tempf.name)
+            self.conf = Config({}, tempf.name, save_backups=False)
 
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)
@@ -375,7 +375,7 @@ class PlacementControllerTestCase(unittest.TestCase):
     def test_load_machines_single(self):
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             utils.spew(tempf.name, yaml.dump(dict()))
-            conf = Config({}, tempf.name)
+            conf = Config({}, tempf.name, save_backups=False)
 
         fake_assignments = {
             'fake_iid': {'constraints': {},
@@ -463,7 +463,7 @@ class PlacementControllerTestCase(unittest.TestCase):
         """gen_defaults should only use ready machines"""
         mock_maas_state = MagicMock()
         mock_maas_state.machines.return_value = []
-        c = Config()
+        c = Config(save_backups=False)
         pc = PlacementController(config=c, maas_state=mock_maas_state)
         # reset the mock to avoid looking at calls from
         # PlacementController.__init__().
@@ -486,7 +486,7 @@ class PlacementControllerTestCase(unittest.TestCase):
                     allcharms += charmclasses
             return cn in allcharms
 
-        c = Config()
+        c = Config(save_backups=False)
         pc = PlacementController(config=c)
 
         defaults = pc.gen_single()

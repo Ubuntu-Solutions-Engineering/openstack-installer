@@ -28,7 +28,7 @@ def print_version():
 
     @return: 0 on success 1 on failure
     """
-    pattern = 'openstack\s\((\d+\.\d+\.\d+)-'
+    pattern = 'openstack\s\(([0-9\.]+)\)'
     if not os.path.isfile('debian/changelog'):
         print("0.0.0")
         return 0

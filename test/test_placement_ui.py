@@ -80,7 +80,7 @@ class ServiceWidgetTestCase(unittest.TestCase):
 
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             utils.spew(tempf.name, yaml.dump(dict()))
-            self.conf = Config({}, tempf.name)
+            self.conf = Config({}, tempf.name, save_backups=False)
 
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)
@@ -175,7 +175,7 @@ class MachineWidgetTestCase(unittest.TestCase):
         self.mock_maas_state = MagicMock()
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             utils.spew(tempf.name, yaml.dump(dict()))
-            self.conf = Config({}, tempf.name)
+            self.conf = Config({}, tempf.name, save_backups=False)
 
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)
@@ -253,7 +253,7 @@ class MachinesListTestCase(unittest.TestCase):
         self.mock_maas_state = MagicMock()
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             utils.spew(tempf.name, yaml.dump(dict()))
-            self.conf = Config({}, tempf.name)
+            self.conf = Config({}, tempf.name, save_backups=False)
 
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)
@@ -326,7 +326,7 @@ class ServicesListTestCase(unittest.TestCase):
         self.mock_maas_state = MagicMock()
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             utils.spew(tempf.name, yaml.dump(dict()))
-            self.conf = Config({}, tempf.name)
+            self.conf = Config({}, tempf.name, save_backups=False)
 
         self.pc = PlacementController(self.mock_maas_state,
                                       self.conf)

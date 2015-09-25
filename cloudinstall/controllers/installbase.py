@@ -22,18 +22,13 @@ from cloudinstall.config import (INSTALL_TYPE_SINGLE,
 from cloudinstall.state import InstallState
 from cloudinstall.alarms import AlarmMonitor
 import cloudinstall.utils as utils
-
+from cloudinstall.config import OPENSTACK_RELEASE_LABELS
 from cloudinstall.controllers.install import (SingleInstall,
                                               LandscapeInstall,
                                               MultiInstallExistingMaas)
 
 
 log = logging.getLogger('cloudinstall.install')
-
-OPENSTACK_RELEASE_LABELS = dict(icehouse="Icehouse (2014.1.3)",
-                                juno="Juno (2014.2.2)",
-                                kilo="Kilo (2015.1.0)",
-                                liberty="Liberty (2015.2.0)")
 
 
 class InstallController:

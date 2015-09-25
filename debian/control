@@ -6,10 +6,10 @@ Build-Depends: debhelper (>= 9),
                dh-python,
                pep8,
                pyflakes,
-               python-all,
+               python,
                python-setuptools,
                python-tox,
-               python3-all,
+               python3,
                python3-bson,
                python3-coverage,
                python3-jinja2,
@@ -24,7 +24,7 @@ Build-Depends: debhelper (>= 9),
                python3-urwid,
                python3-ws4py,
                python3-yaml
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: https://launchpad.net/cloud-installer
 X-Python-Version: >= 2.7
 X-Python3-Version: >= 3.3
@@ -38,7 +38,6 @@ Depends: gawk,
          nmap,
          pwgen,
          python-kombu,
-         python3-all,
          python3-bson,
          python3-jinja2,
          python3-lxc,
@@ -57,8 +56,8 @@ Depends: gawk,
          ${misc:Depends},
          ${python3:Depends},
          ${python:Depends}
-Replaces: cloud-installer
-Conflicts: cloud-installer
+Breaks: cloud-install (<< 0.99)
+Replaces: cloud-install (<< 0.99)
 Description: Ubuntu Openstack Installer
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -69,11 +68,10 @@ Description: Ubuntu Openstack Installer
  profiles.
 
 Package: openstack-multi
-Section: admin
 Architecture: all
-Depends: juju-core, lxc, qemu-kvm, virtinst, vlan, ${misc:Depends}
-Replaces: cloud-install-multi
-Conflicts: cloud-install-multi
+Depends: juju-core, lxc, openstack, qemu-kvm, virtinst, vlan, ${misc:Depends}
+Breaks: cloud-install-multi (<< 0.99)
+Replaces: cloud-install-multi (<< 0.99)
 Description: Ubuntu Openstack Installer (multi-system) - dependency package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -82,12 +80,17 @@ Description: Ubuntu Openstack Installer (multi-system) - dependency package
  .
  This package provides the multi installer profile.
 
-Package: openstack-single
-Section: admin
+Package: cloud-install-multi
 Architecture: all
-Depends: juju-local, juju-local-kvm, ${misc:Depends}
-Replaces: cloud-install-single
-Conflicts: cloud-install-single
+Depends: openstack, openstack-multi, ${misc:Depends}
+Description: transitional dummy package for multi
+  This is a transitional dummy package for multi. It can safely be removed.
+
+Package: openstack-single
+Architecture: all
+Depends: juju-local, juju-local-kvm, openstack, ${misc:Depends}
+Breaks: cloud-install-single (<< 0.99)
+Replaces: cloud-install-single (<< 0.99)
 Description: Ubuntu Openstack Installer (single-system) - dependency package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -96,12 +99,17 @@ Description: Ubuntu Openstack Installer (single-system) - dependency package
  .
  This package provides the single installer profile.
 
-Package: openstack-landscape
-Section: admin
+Package: cloud-install-single
 Architecture: all
-Depends: juju-deployer, ${misc:Depends}
-Replaces: cloud-install-landscape
-Conflicts: cloud-install-landscape
+Depends: openstack, openstack-single, ${misc:Depends}
+Description: transitional dummy package for single install
+  This is a transitional dummy package for single. It can safely be removed.
+
+Package: openstack-landscape
+Architecture: all
+Depends: juju-deployer, openstack, ${misc:Depends}
+Breaks: cloud-install-landscape (<< 0.99)
+Replaces: cloud-install-landscape (<< 0.99)
 Description: Ubuntu Openstack Installer (landscape) - dependency package
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -109,3 +117,9 @@ Description: Ubuntu Openstack Installer (landscape) - dependency package
  for testing, or use MAAS to deploy onto a cluster of any size.
  .
  This package provides the landscape installer profile.
+
+Package: cloud-install-landscape
+Architecture: all
+Depends: openstack, openstack-landscape, ${misc:Depends}
+Description: transitional dummy package for landscape
+  This is a transitional dummy package for landscape. It can safely be removed.

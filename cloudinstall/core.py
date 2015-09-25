@@ -21,6 +21,7 @@ from os import path, getenv
 
 from operator import attrgetter
 
+from cloudinstall.config import OPENSTACK_RELEASE_LABELS
 from cloudinstall import utils
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.state import ControllerState
@@ -164,8 +165,13 @@ class Controller:
             self.maas_state, self.config)
 
         if path.exists(self.config.placements_filename):
-            with open(self.config.placements_filename, 'r') as pf:
-                self.placement_controller.load(pf)
+            try:
+                with open(self.config.placements_filename, 'r') as pf:
+                    self.placement_controller.load(pf)
+            except Exception:
+                log.exception("Exception loading placement")
+                raise Exception("Could not load "
+                                "{}.".format(self.config.placements_filename))
             self.ui.status_info_message("Loaded placements from file")
             log.info("Loaded placements from "
                      "'{}'".format(self.config.placements_filename))
@@ -652,9 +658,13 @@ class Controller:
             self.initialize()
         else:
             self.ui.status_info_message("Welcome")
+            rel = self.config.getopt('openstack_release')
+            label = OPENSTACK_RELEASE_LABELS[rel]
+            self.ui.set_openstack_rel(label)
             self.initialize()
             self.loop.register_callback('refresh_display', self.update)
             AlarmMonitor.add_alarm(self.loop.set_alarm_in(0, self.update),
                                    "controller-start")
+            self.config.setopt("gui_started", True)
             self.loop.run()
             self.loop.close()

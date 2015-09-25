@@ -6,14 +6,14 @@ TOPDIR              := $(shell basename `pwd`)
 GIT_REV		    := $(shell git log --oneline -n1| cut -d" " -f1)
 VERSION             := $(shell ./tools/version)
 UPSTREAM_DEB        := https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git
-UPSTREAM_DEB_COMMIT := 71edfcf
+UPSTREAM_DEB_COMMIT := b7a5472
 UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.git
 UPSTREAM_MACUMBA_COMMIT := 5674861
 UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
 UPSTREAM_MAASCLIENT_COMMIT := 357db23
 
 $(NAME)_$(VERSION).orig.tar.gz: clean
-	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude=debian --exclude='.tox*'
+	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude='.tox*'
 
 tarball: $(NAME)_$(VERSION).orig.tar.gz
 
@@ -34,15 +34,16 @@ uninstall: uninstall-dependencies
 
 clean:
 	@-debian/rules clean
-	@rm -rf debian/cloud-install
+	@rm -rf debian/cloud-install*
 	@rm -rf docs/_build/*
 	@rm -rf ../openstack_*.deb ../cloud-*.deb ../openstack_*.tar.gz ../openstack_*.dsc ../openstack_*.changes \
-		../openstack_*.build ../openstack-*.deb ../openstack_*.upload
+		../openstack_*.build ../openstack-*.deb ../openstack_*.upload ../cloud-install-*.deb
 	@rm -rf cover
 	@rm -rf .coverage
+	@rm -rf .tox
 
 DPKGBUILDARGS = -us -uc -i'.git.*|.tox|.bzr.*|.editorconfig|.travis-yaml|macumba\/debian|maasclient\/debian'
-deb-src: clean update_version tarball
+deb-src: clean update_version
 	@dpkg-buildpackage -S -sa $(DPKGBUILDARGS)
 
 deb-release:
@@ -75,6 +76,7 @@ git-sync-requirements:
 	rsync -az --delete tmp/debian/debian .
 	rsync -az --delete tmp/macumba/macumba .
 	rsync -az --delete tmp/maasclient/maasclient .
+	rm -rf tmp
 
 git_rev:
 	@echo $(GIT_REV)

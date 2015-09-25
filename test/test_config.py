@@ -63,10 +63,11 @@ def parse_opts(argv):
 class TestGoodConfig(unittest.TestCase):
 
     def setUp(self):
-        self._temp_conf = Config(GOOD_CONFIG)
+        self._temp_conf = Config(GOOD_CONFIG, save_backups=False)
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
-            self.conf = Config(self._temp_conf._config, tempf.name)
+            self.conf = Config(self._temp_conf._config, tempf.name,
+                               save_backups=False)
 
     def test_save_openstack_password(self):
         """ Save openstack password to config """
@@ -181,10 +182,11 @@ class TestGoodConfig(unittest.TestCase):
 class TestBadConfig(unittest.TestCase):
 
     def setUp(self):
-        self._temp_conf = Config(BAD_CONFIG)
+        self._temp_conf = Config(BAD_CONFIG, save_backups=False)
         with NamedTemporaryFile(mode='w+', encoding='utf-8') as tempf:
             # Override config file to save to
-            self.conf = Config(self._temp_conf._config, tempf.name)
+            self.conf = Config(self._temp_conf._config, tempf.name,
+                               save_backups=False)
 
     def test_no_openstack_password(self):
         """ No openstack password defined """
