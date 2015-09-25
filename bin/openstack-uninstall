@@ -36,8 +36,14 @@ case $WHAT in
   Single)
     echo Single install path.
     echo "Destroying $CONTAINER_NAME"
-    lxc-stop -n $CONTAINER_NAME || true
-    lxc-destroy -n $CONTAINER_NAME || true
+    CONTAINER_BACKEND=$(openstack-config topcontainer_backend)
+    if [ "$CONTAINER_BACKEND" = "lxc" ]; then
+	lxc-stop -n $CONTAINER_NAME || true
+	lxc-destroy -n $CONTAINER_NAME || true
+    else
+	lxc delete $CONTAINER_NAME || true
+    fi
+
     if [ -n "$CONTAINER_NETWORK" ]; then
         echo "Deleting $CONTAINER_NETWORK"
         ip route del $CONTAINER_NETWORK || true

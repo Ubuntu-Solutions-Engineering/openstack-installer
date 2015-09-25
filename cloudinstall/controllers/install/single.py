@@ -15,6 +15,7 @@
 
 """ Single Install Controller """
 
+import glob
 from ipaddress import IPv4Network
 import logging
 import os
@@ -24,7 +25,7 @@ import platform
 import shutil
 from subprocess import call, check_call, check_output, STDOUT
 from cloudinstall import async, utils, netutils
-from cloudinstall.api.container import (Container,
+from cloudinstall.api.container import (LXCContainer, LXDContainer,
                                         NoContainerIPException,
                                         ContainerRunException)
 
@@ -46,9 +47,12 @@ class SingleInstall:
         self.progress_output = ""
         username = utils.install_user()
         self.container_name = 'openstack-single-{}'.format(username)
-        self.container_path = '/var/lib/lxc'
-        self.container_abspath = os.path.join(self.container_path,
-                                              self.container_name)
+
+        if self.config.getopt("topcontainer_type") == 'lxd':
+            self.cdriver = LXDContainer
+        else:
+            self.cdriver = LXCContainer
+
         self.userdata = os.path.join(
             self.config.cfg_path, 'userdata.yaml')
 
@@ -97,7 +101,8 @@ class SingleInstall:
         for opt in ['apt_proxy', 'apt_https_proxy', 'http_proxy',
                     'https_proxy', 'no_proxy',
                     'image_metadata_url', 'tools_metadata_url',
-                    'apt_mirror', 'next_charms']:
+                    'apt_mirror', 'next_charms',
+                    'topcontainer_type']:
             val = self.config.getopt(opt)
             if val:
                 render_parts[opt] = val
@@ -136,7 +141,7 @@ class SingleInstall:
         to avoid overlapping with IPs used for Neutron.
         """
         lxc_net_template = utils.load_template('lxc-net')
-        lxc_net_container_filename = os.path.join(self.container_abspath,
+        lxc_net_container_filename = os.path.join(self.cdriver.container_root,
                                                   'rootfs/etc/default/lxc-net')
 
         network = netutils.get_unique_lxc_network()
@@ -162,7 +167,7 @@ class SingleInstall:
         """ Adds static route to host system
         """
         # Store container IP in config
-        ip = Container.ip(self.container_name)
+        ip = self.cdriver.ip(self.container_name)
         self.config.setopt('container_ip', ip)
 
         log.info("Adding static route for {} via {}".format(lxc_net,
@@ -179,46 +184,46 @@ class SingleInstall:
         """
         self.tasker.start_task("Creating Container",
                                self.read_container_status)
-        Container.create(self.container_name, self.userdata)
+        self.cdriver.create(self.container_name, self.userdata)
 
-        with open(os.path.join(self.container_abspath, 'fstab'), 'w') as f:
-            f.write("{0} {1} none bind,create=dir\n".format(
-                self.config.cfg_path,
-                'home/ubuntu/.cloud-install'))
-            f.write("/var/cache/lxc var/cache/lxc none bind,create=dir\n")
-            # Detect additional charm plugins and make available to the
-            # container.
-            charm_plugin_dir = self.config.getopt('charm_plugin_dir')
-            if charm_plugin_dir \
-               and self.config.cfg_path not in charm_plugin_dir:
-                plug_dir = os.path.abspath(
-                    self.config.getopt('charm_plugin_dir'))
-                plug_base = os.path.basename(plug_dir)
-                f.write("{d} home/ubuntu/{m} "
-                        "none bind,create=dir\n".format(d=plug_dir,
-                                                        m=plug_base))
+        mounts = [(self.config.cfg_path, 'home/ubuntu/.cloud-install', "dir")]
+        topcontainer_type = self.config.getopt("topcontainer_type")
+        if topcontainer_type == 'lxc':
+            mounts += [("/var/cache/lxc", "var/cache/lxc", "dir")]
+        elif topcontainer_type == 'lxd':
+            mounts += [("/dev/kvm", "dev/kvm", "file"),
+                       ("/dev/net", "dev/net", "dir")]
+        else:
+            raise Exception("Uknown container type " + topcontainer_type)
 
-            extra_mounts = os.getenv("EXTRA_BIND_DIRS", None)
-            if extra_mounts:
-                for d in extra_mounts.split(','):
-                    mountpoint = os.path.basename(d)
-                    f.write("{d} home/ubuntu/{m} "
-                            "none bind,create=dir\n".format(d=d,
-                                                            m=mountpoint))
+        charm_plugin_dir = self.config.getopt('charm_plugin_dir')
+        if charm_plugin_dir \
+           and self.config.cfg_path not in charm_plugin_dir:
+            plug_dir = os.path.abspath(self.config.getopt('charm_plugin_dir'))
+            plug_base = os.path.basename(plug_dir)
+            mounts.append((plug_dir, "home/ubuntu/{}".format(plug_base), "dir"))
 
-        # update container config
-        with open(os.path.join(self.container_abspath, 'config'), 'a') as f:
-            f.write("lxc.mount.auto = cgroup:mixed\n"
-                    "lxc.start.auto = 1\n"
-                    "lxc.start.delay = 5\n"
-                    "lxc.mount = {}/fstab\n".format(self.container_abspath))
+        extra_mounts = os.getenv("EXTRA_BIND_DIRS", None)
+        if extra_mounts:
+            for d in extra_mounts.split(','):
+                mountpoint = os.path.basename(d)
+                mounts.append((d, "home/ubuntu/" + mountpoint, "dir"))
+
+        mount_configs = self.cdriver.add_bind_mounts(self.container_name,
+                                                     mounts)
+
+        cfgs = ['lxc.mount.auto = cgroup:mixed',
+                'lxc.start.auto = 1',
+                'lxc.start.delay = 5'] + mount_configs
+
+        self.cdriver.add_config_entries(self.container_name, cfgs)
 
         lxc_logfile = os.path.join(self.config.cfg_path, 'lxc.log')
 
-        Container.start(self.container_name, lxc_logfile)
+        self.cdriver.start(self.container_name, lxc_logfile)
 
-        Container.wait_checked(self.container_name,
-                               lxc_logfile)
+        self.cdriver.wait_checked(self.container_name,
+                                  lxc_logfile)
 
         self.tasker.start_task("Initializing Container",
                                self.read_cloud_init_output)
@@ -231,35 +236,37 @@ class SingleInstall:
         # control over ordering
         log.debug("Container started, cloud-init done.")
 
-        lxc_network = self.write_lxc_net_config()
         # for wily+ hosts and containers, restart the preexisting
         # lxc-net to pick up our config:
         if platform.linux_distribution()[2][0] >= 'w':
             Container.run(self.container_name,
                           "systemctl restart lxc-net")
-        self.add_static_route(lxc_network)
+
+        if self.config.getopt("topcontainer_type") == 'lxc':
+            lxc_network = self.write_lxc_net_config()
+            self.add_static_route(lxc_network)
+        else:
+            log.info("Ignoring static route for now, TODO")
 
         self.tasker.start_task("Installing Dependencies",
                                self.read_progress_output)
         log.debug("Installing openstack & openstack-single directly, "
                   "and juju-local, libvirt-bin and lxc via deps")
-        Container.run(self.container_name,
-                      "env DEBIAN_FRONTEND=noninteractive apt-get -qy "
-                      "-o Dpkg::Options::=--force-confdef "
-                      "-o Dpkg::Options::=--force-confold "
-                      "install openstack openstack-single ",
-                      output_cb=self.set_progress_output)
+        self.cdriver.run(self.container_name,
+                         "sudo DEBIAN_FRONTEND=noninteractive apt-get -qy "
+                         "-o Dpkg::Options::=--force-confdef "
+                         "-o Dpkg::Options::=--force-confold "
+                         "install openstack openstack-single ",
+                         output_cb=self.set_progress_output)
         log.debug("done installing deps")
 
     def read_container_status(self):
-        return check_output("lxc-info -n {} -s "
-                            "|| true".format(self.container_name),
-                            shell=True, stderr=STDOUT).decode('utf-8')
+        return self.cdriver.get_status(self.container_name)
 
     def read_cloud_init_output(self):
         try:
-            s = Container.run(self.container_name, 'tail -n 10 '
-                              '/var/log/cloud-init-output.log')
+            s = self.cdriver.run(self.container_name, 'tail -n 10 '
+                                 '/var/log/cloud-init-output.log')
             return s.replace('\r', '')
         except Exception:
             return "Waiting..."
@@ -272,9 +279,9 @@ class SingleInstall:
 
     def read_juju_log(self):
         try:
-            return Container.run(self.container_name, 'tail -n 10 '
-                                 '/var/log/juju-ubuntu-local'
-                                 '/all-machines.log')
+            return self.cdriver.run(self.container_name, 'tail -n 10 '
+                                    '/var/log/juju-ubuntu-local'
+                                    '/all-machines.log')
         except Exception:
             return "Waiting..."
 
@@ -292,7 +299,7 @@ class SingleInstall:
         """
         cmd = 'sudo cat /run/cloud-init/result.json'
         try:
-            result_json = Container.run(self.container_name, cmd)
+            result_json = self.cdriver.run(self.container_name, cmd)
 
         except NoContainerIPException as e:
             log.debug("Container has no IPs according to lxc-info. "
@@ -343,16 +350,16 @@ class SingleInstall:
         log.info('Found upstream deb, installing that instead')
         filename = os.path.basename(self.config.getopt('upstream_deb'))
         try:
-            Container.run(
+            self.cdriver.run(
                 self.container_name,
-                'dpkg -i /home/ubuntu/.cloud-install/{}'.format(
+                'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
                     filename),
                 output_cb=self.set_progress_output)
         except:
             # Make sure deps are installed if any new ones introduced by
             # the upstream packaging.
-            Container.run(
-                self.container_name, 'apt-get install -qyf',
+            self.cdriver.run(
+                self.container_name, 'sudo apt-get install -qyf',
                 output_cb=self.set_progress_output)
 
     def set_perms(self):
@@ -432,7 +439,7 @@ class SingleInstall:
 
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
-        if os.path.exists(self.container_abspath):
+        if self.cdriver.exists(self.container_name):
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 
@@ -457,9 +464,11 @@ class SingleInstall:
         self.create_container_and_wait()
 
         # Copy over host ssh keys
-        Container.cp(self.container_name,
-                     os.path.join(utils.install_home(), '.ssh/id_rsa*'),
-                     '.ssh/.')
+        for fname in glob.glob(os.path.join(utils.install_home(),
+                                            '.ssh/id_rsa*')):
+            base_fname = os.path.basename(fname)
+            self.cdriver.cp(self.container_name, fname,
+                            '/home/ubuntu/.ssh/' + base_fname)
 
         # Install local copy of openstack installer if provided
         if upstream_deb:
@@ -480,16 +489,17 @@ class SingleInstall:
             self.config.update_environments_yaml(
                 key='no-proxy',
                 val='{},localhost,{}'.format(
-                    Container.ip(self.container_name),
+                    self.cdriver.ip(self.container_name),
                     netutils.get_ip_set(lxc_net)))
 
         # start the party
         self.tasker.start_task("Bootstrapping Juju",
                                self.read_progress_output)
-        Container.run(self.container_name,
-                      "{0} juju --debug bootstrap".format(
-                          self.config.juju_home(use_expansion=True)),
-                      use_ssh=True, output_cb=self.set_progress_output)
+
+        self.cdriver.run(self.container_name,
+                         "{0} juju --debug bootstrap".format(
+                             self.config.juju_home(use_expansion=True)),
+                         use_ssh=True, output_cb=self.set_progress_output)
 
         trace = os.getenv("TRACE_JUJU", None)
         if trace:
@@ -499,15 +509,15 @@ class SingleInstall:
                               self.config.juju_home(use_expansion=True)),
                           use_ssh=True, output_cb=self.set_progress_output)
 
-        cloud_status_bin = ['openstack-status']
-        Container.run(
-            self.container_name,
-            "{0} juju status".format(
-                self.config.juju_home(use_expansion=True)),
-            use_ssh=True)
+        self.cdriver.run(self.container_name,
+                         "{0} juju status".format(
+                             self.config.juju_home(use_expansion=True)),
+                         use_ssh=True)
+
         self.tasker.stop_current_task()
 
         self.display_controller.status_info_message(
             "Starting cloud deployment")
-        Container.run_status(
-            self.container_name, " ".join(cloud_status_bin), self.config)
+
+        self.cdriver.run_status(
+            self.container_name, "openstack-status", self.config)

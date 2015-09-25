@@ -24,6 +24,8 @@ import os
 import logging
 import uuid
 from functools import partial
+from subprocess import check_output, CalledProcessError
+
 from cloudinstall.log import setup_logger
 import cloudinstall.utils as utils
 from cloudinstall.gui import PegasusGUI, InstallHeader
@@ -121,6 +123,11 @@ def parse_options(argv):
                         default=False,
                         help="Enable LXD support for Nova Compute. Requires"
                         "--series vivid to be set.")
+    parser.add_argument('--topcontainer-type', dest='topcontainer_type',
+                        choices=['lxc', 'lxd'], default='lxc',
+                        help="Which container backend to use to create the "
+                        "top-level container for single installs. Does not "
+                        "affect multi install or containers created by juju.")
     # TODO: currently only works for single installs. Use
     # SHOW_JUJU_LOGS=1 in the env to enable. See github issue #421
     # parser.add_argument('--show-logs', action='store_true',
@@ -189,6 +196,20 @@ if __name__ == '__main__':
     if opts.use_nclxd and opts.ubuntu_series[0] < 'v':
         print("You must pass --series vivid or higher in order to use nclxd.")
         sys.exit(1)
+
+    if opts.topcontainer_type == 'lxd':
+        try:
+            lxc_version = check_output("dpkg -s lxc | grep Version "
+                                       " | cut -f 2 -d \' \'",
+                                       shell=True).decode()
+        except CalledProcessError as e:
+            print("Error checking lxc library version: {}"
+                  "\n{}".format(e, e.output))
+            sys.exit(1)
+        if lxc_version < "1.1.0":
+            print("Use of LXD requires lxc version 1.1 or later. "
+                  "You have {}.".format(lxc_version))
+            sys.exit(1)
 
     try:
         setup_logger(headless=cfg.getopt('headless'))
