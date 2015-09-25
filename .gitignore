@@ -25,3 +25,4 @@ debian/*debhelper.log
 debian/openstack-landscape
 debian/openstack-multi
 debian/openstack-single
+debian/cloud-install*
