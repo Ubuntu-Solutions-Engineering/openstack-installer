@@ -131,6 +131,10 @@ def parse_options(argv):
                         "pairs separated by spaces. "
                         "e.g. \"arch=amd64 tags=foo\". Also limits MAAS "
                         "machines used for service placement.")
+    parser.add_argument('--force', dest='force', action="store_true",
+                        default=False,
+                        help="Ignores any prompting, e.g. with --uninstall. "
+                        "Use with caution.")
     parser.add_argument(
         '--version', action='version', version='%(prog)s {}'.format(version))
     return parser.parse_args(argv)
@@ -139,16 +143,23 @@ if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
     cfg = Config(utils.populate_config(opts))
     if 'uninstall' in opts:
-        msg = ("Warning:\n\nThis will uninstall OpenStack and "
-               "make a best effort to return the system back "
-               "to its original state.")
-        print(msg)
-        yn = input("Proceed? [y/N] ")
-
-        if "y" in yn or "Y" in yn:
+        def clean():
             print("Restoring system to last known state.")
             os.execl('/usr/bin/openstack-uninstall', '')
+
+        if opts.force:
+            clean()
         else:
+            msg = ("Warning:\n\nThis will uninstall OpenStack and "
+                   "make a best effort to return the system back "
+                   "to its original state.")
+            print(msg)
+            yn = input("Proceed? [y/N] ")
+
+        if "y" in yn or "Y" in yn:
+            clean()
+
+        if "n" in yn or "N" in yn:
             print("Uninstall cancelled.")
             sys.exit(1)
 
