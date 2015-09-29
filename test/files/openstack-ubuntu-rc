@@ -1,0 +1,5 @@
+export OS_USERNAME=admin
+export OS_PASSWORD=pass
+export OS_TENANT_NAME=ubuntu
+export OS_AUTH_URL=http://10.0.10.99:5000/v2.0
+export OS_REGION_NAME=RegionOne
