@@ -2,12 +2,6 @@ language: python
 sudo: false
 python:
   - "3.4"
-  - "3.5"
-  - "nightly"
-matrix:
-  allow_failures:
-    - python: 3.5
-    - python: "nightly"
 notifications:
   email: false
   irc:
