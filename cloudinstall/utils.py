@@ -81,11 +81,6 @@ class UtilsException(Exception):
 
 
 def cleanup(cfg):
-    chown(cfg.cfg_path,
-          install_user(),
-          install_user(),
-          recursive=True)
-
     # Save latest config object
     log.info("Cleanup, saving latest config object.")
     cfg.save()
