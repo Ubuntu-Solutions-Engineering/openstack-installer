@@ -2,6 +2,7 @@ language: python
 sudo: false
 python:
   - "3.4"
+  - "3.5"
 notifications:
   email: false
   irc:
@@ -14,4 +15,7 @@ notifications:
 install:
   - travis_retry pip install tox
 script:
-  - travis_retry tox
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then travis_retry tox -e py34; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then travis_retry tox -e py35; fi
+  - travis_retry tox -e flake
+  - travis_retry tox -e pep8

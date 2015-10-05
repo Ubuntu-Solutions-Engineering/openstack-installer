@@ -43,6 +43,7 @@ import shutil
 import json
 import yaml
 import requests
+from urllib.parse import urlparse
 
 log = logging.getLogger('cloudinstall.utils')
 
@@ -769,3 +770,24 @@ def download_url(url, output_file):
     else:
         raise UtilsException("Exception downloading {}:{}".format(
             url, res.content))
+
+
+def parse_openstack_creds(creds_file):
+    """ Parses openstack-{admin,ubuntu}-rc for openstack
+    credentials
+    """
+    rc = slurp(creds_file)
+    r = re.compile(
+        "export OS_USERNAME=(?P<username>.*)\n.*"
+        "export OS_PASSWORD=(?P<password>.*)\n.*"
+        "export OS_TENANT_NAME=(?P<tenantName>.*)\n.*"
+        "export OS_AUTH_URL=(?P<authUrl>.*)\n.*"
+        "export OS_REGION_NAME=(?P<region>.*)", re.I | re.M)
+    m = r.match(rc)
+    return {
+        'username': m.group('username'),
+        'password': m.group('password'),
+        'tenant_name': m.group('tenantName'),
+        'auth_url': urlparse(m.group('authUrl')),
+        'region_name': m.group('region')
+    }
