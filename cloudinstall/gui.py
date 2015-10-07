@@ -193,8 +193,9 @@ class ServicesView(ScrollableWidgetWrap):
         elif unit.agent_state == "down":
             status = Color.error_icon(Text("\N{DOWNWARDS BLACK ARROW} "))
         else:
-            # shouldn't get here
-            status = "? "
+            # NOTE: Should not get here, if we do make sure we account
+            # for that error type above.
+            status = Color.error_icon(Text(unit.agent_state))
         node_cols.append(('pack', status))
         node_cols.append(('pack', Text(status_txt)))
         if unit.public_address:
