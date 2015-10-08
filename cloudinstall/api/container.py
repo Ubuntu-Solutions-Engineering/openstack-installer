@@ -503,6 +503,7 @@ class LXDContainer:
                 raise Exception("Container config already has userdata")
 
             cfgyaml['config']['user.user-data'] = "".join(uf.readlines())
+            cfgyaml['config']['security.privileged'] = True
 
         with tempfile.NamedTemporaryFile(delete=False) as cfgtmp:
             cfgtmp.write(yaml.dump(cfgyaml).encode())
