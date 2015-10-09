@@ -20,6 +20,7 @@ from ipaddress import IPv4Network
 import logging
 import os
 import json
+from tempfile import NamedTemporaryFile
 import time
 import platform
 import shutil
@@ -141,8 +142,6 @@ class SingleInstall:
         to avoid overlapping with IPs used for Neutron.
         """
         lxc_net_template = utils.load_template('lxc-net')
-        lxc_net_container_filename = os.path.join(self.cdriver.container_root,
-                                                  'rootfs/etc/default/lxc-net')
 
         network = netutils.get_unique_lxc_network()
         self.config.setopt('lxc_network', network)
@@ -159,7 +158,18 @@ class SingleInstall:
         lxc_net = lxc_net_template.render(render_parts)
         name = self.container_name
         log.info("Writing lxc-net config for {}".format(name))
-        utils.spew(lxc_net_container_filename, lxc_net)
+        ctype = self.config.getopt('topcontainer_type')
+        if ctype == 'lxc':
+            lxc_net_filename = os.path.join(self.cdriver.container_root,
+                                            'rootfs/etc/default/lxc-net')
+            utils.spew(lxc_net_filename, lxc_net)
+        elif ctype == 'lxd':
+            with NamedTemporaryFile() as lxcnettmp:
+                lxcnettmp.write(lxc_net.encode())
+                lxcnettmp.flush()
+                self.cdriver.cp(self.container_name,
+                                lxcnettmp.name,
+                                '/etc/default/lxc-net')
 
         return network
 
@@ -201,7 +211,8 @@ class SingleInstall:
            and self.config.cfg_path not in charm_plugin_dir:
             plug_dir = os.path.abspath(self.config.getopt('charm_plugin_dir'))
             plug_base = os.path.basename(plug_dir)
-            mounts.append((plug_dir, "home/ubuntu/{}".format(plug_base), "dir"))
+            mounts.append((plug_dir, "home/ubuntu/{}".format(plug_base),
+                           "dir"))
 
         extra_mounts = os.getenv("EXTRA_BIND_DIRS", None)
         if extra_mounts:
