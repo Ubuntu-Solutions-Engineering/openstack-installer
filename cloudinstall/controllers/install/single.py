@@ -242,11 +242,8 @@ class SingleInstall:
             Container.run(self.container_name,
                           "systemctl restart lxc-net")
 
-        if self.config.getopt("topcontainer_type") == 'lxc':
-            lxc_network = self.write_lxc_net_config()
-            self.add_static_route(lxc_network)
-        else:
-            log.info("Ignoring static route for now, TODO")
+        lxc_network = self.write_lxc_net_config()
+        self.add_static_route(lxc_network)
 
         self.tasker.start_task("Installing Dependencies",
                                self.read_progress_output)
