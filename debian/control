@@ -5,11 +5,11 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-python,
                pep8,
-               pyflakes,
                python,
+               python3,
+               pyflakes,
                python-setuptools,
                python-tox,
-               python3,
                python3-bson,
                python3-coverage,
                python3-jinja2,
@@ -56,8 +56,8 @@ Depends: gawk,
          ${misc:Depends},
          ${python3:Depends},
          ${python:Depends}
-Breaks: cloud-install (<< 0.99)
-Replaces: cloud-install (<< 0.99)
+Breaks: cloud-installer (<< 0.99)
+Replaces: cloud-installer (<< 0.99)
 Description: Ubuntu Openstack Installer
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -67,9 +67,16 @@ Description: Ubuntu Openstack Installer
  This package provides the common libraries utilized by the installer
  profiles.
 
+Package: cloud-installer
+Section: metapackages
+Architecture: all
+Depends: openstack, ${misc:Depends}
+Description: transitional dummy package for multi
+  This is a transitional dummy package for multi. It can safely be removed.
+
 Package: openstack-multi
 Architecture: all
-Depends: juju-core, lxc, openstack, qemu-kvm, virtinst, vlan, ${misc:Depends}
+Depends: openstack, juju-core, lxc, qemu-kvm, virtinst, vlan, ${misc:Depends}
 Breaks: cloud-install-multi (<< 0.99)
 Replaces: cloud-install-multi (<< 0.99)
 Description: Ubuntu Openstack Installer (multi-system) - dependency package
@@ -81,6 +88,7 @@ Description: Ubuntu Openstack Installer (multi-system) - dependency package
  This package provides the multi installer profile.
 
 Package: cloud-install-multi
+Section: metapackages
 Architecture: all
 Depends: openstack, openstack-multi, ${misc:Depends}
 Description: transitional dummy package for multi
@@ -88,7 +96,7 @@ Description: transitional dummy package for multi
 
 Package: openstack-single
 Architecture: all
-Depends: juju-local, juju-local-kvm, openstack, ${misc:Depends}
+Depends: openstack, juju-local, juju-local-kvm, ${misc:Depends}
 Breaks: cloud-install-single (<< 0.99)
 Replaces: cloud-install-single (<< 0.99)
 Description: Ubuntu Openstack Installer (single-system) - dependency package
@@ -100,6 +108,7 @@ Description: Ubuntu Openstack Installer (single-system) - dependency package
  This package provides the single installer profile.
 
 Package: cloud-install-single
+Section: metapackages
 Architecture: all
 Depends: openstack, openstack-single, ${misc:Depends}
 Description: transitional dummy package for single install
@@ -107,7 +116,7 @@ Description: transitional dummy package for single install
 
 Package: openstack-landscape
 Architecture: all
-Depends: juju-deployer, openstack, ${misc:Depends}
+Depends: openstack, juju-deployer, ${misc:Depends}
 Breaks: cloud-install-landscape (<< 0.99)
 Replaces: cloud-install-landscape (<< 0.99)
 Description: Ubuntu Openstack Installer (landscape) - dependency package
@@ -119,6 +128,7 @@ Description: Ubuntu Openstack Installer (landscape) - dependency package
  This package provides the landscape installer profile.
 
 Package: cloud-install-landscape
+Section: metapackages
 Architecture: all
 Depends: openstack, openstack-landscape, ${misc:Depends}
 Description: transitional dummy package for landscape
