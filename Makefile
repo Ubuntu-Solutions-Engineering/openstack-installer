@@ -45,7 +45,7 @@ deb-src: clean update_version
 deb-release:
 	@dpkg-buildpackage -S -sd $(DPKGBUILDARGS)
 
-deb: clean update_version man-pages tarball
+deb: clean update_version man-pages
 	@dpkg-buildpackage -b $(DPKGBUILDARGS)
 
 man-pages:
