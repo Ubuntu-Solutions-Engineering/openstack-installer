@@ -6,16 +6,11 @@ TOPDIR              := $(shell basename `pwd`)
 GIT_REV		    := $(shell git log --oneline -n1| cut -d" " -f1)
 VERSION             := $(shell ./tools/version)
 UPSTREAM_DEB        := https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git
-UPSTREAM_DEB_COMMIT := 406949
+UPSTREAM_DEB_COMMIT := 4eca059
 UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.git
 UPSTREAM_MACUMBA_COMMIT := 5674861
 UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
 UPSTREAM_MAASCLIENT_COMMIT := 357db23
-
-$(NAME)_$(VERSION).orig.tar.gz: clean
-	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude='.tox*'
-
-tarball: $(NAME)_$(VERSION).orig.tar.gz
 
 .PHONY: install-dependencies
 install-dependencies:

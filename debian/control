@@ -5,8 +5,8 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-python,
                pep8,
-               python,
-               python3,
+               python-all,
+               python3-all,
                pyflakes,
                python-setuptools,
                python-tox,
@@ -68,11 +68,11 @@ Description: Ubuntu Openstack Installer
  profiles.
 
 Package: cloud-installer
-Section: metapackages
+Section: oldlibs
 Architecture: all
 Depends: openstack, ${misc:Depends}
 Description: transitional dummy package for multi
-  This is a transitional dummy package for multi. It can safely be removed.
+ This is a transitional dummy package for multi. It can safely be removed.
 
 Package: openstack-multi
 Architecture: all
@@ -88,11 +88,11 @@ Description: Ubuntu Openstack Installer (multi-system) - dependency package
  This package provides the multi installer profile.
 
 Package: cloud-install-multi
-Section: metapackages
+Section: oldlibs
 Architecture: all
 Depends: openstack, openstack-multi, ${misc:Depends}
 Description: transitional dummy package for multi
-  This is a transitional dummy package for multi. It can safely be removed.
+ This is a transitional dummy package for multi. It can safely be removed.
 
 Package: openstack-single
 Architecture: all
@@ -108,11 +108,11 @@ Description: Ubuntu Openstack Installer (single-system) - dependency package
  This package provides the single installer profile.
 
 Package: cloud-install-single
-Section: metapackages
+Section: oldlibs
 Architecture: all
 Depends: openstack, openstack-single, ${misc:Depends}
 Description: transitional dummy package for single install
-  This is a transitional dummy package for single. It can safely be removed.
+ This is a transitional dummy package for single. It can safely be removed.
 
 Package: openstack-landscape
 Architecture: all
@@ -128,8 +128,8 @@ Description: Ubuntu Openstack Installer (landscape) - dependency package
  This package provides the landscape installer profile.
 
 Package: cloud-install-landscape
-Section: metapackages
+Section: oldlibs
 Architecture: all
 Depends: openstack, openstack-landscape, ${misc:Depends}
 Description: transitional dummy package for landscape
-  This is a transitional dummy package for landscape. It can safely be removed.
+ This is a transitional dummy package for landscape. It can safely be removed.
