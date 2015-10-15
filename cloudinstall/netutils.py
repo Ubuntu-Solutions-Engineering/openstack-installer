@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from ipaddress import IPv4Interface, ip_address
+from ipaddress import IPv4Interface, ip_address, IPv6Address
 from netaddr import IPSet
 import re
 from subprocess import check_output
@@ -176,3 +176,14 @@ def ip_range_max(network, exclude):
         return ip_range(network)
 
     return ip_address(current[0]), ip_address(current[-1])
+
+
+def is_ipv6(ip):
+    """ Determines if address is IPv6
+    """
+    try:
+        IPv6Address(ip)
+        return True
+    except:
+        return False
+    return False

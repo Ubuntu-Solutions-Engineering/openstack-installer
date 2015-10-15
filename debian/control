@@ -6,10 +6,10 @@ Build-Depends: debhelper (>= 9),
                dh-python,
                pep8,
                pyflakes,
-               python,
+               python-all,
                python-setuptools,
                python-tox,
-               python3,
+               python3-all,
                python3-bson,
                python3-coverage,
                python3-jinja2,
@@ -56,8 +56,8 @@ Depends: gawk,
          ${misc:Depends},
          ${python3:Depends},
          ${python:Depends}
-Breaks: cloud-install (<< 0.99)
-Replaces: cloud-install (<< 0.99)
+Breaks: cloud-installer (<< 0.99)
+Replaces: cloud-installer (<< 0.99)
 Description: Ubuntu Openstack Installer
  Ubuntu OpenStack Installer provides an extremely simple way to
  install, deploy and scale an OpenStack cloud on top of Ubuntu server
@@ -66,6 +66,13 @@ Description: Ubuntu Openstack Installer
  .
  This package provides the common libraries utilized by the installer
  profiles.
+
+Package: cloud-installer
+Section: oldlibs
+Architecture: all
+Depends: openstack, ${misc:Depends}
+Description: transitional dummy package for multi
+ This is a transitional dummy package for multi. It can safely be removed.
 
 Package: openstack-multi
 Architecture: all
@@ -81,10 +88,11 @@ Description: Ubuntu Openstack Installer (multi-system) - dependency package
  This package provides the multi installer profile.
 
 Package: cloud-install-multi
+Section: oldlibs
 Architecture: all
 Depends: openstack, openstack-multi, ${misc:Depends}
 Description: transitional dummy package for multi
-  This is a transitional dummy package for multi. It can safely be removed.
+ This is a transitional dummy package for multi. It can safely be removed.
 
 Package: openstack-single
 Architecture: all
@@ -100,10 +108,11 @@ Description: Ubuntu Openstack Installer (single-system) - dependency package
  This package provides the single installer profile.
 
 Package: cloud-install-single
+Section: oldlibs
 Architecture: all
 Depends: openstack, openstack-single, ${misc:Depends}
 Description: transitional dummy package for single install
-  This is a transitional dummy package for single. It can safely be removed.
+ This is a transitional dummy package for single. It can safely be removed.
 
 Package: openstack-landscape
 Architecture: all
@@ -119,7 +128,8 @@ Description: Ubuntu Openstack Installer (landscape) - dependency package
  This package provides the landscape installer profile.
 
 Package: cloud-install-landscape
+Section: oldlibs
 Architecture: all
 Depends: openstack, openstack-landscape, ${misc:Depends}
 Description: transitional dummy package for landscape
-  This is a transitional dummy package for landscape. It can safely be removed.
+ This is a transitional dummy package for landscape. It can safely be removed.

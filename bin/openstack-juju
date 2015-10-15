@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env python3
+# -*- mode: python; -*-
 #
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -15,11 +16,37 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# FIXME: Convert to python so we can pull from config object.
-if [ -f ~/.cloud-install/juju/environments.yaml ]; then
-  JUJU_HOME=~/.cloud-install/juju juju switch openstack >>/dev/null
-  JUJU_HOME=~/.cloud-install/juju exec juju $@
-else
-  echo -e "Unable to find a proper OpenStack Juju environment.\n\nPlease run 'sudo openstack-install' to begin."
-  exit 1
-fi
+import sys
+import os
+import argparse
+import cloudinstall.utils as utils
+from cloudinstall.config import Config
+from cloudinstall.api.container import Container
+
+CFG_FILE = os.path.join(utils.install_home(),
+                        '.cloud-install/config.yaml')
+
+if __name__ == '__main__':
+    if not os.path.isfile(CFG_FILE):
+        sys.stderr.write("No existing config file found.\n")
+        sys.exit(1)
+    opts = argparse.Namespace(config_file=CFG_FILE)
+    cfg = Config(utils.populate_config(opts))
+    args = " ".join(sys.argv[1:])
+    if cfg.is_single():
+        name = cfg.getopt("container_name")
+        if "ssh" in args:
+            os.system("sudo lxc-attach -n {} -- "
+                      "su ubuntu -c '{} juju {}'".format(
+                          name, cfg.juju_home(True), args))
+        cmd = ("su ubuntu -c 'JUJU_HOME=~/.cloud-install/juju "
+               "juju {}'".format(args))
+        out = Container.run(name, cmd, use_sudo=True)
+        print(out)
+    else:
+        cmd = ("{} juju {}".format(cfg.juju_home(True), args))
+        if "ssh" in args:
+            os.system(cmd)
+        else:
+            out = utils.get_command_output(cmd)
+            print(out['output'])

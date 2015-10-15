@@ -136,7 +136,7 @@ def get_landscape_host():
     juju = yaml.load(out['output'])
 
     try:
-        return juju['services']['apache2']['units']['apache2/0']['public-address']
+        return juju['services']['haproxy']['units']['haproxy/0']['public-address']
     except KeyError:
         raise Exception("Landscape not found!")
 

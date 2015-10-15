@@ -21,12 +21,14 @@ import logging
 import unittest
 from unittest.mock import patch
 
-from cloudinstall.netutils import get_unique_lxc_network
+from cloudinstall.netutils import get_unique_lxc_network, is_ipv6
 
 log = logging.getLogger('cloudinstall.test_netutils')
 
 
 class NetUtilsTestCase(unittest.TestCase):
+    ipv6 = "2001:470:1f07:cd:216:3eff:fee6:e2da"
+    ipv4 = "192.168.1.1"
 
     @patch('cloudinstall.netutils.check_output')
     def test_get_unique_lxc_network(self, mock_check_output):
@@ -41,3 +43,13 @@ class NetUtilsTestCase(unittest.TestCase):
         mock_check_output.side_effect = ['1', '2', '3', '']
         s = get_unique_lxc_network()
         self.assertEqual(s, "10.0.9.0/24")
+
+    def test_is_ipv6(self):
+        """ Should be an ipv6 address
+        """
+        self.assertTrue(is_ipv6(self.ipv6))
+
+    def test_is_no_ipv6(self):
+        """ Should not be ip6 address
+        """
+        self.assertFalse(is_ipv6(self.ipv4))

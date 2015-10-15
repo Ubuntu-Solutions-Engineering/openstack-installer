@@ -16,6 +16,7 @@
 import os
 import logging
 from cloudinstall import utils
+from cloudinstall.netutils import is_ipv6
 from cloudinstall.charms import CharmBase
 
 log = logging.getLogger('cloudinstall.charms.controller')
@@ -48,6 +49,10 @@ class CharmNovaCloudController(CharmBase):
         k_svc = self.juju_state.service('keystone')
         keystone = k_svc.unit('keystone')
         openstack_password = self.config.getopt('openstack_password')
+        public_address = keystone.public_address
+        if is_ipv6(public_address):
+            public_address = "[%s]".format(public_address)
+            log.debug("Found ipv6 address, {}".format(public_address))
 
         if unit.machine_id == '-1':
             return True
@@ -55,7 +60,7 @@ class CharmNovaCloudController(CharmBase):
         for u in ['admin', 'ubuntu']:
             env = self._openstack_env(u,
                                       openstack_password,
-                                      u, keystone.public_address)
+                                      u, public_address)
             self._openstack_env_save(u, env)
             utils.remote_cp(
                 unit.machine_id,
@@ -82,7 +87,7 @@ class CharmNovaCloudController(CharmBase):
         err = utils.remote_run(
             unit.machine_id,
             cmds="/tmp/nova-controller-setup.sh "
-            "{p} {install_type}".format(
+            "\"{p}\" \"{install_type}\"".format(
                 p=openstack_password,
                 install_type=self.config.getopt('install_type')),
             juju_home=self.config.juju_home(use_expansion=True))

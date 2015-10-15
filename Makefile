@@ -6,16 +6,11 @@ TOPDIR              := $(shell basename `pwd`)
 GIT_REV		    := $(shell git log --oneline -n1| cut -d" " -f1)
 VERSION             := $(shell ./tools/version)
 UPSTREAM_DEB        := https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git
-UPSTREAM_DEB_COMMIT := 5617e59
+UPSTREAM_DEB_COMMIT := 4eca059
 UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.git
 UPSTREAM_MACUMBA_COMMIT := 5674861
 UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
 UPSTREAM_MAASCLIENT_COMMIT := 357db23
-
-$(NAME)_$(VERSION).orig.tar.gz: clean
-	cd .. && tar czf $(NAME)_$(VERSION).orig.tar.gz $(TOPDIR) --exclude-vcs --exclude='.tox*'
-
-tarball: $(NAME)_$(VERSION).orig.tar.gz
 
 .PHONY: install-dependencies
 install-dependencies:
@@ -36,6 +31,7 @@ clean:
 	@-debian/rules clean
 	@rm -rf debian/cloud-install*
 	@rm -rf docs/_build/*
+	@rm -rf mockcfgpath
 	@rm -rf ../openstack_*.deb ../cloud-*.deb ../openstack_*.tar.gz ../openstack_*.dsc ../openstack_*.changes \
 		../openstack_*.build ../openstack-*.deb ../openstack_*.upload ../cloud-install-*.deb
 	@rm -rf cover
@@ -49,13 +45,14 @@ deb-src: clean update_version
 deb-release:
 	@dpkg-buildpackage -S -sd $(DPKGBUILDARGS)
 
-deb: clean update_version man-pages tarball
+deb: clean update_version man-pages
 	@dpkg-buildpackage -b $(DPKGBUILDARGS)
 
 man-pages:
 	@pandoc -s docs/openstack-juju.rst -t man -o man/en/openstack-juju.1
 	@pandoc -s docs/openstack-status.rst -t man -o man/en/openstack-status.1
 	@pandoc -s docs/openstack-install.rst -t man -o man/en/openstack-install.1
+	@pandoc -s docs/openstack-uninstall.rst -t man -o man/en/openstack-uninstall.1
 	@pandoc -s docs/openstack-config.md -t man -o man/en/openstack-config.5
 
 current_version:
