@@ -52,6 +52,7 @@ man-pages:
 	@pandoc -s docs/openstack-juju.rst -t man -o man/en/openstack-juju.1
 	@pandoc -s docs/openstack-status.rst -t man -o man/en/openstack-status.1
 	@pandoc -s docs/openstack-install.rst -t man -o man/en/openstack-install.1
+	@pandoc -s docs/openstack-uninstall.rst -t man -o man/en/openstack-uninstall.1
 	@pandoc -s docs/openstack-config.md -t man -o man/en/openstack-config.5
 
 current_version:
