@@ -337,8 +337,7 @@ def apt_install(pkgs):
            "-o Dpkg::Options::=--force-confold "
            "install {0}".format(pkgs))
     try:
-        ret = check_call(cmd, stdout=DEVNULL, stderr=DEVNULL, shell=True)
-        log.debug(ret)
+        check_call(cmd, stdout=DEVNULL, stderr=DEVNULL, shell=True)
     except CalledProcessError as e:
         log.error("Problem with package install: {0}".format(e))
         pass
