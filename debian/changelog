@@ -1,3 +1,9 @@
+openstack (1.0.0) wily; urgency=medium
+
+  * Start development towards 1.0.0
+
+ -- Adam Stokes <adam.stokes@ubuntu>  Tue, 20 Oct 2015 08:38:47 -0400
+
 openstack (0.99.23) wily; urgency=medium
 
   * Support nclxd
