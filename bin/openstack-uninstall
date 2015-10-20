@@ -12,7 +12,7 @@ apt_purge() {
 
 CFG_HOME=$(openstack-config cfg_path)
 case $WHAT in
-  "Landscape OpenStack Autopilot")
+  "OpenStack Autopilot")
     echo Landscape OpenStack Autopilot environment
     JUJU_HOME="$CFG_HOME/juju" juju destroy-environment --yes --force maas || exit 1
     ;;
