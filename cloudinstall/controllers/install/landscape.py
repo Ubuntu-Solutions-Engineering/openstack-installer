@@ -53,9 +53,9 @@ class LandscapeInstall:
         maas_apikey = creds['maas_apikey'].value
         self.config.setopt('landscapecreds', dict(admin_name=admin_name,
                                                   admin_email=admin_email,
-                                                  system_email=system_email,
-                                                  maas_server=maas_server,
-                                                  maas_apikey=maas_apikey))
+                                                  system_email=system_email))
+        self.config.setopt('maascreds', dict(maas_server=maas_server,
+                                             maas_apikey=maas_apikey))
 
         # Validate
         if not maas_server:
