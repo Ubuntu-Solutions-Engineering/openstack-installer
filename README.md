@@ -3,7 +3,7 @@
 
 ### Documenation
 
-[View the Guides](http://openstack.astokes.org/guides/start)
+[View the Documentation](https://wiki.ubuntu.com/OpenStack/Installer)
 
 ## Support
 
@@ -21,7 +21,7 @@ Please make sure to read our [CONTRIBUTING](https://github.com/Ubuntu-Solutions-
 
 ## Developers
 
-* [Read the developers guide](http://openstack.astokes.org/guides/developer-setup)
+* [Read the developers guide](https://wiki.ubuntu.com/OpenStack/Installer/developer-setup)
 
 For further discussions of code development of the installer please join our IRC channel.
 
@@ -29,8 +29,8 @@ IRC: **freenode.net** in channel **#ubuntu-solutions**
 
 ## Users
 
-* [Single Installer guide](http://openstack.astokes.org/guides/single-install)
-* [Multi Installer guide](http://openstack.astokes.org/guides/multi-install)
+* [Single Installer guide](https://help.ubuntu.com/lts/clouddocs/installer/en/single-install.html)
+* [Multi Installer guide](https://help.ubuntu.com/lts/clouddocs/installer/en/multi-install.html)
 * [Landscape OpenStack Autopilot Guide](http://www.ubuntu.com/download/cloud/install-ubuntu-openstack)
 
 # Copyright
