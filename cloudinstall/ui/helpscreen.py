@@ -27,9 +27,8 @@ class HelpScreen(WidgetWrap):
             Text("OpenStack Installer - Help \u21C5 Scroll (ESC) Close",
                  align="center"),
             Divider('-', 1, 1),
-            Text("""
-For full documentation, please refer to http://openstack.astokes.org/guides
-            """),
+            Text("For full documentation, please refer to "
+                 "https://help.ubuntu.com/lts/clouddocs/installer/"),
             Color.header_title(Text("Overview")),
             Divider('-'),
             Text("""
