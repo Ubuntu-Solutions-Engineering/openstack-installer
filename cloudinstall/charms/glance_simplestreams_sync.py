@@ -16,7 +16,7 @@
 import glob
 import logging
 import os
-import platform
+# import platform
 import requests
 import shutil
 import subprocess
@@ -29,7 +29,10 @@ CHARM_STABLE_URL = ("https://api.github.com/repos/Ubuntu-Solutions-Engineering"
                     "/glance-simplestreams-sync-charm/tarball/stable")
 
 # Not necessarily required to match because we're local, but easy enough to get
-CURRENT_DISTRO = platform.linux_distribution()[-1]
+# FIXME: Wily containers won't start under Trusty KVM host because of systemd
+# https://launchpad.net/bugs/1347020
+# CURRENT_DISTRO = platform.linux_distribution()[-1]
+CURRENT_DISTRO = "trusty"
 CHARMS_DIR = os.path.expanduser("~/.cloud-install/local-charms")
 
 log = logging.getLogger(__name__)
