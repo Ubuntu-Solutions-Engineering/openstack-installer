@@ -20,6 +20,7 @@ import logging
 import os
 import json
 import time
+import platform
 import shutil
 from subprocess import call, check_call, check_output, STDOUT
 
@@ -229,6 +230,11 @@ class SingleInstall:
         log.debug("Container started, cloud-init done.")
 
         lxc_network = self.write_lxc_net_config()
+        # for wily+ hosts and containers, restart the preexisting
+        # lxc-net to pick up our config:
+        if platform.linux_distribution()[2][0] >= 'w':
+            Container.run(self.container_name,
+                          "systemctl restart lxc-net")
         self.add_static_route(lxc_network)
 
         self.tasker.start_task("Installing Dependencies",
