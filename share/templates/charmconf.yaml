@@ -60,28 +60,40 @@ https_proxy: '{{https_proxy}}'
 {%- endmacro %}
 
 ceilometer:
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 
 ceilometer-agent:
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 
 heat:
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 
 cinder:
   glance-api-version: 2
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
   block-device: /var/lib/cinder-sdb.img|5G
 {%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('cinder') }}"
 {%- endif %}
 
 ceph-radosgw:
+{%- if openstack_origin is defined %}
   source: {{openstack_origin}}
+{%- endif %}
   use-embedded-webserver: True
 
 ceph:
+{%- if openstack_origin is defined %}
   source: {{openstack_origin}}
+{%- endif %}
   fsid: 4df47d30-cbf3-45d9-a485-27996ab6998e
   monitor-secret: AQBilclUKG9RIRAAlFP9bohec06c+e7lfCRGrw==
 {%- if install_type == 'Single' %}
@@ -89,12 +101,16 @@ ceph:
 {%- endif %}
 
 ceph-osd:
+{%- if openstack_origin is defined %}
   source: {{openstack_origin}}
+{%- endif %}
   osd-devices: /dev/sdb
   osd-reformat: "yes"
 
 glance:
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 {%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
 {%- endif %}
@@ -111,7 +127,9 @@ juju-gui:
 keystone:
   admin-password: {{openstack_password}}
   admin-user: 'admin'
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 {%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
 {%- endif %}
@@ -131,7 +149,9 @@ neutron-openvswitch:
 neutron-api:
   l2-population: False
   neutron-security-groups: True
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 {%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
 {%- endif %}
@@ -142,7 +162,9 @@ nova-cloud-controller:
   {% if openstack_release[0] >= 'j' %}
   console-access-protocol: novnc
   {% endif %}
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 {%- if worker_multiplier is defined %}
   worker-multiplier: {{worker_multiplier}}
 {%- endif %}
@@ -151,20 +173,26 @@ nova-cloud-controller:
 {%- endif %}
 
 nova-compute:
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 {%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('nova') }}"
 {%- endif %}
 
 openstack-dashboard:
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 {%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_repo('horizon') }}"
 {%- endif %}
 
 neutron-gateway:
   instance-mtu: 1400
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 {%- if openstack_git_branch is defined %}
   openstack-origin-git: "{{ render_tip_neutron() }}"
 {%- endif %}
@@ -172,9 +200,13 @@ neutron-gateway:
 swift-proxy:
   zone-assignment: auto
   replicas: 3
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}
 
 swift-storage:
   zone: 1
   block-device: /etc/swift/storage.img|2G
+{%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
+{%- endif %}

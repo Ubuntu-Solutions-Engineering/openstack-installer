@@ -241,11 +241,17 @@ def render_charm_config(config):
     template_args['openstack_release'] = os_release
 
     ubuntu_series = config.getopt('ubuntu_series')
-    openstack_release = config.getopt('openstack_release')
-    openstack_origin = ("cloud:{}-{}".format(ubuntu_series,
-                                             openstack_release))
-
-    template_args['openstack_origin'] = openstack_origin
+    # Per the charm docs, the openstack charms support
+    # openstack-origin: cloud:series-release for a subset of possible
+    # combinations - in particular, precise-icehouse and
+    # trusty-{juno,kilo,liberty}. If you want to use another series,
+    # you don't get to pick the openstack release, you have to use the
+    # default, e.g. wily-liberty.
+    if ubuntu_series == "trusty":
+        openstack_release = config.getopt('openstack_release')
+        openstack_origin = ("cloud:{}-{}".format(ubuntu_series,
+                                                 openstack_release))
+        template_args['openstack_origin'] = openstack_origin
 
     if config.is_single():
         template_args['worker_multiplier'] = '1'
