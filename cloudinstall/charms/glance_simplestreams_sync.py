@@ -29,7 +29,9 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     display_name = 'Glance - Simplestreams Image Sync'
     display_priority = DisplayPriorities.Other
     related = [('keystone:identity-service',
-                'glance-simplestreams-sync:identity-service')]
+                'glance-simplestreams-sync:identity-service'),
+               ('rabbitmq-server:amqp',
+                'glance-simplestreams-sync:amqp')]
     is_core = True
     available_sources = ['charmstore', 'next']
 
