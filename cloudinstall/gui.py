@@ -22,7 +22,7 @@ from operator import attrgetter
 import random
 
 import urwid
-from urwid import (Text, Columns, Overlay, LineBox,
+from urwid import (Text, Columns, LineBox,
                    Filler, Frame, WidgetWrap, Button,
                    Pile, Divider)
 
@@ -34,8 +34,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              SelectorWithDescription,
                              PasswordInput,
                              MaasServerInput,
-                             LandscapeInput,
-                             InfoDialog)
+                             LandscapeInput)
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.ui.views import ErrorView
 from cloudinstall.ui.utils import Color, Padding
@@ -528,40 +527,6 @@ class PegasusGUI(WidgetWrap):
         key = self.key_conversion_map.get(key, key)
         return super().keypress(size, key)
 
-    def _build_overlay_widget(self,
-                              top_w,
-                              align,
-                              width,
-                              valign,
-                              height,
-                              min_width,
-                              min_height):
-        return Overlay(top_w=Filler(top_w),
-                       bottom_w=self.frame,
-                       align=align,
-                       width=width,
-                       valign=valign,
-                       height=height,
-                       min_width=width,
-                       min_height=height)
-
-    def show_widget_on_top(self,
-                           widget,
-                           width,
-                           height,
-                           align='center',
-                           valign='middle',
-                           min_height=0,
-                           min_width=0):
-        """Show `widget` on top of :attr:`frame`."""
-        self._w = self._build_overlay_widget(top_w=widget,
-                                             align=align,
-                                             width=width,
-                                             valign=valign,
-                                             height=height,
-                                             min_width=min_width,
-                                             min_height=min_height)
-
     def focus_next(self):
         if hasattr(self.frame.body, 'scroll_down'):
             self.frame.body.scroll_down()
@@ -578,10 +543,6 @@ class PegasusGUI(WidgetWrap):
         if hasattr(self.frame.body, 'scroll_bottom'):
             self.frame.body.scroll_bottom()
 
-    def hide_widget_on_top(self):
-        """Hide the topmost widget (if any)."""
-        self._w = self.frame
-
     def show_help_info(self):
         self.controller = self.frame.body
         self.frame.body = HelpScreen()
@@ -591,10 +552,6 @@ class PegasusGUI(WidgetWrap):
 
     def show_selector_with_desc(self, title, opts, cb):
         self.frame.body = SelectorWithDescription(title, opts, cb)
-
-    def show_fatal_error_message(self, msg, cb):
-        w = InfoDialog(msg, cb)
-        self.show_widget_on_top(w, width=50, height=20)
 
     def show_password_input(self, title, cb):
         self.frame.body = PasswordInput(title, cb)
