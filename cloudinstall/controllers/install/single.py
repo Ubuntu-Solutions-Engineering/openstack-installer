@@ -24,6 +24,7 @@ import platform
 import shutil
 from subprocess import call, check_call, check_output, STDOUT
 
+from cloudinstall.async import AsyncPool
 from cloudinstall import utils, netutils
 from cloudinstall.api.container import (Container,
                                         NoContainerIPException,
@@ -425,11 +426,7 @@ class SingleInstall:
         if self.config.getopt('headless'):
             self.do_install()
         else:
-            self.do_install_async()
-
-    @utils.async
-    def do_install_async(self):
-        self.do_install()
+            AsyncPool.submit(self.do_install)
 
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
