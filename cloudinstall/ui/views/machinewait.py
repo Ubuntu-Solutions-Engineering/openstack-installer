@@ -1,5 +1,4 @@
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -23,7 +22,7 @@ from urwid import (AttrMap, Button, Divider, Filler, Padding, Pile,
 from cloudinstall.maas import connect_to_maas, FakeMaasState, MaasMachineStatus
 from cloudinstall import utils
 
-log = logging.getLogger('cloudinstall.install')
+log = logging.getLogger('cloudinstall.machinewait')
 
 
 class MachineWaitView(WidgetWrap):

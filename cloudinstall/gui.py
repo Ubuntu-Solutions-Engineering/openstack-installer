@@ -36,10 +36,10 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              MaasServerInput,
                              LandscapeInput)
 from cloudinstall.alarms import AlarmMonitor
-from cloudinstall.ui.views import ErrorView
+from cloudinstall.ui.views import (ErrorView,
+                                   MachineWaitView)
 from cloudinstall.ui.utils import Color, Padding
 from cloudinstall.ui.helpscreen import HelpScreen
-from cloudinstall.machinewait import MachineWaitView
 from cloudinstall.placement.ui import PlacementView
 from cloudinstall.placement.ui.add_services_dialog import AddServicesDialog
 
