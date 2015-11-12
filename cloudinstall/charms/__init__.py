@@ -422,10 +422,6 @@ class CharmQueue:
 
         return valid_relations
 
-    @utils.async
-    def watch_relations_async(self):
-        self.watch_relations()
-
     def watch_relations(self):
         """ Setup charm relations
         """
@@ -464,10 +460,6 @@ class CharmQueue:
                               config=self.config)
             charms.append(charm)
         return charms
-
-    @utils.async
-    def watch_post_proc_async(self):
-        self.watch_post_proc()
 
     def watch_post_proc(self):
         for charm in self._charm_classes():

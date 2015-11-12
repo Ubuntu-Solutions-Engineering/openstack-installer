@@ -28,6 +28,7 @@ from cloudinstall.state import ControllerState
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
                                MaasMachineStatus)
+from cloudinstall.async import AsyncPool
 from cloudinstall.charms import CharmQueue
 from cloudinstall.log import PrettyLog
 from cloudinstall.placement.controller import (PlacementController,
@@ -92,8 +93,9 @@ class Controller:
             self.ui.render_node_install_wait(message="Waiting...")
             interval = self.config.node_install_wait_interval
         elif current_state == ControllerState.ADD_SERVICES:
-            self.ui.render_add_services_dialog(self.deploy_new_services,
-                                               self.cancel_add_services)
+            self.ui.render_add_services_dialog(
+                AsyncPool.submit(self.deploy_new_services),
+                self.cancel_add_services)
         elif current_state == ControllerState.SERVICES:
             self.update_node_states()
         else:
@@ -202,7 +204,7 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                self.begin_deployment_async()
+                AsyncPool.submit(self.begin_deployment)
             return
 
         if self.config.getopt('edit_placement') or \
@@ -213,7 +215,7 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                self.begin_deployment_async()
+                AsyncPool.submit(self.begin_deployment)
 
     def commit_placement(self):
         self.config.setopt('current_state', ControllerState.SERVICES.value)
@@ -223,13 +225,7 @@ class Controller:
         if self.config.getopt('headless'):
             self.begin_deployment()
         else:
-            self.begin_deployment_async()
-
-    @utils.async
-    def begin_deployment_async(self):
-        """ async deployment
-        """
-        self.begin_deployment()
+            AsyncPool.submit(self.begin_deployment)
 
     def begin_deployment(self):
         if self.config.is_multi():
@@ -575,8 +571,8 @@ class Controller:
             charm_q.watch_relations()
             charm_q.watch_post_proc()
         else:
-            charm_q.watch_relations_async()
-            charm_q.watch_post_proc_async()
+            AsyncPool.submit(charm_q.watch_relations)
+            AsyncPool.submit(charm_q.watch_post_proc)
         charm_q.is_running = True
 
         # Exit cleanly if we've finished all deploys, relations,
@@ -599,7 +595,6 @@ class Controller:
                                      self.maas_state, self.config)
         self.loop.redraw_screen()
 
-    @utils.async
     def deploy_new_services(self):
         """Deploys newly added services in background thread.
         Does not attempt to create new machines.

@@ -20,7 +20,7 @@ from urwid import (AttrMap, Button, Divider, Filler, Padding, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.maas import connect_to_maas, FakeMaasState, MaasMachineStatus
-from cloudinstall import utils
+from cloudinstall.async import AsyncPool
 
 log = logging.getLogger('cloudinstall.machinewait')
 
@@ -123,9 +123,8 @@ class MachineWaitView(WidgetWrap):
         # ensure that the button is always focused:
         self.main_pile.focus_position = len(self.main_pile.contents) - 1
 
-    @utils.async
     def do_continue(self, *args, **kwargs):
-        self.installer.do_install()
+        AsyncPool.submit(self.installer.do_install)
 
     def do_cancel(self, *args, **kwargs):
         raise SystemExit("Installation cancelled.")
