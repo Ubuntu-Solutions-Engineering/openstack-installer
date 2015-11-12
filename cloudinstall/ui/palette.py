@@ -88,6 +88,8 @@ STYLES = [
      Palette.light_red, ''),
     ('success_icon', '', '', '',
      Palette.light_green, ''),
+    ('column_header', '', '', '',
+     Palette.white, Palette.blue),
 
 
     # TODO: Update colors
