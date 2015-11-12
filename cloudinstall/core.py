@@ -274,38 +274,11 @@ class Controller:
                 for juju_machine_id in self.juju_m_idmap.values():
                     self.run_apt_go_fast(juju_machine_id)
 
-            if self.config.is_single():
-                self.set_unique_hostnames()
-
             self.deploy_using_placement()
             self.wait_for_deployed_services_ready()
             self.enqueue_deployed_charms()
         else:
             self.ui.status_info_message("Ready")
-
-    def set_unique_hostnames(self):
-        """checks for and ensures unique hostnames, so e.g. ceph can assume
-        that.
-
-        FIXME: Remove once http://pad.lv/1326091 is fixed
-        """
-        count = 0
-        for machine in self.juju_state.machines():
-            count += 1
-            hostname = machine.machine.get('InstanceId',
-                                           "ubuntu-{}".format(count))
-
-            log.debug("Setting hostname of {} to {}".format(machine,
-                                                            hostname))
-            juju_home = self.config.juju_home(use_expansion=True)
-            utils.remote_run(
-                machine.machine_id,
-                cmds="echo {} | sudo tee /etc/hostname".format(hostname),
-                juju_home=juju_home)
-            utils.remote_run(
-                machine.machine_id,
-                cmds="sudo hostname {}".format(hostname),
-                juju_home=juju_home)
 
     def all_maas_machines_ready(self):
         self.maas_state.invalidate_nodes_cache()
@@ -638,7 +611,6 @@ class Controller:
 
         self.deploy_using_placement()
         self.wait_for_deployed_services_ready()
-        self.set_unique_hostnames()
         self.enqueue_deployed_charms()
 
     def cancel_add_services(self):
