@@ -165,7 +165,7 @@ class ServicesView(WidgetWrap):
                                  status_oneline))
 
         if unit.is_horizon and unit.agent_state == "started":
-            self.unit_w.display_name.set_text(
+            unit_w.display_name.set_text(
                 "{} - Login: https://{}/horizon "
                 "l:{} p:{}".format(
                     charm_class.display_name,
@@ -174,7 +174,7 @@ class ServicesView(WidgetWrap):
                     self.config.getopt('openstack_password')))
 
         if unit.is_jujugui and unit.agent_state == "started":
-            self.unit_w.display_name.set_text(
+            unit_w.display_name.set_text(
                 "{} - Login: https://{}/ "
                 "l:{} p:{}".format(
                     charm_class.display_name,
