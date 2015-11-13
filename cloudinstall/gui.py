@@ -36,9 +36,9 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.ui.views import (ErrorView,
                                    ServicesView,
-                                   MachineWaitView)
+                                   MachineWaitView,
+                                   HelpView)
 from cloudinstall.ui.utils import Color, Padding
-from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.placement.ui import PlacementView
 from cloudinstall.placement.ui.add_services_dialog import AddServicesDialog
 
@@ -331,7 +331,7 @@ class PegasusGUI(WidgetWrap):
 
     def show_help_info(self):
         self.controller = self.frame.body
-        self.frame.body = HelpScreen()
+        self.frame.body = HelpView()
 
     def show_step_info(self, msg):
         self.frame.body = StepInfo(msg)

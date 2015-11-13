@@ -16,3 +16,4 @@
 from .error import ErrorView  # NOQA
 from .services import ServicesView  # NOQA
 from .machinewait import MachineWaitView  # noqa
+from .help import HelpView  # noqa
