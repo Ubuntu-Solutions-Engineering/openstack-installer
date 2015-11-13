@@ -5,11 +5,11 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-python,
                pep8,
-               pyflakes,
                python-all,
+               python3-all,
+               pyflakes,
                python-setuptools,
                python-tox,
-               python3-all,
                python3-bson,
                python3-coverage,
                python3-jinja2,
@@ -76,7 +76,7 @@ Description: transitional dummy package for multi
 
 Package: openstack-multi
 Architecture: all
-Depends: juju-core, lxc, openstack, qemu-kvm, virtinst, vlan, ${misc:Depends}
+Depends: openstack, juju-core, lxc, qemu-kvm, virtinst, vlan, ${misc:Depends}
 Breaks: cloud-install-multi (<< 0.99)
 Replaces: cloud-install-multi (<< 0.99)
 Description: Ubuntu Openstack Installer (multi-system) - dependency package
@@ -96,7 +96,7 @@ Description: transitional dummy package for multi
 
 Package: openstack-single
 Architecture: all
-Depends: juju-local, juju-local-kvm, openstack, ${misc:Depends}
+Depends: openstack, juju-local, juju-local-kvm, ${misc:Depends}
 Breaks: cloud-install-single (<< 0.99)
 Replaces: cloud-install-single (<< 0.99)
 Description: Ubuntu Openstack Installer (single-system) - dependency package
@@ -116,7 +116,7 @@ Description: transitional dummy package for single install
 
 Package: openstack-landscape
 Architecture: all
-Depends: juju-deployer, openstack, ${misc:Depends}
+Depends: openstack, juju-deployer, ${misc:Depends}
 Breaks: cloud-install-landscape (<< 0.99)
 Replaces: cloud-install-landscape (<< 0.99)
 Description: Ubuntu Openstack Installer (landscape) - dependency package
