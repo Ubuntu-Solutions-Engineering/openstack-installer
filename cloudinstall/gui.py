@@ -18,17 +18,15 @@
 from __future__ import unicode_literals
 import sys
 import logging
-from operator import attrgetter
 import random
 
 import urwid
-from urwid import (Text, Columns, LineBox,
+from urwid import (Text, Columns,
                    Filler, Frame, WidgetWrap, Button,
                    Pile, Divider)
 
 from cloudinstall.task import Tasker
 from cloudinstall import utils
-from cloudinstall.status import get_sync_status
 from cloudinstall.ui import (ScrollableWidgetWrap,
                              ScrollableListBox,
                              SelectorWithDescription,
@@ -37,6 +35,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              LandscapeInput)
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.ui.views import (ErrorView,
+                                   ServicesView,
                                    MachineWaitView)
 from cloudinstall.ui.utils import Color, Padding
 from cloudinstall.ui.helpscreen import HelpScreen
@@ -123,219 +122,6 @@ class NodeInstallWaitMode(WidgetWrap):
 
         return Filler(Pile(text + [loading_boxes]),
                       valign="middle")
-
-
-class ServicesView(ScrollableWidgetWrap):
-
-    def __init__(self, nodes, juju_state, maas_state, config, **kwargs):
-        nodes = [] if nodes is None else nodes
-        self.juju_state = juju_state
-        self.maas_state = maas_state
-        self.config = config
-        self.log_cache = None
-        super().__init__()
-        self.update(nodes)
-
-    def update(self, nodes, **kwargs):
-        self._w = self._build_widget(nodes, **kwargs)
-
-    def _build_widget(self, nodes, **kwargs):
-        unit_info = []
-        for node in nodes:
-            node_pile = []
-            node_cols = []
-            charm_class, service = node
-            if len(service.units) > 0:
-                for u in sorted(service.units, key=attrgetter('unit_name')):
-                    node_cols = self._build_node_columns(u, charm_class)
-                    node_pile.append(node_cols)
-
-                unit_info.append(Padding.center_96(LineBox(
-                    Pile(node_pile),
-                    title=charm_class.display_name,
-                    lline=' ',
-                    blcorner=' ',
-                    rline=' ',
-                    bline=' ',
-                    brcorner=' ')))
-
-        return ScrollableListBox(unit_info)
-
-    def _build_node_columns(self, unit, charm_class):
-        """ builds columns of node status """
-        node_cols = []
-
-        status_txt = "{:20}".format("[{}]".format(unit.agent_state))
-
-        # unit.agent_state may be "pending" despite errors elsewhere,
-        # so we check for error_info first.
-        # if the agent_state is "error", _detect_errors returns that.
-        error_info = self._detect_errors(unit, charm_class)
-
-        if error_info:
-            status = Color.error_icon(Text("\N{TETRAGRAM FOR FAILURE} "))
-            if unit.agent_state != "error":
-                status_txt = "{:20}".format("[{} (error)]"
-                                            "".format(unit.agent_state))
-        elif unit.agent_state == "pending":
-            pending_status = [Color.pending_icon(Text("\N{CIRCLED BULLET} ")),
-                              Color.pending_icon(
-                                  Text("\N{CIRCLED WHITE BULLET} ")),
-                              Color.pending_icon_on(Text("\N{FISHEYE} "))]
-            status = random.choice(pending_status)
-        elif unit.agent_state == "installed":
-            status = Color.pending_icon(Text("\N{HOURGLASS} "))
-        elif unit.agent_state == "started":
-            status = Color.success_icon(Text("\u2713 "))
-        elif unit.agent_state == "stopped":
-            status = Color.error_icon(Text("\N{BLACK FLAG} "))
-        elif unit.agent_state == "down":
-            status = Color.error_icon(Text("\N{DOWNWARDS BLACK ARROW} "))
-        else:
-            # NOTE: Should not get here, if we do make sure we account
-            # for that error type above.
-            status = Color.error_icon(Text(unit.agent_state))
-        node_cols.append(('pack', status))
-        node_cols.append(('pack', Text(status_txt)))
-        if unit.public_address:
-            node_cols.append(
-                ('pack',
-                 Text("{0:<12}".format(unit.public_address))))
-        elif error_info:
-            node_cols.append(('pack', Text("{:<12}".format("Error"))))
-        else:
-            node_cols.append(
-                ('pack',
-                 Text("{:<12}".format("IP Pending"))))
-
-        if error_info:
-            infos = [('pack', Text(" | {}".format(error_info)))]
-        else:
-            hw_text = Text([" | "] + self._get_hardware_info(unit))
-
-            if 'glance-simplestreams-sync' in unit.unit_name:
-                status_oneline = get_sync_status().replace("\n", " - ")
-                sync_text = Text('   ' + status_oneline)
-                infos = [hw_text, sync_text]
-            else:
-                infos = [hw_text]
-
-        if self.config.getopt('show_logs'):
-            log_text = Text([('label',
-                              self.get_log_text(unit.unit_name))])
-            infos.append(log_text)
-
-        node_cols.append(Pile(infos))
-
-        return Columns(node_cols)
-
-    def _get_hardware_info(self, unit):
-        """Get hardware info from juju or maas
-
-        Returns list of text and formatting tuples
-        """
-        juju_machine = self.juju_state.machine(unit.machine_id)
-        maas_machine = None
-        if self.maas_state:
-            maas_machine = self.maas_state.machine(juju_machine.instance_id)
-
-        m = juju_machine
-        if juju_machine.arch == "N/A":
-            if maas_machine:
-                m = maas_machine
-            else:
-                try:
-                    return self._get_container_info(unit)
-                except:
-                    log.exception(
-                        "failed to get container info for unit {}.".format(
-                            unit))
-
-        return ["Machine {}: ".format(juju_machine.machine_id)] \
-            + self._hardware_info_for_machine(m)
-
-    def _get_container_info(self, unit):
-        """Attempt to get hardware info of host machine for a unit that looks
-        like a container.
-
-        """
-        base_machine = self.juju_state.base_machine(unit.machine_id)
-
-        if base_machine.arch == "N/A" and self.maas_state is not None:
-            m = self.maas_state.machine(base_machine.instance_id)
-        else:
-            m = base_machine
-
-        # FIXME: Breaks single install status display
-        # base_id, container_type, container_id = unit.machine_id.split('/')
-        # ctypestr = dict(kvm="VM", lxc="Container")[container_type]
-
-        # rl = ["{} {} (Machine {}".format(ctypestr, container_id,
-        #                                  base_id)]
-        try:
-            container_id = unit.machine_id.split('/')[-1]
-        except:
-            log.exception("ERROR: base_machine is {} and m is {}, "
-                          "and unit.machine_id is {}".format(
-                              base_machine, m, unit.machine_id))
-            return "?"
-
-        base_id = base_machine.machine_id
-        rl = ["Container {} (Machine {}".format(container_id,
-                                                base_id)]
-
-        if m:
-            rl += [":  "] + self._hardware_info_for_machine(m) + [")"]
-        else:
-            rl += [")"]
-        return rl
-
-    def _hardware_info_for_machine(self, m):
-        return [('label', 'arch'), ' {}  '.format(m.arch),
-                ('label', 'cores'), ' {}  '.format(m.cpu_cores),
-                ('label', 'mem'), ' {}  '.format(m.mem),
-                ('label', 'storage'), ' {}'.format(m.storage)]
-
-    def _detect_errors(self, unit, charm_class):
-        """Look in multiple places for an error.
-
-        Return error info string if present,
-        or None if no error is found
-        """
-        unit_machine = self.juju_state.machine(unit.machine_id)
-
-        if unit.agent_state == "error":
-            return unit.agent_state_info.lstrip()
-
-        err_info = ""
-
-        if unit.agent_state == 'pending' and \
-           unit_machine.agent_state is '' and \
-           unit_machine.agent_state_info is not None:
-
-            # detect MAAS API errors, returned as 409 conflict:
-            if "409" in unit_machine.agent_state_info:
-                if charm_class.constraints is not None:
-                    err_info = "Found no machines meeting constraints: "
-                    err_info += ', '.join(["{}='{}'".format(k, v) for k, v
-                                           in charm_class.constraints.items()])
-                else:
-                    err_info += "No machines available for unit."
-            else:
-                err_info += unit_machine.agent_state_info
-            return err_info
-        return None
-
-    def get_log_text(self, unit_name):
-        name = '-'.join(unit_name.split('/'))
-        cmd = ("sudo grep {unit} /var/log/juju-ubuntu-local/all-machines.log "
-               " | tail -n 2")
-        cmd = cmd.format(unit=name)
-        out = utils.get_command_output(cmd)
-        if out['status'] == 0 and len(out['output']) > 0:
-            return out['output']
-        else:
-            return "No log matches for {}".format(name)
 
 
 class Header(WidgetWrap):
@@ -595,14 +381,10 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer = None
         self.frame.set_footer(self.frame.footer)
 
-    def render_services_view(self, nodes, juju_state, maas_state, config,
-                             **kwargs):
-        if self.services_view is None:
-            self.services_view = ServicesView(nodes, juju_state, maas_state,
-                                              config)
-
-        self.services_view.update(nodes)
-        self.frame.set_body(self.services_view)
+    def render_services_view(self, nodes, juju_state, maas_state, config):
+        self.services_view = ServicesView(nodes, juju_state, maas_state,
+                                          config)
+        self.frame.body = self.services_view
         self.header.set_show_add_units_hotkey(True)
         dc = config.getopt('deploy_complete')
         dcstr = "complete" if dc else "pending"
