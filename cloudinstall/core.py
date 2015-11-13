@@ -28,6 +28,7 @@ from cloudinstall.state import ControllerState
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
                                MaasMachineStatus)
+from cloudinstall.async import AsyncPool
 from cloudinstall.charms import CharmQueue
 from cloudinstall.log import PrettyLog
 from cloudinstall.placement.controller import (PlacementController,
@@ -92,8 +93,9 @@ class Controller:
             self.ui.render_node_install_wait(message="Waiting...")
             interval = self.config.node_install_wait_interval
         elif current_state == ControllerState.ADD_SERVICES:
-            self.ui.render_add_services_dialog(self.deploy_new_services,
-                                               self.cancel_add_services)
+            self.ui.render_add_services_dialog(
+                AsyncPool.submit(self.deploy_new_services),
+                self.cancel_add_services)
         elif current_state == ControllerState.SERVICES:
             self.update_node_states()
         else:
@@ -124,19 +126,15 @@ class Controller:
 
         self.nodes = list(zip(charm_classes, deployed_services))
 
-        for n in deployed_services:
-            for u in n.units:
-                if u.is_horizon and u.agent_state == "started":
-                    self.ui.set_dashboard_url(
-                        u.public_address, 'ubuntu',
-                        self.config.getopt('openstack_password'))
-                if u.is_jujugui and u.agent_state == "started":
-                    self.ui.set_jujugui_url(u.public_address)
         if len(self.nodes) == 0:
             return
         else:
-            self.ui.render_services_view(self.nodes, self.juju_state,
-                                         self.maas_state, self.config)
+            if not self.ui.services_view:
+                self.ui.render_services_view(
+                    self.nodes, self.juju_state,
+                    self.maas_state, self.config)
+            else:
+                self.ui.services_view.refresh_nodes(self.nodes)
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:
@@ -202,7 +200,7 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                self.begin_deployment_async()
+                AsyncPool.submit(self.begin_deployment)
             return
 
         if self.config.getopt('edit_placement') or \
@@ -213,7 +211,7 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                self.begin_deployment_async()
+                AsyncPool.submit(self.begin_deployment)
 
     def commit_placement(self):
         self.config.setopt('current_state', ControllerState.SERVICES.value)
@@ -223,13 +221,7 @@ class Controller:
         if self.config.getopt('headless'):
             self.begin_deployment()
         else:
-            self.begin_deployment_async()
-
-    @utils.async
-    def begin_deployment_async(self):
-        """ async deployment
-        """
-        self.begin_deployment()
+            AsyncPool.submit(self.begin_deployment)
 
     def begin_deployment(self):
         if self.config.is_multi():
@@ -274,38 +266,11 @@ class Controller:
                 for juju_machine_id in self.juju_m_idmap.values():
                     self.run_apt_go_fast(juju_machine_id)
 
-            if self.config.is_single():
-                self.set_unique_hostnames()
-
             self.deploy_using_placement()
             self.wait_for_deployed_services_ready()
             self.enqueue_deployed_charms()
         else:
             self.ui.status_info_message("Ready")
-
-    def set_unique_hostnames(self):
-        """checks for and ensures unique hostnames, so e.g. ceph can assume
-        that.
-
-        FIXME: Remove once http://pad.lv/1326091 is fixed
-        """
-        count = 0
-        for machine in self.juju_state.machines():
-            count += 1
-            hostname = machine.machine.get('InstanceId',
-                                           "ubuntu-{}".format(count))
-
-            log.debug("Setting hostname of {} to {}".format(machine,
-                                                            hostname))
-            juju_home = self.config.juju_home(use_expansion=True)
-            utils.remote_run(
-                machine.machine_id,
-                cmds="echo {} | sudo tee /etc/hostname".format(hostname),
-                juju_home=juju_home)
-            utils.remote_run(
-                machine.machine_id,
-                cmds="sudo hostname {}".format(hostname),
-                juju_home=juju_home)
 
     def all_maas_machines_ready(self):
         self.maas_state.invalidate_nodes_cache()
@@ -602,8 +567,8 @@ class Controller:
             charm_q.watch_relations()
             charm_q.watch_post_proc()
         else:
-            charm_q.watch_relations_async()
-            charm_q.watch_post_proc_async()
+            AsyncPool.submit(charm_q.watch_relations)
+            AsyncPool.submit(charm_q.watch_post_proc)
         charm_q.is_running = True
 
         # Exit cleanly if we've finished all deploys, relations,
@@ -626,7 +591,6 @@ class Controller:
                                      self.maas_state, self.config)
         self.loop.redraw_screen()
 
-    @utils.async
     def deploy_new_services(self):
         """Deploys newly added services in background thread.
         Does not attempt to create new machines.
@@ -638,7 +602,6 @@ class Controller:
 
         self.deploy_using_placement()
         self.wait_for_deployed_services_ready()
-        self.set_unique_hostnames()
         self.enqueue_deployed_charms()
 
     def cancel_add_services(self):

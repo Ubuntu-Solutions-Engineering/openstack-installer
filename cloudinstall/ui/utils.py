@@ -16,7 +16,7 @@
 """ UI utilities """
 
 from urwid import Padding as _Padding
-from urwid import AttrMap, Text
+from urwid import AttrMap, Text, Divider
 from functools import partialmethod
 from cloudinstall.ui.palette import STYLES
 
@@ -81,6 +81,7 @@ class Padding:
                                 "width of 10 columns"))
     """
     line_break = partialmethod(Text)
+    hr = partialmethod(Divider, "\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1)
 
 
 def apply_style_map(cls):

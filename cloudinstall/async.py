@@ -13,7 +13,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .error import ErrorView  # NOQA
-from .services import ServicesView  # NOQA
-from .machinewait import MachineWaitView  # noqa
-from .help import HelpView  # noqa
+""" Async Handler
+Provides async operations for various api calls and other non-blocking
+work.
+"""
+
+import logging
+from concurrent.futures import ThreadPoolExecutor
+log = logging.getLogger("cloudinstall.async")
+
+
+AsyncPool = ThreadPoolExecutor(1)
+log.debug('AsyncPool={}'.format(AsyncPool))

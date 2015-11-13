@@ -83,11 +83,13 @@ STYLES = [
     ('pending_icon_on', '', '', '',
      Palette.blue, ''),
     ('pending_icon', '', '', '',
-     Palette.dark_blue, ''),
+     Palette.blue, ''),
     ('error_icon', '', '', '',
      Palette.light_red, ''),
     ('success_icon', '', '', '',
      Palette.light_green, ''),
+    ('column_header', '', '', '',
+     Palette.white, Palette.blue),
 
 
     # TODO: Update colors

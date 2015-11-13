@@ -19,7 +19,7 @@ from cloudinstall.ui.lists import SimpleList
 from cloudinstall.ui.utils import Color, Padding
 
 
-class HelpScreen(WidgetWrap):
+class HelpView(WidgetWrap):
 
     def __init__(self):
         help_text = [
