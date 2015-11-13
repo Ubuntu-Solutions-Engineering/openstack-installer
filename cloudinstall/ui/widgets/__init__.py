@@ -14,4 +14,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from .machine import MachineWidget  # NOQA
+from .unit import UnitInfoWidget  # NOQA

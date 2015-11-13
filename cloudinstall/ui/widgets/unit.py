@@ -13,16 +13,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Machine widget, easily display hardware attributes
-and updates
+""" Unit info widget, attaches properties from unit/charm class to
+urwid Text widgets
 """
 import logging
 from urwid import WidgetWrap, Text
 
-log = logging.getLogger('cloudinstall.ui.widgets.machine')
+log = logging.getLogger('cloudinstall.ui.widgets.unit')
 
 
-class MachineWidget(WidgetWrap):
+class UnitInfoWidget(WidgetWrap):
     def __init__(self, unit, charm_class, hwinfo):
         self.unit = unit
         self.charm_class = charm_class

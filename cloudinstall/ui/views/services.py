@@ -16,11 +16,12 @@
 from __future__ import unicode_literals
 from operator import attrgetter
 import logging
+import random
 from urwid import (Text, Columns, WidgetWrap,
                    Pile, ListBox, Divider)
 from cloudinstall.status import get_sync_status
 from cloudinstall import utils
-from cloudinstall.ui.widgets import MachineWidget
+from cloudinstall.ui.widgets import UnitInfoWidget
 from cloudinstall.ui.utils import Color
 
 
@@ -90,7 +91,7 @@ class ServicesView(WidgetWrap):
         self.juju_state = juju_state
         self.maas_state = maas_state
         self.config = config
-        self.machine_w = None
+        self.unit_w = None
         self.log_cache = None
 
         for key, label in self.view_columns:
@@ -108,34 +109,63 @@ class ServicesView(WidgetWrap):
                 for u in sorted(service.units, key=attrgetter('unit_name')):
                     # Refresh any state changes
                     try:
-                        machine_w = self.deployed[u.unit_name]
+                        unit_w = self.deployed[u.unit_name]
                     except:
                         hwinfo = self._get_hardware_info(u)
-                        self.deployed[u.unit_name] = MachineWidget(u,
-                                                                   charm_class,
-                                                                   hwinfo)
-                        machine_w = self.deployed[u.unit_name]
+                        self.deployed[u.unit_name] = UnitInfoWidget(
+                            u,
+                            charm_class,
+                            hwinfo)
+                        unit_w = self.deployed[u.unit_name]
                         for k, label in self.view_columns:
-                            self.columns.add_to(k, getattr(machine_w, k))
+                            self.columns.add_to(k, getattr(unit_w, k))
 
                     self.update_ui_state(charm_class, u,
-                                         machine_w)
+                                         unit_w)
 
-    def update_ui_state(self, charm_class, unit, machine_w):
+    def status_icon_state(self, charm_class, unit):
+        # unit.agent_state may be "pending" despite errors elsewhere,
+        # so we check for error_info first.
+        # if the agent_state is "error", _detect_errors returns that.
+        error_info = self._detect_errors(unit, charm_class)
+
+        if error_info:
+            status = ("error_icon", "\N{TETRAGRAM FOR FAILURE}")
+        elif unit.agent_state == "pending":
+            pending_status = [("pending_icon", "\N{CIRCLED BULLET}"),
+                              ("pending_icon", "\N{CIRCLED WHITE BULLET}"),
+                              ("pending_icon", "\N{FISHEYE}")]
+            status = random.choice(pending_status)
+        elif unit.agent_state == "installed":
+            status = ("pending_icon", "\N{HOURGLASS}")
+        elif unit.agent_state == "started":
+            status = ("success_icon", "\u2713")
+        elif unit.agent_state == "stopped":
+            status = ("error_icon", "\N{BLACK FLAG}")
+        elif unit.agent_state == "down":
+            status = ("error_icon", "\N{DOWNWARDS BLACK ARROW}")
+        else:
+            # NOTE: Should not get here, if we do make sure we account
+            # for that error type above.
+            status = ("error_icon", "?")
+        return status
+
+    def update_ui_state(self, charm_class, unit, unit_w):
         """ Updates individual machine information
         """
-        machine_w.public_address.set_text(unit.public_address)
-        machine_w.agent_state.set_text(unit.agent_state)
+        unit_w.public_address.set_text(unit.public_address)
+        unit_w.agent_state.set_text(unit.agent_state)
+        unit_w.icon.set_text(self.status_icon_state(charm_class, unit))
 
         # Special additional status text for these services
         if 'glance-simplestreams-sync' in unit.unit_name:
             status_oneline = get_sync_status().replace("\n", " - ")
-            machine_w.display_name.set_text(
+            unit_w.display_name.set_text(
                 "{} ({})".format(charm_class.display_name,
                                  status_oneline))
 
         if unit.is_horizon and unit.agent_state == "started":
-            self.machine_w.display_name.set_text(
+            self.unit_w.display_name.set_text(
                 "{} - Login: https://{}/horizon "
                 "l:{} p:{}".format(
                     charm_class.display_name,
@@ -144,7 +174,7 @@ class ServicesView(WidgetWrap):
                     self.config.getopt('openstack_password')))
 
         if unit.is_jujugui and unit.agent_state == "started":
-            self.machine_w.display_name.set_text(
+            self.unit_w.display_name.set_text(
                 "{} - Login: https://{}/ "
                 "l:{} p:{}".format(
                     charm_class.display_name,
