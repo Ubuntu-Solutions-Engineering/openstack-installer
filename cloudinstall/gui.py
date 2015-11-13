@@ -174,7 +174,7 @@ class InstallHeader(WidgetWrap):
 
 class StatusBar(WidgetWrap):
 
-    """Displays text."""
+    """ Displays text in the footers status area."""
 
     INFO = "[INFO]"
     ERROR = "[ERROR]"
@@ -183,9 +183,6 @@ class StatusBar(WidgetWrap):
     def __init__(self, text=''):
         self._pending_deploys = Text('')
         self._status_line = Text(text, align="center")
-        self._horizon_url = Text('')
-        self._jujugui_url = Text('')
-        self._openstack_rel = Text('', align="right")
         self._status_extra = self._build_status_extra()
         status = Pile([self._pending_deploys,
                        self._status_extra])
@@ -194,30 +191,8 @@ class StatusBar(WidgetWrap):
     def _build_status_extra(self):
         return Color.frame_footer(
             Pile([
-                self._horizon_url,
-                self._jujugui_url,
-                self._openstack_rel,
                 self._status_line
             ]))
-
-    def set_dashboard_url(self, ip=None, user=None, password=None):
-        """ sets horizon dashboard url """
-        text = "Horizon: "
-        if not ip:
-            text += "(pending)"
-        else:
-            text += "https://{}/horizon l:{} p:{}".format(
-                ip, user, password)
-        return self._horizon_url.set_text(text)
-
-    def set_jujugui_url(self, ip=None):
-        """ sets juju gui url """
-        text = "{0:<21}".format("JujuGUI: ")
-        if not ip:
-            text += "(pending)"
-        else:
-            text += "https://{}/".format(ip)
-        return self._jujugui_url.set_text(text)
 
     def message(self, text):
         """Write `text` on the footer."""
