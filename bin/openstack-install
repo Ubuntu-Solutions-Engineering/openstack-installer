@@ -65,6 +65,10 @@ def parse_options(argv):
                         default=None,
                         help="with arg <key>, prints config value for 'key' "
                         "to stdout and exits.")
+    parser.add_argument('--install-type',
+                        dest='install_type', default="Single",
+                        choices=['Single', 'Multi', 'OpenStack Autopilot'],
+                        help="Specify install type")
     parser.add_argument('--openstack-release',
                         dest='openstack_release', default="kilo",
                         choices=['icehouse', 'juno', 'kilo', 'liberty'],
