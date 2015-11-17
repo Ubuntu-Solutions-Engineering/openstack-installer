@@ -264,7 +264,7 @@ class LandscapeInstallFinal:
     """ Final phase of landscape install
     """
     BUNDLE_URL = ("https://api.jujucharms.com/charmstore/v4/"
-                  "~landscape/bundle/landscape-dense-maas-14/"
+                  "~landscape/bundle/landscape-dense-maas/"
                   "archive/bundle.yaml")
 
     def __init__(self, multi_installer, display_controller,
