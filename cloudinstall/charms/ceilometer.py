@@ -25,7 +25,7 @@ class CharmCeilometer(CharmBase):
     """ Ceilometer directives """
 
     charm_name = 'ceilometer'
-    charm_rev = 9
+    charm_rev = 15
     display_name = 'Ceilometer'
     deploy_priority = 100
     contrib = True

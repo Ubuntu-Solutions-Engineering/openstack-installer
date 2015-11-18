@@ -27,7 +27,7 @@ class CharmNeutron(CharmBase):
     """ neutron directives """
 
     charm_name = 'neutron-gateway'
-    charm_rev = 5
+    charm_rev = 7
     display_name = 'Neutron'
     deploy_priority = 99
     related = [('mysql:shared-db', 'neutron-gateway:shared-db'),
