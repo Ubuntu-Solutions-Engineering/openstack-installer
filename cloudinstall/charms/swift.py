@@ -25,7 +25,7 @@ class CharmSwift(CharmBase):
     """ swift directives """
 
     charm_name = 'swift-storage'
-    charm_rev = 19
+    charm_rev = 23
     display_name = 'Swift'
     display_priority = DisplayPriorities.Storage
     related = [('swift-proxy:swift-storage', 'swift-storage:swift-storage')]

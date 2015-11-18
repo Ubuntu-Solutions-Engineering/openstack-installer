@@ -25,7 +25,7 @@ class CharmNovaCompute(CharmBase):
     """ Openstack Nova Compute directives """
 
     charm_name = 'nova-compute'
-    charm_rev = 26
+    charm_rev = 33
     display_name = 'Compute'
     display_priority = DisplayPriorities.Compute
     related = [('nova-compute:neutron-plugin',
