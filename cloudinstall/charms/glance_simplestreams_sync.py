@@ -25,7 +25,7 @@ class CharmGlanceSimplestreamsSync(CharmBase):
     """ Charm directives for glance-simplestreams-sync  """
 
     charm_name = 'glance-simplestreams-sync'
-    charm_rev = 3
+    charm_rev = 7
     display_name = 'Glance - Simplestreams Image Sync'
     display_priority = DisplayPriorities.Other
     related = [('keystone:identity-service',
