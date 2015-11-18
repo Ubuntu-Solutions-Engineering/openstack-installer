@@ -45,8 +45,9 @@ if [[ "$2" == "Single" ]]; then
 fi
 
 # configure security groups
-nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0 || true
-nova secgroup-add-rule default tcp 22 22 0.0.0.0/0 || true
+neutron security-group-rule-create --direction ingress --ethertype IPv4 --protocol icmp --remote-ip-prefix 0.0.0.0/0 default || true
+neutron security-group-rule-create --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 22 --port-range-max 22 --remote-ip-prefix 0.0.0.0/0 default || true
+
 
 # import key pair
 nova keypair-show ubuntu-keypair || nova keypair-add --pub-key /tmp/id_rsa.pub ubuntu-keypair
