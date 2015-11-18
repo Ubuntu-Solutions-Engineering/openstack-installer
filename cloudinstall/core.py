@@ -134,7 +134,7 @@ class Controller:
                     self.nodes, self.juju_state,
                     self.maas_state, self.config)
             else:
-                self.ui.services_view.refresh_nodes(self.nodes)
+                self.ui.refresh_services_view(self.nodes, self.config)
 
     def authenticate_juju(self):
         if not len(self.config.juju_env['state-servers']) > 0:

@@ -361,6 +361,13 @@ class PegasusGUI(WidgetWrap):
                                           config)
         self.frame.body = self.services_view
         self.header.set_show_add_units_hotkey(True)
+        self.update_phase_status(config)
+
+    def refresh_services_view(self, nodes, config):
+        self.services_view.refresh_nodes(nodes)
+        self.update_phase_status(config)
+
+    def update_phase_status(self, config):
         dc = config.getopt('deploy_complete')
         dcstr = "complete" if dc else "pending"
         rc = config.getopt('relations_complete')
