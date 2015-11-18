@@ -775,18 +775,26 @@ def parse_openstack_creds(creds_file):
     """ Parses openstack-{admin,ubuntu}-rc for openstack
     credentials
     """
+    def sanitize_quotes(key):
+        if key[0] == key[-1] and key[0] in ("'", '"'):
+            return key[1:-1]
+        else:
+            return key
+
+    cred_map = {}
     rc = slurp(creds_file)
-    r = re.compile(
-        "export OS_USERNAME=(?P<username>.*)\n.*"
-        "export OS_PASSWORD=(?P<password>.*)\n.*"
-        "export OS_TENANT_NAME=(?P<tenantName>.*)\n.*"
-        "export OS_AUTH_URL=(?P<authUrl>.*)\n.*"
-        "export OS_REGION_NAME=(?P<region>.*)", re.I | re.M)
-    m = r.match(rc)
-    return {
-        'username': m.group('username'),
-        'password': m.group('password'),
-        'tenant_name': m.group('tenantName'),
-        'auth_url': urlparse(m.group('authUrl')),
-        'region_name': m.group('region')
-    }
+    lines = rc.split("\n")
+    for k in lines:
+        first, rest = k.split("=")
+        first = first.lower()
+        if 'username' in first:
+            cred_map['username'] = sanitize_quotes(rest)
+        if 'password' in first:
+            cred_map['password'] = sanitize_quotes(rest)
+        if 'tenant_name' in first:
+            cred_map['tenant_name'] = sanitize_quotes(rest)
+        if 'auth_url' in first:
+            cred_map['auth_url'] = urlparse(sanitize_quotes(rest))
+        if 'region_name' in first:
+            cred_map['region_name'] = sanitize_quotes(rest)
+    return cred_map

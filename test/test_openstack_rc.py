@@ -23,6 +23,7 @@ log = logging.getLogger('cloudinstall.test_openstack_rc')
 USER_DIR = path.expanduser('~')
 DATA_DIR = path.join(path.dirname(__file__), 'files')
 ADMIN_RC = path.join(DATA_DIR, "openstack-admin-rc")
+ADMIN_RC_EXT = path.join(DATA_DIR, "openstack-admin-rc-extended")
 UBUNTU_RC = path.join(DATA_DIR, "openstack-ubuntu-rc")
 
 
@@ -31,21 +32,37 @@ class TestOpenstackRC(unittest.TestCase):
         """ read admin rc file
         """
         self.creds = utils.parse_openstack_creds(ADMIN_RC)
+        self.creds_with_quotes = utils.parse_openstack_creds(ADMIN_RC_EXT)
 
     def test_username(self):
         """ Test admin username
         """
         self.assertEqual(self.creds['username'], 'admin')
 
+    def test_username_quotes(self):
+        """ Test admin username in quotes
+        """
+        self.assertEqual(self.creds_with_quotes['username'], 'admin')
+
     def test_password(self):
         """ Test password parsed
         """
         self.assertEqual(self.creds['password'], 'pass')
 
+    def test_password_quotes(self):
+        """ Test password in quotes
+        """
+        self.assertEqual(self.creds_with_quotes['password'], 'pass')
+
     def test_tenant_name(self):
         """ Test tenant name is parsed
         """
         self.assertEqual(self.creds['tenant_name'], 'admin')
+
+    def test_tenant_name_quotes(self):
+        """ Test tenant name in quotes
+        """
+        self.assertEqual(self.creds_with_quotes['tenant_name'], 'admin')
 
     def test_auth_url(self):
         """ Test auth url is parsed
@@ -55,7 +72,20 @@ class TestOpenstackRC(unittest.TestCase):
         self.assertEqual(url.port, 5000)
         self.assertEqual(url.path, '/v2.0')
 
+    def test_auth_url_quotes(self):
+        """ Test auth url is parsed
+        """
+        url = self.creds_with_quotes['auth_url']
+        self.assertEqual(url.scheme, 'http')
+        self.assertEqual(url.port, 5000)
+        self.assertEqual(url.path, '/v2.0')
+
     def test_region_name(self):
         """ Test region name parsed
         """
         self.assertEqual(self.creds['region_name'], 'RegionOne')
+
+    def test_region_name_quotes(self):
+        """ Test region name parsed in quotes
+        """
+        self.assertEqual(self.creds_with_quotes['region_name'], 'RegionOne')
