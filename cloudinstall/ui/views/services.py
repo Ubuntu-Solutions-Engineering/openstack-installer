@@ -243,7 +243,7 @@ class ServicesView(WidgetWrap):
                 "cpu_cores": m.cpu_cores,
                 "mem": m.mem,
                 "storage": m.storage,
-                "container": 'x',
+                "container": '-',
                 "machine": 0}
 
     def _detect_errors(self, unit, charm_class):
