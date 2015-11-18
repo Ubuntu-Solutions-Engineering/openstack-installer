@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-
+from cloudinstall.utils import pollinate
 from .multi import (MultiInstall,
                     MultiInstallExistingMaas)
 
@@ -29,6 +29,9 @@ class LandscapeInstall:
         self.display_controller = display_controller
         self.loop = loop
         self.config.setopt('install_type', 'OpenStack Autopilot')
+
+        session_id = self.config.getopt('session_id')
+        pollinate(session_id, 'IL')
 
         self.landscape_tasks = ["Preparing Landscape",
                                 "Deploying Landscape",

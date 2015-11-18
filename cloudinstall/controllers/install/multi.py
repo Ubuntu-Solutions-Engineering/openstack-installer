@@ -52,6 +52,9 @@ class MultiInstall:
         if not self.config.is_landscape():
             self.config.setopt('install_type', 'Multi')
 
+        session_id = self.config.getopt('session_id')
+        utils.pollinate(session_id, 'IM')
+
     def set_perms(self):
         # Set permissions
         dirs = [self.config.cfg_path,
@@ -387,5 +390,8 @@ class LandscapeInstallFinal:
         if out['status']:
             log.error("Problem with configuring Landscape: {}.".format(out))
             raise Exception("Error configuring Landscape.")
+
+        session_id = self.config.getopt('session_id')
+        utils.pollinate(session_id, 'DL')
 
         return out['output'].strip()

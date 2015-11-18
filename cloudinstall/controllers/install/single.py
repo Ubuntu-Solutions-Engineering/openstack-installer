@@ -57,6 +57,9 @@ class SingleInstall:
         # Sets install type
         self.config.setopt('install_type', 'Single')
 
+        session_id = self.config.getopt('session_id')
+        utils.pollinate(session_id, 'IS')
+
     def setup_apt_proxy(self):
         "Use http_proxy unless apt_proxy is explicitly set"
         apt_proxy = self.config.getopt('apt_proxy')

@@ -67,6 +67,13 @@ class CharmNeutron(CharmBase):
             cmds="sudo /tmp/neutron-network.sh {}".format(
                 self.config.getopt('install_type')),
             juju_home=self.config.juju_home(use_expansion=True))
+
+        session_id = self.config.getopt('session_id')
+        if self.config.is_single():
+            utils.pollinate(session_id, 'DS')
+        elif self.config.is_multi():
+            utils.pollinate(session_id, 'DM')
+
         self.ui.status_info_message("Done.")
         return False
 
