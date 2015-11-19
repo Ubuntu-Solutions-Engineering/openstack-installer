@@ -93,9 +93,10 @@ class Controller:
             self.ui.render_node_install_wait(message="Waiting...")
             interval = self.config.node_install_wait_interval
         elif current_state == ControllerState.ADD_SERVICES:
-            self.ui.render_add_services_dialog(
+            def submit_deploy():
                 AsyncPool.submit(self.deploy_new_services),
-                self.cancel_add_services)
+            self.ui.render_add_services_dialog(
+                submit_deploy, self.cancel_add_services)
         elif current_state == ControllerState.SERVICES:
             self.update_node_states()
         else:
