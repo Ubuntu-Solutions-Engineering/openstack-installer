@@ -125,7 +125,7 @@ class JujuState:
         for m in self.machines():
             if m.machine_id == machine_id:
                 return m
-        return Machine(-1, {})
+        return Machine('-', {})
 
     def machines(self):
         """ Machines property
