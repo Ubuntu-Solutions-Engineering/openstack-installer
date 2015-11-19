@@ -175,8 +175,7 @@ class ServicesView(WidgetWrap):
 
         if unit.is_jujugui and unit.agent_state == "started":
             unit_w.display_name.set_text(
-                "{} - Login: https://{}/ "
-                "l:{} p:{}".format(
+                "{} - Login: https://{}/".format(
                     charm_class.display_name,
                     unit.public_address))
 

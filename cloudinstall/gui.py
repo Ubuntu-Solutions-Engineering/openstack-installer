@@ -343,12 +343,6 @@ class PegasusGUI(WidgetWrap):
         self.frame.footer.info_message(
             "{}\N{HORIZONTAL ELLIPSIS}".format(message))
 
-    def set_dashboard_url(self, ip, user, password):
-        self.frame.footer.set_dashboard_url(ip, user, password)
-
-    def set_jujugui_url(self, ip):
-        self.frame.footer.set_jujugui_url(ip)
-
     def set_openstack_rel(self, release):
         self.frame.header.set_openstack_rel(release)
 
