@@ -157,6 +157,17 @@ class ServicesView(WidgetWrap):
         unit_w.agent_state.set_text(unit.agent_state)
         unit_w.icon.set_text(self.status_icon_state(charm_class, unit))
 
+        extended_agent_state = unit.extended_agent_state
+        if len(extended_agent_state) > 0 and \
+           extended_agent_state != 'idle':
+            unit_w.display_name.set_text("{}: {} - {}".format(
+                charm_class.display_name,
+                extended_agent_state,
+                unit.workload_info))
+        else:
+            unit_w.display_name.set_text("{}".format(
+                charm_class.display_name))
+
         # Special additional status text for these services
         if 'glance-simplestreams-sync' in unit.unit_name:
             status_oneline = get_sync_status().replace("\n", " - ")

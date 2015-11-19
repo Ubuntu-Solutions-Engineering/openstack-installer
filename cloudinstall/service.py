@@ -46,6 +46,18 @@ class Unit:
         return self.unit.get('AgentState', 'unknown')
 
     @property
+    def workload_state(self):
+        return self.unit.get('Workload', {}).get('Status', '')
+
+    @property
+    def extended_agent_state(self):
+        return self.unit.get('UnitAgent', {}).get('Status', '')
+
+    @property
+    def workload_info(self):
+        return self.unit.get('Workload', {}).get('Info', '')
+    
+    @property
     def machine_id(self):
         """ Associate machine for unit
 
