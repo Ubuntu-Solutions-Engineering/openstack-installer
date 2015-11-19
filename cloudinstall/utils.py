@@ -771,6 +771,25 @@ def download_url(url, output_file):
             url, res.content))
 
 
+def pollinate(session, tag):
+    """ fetches random seed
+
+    :param str session: randomly generated session id
+    :param str tag: custom tag
+    """
+    if not os.path.isfile('/usr/bin/pollinate'):
+        return
+    if tag not in ['IL', 'IS', 'IM', 'DL', 'DM', 'DS']:
+        raise UtilsException("Unknown TAG {}".format(tag))
+    agent_str = 'uoi/{}/{}'.format(session, tag)
+    try:
+        check_call(['pollinate', '-q',
+                    '--curl-opts',
+                    '--user-agent {}'.format(agent_str)])
+    except CalledProcessError as e:
+        log.warning("Generating random seed failed: {}".format(e))
+
+
 def parse_openstack_creds(creds_file):
     """ Parses openstack-{admin,ubuntu}-rc for openstack
     credentials

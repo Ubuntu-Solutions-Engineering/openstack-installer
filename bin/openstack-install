@@ -22,6 +22,7 @@ import argparse
 import sys
 import os
 import logging
+import uuid
 from functools import partial
 from cloudinstall.log import setup_logger
 import cloudinstall.utils as utils
@@ -252,6 +253,7 @@ if __name__ == '__main__':
         os.environ['HTTPS_PROXY'] = cfg.getopt('https_proxy')
         os.environ['https_proxy'] = cfg.getopt('https_proxy')
 
+    cfg.setopt('session_id', str(uuid.uuid4()))
     # Choose event loop
     ev = EventLoop(ui, cfg, logger)
 
