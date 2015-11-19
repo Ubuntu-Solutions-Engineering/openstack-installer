@@ -782,7 +782,7 @@ def pollinate(session, tag):
     if tag not in ['IL', 'IS', 'IM', 'DL', 'DM', 'DS']:
         raise UtilsException("Unknown TAG {}".format(tag))
 
-    session = os.getenv('UOI_TEST', session)
+    session = os.getenv('OSI_TESTRUNNER_ID', session)
     agent_str = 'uoi/{}/{}'.format(session, tag)
     try:
         check_call(['pollinate', '-q',
