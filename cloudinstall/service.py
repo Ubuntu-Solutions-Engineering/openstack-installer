@@ -56,7 +56,7 @@ class Unit:
     @property
     def workload_info(self):
         return self.unit.get('Workload', {}).get('Info', '')
-    
+
     @property
     def machine_id(self):
         """ Associate machine for unit
