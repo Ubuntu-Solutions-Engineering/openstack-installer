@@ -20,7 +20,6 @@ from tornado.ioloop import IOLoop
 from cloudinstall.ui.palette import STYLES
 
 import logging
-import threading
 
 log = logging.getLogger('cloudinstall.ev')
 
@@ -41,9 +40,6 @@ class EventLoop:
 
         if not self.config.getopt('headless'):
             self.loop = self._build_loop()
-            self.loop.set_alarm_in(2, self.check_thread_exit_event)
-            self._loop_thread = threading.current_thread()
-            self._thread_exit_event = threading.Event()
 
     def register_callback(self, key, val):
         """ Registers some additional callbacks that didn't make sense
@@ -97,18 +93,7 @@ class EventLoop:
         if self.config.getopt('headless'):
             sys.exit(err)
 
-        if threading.current_thread() == self._loop_thread:
-            raise urwid.ExitMainLoop()
-        else:
-            self._thread_exit_event.set()
-            log.debug("{} exiting, deferred UI exit "
-                      "to main thread.".format(
-                          threading.current_thread().name))
-
-    def check_thread_exit_event(self, *args, **kwargs):
-        if self._thread_exit_event.is_set():
-            raise urwid.ExitMainLoop()
-        self.loop.set_alarm_in(2, self.check_thread_exit_event)
+        raise urwid.ExitMainLoop()
 
     def close(self):
         pass

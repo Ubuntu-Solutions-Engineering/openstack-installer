@@ -15,7 +15,6 @@
 
 import logging
 import time
-import sys
 
 from os import path, getenv
 
@@ -39,7 +38,6 @@ from macumba import Jobs as JujuJobs
 
 
 log = logging.getLogger('cloudinstall.core')
-sys.excepthook = utils.global_exchandler
 
 
 class FakeJujuState:
@@ -254,7 +252,6 @@ class Controller:
         elif self.config.is_single():
             self.add_machines_to_juju_single()
 
-        raise Exception("Shit couldnt start machines")
         # Quiet out some of the logging
         _previous_summary = None
         while not self.all_juju_machines_started():

@@ -28,12 +28,9 @@ import string
 import random
 import fnmatch
 import logging
-import traceback
 import urwid
 import itertools
 import configparser
-from threading import Thread
-from functools import wraps
 import time
 from importlib import import_module
 import pkgutil
@@ -49,31 +46,6 @@ log = logging.getLogger('cloudinstall.utils')
 
 # String with number of minutes, or None.
 blank_len = None
-
-
-def global_exchandler(type, value, tb):
-    """ helper routine capturing tracebacks and printing to log file """
-    tb_list = traceback.format_exception(type, value, tb)
-    log.debug("".join(tb_list))
-
-
-_async_exception_callback = None
-
-
-def register_async_exception_callback(cb):
-    global _async_exception_callback
-    _async_exception_callback = cb
-
-
-class ExceptionLoggingThread(Thread):
-
-    def run(self):
-        try:
-            super().run()
-        except Exception as e:
-            global_exchandler(*sys.exc_info())
-            if _async_exception_callback:
-                _async_exception_callback(e)
 
 
 class UtilsException(Exception):
@@ -304,18 +276,6 @@ def chown(path, user, group=None, recursive=False):
                     shutil.chown(os.path.join(root, item), user, group)
     except OSError as e:
         raise UtilsException(e)
-
-
-def async(func):
-    """
-    Decorator for executing a function in a separate thread.
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        thread = ExceptionLoggingThread(target=func, args=args, kwargs=kwargs)
-        thread.daemon = True
-        return thread.start()
-    return wrapper
 
 
 def ensure_locale():
