@@ -20,7 +20,7 @@ import sys
 from os import path, getenv
 
 from operator import attrgetter
-
+from tornado.gen import coroutine
 from cloudinstall.config import OPENSTACK_RELEASE_LABELS
 from cloudinstall import utils
 from cloudinstall.alarms import AlarmMonitor
@@ -153,6 +153,7 @@ class Controller:
         self.juju_state = JujuState(self.juju)
         log.debug('Authenticated against juju api.')
 
+    @coroutine
     def initialize(self):
         """Authenticates against juju/maas and sets up placement controller."""
         if getenv("FAKE_API_DATA"):
@@ -205,7 +206,10 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                AsyncPool.submit(self.begin_deployment)
+                try:
+                    yield AsyncPool.submit(self.begin_deployment)
+                except Exception as e:
+                    self.ui.show_exception_message(e)
             return
 
         if self.config.getopt('edit_placement') or \
@@ -216,7 +220,10 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                AsyncPool.submit(self.begin_deployment)
+                try:
+                    yield AsyncPool.submit(self.begin_deployment)
+                except Exception as e:
+                    self.ui.show_exception_message(e)
 
     def commit_placement(self):
         self.config.setopt('current_state', ControllerState.SERVICES.value)
@@ -226,7 +233,10 @@ class Controller:
         if self.config.getopt('headless'):
             self.begin_deployment()
         else:
-            AsyncPool.submit(self.begin_deployment)
+            try:
+                yield AsyncPool.submit(self.begin_deployment)
+            except Exception as e:
+                self.ui.show_exception_message(e)
 
     def begin_deployment(self):
         if self.config.is_multi():
@@ -244,6 +254,7 @@ class Controller:
         elif self.config.is_single():
             self.add_machines_to_juju_single()
 
+        raise Exception("Shit couldnt start machines")
         # Quiet out some of the logging
         _previous_summary = None
         while not self.all_juju_machines_started():
@@ -572,8 +583,13 @@ class Controller:
             charm_q.watch_relations()
             charm_q.watch_post_proc()
         else:
-            AsyncPool.submit(charm_q.watch_relations)
-            AsyncPool.submit(charm_q.watch_post_proc)
+            try:
+                yield [
+                    AsyncPool.submit(charm_q.watch_relations),
+                    AsyncPool.submit(charm_q.watch_post_proc)
+                ]
+            except Exception as e:
+                self.ui.show_exception_message(e)
         charm_q.is_running = True
 
         # Exit cleanly if we've finished all deploys, relations,
