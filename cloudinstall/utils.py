@@ -43,7 +43,6 @@ import shutil
 import json
 import yaml
 import requests
-import shlex
 from urllib.parse import urlparse
 
 log = logging.getLogger('cloudinstall.utils')

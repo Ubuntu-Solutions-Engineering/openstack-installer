@@ -384,9 +384,9 @@ class SingleInstall:
         we also try to reload the module to work now.
         """
 
-        if 0 == call("lsmod | grep kvm_amd", shell=True):
+        if 0 == call("lsmod | grep -q kvm_amd", shell=True):
             return              # we're fine, kvm_amd has nested on by default
-        if 0 != call("lsmod | grep kvm_intel", shell=True):
+        if 0 != call("lsmod | grep -q kvm_intel", shell=True):
             raise Exception("kvm_intel kernel module not loaded, "
                             "nested VMs will fail to launch")
 
