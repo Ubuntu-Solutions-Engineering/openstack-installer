@@ -92,9 +92,11 @@ class TestRenderCharmConfig(unittest.TestCase):
         d = yaml.load(generated_yaml)
         wmul = d['nova-cloud-controller'].get('worker-multiplier', None)
         self.assertEqual(wmul, expected)
-        if d['glance'] is not None:
+        if expected:
             wmul = d['glance'].get('worker-multiplier', None)
             self.assertEqual(wmul, expected)
+        else:
+            self.assertEqual(d['glance'], None)
         wmul = d['keystone'].get('worker-multiplier', None)
         self.assertEqual(wmul, expected)
 
