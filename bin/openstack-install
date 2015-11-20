@@ -71,7 +71,7 @@ def parse_options(argv):
                         choices=['Single', 'Multi', 'OpenStack Autopilot'],
                         help="Specify install type")
     parser.add_argument('--openstack-release',
-                        dest='openstack_release', default="kilo",
+                        dest='openstack_release', default="liberty",
                         choices=['icehouse', 'juno', 'kilo', 'liberty'],
                         help="Specify a specific OpenStack release.")
     parser.add_argument('--openstack-git-branch',
