@@ -43,6 +43,7 @@ import shutil
 import json
 import yaml
 import requests
+import shlex
 from urllib.parse import urlparse
 
 log = logging.getLogger('cloudinstall.utils')
@@ -785,9 +786,10 @@ def pollinate(session, tag):
     session = os.getenv('OSI_TESTRUNNER_ID', session)
     agent_str = 'uoi/{}/{}'.format(session, tag)
     try:
-        check_call(['pollinate', '-q',
-                    '--curl-opts',
-                    '--user-agent {}'.format(agent_str)])
+        cmd = ("sudo su - -c 'pollinate -q -r --curl-opts "
+               "\"--user-agent {}\"'".format(agent_str))
+        log.info("pollinate: {}".format(cmd))
+        check_call(cmd, shell=True)
     except CalledProcessError as e:
         log.warning("Generating random seed failed: {}".format(e))
 

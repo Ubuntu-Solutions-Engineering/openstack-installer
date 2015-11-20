@@ -1,4 +1,4 @@
-openstack (0.99.24) wily; urgency=medium
+openstack (0.99.25) wily; urgency=medium
 
   * Support nclxd
   * Improve threading support in macumba
