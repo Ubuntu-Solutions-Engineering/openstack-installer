@@ -4,15 +4,11 @@ Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-python,
-               pep8,
-               pyflakes,
-               python-all,
-               python-setuptools,
-               python-tox,
                python3-all,
                python3-bson,
                python3-coverage,
                python3-jinja2,
+               python3-kombu,
                python3-mock,
                python3-netaddr,
                python3-nose,
@@ -26,21 +22,17 @@ Build-Depends: debhelper (>= 9),
                python3-yaml
 Standards-Version: 3.9.6
 Homepage: https://launchpad.net/cloud-installer
-X-Python-Version: >= 2.7
-X-Python3-Version: >= 3.3
+X-Python3-Version: >= 3.4
 Vcs-Browser: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer
 Vcs-Git: https://github.com/Ubuntu-Solutions-Engineering/cloud-installer.git
 
 Package: openstack
 Architecture: all
-Depends: gawk,
-         juju-core,
-         nmap,
+Depends: juju-core,
          pollinate,
-         pwgen,
-         python-kombu,
          python3-bson,
          python3-jinja2,
+         python3-kombu,
          python3-lxc,
          python3-mock,
          python3-netaddr,
@@ -55,8 +47,7 @@ Depends: gawk,
          python3-ws4py,
          python3-yaml,
          ${misc:Depends},
-         ${python3:Depends},
-         ${python:Depends}
+         ${python3:Depends}
 Breaks: cloud-installer (<< 0.99)
 Replaces: cloud-installer (<< 0.99)
 Description: Ubuntu Openstack Installer
