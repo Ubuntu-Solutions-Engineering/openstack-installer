@@ -86,7 +86,8 @@ class Tasker:
                      "tasks_started: {}".format(self.tasks,
                                                 self.tasks_started_debug))
 
-        self.tasks[self.current_task_index] = (expectedname, time.time(), None)
+        self.tasks[self.current_task_index] = (expectedname,
+                                               time.time(), None)
         self.stopped = False
         if self.alarm is None:
             self.update_progress()
@@ -134,19 +135,23 @@ class Tasker:
                                               ts='   -')))
             elif e is None:
                 e = time.time()
-                ts = "{:6.2f} sec elapsed".format(e - s)
+                ts = "{:6d} sec(s) elapsed".format(int(e) - int(s))
                 m.append("{n:>{mw}}: {ts:<22}"
                          "\n".format(n=n, mw=self.max_width, ts=ts))
                 if self.task_info_func:
                     m.append(('label',
                               "\n{}\n\n".format(self.task_info_func())))
             else:
-                ts = "{:6.2f} sec".format(e - s)
+                ts = "{:6d} sec".format(int(e) - int(s))
                 m.append(('label', "{n:>{mw}}: {ts:<22}"
                           "\n".format(n=n, mw=self.max_width,
                                       ts=ts)))
 
-        self.display_controller.render_node_install_wait(m)
+        if self.display_controller.node_install_wait_view is None:
+            self.display_controller.render_node_install_wait(m)
+        else:
+            self.display_controller.node_install_wait_view.message.set_text(m)
+            self.display_controller.node_install_wait_view.redraw_kitt()
         f = self.update_progress
         self.alarm = self.loop.set_alarm_in(0.3, f)
         AlarmMonitor.add_alarm(self.alarm, "tasker-update-progress")

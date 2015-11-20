@@ -90,7 +90,11 @@ class Controller:
                                           self.commit_placement)
 
         elif current_state == ControllerState.INSTALL_WAIT:
-            self.ui.render_node_install_wait(message="Waiting...")
+            if self.ui.node_install_wait_view is None:
+                self.ui.render_node_install_wait(
+                    message="Installer is initializing nodes. Please wait.")
+            else:
+                self.ui.node_install_wait_view.redraw_kitt()
             interval = self.config.node_install_wait_interval
         elif current_state == ControllerState.ADD_SERVICES:
             def submit_deploy():

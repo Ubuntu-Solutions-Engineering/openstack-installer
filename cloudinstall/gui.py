@@ -18,10 +18,9 @@
 from __future__ import unicode_literals
 import sys
 import logging
-import random
 
 import urwid
-from urwid import (Text, Columns,
+from urwid import (Text,
                    Filler, Frame, WidgetWrap, Button,
                    Pile, Divider)
 
@@ -37,7 +36,8 @@ from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.ui.views import (ErrorView,
                                    ServicesView,
                                    MachineWaitView,
-                                   HelpView)
+                                   HelpView,
+                                   NodeInstallWaitView)
 from cloudinstall.ui.utils import Color, Padding
 from cloudinstall.placement.ui import PlacementView
 from cloudinstall.placement.ui.add_services_dialog import AddServicesDialog
@@ -78,50 +78,6 @@ class Banner(ScrollableWidgetWrap):
 
     def flash_reset(self):
         self.flash_text.set_text('')
-
-
-class NodeInstallWaitMode(WidgetWrap):
-
-    def __init__(self,
-                 message="Installer is initializing nodes. Please wait."):
-        self.message = message
-        super().__init__(self._build_node_waiting())
-
-    def _build_node_waiting(self):
-        """ creates a loading screen if nodes do not exist yet """
-        text = [Padding.line_break(""),
-                Text(self.message, align="center"),
-                Padding.line_break("")]
-
-        load_box = [Color.pending_icon_on(Text("\u2581",
-                                               align="center")),
-                    Color.pending_icon_on(Text("\u2582",
-                                               align="center")),
-                    Color.pending_icon_on(Text("\u2583",
-                                               align="center")),
-                    Color.pending_icon_on(Text("\u2584",
-                                               align="center")),
-                    Color.pending_icon_on(Text("\u2585",
-                                               align="center")),
-                    Color.pending_icon_on(Text("\u2586",
-                                               align="center")),
-                    Color.pending_icon_on(Text("\u2587",
-                                               align="center")),
-                    Color.pending_icon_on(Text("\u2588",
-                                               align="center"))]
-
-        # Add loading boxes
-        random.shuffle(load_box)
-        loading_boxes = []
-        loading_boxes.append(('weight', 1, Text('')))
-        for i in load_box:
-            loading_boxes.append(('pack',
-                                  load_box[random.randrange(len(load_box))]))
-        loading_boxes.append(('weight', 1, Text('')))
-        loading_boxes = Columns(loading_boxes)
-
-        return Filler(Pile(text + [loading_boxes]),
-                      valign="middle")
 
 
 class Header(WidgetWrap):
@@ -281,6 +237,7 @@ class PegasusGUI(WidgetWrap):
         self.placement_view = None
         self.controller = None
         self.machine_wait_view = None
+        self.node_install_wait_view = None
         self.add_services_dialog = None
         super().__init__(self.frame)
 
@@ -374,8 +331,10 @@ class PegasusGUI(WidgetWrap):
                                                               rcstr,
                                                               ppcstr))
 
-    def render_node_install_wait(self, message=None, **kwargs):
-        self.frame.body = NodeInstallWaitMode(message, **kwargs)
+    def render_node_install_wait(self, message):
+        if self.node_install_wait_view is None:
+            self.node_install_wait_view = NodeInstallWaitView(message)
+        self.frame.body = self.node_install_wait_view
 
     def render_placement_view(self, loop, config, cb):
         """ render placement view
