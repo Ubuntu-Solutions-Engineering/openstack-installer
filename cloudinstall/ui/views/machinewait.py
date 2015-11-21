@@ -16,7 +16,6 @@
 import logging
 import os
 import random
-from tornado.gen import coroutine
 from urwid import (AttrMap, Button, Divider, Filler, Padding, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
@@ -124,11 +123,10 @@ class MachineWaitView(WidgetWrap):
         # ensure that the button is always focused:
         self.main_pile.focus_position = len(self.main_pile.contents) - 1
 
-    @coroutine
     def do_continue(self, *args, **kwargs):
-        try:
-            yield AsyncPool.submit(self.installer.do_install)
-        except Exception as e:
+        f = AsyncPool.submit(self.installer.do_install)
+        e = f.exception()
+        if e:
             self.display_controller.show_exception_message(e)
 
     def do_cancel(self, *args, **kwargs):

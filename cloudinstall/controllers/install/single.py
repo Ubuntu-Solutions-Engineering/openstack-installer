@@ -23,7 +23,6 @@ import time
 import platform
 import shutil
 from subprocess import call, check_call, check_output, STDOUT
-from tornado.gen import coroutine
 from cloudinstall.async import AsyncPool
 from cloudinstall import utils, netutils
 from cloudinstall.api.container import (Container,
@@ -416,7 +415,6 @@ class SingleInstall:
                             "module to enable nested VMs. A manual reboot or "
                             "reload will be required.")
 
-    @coroutine
     def run(self):
         self.tasker.register_tasks([
             "Initializing Environment",
@@ -430,9 +428,9 @@ class SingleInstall:
         if self.config.getopt('headless'):
             self.do_install()
         else:
-            try:
-                yield AsyncPool.submit(self.do_install)
-            except Exception as e:
+            f = AsyncPool.submit(self.do_install)
+            e = f.exception()
+            if e:
                 self.display_controller.show_exception_message(e)
 
     def do_install(self):

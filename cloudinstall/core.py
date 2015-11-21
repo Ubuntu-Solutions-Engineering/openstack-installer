@@ -16,10 +16,10 @@
 import logging
 import time
 
+from concurrent.futures import as_completed
 from os import path, getenv
 
 from operator import attrgetter
-from tornado.gen import coroutine
 from cloudinstall.config import OPENSTACK_RELEASE_LABELS
 from cloudinstall import utils
 from cloudinstall.alarms import AlarmMonitor
@@ -96,7 +96,10 @@ class Controller:
             interval = self.config.node_install_wait_interval
         elif current_state == ControllerState.ADD_SERVICES:
             def submit_deploy():
-                AsyncPool.submit(self.deploy_new_services),
+                f = AsyncPool.submit(self.deploy_new_services)
+                e = f.exception()
+                if e:
+                    self.ui.show_exception_message(e)
             self.ui.render_add_services_dialog(
                 submit_deploy, self.cancel_add_services)
         elif current_state == ControllerState.SERVICES:
@@ -151,7 +154,6 @@ class Controller:
         self.juju_state = JujuState(self.juju)
         log.debug('Authenticated against juju api.')
 
-    @coroutine
     def initialize(self):
         """Authenticates against juju/maas and sets up placement controller."""
         if getenv("FAKE_API_DATA"):
@@ -204,9 +206,9 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                try:
-                    yield AsyncPool.submit(self.begin_deployment)
-                except Exception as e:
+                f = AsyncPool.submit(self.begin_deployment)
+                e = f.exception()
+                if e:
                     self.ui.show_exception_message(e)
             return
 
@@ -218,9 +220,9 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                try:
-                    yield AsyncPool.submit(self.begin_deployment)
-                except Exception as e:
+                f = AsyncPool.submit(self.begin_deployment)
+                e = f.exception()
+                if e:
                     self.ui.show_exception_message(e)
 
     def commit_placement(self):
@@ -231,9 +233,9 @@ class Controller:
         if self.config.getopt('headless'):
             self.begin_deployment()
         else:
-            try:
-                yield AsyncPool.submit(self.begin_deployment)
-            except Exception as e:
+            f = AsyncPool.submit(self.begin_deployment)
+            e = f.exception()
+            if e:
                 self.ui.show_exception_message(e)
 
     def begin_deployment(self):
@@ -580,13 +582,14 @@ class Controller:
             charm_q.watch_relations()
             charm_q.watch_post_proc()
         else:
-            try:
-                yield [
-                    AsyncPool.submit(charm_q.watch_relations),
-                    AsyncPool.submit(charm_q.watch_post_proc)
-                ]
-            except Exception as e:
-                self.ui.show_exception_message(e)
+            f1 = AsyncPool.submit(charm_q.watch_relations)
+            f2 = AsyncPool.submit(charm_q.watch_post_proc)
+            for f in as_completed([f1, f2]):
+                e = f.exception()
+                if e:
+                    self.ui.show_exception_message(e)
+                    return
+
         charm_q.is_running = True
 
         # Exit cleanly if we've finished all deploys, relations,
