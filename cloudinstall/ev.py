@@ -16,7 +16,7 @@
 import urwid
 import sys
 from cloudinstall.state import ControllerState
-from tornado.ioloop import IOLoop
+import asyncio
 from cloudinstall.ui.palette import STYLES
 
 import logging
@@ -59,9 +59,10 @@ class EventLoop:
         }
         additional_opts['screen'].set_terminal_properties(colors=256)
         additional_opts['screen'].reset_default_terminal_palette()
-        evl = urwid.TornadoEventLoop(IOLoop())
+        evl = asyncio.get_event_loop()
         return urwid.MainLoop(
-            self.ui, STYLES, event_loop=evl, **additional_opts)
+            self.ui, STYLES,
+            event_loop=urwid.AsyncioEventLoop(loop=evl), **additional_opts)
 
     def header_hotkeys(self, key):
         if not self.config.getopt('headless'):
@@ -133,4 +134,4 @@ class EventLoop:
         if self.config.getopt('headless'):
             return "<eventloop disabled>"
         else:
-            return "<eventloop urwid based on tornado()>"
+            return "<eventloop urwid based on asyncio>"

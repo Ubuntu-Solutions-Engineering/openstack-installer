@@ -112,7 +112,7 @@ class EventLoopCoreTestCase(unittest.TestCase):
             ui=self.mock_ui, config=self.conf,
             loop=ev)
         dc.initialize = MagicMock()
-        self.assertEqual(str(ev), '<eventloop urwid based on tornado()>')
+        self.assertEqual(str(ev), '<eventloop urwid based on asyncio>')
 
     def test_repr_no_ev(self):
         """ Prints appropriate class string for no eventloop """
