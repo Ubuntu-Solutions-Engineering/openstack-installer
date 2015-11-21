@@ -25,3 +25,12 @@ log = logging.getLogger("cloudinstall.async")
 
 AsyncPool = ThreadPoolExecutor(1)
 log.debug('AsyncPool={}'.format(AsyncPool))
+
+
+def submit(func, exc_callback):
+    def cb(cb_f):
+        e = cb_f.exception()
+        if e:
+            exc_callback(e)
+    f = AsyncPool.submit(func)
+    f.add_done_callback(cb)

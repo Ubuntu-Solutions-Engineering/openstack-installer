@@ -23,8 +23,7 @@ import time
 import platform
 import shutil
 from subprocess import call, check_call, check_output, STDOUT
-from cloudinstall.async import AsyncPool
-from cloudinstall import utils, netutils
+from cloudinstall import async, utils, netutils
 from cloudinstall.api.container import (Container,
                                         NoContainerIPException,
                                         ContainerRunException)
@@ -428,10 +427,8 @@ class SingleInstall:
         if self.config.getopt('headless'):
             self.do_install()
         else:
-            f = AsyncPool.submit(self.do_install)
-            e = f.exception()
-            if e:
-                self.display_controller.show_exception_message(e)
+            async.submit(self.do_install,
+                         self.display_controller.show_exception_message)
 
     def do_install(self):
         self.display_controller.status_info_message("Building environment")

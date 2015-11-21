@@ -16,10 +16,11 @@
 import logging
 import time
 
-from concurrent.futures import as_completed
 from os import path, getenv
 
 from operator import attrgetter
+
+from cloudinstall import async
 from cloudinstall.config import OPENSTACK_RELEASE_LABELS
 from cloudinstall import utils
 from cloudinstall.alarms import AlarmMonitor
@@ -27,7 +28,6 @@ from cloudinstall.state import ControllerState
 from cloudinstall.juju import JujuState
 from cloudinstall.maas import (connect_to_maas, FakeMaasState,
                                MaasMachineStatus)
-from cloudinstall.async import AsyncPool
 from cloudinstall.charms import CharmQueue
 from cloudinstall.log import PrettyLog
 from cloudinstall.placement.controller import (PlacementController,
@@ -96,10 +96,9 @@ class Controller:
             interval = self.config.node_install_wait_interval
         elif current_state == ControllerState.ADD_SERVICES:
             def submit_deploy():
-                f = AsyncPool.submit(self.deploy_new_services)
-                e = f.exception()
-                if e:
-                    self.ui.show_exception_message(e)
+                async.submit(self.deploy_new_services,
+                             self.ui.show_exception_message)
+
             self.ui.render_add_services_dialog(
                 submit_deploy, self.cancel_add_services)
         elif current_state == ControllerState.SERVICES:
@@ -206,10 +205,8 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                f = AsyncPool.submit(self.begin_deployment)
-                e = f.exception()
-                if e:
-                    self.ui.show_exception_message(e)
+                async.submit(self.begin_deployment,
+                             self.ui.show_exception_message)
             return
 
         if self.config.getopt('edit_placement') or \
@@ -220,10 +217,8 @@ class Controller:
             if self.config.getopt('headless'):
                 self.begin_deployment()
             else:
-                f = AsyncPool.submit(self.begin_deployment)
-                e = f.exception()
-                if e:
-                    self.ui.show_exception_message(e)
+                async.submit(self.begin_deployment,
+                             self.ui.show_exception_message)
 
     def commit_placement(self):
         self.config.setopt('current_state', ControllerState.SERVICES.value)
@@ -233,10 +228,8 @@ class Controller:
         if self.config.getopt('headless'):
             self.begin_deployment()
         else:
-            f = AsyncPool.submit(self.begin_deployment)
-            e = f.exception()
-            if e:
-                self.ui.show_exception_message(e)
+            async.submit(self.begin_deployment,
+                         self.ui.show_exception_message)
 
     def begin_deployment(self):
         if self.config.is_multi():
@@ -582,13 +575,10 @@ class Controller:
             charm_q.watch_relations()
             charm_q.watch_post_proc()
         else:
-            f1 = AsyncPool.submit(charm_q.watch_relations)
-            f2 = AsyncPool.submit(charm_q.watch_post_proc)
-            for f in as_completed([f1, f2]):
-                e = f.exception()
-                if e:
-                    self.ui.show_exception_message(e)
-                    return
+            async.submit(charm_q.watch_relations,
+                         self.ui.show_exception_message)
+            async.submit(charm_q.watch_post_proc,
+                         self.ui.show_exception_message)
 
         charm_q.is_running = True
 

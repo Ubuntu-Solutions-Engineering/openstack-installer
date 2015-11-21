@@ -20,7 +20,7 @@ from urwid import (AttrMap, Button, Divider, Filler, Padding, Pile,
                    SelectableIcon, Text, WidgetWrap)
 
 from cloudinstall.maas import connect_to_maas, FakeMaasState, MaasMachineStatus
-from cloudinstall.async import AsyncPool
+from cloudinstall import async
 
 log = logging.getLogger('cloudinstall.machinewait')
 
@@ -124,10 +124,8 @@ class MachineWaitView(WidgetWrap):
         self.main_pile.focus_position = len(self.main_pile.contents) - 1
 
     def do_continue(self, *args, **kwargs):
-        f = AsyncPool.submit(self.installer.do_install)
-        e = f.exception()
-        if e:
-            self.display_controller.show_exception_message(e)
+        async.submit(self.installer.do_install,
+                     self.display_controller.show_exception_message)
 
     def do_cancel(self, *args, **kwargs):
         raise SystemExit("Installation cancelled.")

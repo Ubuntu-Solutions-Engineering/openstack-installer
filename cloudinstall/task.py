@@ -19,7 +19,7 @@ import time
 import yaml
 
 from cloudinstall import utils
-from cloudinstall.async import AsyncPool
+from cloudinstall import async
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.config import Config
 
@@ -186,14 +186,13 @@ class FakeInstall:
         self.config = Config()
         self.tasker = Tasker(display_controller, loop)
         self.display_controller = display_controller
-        # cb = self.display_controller.show_exception_message
-        # utils.register_async_exception_callback(cb)
 
     def run(self):
         self.tl = ['a', 'b', 'c']
         self.tasker.register_tasks(self.tl)
         self.update_progress()
-        AsyncPool.submit(self.async_go)
+        async.submit(self.async_go,
+                     self.display_controller.show_exception_message)
 
     def async_go(self):
         for t in self.tl:
