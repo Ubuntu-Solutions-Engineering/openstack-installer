@@ -23,6 +23,7 @@ import sys
 import os
 import logging
 import uuid
+import urwid
 from functools import partial
 from cloudinstall.log import setup_logger
 import cloudinstall.utils as utils
@@ -168,7 +169,7 @@ if __name__ == '__main__':
             print("Uninstall cancelled.")
             sys.exit(1)
 
-    if sys.getdefaultencoding() != 'utf-8':
+    if sys.getdefaultencoding() != 'utf-8' or not urwid.supports_unicode():
         print("Ubuntu OpenStack Installer requires unicode support. "
               "Please enable this on the system running the installer.\n\n")
         print("Example:\n")
@@ -176,6 +177,8 @@ if __name__ == '__main__':
         print("  export LANG=en_US.UTF-8")
         print("  export LANGUAGE=en_US.UTF-8")
         sys.exit(1)
+    else:
+        urwid.set_encoding('utf-8')
 
     if opts.get_config:
         conf_bin = "/usr/bin/openstack-config"
