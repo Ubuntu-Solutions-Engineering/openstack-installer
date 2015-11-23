@@ -6,7 +6,7 @@ TOPDIR              := $(shell basename `pwd`)
 GIT_REV		    := $(shell git log --oneline -n1| cut -d" " -f1)
 VERSION             := $(shell ./tools/version)
 UPSTREAM_DEB        := https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git
-UPSTREAM_DEB_COMMIT := v0.99.26
+UPSTREAM_DEB_COMMIT := v0.99.27
 UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.git
 UPSTREAM_MACUMBA_COMMIT := 5674861
 UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
@@ -78,7 +78,7 @@ git-sync-requirements:
 git_rev:
 	@echo $(GIT_REV)
 
-update_version:
+update_version: git-sync-requirements
 	wrap-and-sort
 	@sed -i -r "s/(^__version__\s=\s)(.*)/\1\"$(VERSION)\"/" cloudinstall/__init__.py
 
