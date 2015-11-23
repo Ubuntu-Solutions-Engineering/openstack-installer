@@ -16,7 +16,6 @@
 """ UI interface to the OpenStack Installer """
 
 from __future__ import unicode_literals
-import sys
 import logging
 
 import urwid
@@ -198,29 +197,10 @@ class StepInfo(WidgetWrap):
         raise SystemExit("Installation cancelled.")
 
 
-def _check_encoding():
-    """Set the Urwid global byte encoding to utf-8.
-
-    Exit the application if, for some reasons, the change does not have effect.
-    """
-    urwid.set_encoding('utf-8')
-    if not urwid.supports_unicode():
-        # Note: the following message must only include ASCII characters.
-        msg = (
-            'Error: your terminal does not seem to support UTF-8 encoding.\n'
-            'Please check your locale settings.\n'
-            'On Ubuntu, running the following might fix the problem:\n'
-            '  sudo locale-gen en_US.UTF-8\n'
-            '  sudo dpkg-reconfigure locales'
-        )
-        sys.exit(msg.encode('ascii'))
-
-
 class PegasusGUI(WidgetWrap):
     key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
 
     def __init__(self, header=None, body=None, footer=None):
-        _check_encoding()  # Make sure terminal supports utf8
         self.header = header if header else Header()
         self.body = body if body else Banner()
         self.footer = footer if footer else StatusBar('')
