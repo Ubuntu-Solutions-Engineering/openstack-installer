@@ -270,9 +270,10 @@ export OS_REGION_NAME=\"RegionOne\"
 
             self.juju.deploy(_charm_name_rev, self.charm_name, num_units,
                              config_yaml, self.constraints, machine_spec)
-        except MacumbaError:
-            log.exception("Error deploying")
-            return True
+        except MacumbaError as e:
+            log.exception("Error deploying: {}".format(e))
+            raise Exception(
+                "Error deploying: {} {}".format(self.charm_name, e))
 
         self.ui.status_info_message("Deployed {0}.".format(self.display_name))
         return False
