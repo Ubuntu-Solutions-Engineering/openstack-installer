@@ -13,71 +13,62 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
-from .input import StringEditor
-from cloudinstall.ui.utils import Color, Padding
 from collections import OrderedDict
-import logging
-from urwid import (Pile, WidgetWrap, Text,
-                   Button, Filler, Columns, Divider,
-                   signals, emit_signal, connect_signal)
-
-log = logging.getLogger('cloudinstall.ui.dialog')
+from urwid import (WidgetWrap, signals, emit_signal, connect_signal,
+                   RadioButton, Button, Columns, Text, Pile,
+                   Divider, Filler)
+from cloudinstall.ui.utils import Color, Padding
 
 
-""" re-usable dialog widget """
+class SelectorWithDescriptionWidget(WidgetWrap):
 
+    """
+    Simple selector box
 
-class Dialog(WidgetWrap):
-
+    :param str title: title of selections
+    :param list opts: items to select
+    :param cb: callback
+    :returns: item selected from dialog
+    """
     __metaclass__ = signals.MetaSignals
     signals = ['done']
-    # key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
 
-    input_items = []
-
-    def __init__(self, title, cb):
+    def __init__(self, title, opts, cb):
         self.title = title
-        self.cb = cb
-        self.input_selection = OrderedDict()
-        connect_signal(self, 'done', self.cb)
+        self.radio_items = OrderedDict()
+        for item, desc in opts:
+            self.add_radio(item, desc)
+        connect_signal(self, 'done', cb)
         super().__init__(self._build_widget())
+
+    def add_radio(self, item, desc, group=[]):
+        self.radio_items[item] = (RadioButton(group, item), desc)
 
     def _build_buttons(self):
         buttons = [
-            Padding.line_break(""),
             Color.button_primary(
                 Button("Confirm", self.submit),
                 focus_map='button_primary focus'),
             Color.button_secondary(
                 Button("Cancel", self.cancel),
-                focus_map='button_secondary focus'),
+                focus_map='button_secondary focus')
         ]
         return Pile(buttons)
 
-    def _build_widget(self, **kwargs):
+    def _build_widget(self):
         total_items = [
             Padding.center_60(Text(self.title, align="center")),
             Padding.center_60(
                 Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1))
         ]
-        if self.input_items:
-            for item in self.input_items:
-                key = item[0]
-                caption = item[1]
-                try:
-                    mask = item[2]
-                except:
-                    mask = None
-                self.input_selection[key] = StringEditor(caption="", mask=mask)
-                col = Columns(
-                    [
-                        ("weight", 0.4, Text(caption, align="right")),
-                        Color.string_input(self.input_selection[key],
-                                           focus_map="string_input focus")
-                    ]
-                )
-                total_items.append(Padding.center_60(col))
+        for item in self.radio_items.keys():
+            opt, desc = self.radio_items[item]
+            col = Columns(
+                [
+                    ("weight", 0.4, opt),
+                    Text(desc)
+                ], dividechars=1)
+            total_items.append(Padding.center_60(col))
         total_items.append(
             Padding.center_60(
                 Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1)))
@@ -85,7 +76,11 @@ class Dialog(WidgetWrap):
         return Filler(Pile(total_items), valign='middle')
 
     def submit(self, button):
-        self.emit_done_signal(self.input_selection)
+        for item in self.radio_items.keys():
+            _item = self.radio_items[item][0]
+            if _item.get_state():
+                selected_item = _item.label
+        self.emit_done_signal(selected_item)
 
     def cancel(self, button):
         raise SystemExit("Installation cancelled.")

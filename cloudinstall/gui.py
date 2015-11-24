@@ -19,35 +19,32 @@ from __future__ import unicode_literals
 import logging
 
 import urwid
-from urwid import (Text,
-                   Filler, Frame, WidgetWrap, Button,
-                   Pile, Divider)
+from urwid import (Text, Pile,
+                   Filler, Frame, WidgetWrap)
 
 from cloudinstall.task import Tasker
-from cloudinstall.ui import (ScrollableWidgetWrap,
-                             ScrollableListBox,
-                             SelectorWithDescription,
-                             PasswordInput,
-                             MaasServerInput,
-                             LandscapeInput)
+from cloudinstall.ui.widgets import (SelectorWithDescriptionWidget,
+                                     PasswordInput,
+                                     MaasServerInput,
+                                     LandscapeInput,
+                                     StatusBarWidget)
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall.ui.views import (ErrorView,
                                    ServicesView,
                                    MachineWaitView,
                                    HelpView,
-                                   NodeInstallWaitView)
-from cloudinstall.ui.utils import Color, Padding
+                                   NodeInstallWaitView,
+                                   StepInfoView)
+from cloudinstall.ui.utils import Color
 from cloudinstall.placement.ui import PlacementView
 from cloudinstall.placement.ui.add_services_dialog import AddServicesDialog
 
 log = logging.getLogger('cloudinstall.gui')
 
 
-class Banner(ScrollableWidgetWrap):
+class Banner(WidgetWrap):
 
     def __init__(self):
-        self.text = []
-        self.flash_text = Text('', align='center')
         self.BANNER = [
             "",
             "",
@@ -59,22 +56,10 @@ class Banner(ScrollableWidgetWrap):
         super().__init__(self._create_text())
 
     def _create_text(self):
-        self.text = []
+        text = []
         for line in self.BANNER:
-            self._insert_line(line)
-
-        self.text.append(self.flash_text)
-        return ScrollableListBox(self.text)
-
-    def _insert_line(self, line):
-        text = Text(line, align='center')
-        self.text.append(text)
-
-    def flash(self, msg):
-        self.flash_text.set_text([('error_major', msg)])
-
-    def flash_reset(self):
-        self.flash_text.set_text('')
+            text.append(Text(line, align='center'))
+        return Pile(text)
 
 
 class Header(WidgetWrap):
@@ -125,85 +110,13 @@ class InstallHeader(WidgetWrap):
             self.TITLE_TEXT, release))
 
 
-class StatusBar(WidgetWrap):
-
-    """ Displays text in the footers status area."""
-
-    INFO = "[INFO]"
-    ERROR = "[ERROR]"
-    ARROW = " \u21e8 "
-
-    def __init__(self, text=''):
-        self._pending_deploys = Text('')
-        self._status_line = Text(text, align="center")
-        self._status_extra = self._build_status_extra()
-        status = Pile([self._pending_deploys,
-                       self._status_extra])
-        super().__init__(status)
-
-    def _build_status_extra(self):
-        return Color.frame_footer(
-            Pile([
-                self._status_line
-            ]))
-
-    def message(self, text):
-        """Write `text` on the footer."""
-        self._status_line.set_text(text)
-
-    def error_message(self, text):
-        self.message([('status_error', self.ERROR),
-                      self.ARROW + text])
-
-    def info_message(self, text):
-        self.message([('status_info', self.INFO),
-                      self.ARROW + text])
-
-    def set_pending_deploys(self, pending_deploys):
-        if len(pending_deploys) > 0:
-            msg = "Pending deploys: " + ", ".join(pending_deploys)
-            self._pending_deploys.set_text(msg)
-        else:
-            self._pending_deploys.set_text('')
-
-    def clear(self):
-        """Clear the text."""
-        self._w.set_text('')
-
-
-class StepInfo(WidgetWrap):
-
-    def __init__(self, msg=None):
-        if not msg:
-            msg = "Processing."
-        items = [
-            Padding.center_60(Text("Information", align="center")),
-            Padding.center_60(
-                Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}", 1, 1)),
-            Padding.center_60(Text(msg))
-        ]
-        super().__init__(Filler(Pile(items), valign='middle'))
-
-    def _build_buttons(self):
-        buttons = [
-            Padding.line_break(""),
-            Color.button_secondary(
-                Button("Quit", self.cancel),
-                focus_map='button_secondary focus'),
-        ]
-        return Pile(buttons)
-
-    def cancel(self, button):
-        raise SystemExit("Installation cancelled.")
-
-
 class PegasusGUI(WidgetWrap):
     key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
 
     def __init__(self, header=None, body=None, footer=None):
         self.header = header if header else Header()
         self.body = body if body else Banner()
-        self.footer = footer if footer else StatusBar('')
+        self.footer = footer if footer else StatusBarWidget()
 
         self.frame = Frame(self.body,
                            header=self.header,
@@ -242,10 +155,10 @@ class PegasusGUI(WidgetWrap):
         self.frame.body = HelpView()
 
     def show_step_info(self, msg):
-        self.frame.body = StepInfo(msg)
+        self.frame.body = StepInfoView(msg)
 
     def show_selector_with_desc(self, title, opts, cb):
-        self.frame.body = SelectorWithDescription(title, opts, cb)
+        self.frame.body = SelectorWithDescriptionWidget(title, opts, cb)
 
     def show_password_input(self, title, cb):
         self.frame.body = PasswordInput(title, cb)
@@ -258,12 +171,6 @@ class PegasusGUI(WidgetWrap):
 
     def set_pending_deploys(self, pending_charms):
         self.frame.footer.set_pending_deploys(pending_charms)
-
-    def flash(self, msg):
-        self.frame.body.flash("{}\N{HORIZONTAL ELLIPSIS}".format(msg))
-
-    def flash_reset(self):
-        self.frame.body.flash_reset()
 
     def status_message(self, text):
         self.frame.footer.message(text)

@@ -18,3 +18,4 @@ from .services import ServicesView  # NOQA
 from .machinewait import MachineWaitView  # noqa
 from .help import HelpView  # noqa
 from .nodeinstallwait import NodeInstallWaitView  # noqa
+from .stepinfo import StepInfoView  # noqa

@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -14,10 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from .unit import UnitInfoWidget  # NOQA
-from .statusbar import StatusBarWidget  # noqa
-from .infodialog import InfoDialogWidget  # noqa
-from .selectordialog import SelectorWithDescriptionWidget  # noqa
-from .passwordinput import PasswordInput  # noqa
-from .maasinput import MaasServerInput  # noqa
-from .landscapeinput import LandscapeInput  # noqa
+from cloudinstall.ui import Dialog
+
+
+class PasswordInput(Dialog):
+
+    """ Password input dialog
+    """
+
+    input_items = [
+        ('password', 'Password: ', '*'),
+        ('confirm_password', 'Confirm Password: ',
+         '*')
+    ]
