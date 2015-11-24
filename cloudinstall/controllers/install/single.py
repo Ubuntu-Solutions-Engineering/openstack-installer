@@ -250,8 +250,8 @@ class SingleInstall:
         # for wily+ hosts and containers, restart the preexisting
         # lxc-net to pick up our config:
         if platform.linux_distribution()[2][0] >= 'w':
-            Container.run(self.container_name,
-                          "systemctl restart lxc-net")
+            self.cdriver.run(self.container_name,
+                             "systemctl restart lxc-net")
 
         lxc_network = self.write_lxc_net_config()
         self.add_static_route(lxc_network)
@@ -511,11 +511,11 @@ class SingleInstall:
 
         trace = os.getenv("TRACE_JUJU", None)
         if trace:
-            Container.run(self.container_name,
-                          "{} juju set-env "
-                          "logging-config=\"<root>=TRACE\"".format(
-                              self.config.juju_home(use_expansion=True)),
-                          use_ssh=True, output_cb=self.set_progress_output)
+            self.cdriver.run(self.container_name,
+                             "{} juju set-env "
+                             "logging-config=\"<root>=TRACE\"".format(
+                                 self.config.juju_home(use_expansion=True)),
+                             use_ssh=True, output_cb=self.set_progress_output)
 
         self.cdriver.run(self.container_name,
                          "{0} juju status".format(
