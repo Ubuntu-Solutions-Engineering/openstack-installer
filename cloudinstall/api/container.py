@@ -489,13 +489,13 @@ class LXDContainer:
         out = utils.get_command_output('lxc init {} {}'.format(imgname,
                                                                name))
         if out['status'] > 0:
-            raise Exception("Unable to create container: "
-                            + out['output'])
+            raise Exception("Unable to create container: " +
+                            out['output'])
 
         out = utils.get_command_output('lxc config show ' + name)
         if out['status'] > 0:
-            raise Exception("Unable to get container config: "
-                            + out['output'])
+            raise Exception("Unable to get container config: " +
+                            out['output'])
 
         cfgyaml = yaml.load(out['output'])
         with open(userdata, 'r') as uf:
@@ -512,8 +512,8 @@ class LXDContainer:
             log.debug("cmd is '{}'".format(cmd))
             out = utils.get_command_output(cmd)
             if out['status'] > 0:
-                raise Exception("Unable to set userdata config: "
-                                + out['output'] + "ERR" + out['err'])
+                raise Exception("Unable to set userdata config: " +
+                                out['output'] + "ERR" + out['err'])
 
         return 0
 
