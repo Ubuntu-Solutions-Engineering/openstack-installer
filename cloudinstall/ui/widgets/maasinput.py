@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 Canonical, Ltd.
+# Copyright 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -13,11 +13,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from cloudinstall.ui import Dialog
 
-from .unit import UnitInfoWidget  # NOQA
-from .statusbar import StatusBarWidget  # noqa
-from .infodialog import InfoDialogWidget  # noqa
-from .selectordialog import SelectorWithDescriptionWidget  # noqa
-from .passwordinput import PasswordInput  # noqa
-from .maasinput import MaasServerInput  # noqa
-from .landscapeinput import LandscapeInput  # noqa
+
+class MaasServerInput(Dialog):
+
+    """ Maas Server input dialog
+    """
+    input_items = [
+        ('maas_server', 'MAAS Server IP: '),
+        ('maas_apikey', 'MAAS API Key: ')
+    ]

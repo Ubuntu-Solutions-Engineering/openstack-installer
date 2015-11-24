@@ -26,7 +26,7 @@ from cloudinstall.placement.ui.machine_chooser import MachineChooser
 from cloudinstall.placement.ui.machines_list import MachinesList
 from cloudinstall.placement.ui.service_chooser import ServiceChooser
 from cloudinstall.placement.ui.services_list import ServicesList
-from cloudinstall.ui import InfoDialog
+from cloudinstall.ui.widgets import InfoDialogWidget
 from cloudinstall.state import CharmState
 
 log = logging.getLogger('cloudinstall.placement')
@@ -316,7 +316,7 @@ class MachinesColumn(WidgetWrap):
         e = errs.decode('utf-8')
         msg = "Error opening '{}' in a browser:\n{}".format(bc['name'], e)
 
-        w = InfoDialog(msg, self.placement_view.remove_overlay)
+        w = InfoDialogWidget(msg, self.placement_view.remove_overlay)
         self.placement_view.show_overlay(w)
 
 
@@ -375,7 +375,7 @@ class PlacementView(WidgetWrap):
     def do_autoplace(self, sender):
         ok, msg = self.placement_controller.autoassign_unassigned_services()
         if not ok:
-            self.show_overlay(InfoDialog(msg, self.remove_overlay))
+            self.show_overlay(InfoDialogWidget(msg, self.remove_overlay))
 
     def do_clear_all(self, sender):
         self.placement_controller.clear_all_assignments()

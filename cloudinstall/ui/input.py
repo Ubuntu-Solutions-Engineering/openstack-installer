@@ -16,28 +16,36 @@
 """ re-usable input widgets """
 
 from urwid import (Edit, WidgetWrap)
-from cloudinstall.ui.utils import Color
 
 import logging
 
 log = logging.getLogger('cloudinstall.ui.input')
 
 
-class EditInput(WidgetWrap):
-
+class StringEditor(WidgetWrap):
     """ Edit input class
-
-    Initializes an Edit object and attaches its result to
-    the `value` accessor.
+    Initializes and Edit object and attachs its result
+    to the `value` accessor.
     """
-
     def __init__(self, caption, **kwargs):
         self._edit = Edit(caption=caption, **kwargs)
-        super().__init__(Color.string_input(self._edit,
-                                            focus_map="string_input focus"))
+        self.error = None
+        super().__init__(self._edit)
+
+    def keypress(self, size, key):
+        if self.error:
+            self._edit.set_edit_text("")
+            self.error = None
+        return super().keypress(size, key)
+
+    def set_error(self, msg):
+        self.error = msg
+        return self._edit.set_edit_text(msg)
 
     @property
     def value(self):
-        """ Returns text of input
-        """
         return self._edit.get_edit_text()
+
+    @value.setter  # NOQA
+    def value(self, value):
+        self._edit.set_edit_text(value)
