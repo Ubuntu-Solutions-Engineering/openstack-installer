@@ -328,9 +328,13 @@ class LXDContainer:
 
     @classmethod
     def get_status(cls, name):
-        s = subprocess.check_output("lxc info {} | grep Status".format(name),
-                                    shell=True,
-                                    stderr=subprocess.STDOUT).decode('utf-8')
+        try:
+            s = subprocess.check_output("lxc info {} | grep Status".format(name),
+                                        shell=True,
+                                        stderr=subprocess.STDOUT).decode('utf-8')
+        except subprocess.CalledProcessError as e:
+            s = "Status: Unknown"
+
         return s
 
     @classmethod
