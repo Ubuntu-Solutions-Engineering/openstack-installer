@@ -481,11 +481,16 @@ class LXDContainer:
     def create(cls, name, userdata):
         """ creates a container from an image with the alias 'ubuntu'
         """
-        out = utils.get_command_output('lxc image list | grep ubuntu')
-        if len(out['output']) == 0:
-            raise Exception("No 'ubuntu' image found")
 
         imgname = os.getenv("LXD_IMAGE_NAME", "ubuntu")
+        out = utils.get_command_output('lxc image list | '
+                                       'grep {}'.format(imgname),
+                                       user_sudo=True)
+        if len(out['output']) == 0:
+            m = ("LXD: No image named '{}' found. "
+                 "Please import an image or set an alias.".format(imgname))
+            raise Exception(m)
+
         out = utils.get_command_output('lxc init {} {}'.format(imgname,
                                                                name))
         if out['status'] > 0:
