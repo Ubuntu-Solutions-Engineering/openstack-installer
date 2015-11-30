@@ -492,12 +492,14 @@ class LXDContainer:
             raise Exception(m)
 
         out = utils.get_command_output('lxc init {} {}'.format(imgname,
-                                                               name))
+                                                               name),
+                                       user_sudo=True)
         if out['status'] > 0:
             raise Exception("Unable to create container: " +
                             out['output'])
 
-        out = utils.get_command_output('lxc config show ' + name)
+        out = utils.get_command_output('lxc config show ' + name,
+                                       user_sudo=True)
         if out['status'] > 0:
             raise Exception("Unable to get container config: " +
                             out['output'])
@@ -515,7 +517,7 @@ class LXDContainer:
             cfgtmp.flush()
             cmd = 'cat {} | lxc config edit {}'.format(cfgtmp.name, name)
             log.debug("cmd is '{}'".format(cmd))
-            out = utils.get_command_output(cmd)
+            out = utils.get_command_output(cmd, user_sudo=True)
             if out['status'] > 0:
                 raise Exception("Unable to set userdata config: " +
                                 out['output'] + "ERR" + out['err'])
@@ -532,7 +534,8 @@ class LXDContainer:
     def add_config_entries(cls, name, configlines):
         raw_lxc_config = "\n".join(configlines)
         out = utils.get_command_output('lxc config set {} raw.lxc '
-                                       '"{}"'.format(name, raw_lxc_config))
+                                       '"{}"'.format(name, raw_lxc_config),
+                                       user_sudo=True)
         if out['status'] > 0:
             raise Exception("couldn't set container config")
 
@@ -542,7 +545,8 @@ class LXDContainer:
 
         :param str name: name of container
         """
-        out = utils.get_command_output('lxc start ' + name)
+        out = utils.get_command_output('lxc start ' + name,
+                                       user_sudo=True)
 
         if out['status'] > 0:
             raise Exception("Unable to start container: "
@@ -556,7 +560,7 @@ class LXDContainer:
 
         :param str name: name of container
         """
-        out = utils.get_command_output('lxc stop ' + name)
+        out = utils.get_command_output('lxc stop ' + name, user_sudo=True)
 
         if out['status'] > 0:
             raise Exception("Unable to stop container: "
@@ -570,7 +574,7 @@ class LXDContainer:
 
         :param str name: name of container
         """
-        out = utils.get_command_output('lxc delete ' + name)
+        out = utils.get_command_output('lxc delete ' + name, user_sudo=True)
 
         if out['status'] > 0:
             raise Exception("Unable to delete container: "
@@ -589,7 +593,7 @@ class LXDContainer:
         """
         while True:
             cmd = 'lxc info {} | grep Status'.format(name)
-            out = utils.get_command_output(cmd)
+            out = utils.get_command_output(cmd, user_sudo=True)
             if out['status'] != 0:
                 raise Exception("Error getting container info {}".format(out))
             outstr = out['output'].strip()
