@@ -305,7 +305,7 @@ class SingleInstall:
         it's not done yet, and raises an exception if it had errors.
 
         """
-        cmd = 'sudo cat /run/cloud-init/result.json'
+        cmd = 'sh -c "sudo cat /run/cloud-init/result.json 2> /dev/null"'
         try:
             result_json = self.cdriver.run(self.container_name, cmd)
 
