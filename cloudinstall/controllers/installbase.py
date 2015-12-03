@@ -157,4 +157,5 @@ class InstallController:
                 self.config.install_types(), self._set_install_type)
 
         self.update()
+        self.loop.register_callback('refresh_display', self.update)
         self.loop.run()
