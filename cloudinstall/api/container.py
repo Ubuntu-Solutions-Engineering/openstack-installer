@@ -323,7 +323,8 @@ class LXDContainer:
 
     @classmethod
     def exists(cls, name):
-        out = subprocess.call("lxc info " + name, shell=True)
+        out = subprocess.call("lxc info " + name, shell=True,
+                              stderr=subprocess.DEVNULL)
         return out == 0
 
     @classmethod
