@@ -46,7 +46,8 @@ class LXCContainer:
     @classmethod
     def exists(cls, name):
         out = subprocess.call("sudo lxc-info -n {}".format(name),
-                              shell=True)
+                              shell=True,
+                              stderr=subprocess.DEVNULL)
         return out == 0
 
     @classmethod
