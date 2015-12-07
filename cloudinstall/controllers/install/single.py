@@ -160,7 +160,9 @@ class SingleInstall:
         log.info("Writing lxc-net config for {}".format(name))
         ctype = self.config.getopt('topcontainer_type')
         if ctype == 'lxc':
-            lxc_net_filename = os.path.join(self.cdriver.container_root,
+            container_abspath = os.path.join(self.cdriver.container_root,
+                                            name)
+            lxc_net_filename = os.path.join(container_abspath,
                                             'rootfs/etc/default/lxc-net')
             utils.spew(lxc_net_filename, lxc_net)
         elif ctype == 'lxd':
