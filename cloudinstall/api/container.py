@@ -23,6 +23,7 @@ import codecs
 import errno
 from collections import deque
 from cloudinstall import utils
+import stat
 import tempfile
 import time
 import yaml
@@ -521,8 +522,8 @@ class LXDContainer:
         with tempfile.NamedTemporaryFile(delete=False) as cfgtmp:
             cfgtmp.write(yaml.dump(cfgyaml).encode())
             cfgtmp.flush()
+            os.chmod(cfgtmp.name, stat.S_IROTH | stat.S_IRWXU)
             cmd = 'cat {} | lxc config edit {}'.format(cfgtmp.name, name)
-            log.debug("cmd is '{}'".format(cmd))
             out = utils.get_command_output(cmd, user_sudo=True)
             if out['status'] > 0:
                 raise Exception("Unable to set userdata config: " +
