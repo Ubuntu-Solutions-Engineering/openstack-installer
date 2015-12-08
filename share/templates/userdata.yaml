@@ -28,7 +28,7 @@ write_files:
       mknod /dev/net/tun c 10 200
       exit 0
     path: /etc/rc.local
-  permissions: '0755'
+    permissions: '0755'
 {%- endif %}
 packages:
   - software-properties-common

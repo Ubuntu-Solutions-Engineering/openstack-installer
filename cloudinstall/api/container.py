@@ -197,8 +197,8 @@ class LXCContainer:
         ret = utils.get_command_output(cmd)
         if ret['status'] > 0:
             raise Exception("There was a problem copying ({0}) to the "
-                            "container ({1}:{2}): {3}".format(
-                                src, name, ip, ret['output']))
+                            "container ({1}:{2}): {3}\n{4}\ncmd:{5}".format(
+                                src, name, ip, ret['output'], ret['err'], cmd))
 
     @classmethod
     def create(cls, name, userdata):
