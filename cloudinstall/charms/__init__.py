@@ -24,7 +24,6 @@ import yaml
 from queue import Queue
 import shutil
 import subprocess
-import time
 import requests
 
 from macumba import MacumbaError, ServerError
