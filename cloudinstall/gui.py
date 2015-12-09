@@ -22,6 +22,7 @@ import urwid
 from urwid import (Text, Pile,
                    Filler, Frame, WidgetWrap)
 
+from cloudinstall import async
 from cloudinstall.task import Tasker
 from cloudinstall.ui.widgets import (SelectorWithDescriptionWidget,
                                      PasswordInput,
@@ -259,9 +260,13 @@ class PegasusGUI(WidgetWrap):
         self.frame.body = Filler(self.add_services_dialog)
 
     def show_exception_message(self, ex):
-        msg = ("A fatal error has occurred: {}\n".format(ex.args[0]))
-        log.error(msg)
-        self.frame.body = ErrorView(ex.args[0])
+        if isinstance(ex, async.ThreadCancelledException):
+            log.debug("Thread cancelled intentionally.")
+        else:
+            msg = ("A fatal error has occurred: {}\n".format(ex.args[0]))
+            log.error(msg)
+            self.frame.body = ErrorView(ex.args[0])
+
         AlarmMonitor.remove_all()
 
     def select_install_type(self, install_types, cb):

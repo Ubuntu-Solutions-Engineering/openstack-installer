@@ -28,6 +28,7 @@ import time
 import requests
 
 from macumba import MacumbaError, ServerError
+from cloudinstall import async
 from cloudinstall import utils
 from cloudinstall.placement.controller import AssignmentType
 
@@ -433,6 +434,7 @@ class CharmQueue:
         log.debug("Processing relations: {}".format(valid_relations))
         while len(valid_relations) != len(completed_relations):
             for relation_a, relation_b in valid_relations:
+                async.sleep_until(0)
                 try:
                     log.debug("Calling juju.add_relation({}, {})".format(
                         relation_a, relation_b))
@@ -466,6 +468,8 @@ class CharmQueue:
         for charm in self._charm_classes():
             self.charm_post_proc_q.put(charm)
 
+        async.sleep_until(0)
+
         log.debug("Starting charm post processing watcher.")
         while not self.charm_post_proc_q.empty():
             try:
@@ -478,5 +482,6 @@ class CharmQueue:
                 msg = "Exception in post-processing watcher, re-trying."
                 log.exception(msg)
                 self.ui.status_error_message(msg)
-            time.sleep(10)
+
+            async.sleep_until(10)
         self.config.setopt('postproc_complete', True)
