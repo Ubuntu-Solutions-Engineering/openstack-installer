@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import yaml
 
-from cloudinstall.api.container import Container
+from cloudinstall.api.container import LXCContainer, LXDContainer
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -24,6 +24,11 @@ with open(os.path.expanduser("~/.cloud-install/config.yaml")) as cfg_file:
     cfg = yaml.load(cfg_file)
     container_name = cfg['container_name']
 
+if cfg.get("topcontainer_type", 'lxc') == 'lxd':
+    cdriver = LXDContainer
+else:
+    cdriver = LXCContainer
+
 print("building deb")
 os.chdir(startdir)
 subprocess.check_call("make deb", shell=True, stdout=subprocess.DEVNULL,
@@ -33,11 +38,11 @@ deb_name = glob.glob("../openstack_0.99*all.deb")[0]
 shutil.copy(deb_name, os.path.expanduser("~/.cloud-install/"))
 
 print("removing old version")
-r = Container.run(container_name, "sudo apt-get -y remove openstack")
+r = cdriver.run(container_name, "sudo apt-get -y remove openstack")
 print(r)
 
 print("installing in container")
-r = Container.run(container_name,
+r = cdriver.run(container_name,
                   'sudo dpkg -i /home/ubuntu/.cloud-install/{}'.format(
                       os.path.basename(deb_name)))
 
@@ -45,4 +50,4 @@ print("r is {}".format(r))
 
 
 config_is_ignored = {}
-Container.run_status(container_name, 'openstack-status', config_is_ignored)
+cdriver.run_status(container_name, 'openstack-status', config_is_ignored)
