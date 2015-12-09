@@ -15,6 +15,7 @@
 
 import urwid
 import sys
+from cloudinstall import async
 from cloudinstall.state import ControllerState
 import asyncio
 from cloudinstall.ui.palette import STYLES
@@ -93,7 +94,7 @@ class EventLoop:
         self.log.info("Stopping eventloop")
         if self.config.getopt('headless'):
             sys.exit(err)
-
+        async.shutdown()
         raise urwid.ExitMainLoop()
 
     def close(self):

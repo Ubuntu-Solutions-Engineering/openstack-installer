@@ -258,7 +258,7 @@ class Controller:
                                             "start: {}".format(summary))
                 _previous_summary = summary
 
-            time.sleep(1)
+            async.sleep_until(1)
 
         if len(self.juju_state.machines()) == 0:
             raise Exception("Expected some juju machines started.")
@@ -272,6 +272,7 @@ class Controller:
                 self.configure_lxc_network(controller_machine)
 
                 for juju_machine_id in self.juju_m_idmap.values():
+                    async.sleep_until(0)
                     self.run_apt_go_fast(juju_machine_id)
 
             self.deploy_using_placement()
@@ -454,7 +455,7 @@ class Controller:
                 log.debug("deployed_charm_classes={}".format(
                     PrettyLog(self.deployed_charm_classes)))
 
-                time.sleep(5)
+                async.sleep_until(5)
             update_pending_display()
 
     def try_deploy(self, charm_class):
@@ -551,13 +552,13 @@ class Controller:
             not_ready = [(a, b) for a, b in self.juju_state.get_agent_states()
                          if b != 'started']
             if len(not_ready) == not_ready_len:
-                time.sleep(3)
+                async.sleep_until(3)
                 continue
 
             not_ready_len = len(not_ready)
             log.info("Checking availability of {} ".format(
                 ", ".join(["{}:{}".format(a, b) for a, b in not_ready])))
-            time.sleep(3)
+            async.sleep_until(3)
 
         self.config.setopt('deploy_complete', True)
         self.ui.status_info_message(

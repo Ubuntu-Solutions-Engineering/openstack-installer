@@ -49,12 +49,12 @@ class WaitForDeployedServicesReadyCoreTestCase(unittest.TestCase):
     def test_validate_services_ready(self):
         """ Verifies wait_for_deployed_services_ready
 
-        time.sleep should not be called here as all services
+        async.sleep_until should not be called here as all services
         are in a started state.
         """
         self.dc.juju_state.all_agents_started.return_value = True
 
-        with patch('cloudinstall.core.time.sleep') as mock_sleep:
+        with patch('cloudinstall.async.sleep_until') as mock_sleep:
             self.dc.wait_for_deployed_services_ready()
         self.assertEqual(len(mock_sleep.mock_calls), 0)
 
@@ -62,13 +62,13 @@ class WaitForDeployedServicesReadyCoreTestCase(unittest.TestCase):
         """ Verifies wait_for_deployed_services_ready against some of the
         services in started state
 
-        Here we test if time.sleep was called twice due to some services
+        Here we test if async.sleep_until was called twice due to some services
         being in an installing and allocating state.
         """
         self.dc.juju_state.all_agents_started.side_effect = [
             False, False, True, True]
 
-        with patch('cloudinstall.core.time.sleep') as mock_sleep:
+        with patch('cloudinstall.async.sleep_until') as mock_sleep:
             self.dc.wait_for_deployed_services_ready()
         print(mock_sleep.mock_calls)
         self.assertEqual(len(mock_sleep.mock_calls), 2)
