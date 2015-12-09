@@ -33,7 +33,7 @@ from cloudinstall.core import Controller
 from cloudinstall.consoleui import ConsoleUI
 from cloudinstall.ev import EventLoop
 from cloudinstall.alarms import AlarmMonitor
-from cloudinstall.api.container import Container
+from cloudinstall.api.container import LXDContainer, LXCContainer
 from cloudinstall import utils
 from cloudinstall import log
 from cloudinstall.config import Config
@@ -120,8 +120,13 @@ if __name__ == '__main__':
             sys.exit(1)
         if container_name not in hostname:
             logger.info("Running status within container")
-            Container.run_status(config.getopt('container_name'),
-                                 'openstack-status', config)
+            if config.getopt("topcontainer_type") == 'lxd':
+                cdriver = LXDContainer
+            else:
+                cdriver = LXCContainer
+
+            cdriver.run_status(config.getopt('container_name'),
+                               'openstack-status', config)
 
     if config.getopt('headless'):
         ui = ConsoleUI()

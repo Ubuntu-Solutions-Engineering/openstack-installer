@@ -21,7 +21,7 @@ import os
 import argparse
 import cloudinstall.utils as utils
 from cloudinstall.config import Config
-from cloudinstall.api.container import Container
+from cloudinstall.api.container import (LXDContainer, LXCContainer)
 
 CFG_FILE = os.path.join(utils.install_home(),
                         '.cloud-install/config.yaml')
@@ -41,7 +41,13 @@ if __name__ == '__main__':
                           name, cfg.juju_home(True), args))
         cmd = ("su ubuntu -c 'JUJU_HOME=~/.cloud-install/juju "
                "juju {}'".format(args))
-        out = Container.run(name, cmd, use_sudo=True)
+
+        if cfg.getopt("topcontainer_type") == 'lxd':
+            cdriver = LXDContainer
+        else:
+            cdriver = LXCContainer
+
+        out = cdriver.run(name, cmd, use_sudo=True)
         print(out)
     else:
         cmd = ("{} juju {}".format(cfg.juju_home(True), args))

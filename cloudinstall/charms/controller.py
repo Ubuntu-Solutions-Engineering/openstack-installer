@@ -100,6 +100,9 @@ class CharmNovaCloudController(CharmBase):
         setup_template = utils.load_template("nova-controller-setup.sh")
         if self.config.is_single():
             lxc_network = self.config.getopt('lxc_network')
+            if lxc_network is None:
+                log.error("lxc_network config not found")
+                raise Exception("can't find lxc_network")
             N = lxc_network.split('.')[2]
         else:
             # N is used to define networks for single, so we simply

@@ -19,15 +19,17 @@
 
 #cloud-config
 
+{%- if topcontainer_type == "lxc" %}
 write_files:
   - content: |
-      #!/bin/sh
+      #!/bin/sh -x
       mkdir -p /dev/net || true
       mknod /dev/kvm c 10 232
       mknod /dev/net/tun c 10 200
       exit 0
     path: /etc/rc.local
     permissions: '0755'
+{%- endif %}
 packages:
   - software-properties-common
 {%- if next_charms %}
@@ -92,7 +94,9 @@ resize_rootfs: False
 
 # Make sure we load our modules on first creation
 runcmd:
+{%- if topcontainer_type == "lxc" %}
   - [ sh, /etc/rc.local ]
+{%- endif %}
   - echo "export PATH=$PATH:/usr/sbin" >> /home/ubuntu/.bashrc
 {%- if http_proxy %}
   - echo "export http_proxy={{ http_proxy }}" >> /home/ubuntu/.bashrc
