@@ -120,6 +120,7 @@ glance:
 
 glance-simplestreams-sync:
   use_swift: False
+  source: ppa:cloud-installer/simplestreams-testing
 
 juju-gui:
   password: {{openstack_password}}
