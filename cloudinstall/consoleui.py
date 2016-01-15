@@ -36,6 +36,9 @@ class ConsoleUI:
     def status_info_message(self, msg):
         log.info(msg)
 
+    def clear_status(self):
+        pass
+
     def show_step_info(self, msg):
         log.info(msg)
 
