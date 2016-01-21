@@ -557,6 +557,7 @@ class PlacementController:
 
         self.update_and_save()
 
+        unassigned_services = list(self.unassigned_undeployed_services())
         unassigned_reqs = [c for c in unassigned_services if
                            self.get_charm_state(c)[0] == CharmState.REQUIRED]
 
