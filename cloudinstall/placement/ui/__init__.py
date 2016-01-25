@@ -293,8 +293,8 @@ class MachinesColumn(WidgetWrap):
                                                 align='center',
                                                 width=BUTTON_SIZE)])
 
-        # 1 machine is the subordinate placeholder:
-        if len(self.placement_controller.machines()) == 1:
+        # 2 machines is the subordinate placeholder + juju default:
+        if len(self.placement_controller.machines()) == 2:
             self.main_pile.contents[2] = (self.empty_maas_widgets,
                                           self.main_pile.options())
         else:
