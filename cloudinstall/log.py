@@ -88,7 +88,7 @@ def setup_logger(name=__name__, headless=False):
 
     if headless:
         consolelog = logging.StreamHandler()
-        consolelog.setLevel(logging.INFO)
+        consolelog.setLevel(logging.DEBUG)
         consolelog.setFormatter(logging.Formatter(
             '[%(levelname)-4s: %(asctime)s] %(message)s',
             datefmt='%m-%d %H:%M:%S'))
