@@ -752,7 +752,7 @@ def pollinate(session, tag):
     agent_str = 'uoi/{}/{}'.format(session, tag)
     try:
         cmd = ("sudo su - -c 'pollinate -q -r --curl-opts "
-               "\"--user-agent {}\"'".format(agent_str))
+               "\"-k --user-agent {}\"'".format(agent_str))
         log.info("pollinate: {}".format(cmd))
         check_call(cmd, shell=True)
     except CalledProcessError as e:
