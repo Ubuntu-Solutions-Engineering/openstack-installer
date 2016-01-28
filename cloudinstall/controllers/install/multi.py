@@ -51,9 +51,8 @@ class MultiInstall:
         # Sets install type
         if not self.config.is_landscape():
             self.config.setopt('install_type', 'Multi')
-
-        session_id = self.config.getopt('session_id')
-        utils.pollinate(session_id, 'IM')
+            session_id = self.config.getopt('session_id')
+            utils.pollinate(session_id, 'IM')
 
     def set_perms(self):
         # Set permissions
