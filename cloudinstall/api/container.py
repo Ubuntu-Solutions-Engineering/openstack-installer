@@ -165,7 +165,7 @@ class LXCContainer:
         """ Runs cloud-status in container
         """
         ip = cls.ip(name)
-        cmd = ("sudo -H -u {2} TERM=xterm256-color ssh -t -q "
+        cmd = ("sudo -E -H -u {2} TERM=xterm256-color ssh -t -q "
                "-l ubuntu -o \"StrictHostKeyChecking=no\" "
                "-o \"UserKnownHostsFile=/dev/null\" "
                "-o \"ControlMaster=auto\" "
@@ -452,7 +452,7 @@ class LXDContainer:
         """ Runs cloud-status in container
         """
         ip = cls.ip(name)
-        cmd = ("sudo -H -u {2} TERM=xterm256-color ssh -t -q "
+        cmd = ("sudo -E -H -u {2} TERM=xterm256-color ssh -t -q "
                "-l ubuntu -o \"StrictHostKeyChecking=no\" "
                "-o \"UserKnownHostsFile=/dev/null\" "
                "-o \"ControlMaster=auto\" "
