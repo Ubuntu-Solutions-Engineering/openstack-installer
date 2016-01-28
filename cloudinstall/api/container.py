@@ -505,13 +505,15 @@ class LXDContainer:
                                        user_sudo=True)
         if out['status'] > 0:
             raise Exception("Unable to create container: " +
-                            out['output'])
+                            out['output'] + "\nERR:\n" +
+                            out['err'])
 
         out = utils.get_command_output('lxc config show ' + name,
                                        user_sudo=True)
         if out['status'] > 0:
             raise Exception("Unable to get container config: " +
-                            out['output'])
+                            out['output'] + "\nERR:\n" +
+                            out['err'])
 
         cfgyaml = yaml.load(out['output'])
         with open(userdata, 'r') as uf:
