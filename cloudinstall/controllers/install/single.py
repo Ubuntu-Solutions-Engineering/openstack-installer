@@ -48,6 +48,7 @@ class SingleInstall:
         self.progress_output = ""
         username = utils.install_user()
         self.container_name = 'openstack-single-{}'.format(username)
+        self.session_id = self.config.getopt('session_id')
 
         if self.config.getopt("topcontainer_type") == 'lxd':
             self.cdriver = LXDContainer
@@ -60,8 +61,7 @@ class SingleInstall:
         # Sets install type
         self.config.setopt('install_type', 'Single')
 
-        session_id = self.config.getopt('session_id')
-        utils.pollinate(session_id, 'IS')
+        utils.pollinate(self.session_id, 'IS')
 
     def setup_apt_proxy(self):
         "Use http_proxy unless apt_proxy is explicitly set"
@@ -322,6 +322,7 @@ class SingleInstall:
                 if tries < maxlenient:
                     log.debug("Ignoring initial SSH error.")
                     return False
+                utils.pollinate(self.session_id, 'EC')
                 raise e
             if returncode == 1:
                 # the 'cat' did not find the file.
@@ -331,6 +332,7 @@ class SingleInstall:
             else:
                 log.debug("Unexpected return code from reading "
                           "cloud-init status in container.")
+                utils.pollinate(self.session_id, 'EC')
                 raise e
 
         if result_json == '':
@@ -346,12 +348,14 @@ class SingleInstall:
 
             log.error(str(e))
             log.debug("exception trying to parse '{}'".format(result_json))
+            utils.pollinate(self.session_id, 'EC')
             raise e
 
         errors = ret['v1']['errors']
         if len(errors):
             log.error("Container cloud-init finished with "
                       "errors: {}".format(errors))
+            utils.pollinate(self.session_id, 'EC')
             raise Exception("Top-level container OS did not initialize "
                             "correctly.")
         return True
@@ -390,6 +394,7 @@ class SingleInstall:
             msg = ("Error setting ownership for "
                    "{}".format(self.config.cfg_path))
             log.exception(msg)
+            utils.pollinate(self.session_id, 'EO')
             raise Exception(msg)
 
     def ensure_nested_kvm(self):
@@ -450,6 +455,7 @@ class SingleInstall:
     def do_install(self):
         self.display_controller.status_info_message("Building environment")
         if self.cdriver.exists(self.container_name):
+            utils.pollinate(self.session_id, 'EE')
             raise Exception("Container exists, please uninstall or kill "
                             "existing cloud before proceeding.")
 

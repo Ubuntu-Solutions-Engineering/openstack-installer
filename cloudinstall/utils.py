@@ -740,6 +740,20 @@ def download_url(url, output_file):
 def pollinate(session, tag):
     """ fetches random seed
 
+    Tag definitions:
+        IS - install single
+        IL - install autopilot
+        IM - install multi
+        DS - deploy single
+        DL - deploy autopilot
+        DM - deploy multi
+        ET - error timeout
+        EB - error juju bootstrap
+        EC - error container creation
+        EO - error setting permissions
+        EE - error cloud exists
+        EJ - error reading juju environment
+        EL - error downloading autopilot bundle
     :param str session: randomly generated session id
     :param str tag: custom tag
     """

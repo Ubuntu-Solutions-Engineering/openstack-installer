@@ -49,10 +49,10 @@ class MultiInstall:
             self.post_tasks = []
         self.installing_new_maas = False
         # Sets install type
+        self.session_id = self.config.getopt('session_id')
         if not self.config.is_landscape():
             self.config.setopt('install_type', 'Multi')
-            session_id = self.config.getopt('session_id')
-            utils.pollinate(session_id, 'IM')
+            utils.pollinate(self.session_id, 'IM')
 
     def set_perms(self):
         # Set permissions
@@ -65,6 +65,7 @@ class MultiInstall:
                             utils.install_user(),
                             recursive=True)
             except:
+                utils.pollinate(self.session_id, 'EO')
                 raise MaasInstallError(
                     "Unable to set ownership for {}".format(d))
 
@@ -193,6 +194,7 @@ class MultiInstall:
             status = yaml.load(out['output'])
             bootstrap_dns_name = status['machines']['0']['dns-name']
         except:
+            utils.pollinate(self.session_id, 'EJ')
             log.exception("Error parsing yaml from juju status")
             raise Exception("Problem getting bootstrap machine DNS name")
 
@@ -282,6 +284,7 @@ class LandscapeInstallFinal:
             self.config.bin_path, 'configure-landscape')
         self.lscape_yaml_path = os.path.join(
             self.config.cfg_path, 'landscape-deployments.yaml')
+        self.session_id = self.config.getopt('session_id')
 
     def set_perms(self):
         # Set permissions
@@ -294,6 +297,7 @@ class LandscapeInstallFinal:
                             utils.install_user(),
                             recursive=True)
             except:
+                utils.pollinate(self.session_id, 'EO')
                 raise Exception(
                     "Unable to set ownership for {}".format(d))
 
@@ -320,6 +324,7 @@ class LandscapeInstallFinal:
                 "Downloading latest Landscape Autopilot bundle")
             utils.download_url(self.BUNDLE_URL, self.lscape_yaml_path)
         except Exception as e:
+            utils.pollinate(self.session_id, 'EL')
             log.exception(e)
             raise e
 
@@ -363,6 +368,7 @@ class LandscapeInstallFinal:
             timeout=None,
             user_sudo=True)
         if out['status']:
+            utils.pollinate(self.session_id, 'ET')
             log.error("Problem deploying Landscape: {}".format(out))
             raise Exception("Error deploying Landscape.")
 
@@ -387,10 +393,10 @@ class LandscapeInstallFinal:
         out = utils.get_command_output(cmd, timeout=None)
 
         if out['status']:
+            utils.pollinate(self.session_id, 'ET')
             log.error("Problem with configuring Landscape: {}.".format(out))
             raise Exception("Error configuring Landscape.")
 
-        session_id = self.config.getopt('session_id')
-        utils.pollinate(session_id, 'DL')
+        utils.pollinate(self.session_id, 'DL')
 
         return out['output'].strip()
