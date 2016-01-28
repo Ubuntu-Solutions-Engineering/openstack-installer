@@ -759,8 +759,6 @@ def pollinate(session, tag):
     """
     if not os.path.isfile('/usr/bin/pollinate'):
         return
-    if tag not in ['IL', 'IS', 'IM', 'DL', 'DM', 'DS']:
-        raise UtilsException("Unknown TAG {}".format(tag))
 
     session = os.getenv('OSI_TESTRUNNER_ID', session)
     agent_str = 'uoi/{}/{}'.format(session, tag)
