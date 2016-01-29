@@ -356,7 +356,11 @@ class SingleInstall:
             allowable_errors = ["('ssh-authkey-fingerprints', "
                                 "IOError(13, 'Permission denied'))",
                                 "('keys-to-console', "
-                                "IOError(13, 'Permission denied'))"]
+                                "IOError(13, 'Permission denied'))",
+                                "('ssh-authkey-fingerprints', "
+                                "IOError(1, 'Operation not permitted'))",
+                                "('keys-to-console', "
+                                "IOError(1, 'Operation not permitted'))"]
 
         errors = ret['v1']['errors']
         for e in errors:
