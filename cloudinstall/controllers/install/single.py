@@ -370,6 +370,9 @@ class SingleInstall:
                 utils.pollinate(self.session_id, 'EC')
                 raise Exception("Top-level container OS did not initialize "
                                 "correctly.")
+            else:
+                log.debug("Ignoring container cloud-init error: {}".format(e))
+
         return True
 
     def _install_upstream_deb(self):
