@@ -189,7 +189,9 @@ class SingleInstall:
             'ip route add {} via {} dev lxcbr0'.format(lxc_net, ip))
         if out['status'] != 0:
             raise Exception("Could not add static route for {}"
-                            " network: {}".format(lxc_net, out['output']))
+                            " network: out:{}\nerr:{}".format(lxc_net,
+                                                              out['output'],
+                                                              out['err']))
 
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
