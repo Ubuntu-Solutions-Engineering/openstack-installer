@@ -351,13 +351,21 @@ class SingleInstall:
             utils.pollinate(self.session_id, 'EC')
             raise e
 
+        allowable_errors = []
+        if self.cdriver == LXDContainer:
+            allowable_errors = ["('ssh-authkey-fingerprints', "
+                                "IOError(13, 'Permission denied'))",
+                                "('keys-to-console', "
+                                "IOError(13, 'Permission denied'))"]
+
         errors = ret['v1']['errors']
-        if len(errors):
-            log.error("Container cloud-init finished with "
-                      "errors: {}".format(errors))
-            utils.pollinate(self.session_id, 'EC')
-            raise Exception("Top-level container OS did not initialize "
-                            "correctly.")
+        for e in errors:
+            if e not in allowable_errors:
+                log.error("Container cloud-init finished with some fatal"
+                          "errors: {}".format(errors))
+                utils.pollinate(self.session_id, 'EC')
+                raise Exception("Top-level container OS did not initialize "
+                                "correctly.")
         return True
 
     def _install_upstream_deb(self):
