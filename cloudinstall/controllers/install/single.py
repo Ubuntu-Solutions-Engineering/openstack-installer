@@ -189,7 +189,9 @@ class SingleInstall:
             'ip route add {} via {} dev lxcbr0'.format(lxc_net, ip))
         if out['status'] != 0:
             raise Exception("Could not add static route for {}"
-                            " network: {}".format(lxc_net, out['output']))
+                            " network: out:{}\nerr:{}".format(lxc_net,
+                                                              out['output'],
+                                                              out['err']))
 
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
@@ -356,7 +358,11 @@ class SingleInstall:
             allowable_errors = ["('ssh-authkey-fingerprints', "
                                 "IOError(13, 'Permission denied'))",
                                 "('keys-to-console', "
-                                "IOError(13, 'Permission denied'))"]
+                                "IOError(13, 'Permission denied'))",
+                                "('ssh-authkey-fingerprints', "
+                                "IOError(1, 'Operation not permitted'))",
+                                "('keys-to-console', "
+                                "IOError(1, 'Operation not permitted'))"]
 
         errors = ret['v1']['errors']
         for e in errors:
@@ -366,6 +372,9 @@ class SingleInstall:
                 utils.pollinate(self.session_id, 'EC')
                 raise Exception("Top-level container OS did not initialize "
                                 "correctly.")
+            else:
+                log.debug("Ignoring container cloud-init error: {}".format(e))
+
         return True
 
     def _install_upstream_deb(self):

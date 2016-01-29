@@ -355,6 +355,8 @@ class LXDContainer:
             ip = ips[3].split('|')[3].strip()
             # that gives us a comma-sep list, take the first one:
             ip = ip.split(',')[0]
+            if "(" in ip:
+                ip = ip.split(' ')[0]
             log.debug("lxc ip found: '{}'".format(ip))
             if len(ip) == 0:
                 raise NoContainerIPException()
