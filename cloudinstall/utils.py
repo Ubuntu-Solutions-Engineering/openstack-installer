@@ -760,7 +760,6 @@ def pollinate(session, tag):
     if not os.path.isfile('/usr/bin/pollinate'):
         return
 
-    session = os.getenv('OSI_TESTRUNNER_ID', session)
     agent_str = 'uoi/{}/{}'.format(session, tag)
     try:
         cmd = ("sudo su - -c 'pollinate -q -r --curl-opts "
