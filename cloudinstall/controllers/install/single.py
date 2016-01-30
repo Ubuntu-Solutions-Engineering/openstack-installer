@@ -205,8 +205,11 @@ class SingleInstall:
         if topcontainer_type == 'lxc':
             mounts += [("/var/cache/lxc", "var/cache/lxc", "dir")]
         elif topcontainer_type == 'lxd':
-            mounts += [("/dev/kvm", "dev/kvm", "file"),
-                       ("/dev/net", "dev/net", "dir")]
+            self.cdriver.add_devices(self.container_name,
+                                     [('tun', 'unix-char',
+                                       'path=/dev/net/tun'),
+                                      ('kvm', 'unix-char',
+                                       'path=/dev/kvm')])
         else:
             raise Exception("Uknown container type " + topcontainer_type)
 

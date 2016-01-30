@@ -553,6 +553,17 @@ class LXDContainer:
             raise Exception("couldn't set container config")
 
     @classmethod
+    def add_devices(cls, name, devices):
+        for dname, dtype, keyvalstr in devices:
+            cmd = 'lxc config device add {} {} {} {}'.format(name, dname,
+                                                             dtype, keyvalstr)
+            out = utils.get_command_output(cmd, user_sudo=True)
+            if out['status'] > 0:
+                raise Exception("couldn't add device:"
+                                "out:{}\nerr{}".format(out['output'],
+                                                       out['err']))
+
+    @classmethod
     def start(cls, name, lxc_logfile):
         """ starts lxc container
 
