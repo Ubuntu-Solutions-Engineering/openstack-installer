@@ -21,7 +21,7 @@ class CharmMysql(CharmBase):
     """ MYSQL directives """
 
     charm_name = 'mysql'
-    charm_rev = 30
+    charm_rev = 33
     display_name = 'MySQL'
     deploy_priority = 0
     is_core = True

@@ -26,7 +26,7 @@ class CharmKeystone(CharmBase):
     """ Openstack Keystone directives """
 
     charm_name = 'keystone'
-    charm_rev = 31
+    charm_rev = 33
     display_name = 'Keystone'
     related = [('mysql:shared-db', 'keystone:shared-db')]
     deploy_priority = 1
