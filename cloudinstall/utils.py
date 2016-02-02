@@ -53,6 +53,10 @@ class UtilsException(Exception):
 
 
 def cleanup(cfg):
+    # Log current Juju version
+    if os.path.isfile('/usr/bin/juju'):
+        version = get_command_output('juju version', user_sudo=True)
+        log.debug("Juju Version: {}".format(version['output'].strip()))
     # Save latest config object
     log.info("Cleanup, saving latest config object.")
     cfg.save()
