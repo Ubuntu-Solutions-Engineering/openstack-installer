@@ -22,7 +22,7 @@ class CharmMongo(CharmBase):
     """ MongoDB directives """
 
     charm_name = 'mongodb'
-    charm_rev = 28
+    charm_rev = 33
     display_name = 'MongoDB'
     deploy_priority = 0
     contrib = True

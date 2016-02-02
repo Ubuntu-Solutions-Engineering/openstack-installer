@@ -25,7 +25,7 @@ class CharmCinderCeph(CharmBase):
     """ Cinder-Ceph directives """
 
     charm_name = 'cinder-ceph'
-    charm_rev = 14
+    charm_rev = 16
     display_name = 'Cinder-Ceph'
     deploy_priority = 5
     subordinate = True

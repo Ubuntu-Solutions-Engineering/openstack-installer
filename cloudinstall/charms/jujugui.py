@@ -20,7 +20,7 @@ class CharmJujuGui(CharmBase):
     """ Juju gui directives """
 
     charm_name = 'juju-gui'
-    charm_rev = 41
+    charm_rev = 45
     display_name = 'Juju GUI'
     display_priority = DisplayPriorities.Other
     deploy_priority = 1

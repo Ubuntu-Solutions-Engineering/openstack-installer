@@ -21,7 +21,7 @@ class CharmRabbitMQ(CharmBase):
     """ RabbitMQ directives """
 
     charm_name = 'rabbitmq-server'
-    charm_rev = 42
+    charm_rev = 43
     display_name = 'RabbitMQ Server'
     deploy_priority = 1
     related = [('rabbitmq-server:amqp',

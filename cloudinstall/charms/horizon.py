@@ -21,7 +21,7 @@ class CharmHorizon(CharmBase):
     """ Openstack Horizon directives """
 
     charm_name = 'openstack-dashboard'
-    charm_rev = 19
+    charm_rev = 21
     display_name = 'Openstack Dashboard'
     related = [('keystone:identity-service',
                 'openstack-dashboard:identity-service')]

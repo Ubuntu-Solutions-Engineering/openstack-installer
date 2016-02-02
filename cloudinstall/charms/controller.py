@@ -27,7 +27,7 @@ class CharmNovaCloudController(CharmBase):
     """ Openstack Nova Cloud Controller directives """
 
     charm_name = 'nova-cloud-controller'
-    charm_rev = 64
+    charm_rev = 66
     display_name = 'Controller'
     deploy_priority = 2
     related = [('nova-cloud-controller:shared-db',

@@ -21,7 +21,7 @@ class CharmSwiftProxy(CharmBase):
     """ swift directives """
 
     charm_name = 'swift-proxy'
-    charm_rev = 25
+    charm_rev = 27
     display_name = 'Swift Proxy'
     display_priority = DisplayPriorities.Storage
     related = [
