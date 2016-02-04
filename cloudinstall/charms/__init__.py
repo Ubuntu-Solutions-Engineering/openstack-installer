@@ -264,9 +264,9 @@ export OS_REGION_NAME=\"RegionOne\"
         try:
             # TODO - might not need to pass self.constraints to deploy
 
-            log.debug('calling deploy({}, {}, {}, {}, {}, {})'.format(
+            log.debug('calling deploy({}, {}, {}, {}, {})'.format(
                 _charm_name_rev, self.charm_name, num_units,
-                config_yaml, self.constraints, machine_spec))
+                self.constraints, machine_spec))
 
             self.juju.deploy(_charm_name_rev, self.charm_name, num_units,
                              config_yaml, self.constraints, machine_spec)
