@@ -157,7 +157,6 @@ class Base:
         else:
             raise MacumbaError(
                 'Unknown facade type: {}'.format(params['Type']))
-        print(params)
         with self.connlock:
             req_id = self.conn.do_send(params)
 

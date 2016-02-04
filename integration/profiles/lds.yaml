@@ -1,0 +1,12 @@
+install_type: OpenStack Autopilot
+landscapecreds:
+  admin_email: foo@bar.com
+  admin_name: foo ey
+  system_email: foo@bar.com
+maascreds:
+  api_host: 172.16.0.1
+  api_key: apHb942Xw2GQLxntsV:jFbRrjjuxmybkA7yzX:TLeuLA8TxMFLvYYsRC3b7cvkr4pesTgh
+openstack_password: pass
+openstack_release: kilo
+ubuntu_series: trusty
+headless: true

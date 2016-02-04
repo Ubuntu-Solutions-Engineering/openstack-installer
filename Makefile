@@ -70,9 +70,9 @@ git-sync-requirements:
 	(cd tmp/debian && git checkout -q -f $(UPSTREAM_DEB_COMMIT))
 	(cd tmp/maasclient && git checkout -q -f $(UPSTREAM_MAASCLIENT_COMMIT))
 	(cd tmp/macumba && git checkout -q -f $(UPSTREAM_MACUMBA_COMMIT))
-	rsync -az --delete tmp/debian/debian .
-	rsync -az --delete tmp/macumba/macumba .
-	rsync -az --delete tmp/maasclient/maasclient .
+	rsync -az -C --delete tmp/debian/debian .
+	rsync -az -C --delete tmp/macumba/macumba .
+	rsync -az -C --delete tmp/maasclient/maasclient .
 	rm -rf tmp
 
 git_rev:

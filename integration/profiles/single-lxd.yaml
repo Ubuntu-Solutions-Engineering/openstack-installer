@@ -1,0 +1,4 @@
+openstack_password: pass
+install_type: Single
+headless: true
+topcontainer_type: lxd
