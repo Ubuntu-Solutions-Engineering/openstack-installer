@@ -8,8 +8,8 @@ environments:
     admin-secret: "{{openstack_password}}"
     default-series: {{ubuntu_series}}
     authorized-keys-path: ~/.ssh/id_rsa.pub
-{%- if http_proxy %}
-    apt-http-proxy: {{http_proxy}}
+{%- if apt_proxy %}
+    apt-http-proxy: {{apt_proxy}}
 {%- else %}
     apt-http-proxy: 'http://{{maas_server}}:8000/'
 {%- endif %}
