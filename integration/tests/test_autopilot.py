@@ -31,12 +31,14 @@ CONFIGOBJ = yaml.load(utils.slurp(CONFIGFILE))
 @pytest.fixture
 def juju_state():
     cfg = Config(CONFIGOBJ)
+    uuid = cfg.juju_env['environ-uuid']
     if not len(cfg.juju_env['state-servers']) > 0:
         state_server = 'localhost:17070'
     else:
         state_server = cfg.juju_env['state-servers'][0]
+    url = path.join('wss://', state_server, 'environment', uuid, 'api')
     juju = JujuClient(
-        url=path.join('wss://', state_server),
+        url=url,
         password=cfg.juju_api_password)
     juju.login()
     return JujuState(juju)
