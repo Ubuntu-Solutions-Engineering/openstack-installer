@@ -33,8 +33,8 @@ from cloudinstall.log import PrettyLog
 from cloudinstall.placement.controller import (PlacementController,
                                                AssignmentType)
 
-from macumba import JujuClient
-from macumba import Jobs as JujuJobs
+from macumba.v1 import JujuClient
+from macumba.jobs import Jobs as JujuJobs
 
 
 log = logging.getLogger('cloudinstall.core')
@@ -142,16 +142,18 @@ class Controller:
                 self.ui.refresh_services_view(self.nodes, self.config)
 
     def authenticate_juju(self):
+        uuid = self.config.juju_env['environ-uuid']
         if not len(self.config.juju_env['state-servers']) > 0:
             state_server = 'localhost:17070'
         else:
             state_server = self.config.juju_env['state-servers'][0]
+        url = path.join('wss://', state_server, 'environment', uuid, 'api')
         self.juju = JujuClient(
-            url=path.join('wss://', state_server),
+            url=url,
             password=self.config.juju_api_password)
         self.juju.login()
         self.juju_state = JujuState(self.juju)
-        log.debug('Authenticated against juju api.')
+        log.debug('Authenticated against Juju: {}'.format(url))
 
     def initialize(self):
         """Authenticates against juju/maas and sets up placement controller."""

@@ -23,7 +23,7 @@ import time
 from cloudinstall.machine import Machine
 from cloudinstall.service import Service
 
-from macumba import RequestTimeout
+from macumba.errors import RequestTimeout
 
 log = logging.getLogger('cloudinstall.juju')
 

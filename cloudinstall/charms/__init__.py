@@ -26,7 +26,7 @@ import shutil
 import subprocess
 import requests
 
-from macumba import MacumbaError, ServerError
+from macumba.errors import MacumbaError, ServerError
 from cloudinstall import async
 from cloudinstall import utils
 from cloudinstall.placement.controller import AssignmentType
