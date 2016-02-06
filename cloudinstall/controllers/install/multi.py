@@ -85,7 +85,7 @@ class MultiInstall:
                         'ubuntu_series':
                         self.config.getopt('ubuntu_series')}
 
-        for opt in ['http_proxy', 'https_proxy', 'no_proxy',
+        for opt in ['http_proxy', 'https_proxy', 'no_proxy', 'apt_proxy',
                     'image_metadata_url', 'tools_metadata_url']:
             val = self.config.getopt(opt)
             if val:
