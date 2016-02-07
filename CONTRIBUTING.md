@@ -6,13 +6,13 @@ Guidelines to follow when writing new code or submitting patches.
   3. A `sosreport` from the host system if a *single* install, MAAS server if *multi/landscape autopilot* installation.
 
 ## Landscape OpenStack Autopilot requirements
-  1. */var/log/landscape/job-handler-1.log*
+  1. */var/log/landscape-server/job-handler.log*
 
       Obtain that by running the following from the MAAS system:
       ```
       $ JUJU_HOME=~/.cloud-install/juju juju ssh landscape/0
       $ sudo apt-get install pastebinit
-      $ pastebinit /var/log/landscape/job-handler-1.log
+      $ pastebinit /var/log/landscape-server/job-handler.log
       ```
       
   2. `lshw` output
