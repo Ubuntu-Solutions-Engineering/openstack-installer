@@ -35,7 +35,8 @@ INSTALL_TYPE_LANDSCAPE = ("OpenStack Autopilot",
 OPENSTACK_RELEASE_LABELS = dict(icehouse="Icehouse (2014.1.3)",
                                 juno="Juno (2014.2.2)",
                                 kilo="Kilo (2015.1.0)",
-                                liberty="Liberty (2015.2.0)")
+                                liberty="Liberty (2015.2.0)",
+                                mitaka="Mitaka (2016 devel)")
 
 
 class ConfigException(Exception):
