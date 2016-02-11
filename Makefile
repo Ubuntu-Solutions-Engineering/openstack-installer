@@ -11,6 +11,8 @@ UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.g
 UPSTREAM_MACUMBA_COMMIT := v0.7
 UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
 UPSTREAM_MAASCLIENT_COMMIT := 357db23
+UPSTREAM_UBUNTUI := https://github.com/Ubuntu-Solutions-Engineering/urwid-ubuntu.git
+UPSTREAM_UBUNTUI_COMMIT := v0.0.9
 
 .PHONY: install-dependencies
 install-dependencies:
@@ -60,20 +62,24 @@ current_version:
 
 git-sync-requirements:
 	@echo Syncing git repos
-	rm -rf tmp && mkdir -p tmp
-	rm -rf debian
-	rm -rf macumba
-	rm -rf maasclient
+	@rm -rf tmp && mkdir -p tmp
+	@rm -rf debian
+	@rm -rf macumba
+	@rm -rf maasclient
+	@rm -rf ubuntui
 	git clone -q $(UPSTREAM_DEB) tmp/debian
 	git clone -q $(UPSTREAM_MACUMBA) tmp/macumba
 	git clone -q $(UPSTREAM_MAASCLIENT) tmp/maasclient
-	(cd tmp/debian && git checkout -q -f $(UPSTREAM_DEB_COMMIT))
-	(cd tmp/maasclient && git checkout -q -f $(UPSTREAM_MAASCLIENT_COMMIT))
-	(cd tmp/macumba && git checkout -q -f $(UPSTREAM_MACUMBA_COMMIT))
-	rsync -az -C --delete tmp/debian/debian .
-	rsync -az -C --delete tmp/macumba/macumba .
-	rsync -az -C --delete tmp/maasclient/maasclient .
-	rm -rf tmp
+	git clone -q $(UPSTREAM_UBUNTUI) tmp/ubuntui
+	@(cd tmp/debian && git checkout -q -f $(UPSTREAM_DEB_COMMIT))
+	@(cd tmp/maasclient && git checkout -q -f $(UPSTREAM_MAASCLIENT_COMMIT))
+	@(cd tmp/macumba && git checkout -q -f $(UPSTREAM_MACUMBA_COMMIT))
+	@(cd tmp/ubuntui && git checkout -q -f $(UPSTREAM_UBUNTUI_COMMIT))
+	@rsync -az -C --delete tmp/debian/debian .
+	@rsync -az -C --delete tmp/macumba/macumba .
+	@rsync -az -C --delete tmp/maasclient/maasclient .
+	@rsync -C -az --delete tmp/ubuntui/ubuntui .
+	@rm -rf tmp
 
 git_rev:
 	@echo $(GIT_REV)

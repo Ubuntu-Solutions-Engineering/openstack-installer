@@ -17,75 +17,33 @@ from __future__ import unicode_literals
 from operator import attrgetter
 import logging
 import random
-from urwid import (Text, Columns, WidgetWrap,
-                   Pile, ListBox, Divider)
+from urwid import (Text, WidgetWrap)
 from cloudinstall.status import get_sync_status
 from cloudinstall import utils
 from cloudinstall.ui.widgets import UnitInfoWidget
-from cloudinstall.ui.utils import Color
+from ubuntui.widgets.table import Table
+from ubuntui.utils import Color
 
 
 log = logging.getLogger('cloudinstall.ui.views.services')
 
 
-class ServiceColumn:
-
-    def __init__(self):
-        self.columns = {}
-
-    def add(self, key, heading):
-        self.columns[key] = Pile([
-            Color.column_header(Text(heading))
-        ])
-
-    def get(self, key):
-        return self.columns[key]
-
-    def add_to(self, key, w):
-        """ Append item to specified column pile
-        """
-        pile = self.get(key)
-        pile.contents.append((w, pile.options()))
-        pile.contents.append((
-            Divider("\N{BOX DRAWINGS LIGHT HORIZONTAL}"),
-            pile.options()))
-
-    def contents(self, key):
-        return self.get(key).contents
-
-    def render(self):
-        """ Renders columns with proper spacing
-        """
-        items = [('fixed', 2, self.get('icon')),
-                 self.get('display_name'),
-                 ('fixed', 10, self.get('agent_state')),
-                 ('fixed', 12, self.get('public_address')),
-                 ('fixed', 9, self.get('machine')),
-                 ('fixed', 10, self.get('container')),
-                 ('fixed', 7, self.get('arch')),
-                 ('fixed', 6, self.get('cpu_cores')),
-                 ('fixed', 7, self.get('mem')),
-                 ('fixed', 7, self.get('storage'))]
-        return Columns(items)
-
-
 class ServicesView(WidgetWrap):
 
     view_columns = [
-        ('icon', ""),
-        ('display_name', "Service"),
-        ('agent_state', "Status"),
-        ('public_address', "IP"),
-        ('machine', "Machine"),
-        ('container', "Container"),
-        ('arch', "Arch "),
-        ('cpu_cores', "Cores"),
-        ('mem', "Mem "),
-        ('storage', "Storage")
+        ('icon', "", 2),
+        ('display_name', "Service", 0),
+        ('agent_state', "Status", 12),
+        ('public_address', "IP", 12),
+        ('machine', "Machine", 12),
+        ('container', "Container", 12),
+        ('arch', "Arch ", 12),
+        ('cpu_cores', "Cores", 12),
+        ('mem', "Mem ", 12),
+        ('storage', "Storage", 12)
     ]
 
     def __init__(self, nodes, juju_state, maas_state, config):
-        self.columns = ServiceColumn()
         self.deployed = {}
         self.nodes = [] if nodes is None else nodes
         self.juju_state = juju_state
@@ -93,10 +51,18 @@ class ServicesView(WidgetWrap):
         self.config = config
         self.unit_w = None
         self.log_cache = None
+        self.table = Table()
 
-        for key, label in self.view_columns:
-            self.columns.add(key, label)
-        super().__init__(ListBox([self.columns.render()]))
+        headings = []
+        for key, label, width in self.view_columns:
+            # If no width assume ('weight', 1, widget)
+            if width == 0:
+                headings.append(Color.column_header(Text(label)))
+            else:
+                headings.append(
+                    ('fixed', width, Color.column_header(Text(label))))
+        self.table.addHeadings(headings)
+        super().__init__(self.table.render())
 
         self.refresh_nodes(self.nodes)
 
@@ -104,6 +70,7 @@ class ServicesView(WidgetWrap):
         """ Adds services to the view if they don't already exist
         """
         for node in nodes:
+            services_list = []
             charm_class, service = node
             if len(service.units) > 0:
                 for u in sorted(service.units, key=attrgetter('unit_name')):
@@ -117,9 +84,21 @@ class ServicesView(WidgetWrap):
                             charm_class,
                             hwinfo)
                         unit_w = self.deployed[u.unit_name]
-                        for k, label in self.view_columns:
-                            self.columns.add_to(k, getattr(unit_w, k))
+                        for k, label, width in self.view_columns:
+                            if width == 0:
+                                services_list.append(getattr(unit_w, k))
+                            else:
+                                services_list.append(('fixed', width,
+                                                      getattr(unit_w, k)))
 
+                        self.table.addColumns(u.unit_name, services_list)
+                        self.table.addColumns(
+                            u.unit_name,
+                            [
+                                ('fixed', 5, Text("")),
+                                Color.frame_subheader(unit_w.workload_info)
+                            ],
+                            force=True)
                     self.update_ui_state(charm_class, u,
                                          unit_w)
 
@@ -156,39 +135,27 @@ class ServicesView(WidgetWrap):
         unit_w.public_address.set_text(unit.public_address)
         unit_w.agent_state.set_text(unit.agent_state)
         unit_w.icon.set_text(self.status_icon_state(charm_class, unit))
-
-        extended_agent_state = unit.extended_agent_state
-        if len(extended_agent_state) > 0 and \
-           extended_agent_state != 'idle':
-            unit_w.display_name.set_text("{}: {} - {}".format(
-                charm_class.display_name,
-                extended_agent_state,
-                unit.workload_info))
-        else:
-            unit_w.display_name.set_text("{}".format(
-                charm_class.display_name))
-
         # Special additional status text for these services
         if 'glance-simplestreams-sync' in unit.unit_name:
             status_oneline = get_sync_status().replace("\n", " - ")
-            unit_w.display_name.set_text(
-                "{} ({})".format(charm_class.display_name,
-                                 status_oneline))
+            unit_w.workload_info.set_text(status_oneline)
 
-        if unit.is_horizon and unit.agent_state == "started":
-            unit_w.display_name.set_text(
-                "{} - Login: https://{}/horizon "
+        elif unit.is_horizon and unit.agent_state == "started":
+            unit_w.workload_info.set_text(
+                "Login: https://{}/horizon "
                 "l:{} p:{}".format(
-                    charm_class.display_name,
                     unit.public_address,
                     'ubuntu',
                     self.config.getopt('openstack_password')))
 
-        if unit.is_jujugui and unit.agent_state == "started":
-            unit_w.display_name.set_text(
-                "{} - Login: https://{}/".format(
-                    charm_class.display_name,
+        elif unit.is_jujugui and unit.agent_state == "started":
+            unit_w.workload_info.set_text(
+                "Login: https://{}/".format(
                     unit.public_address))
+        else:
+            unit_w.workload_info.set_text(
+                " {} - {}".format(unit.extended_agent_state,
+                                  unit.workload_info))
 
     def _get_hardware_info(self, unit):
         """Get hardware info from juju or maas

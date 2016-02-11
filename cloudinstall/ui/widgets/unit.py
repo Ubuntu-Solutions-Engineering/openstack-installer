@@ -36,4 +36,6 @@ class UnitInfoWidget(WidgetWrap):
         self.display_name = Text(self.charm_class.display_name)
         self.agent_state = Text(self.unit.agent_state)
         self.public_address = Text(self.unit.public_address)
+        self.extended_agent_state = Text(self.unit.extended_agent_state)
+        self.workload_info = Text(self.unit.workload_info)
         self.icon = Text("")
