@@ -186,7 +186,7 @@ class SingleInstall:
                                                             ip))
 
         out = utils.get_command_output(
-            'ip route add {} via {} dev lxcbr0'.format(lxc_net, ip))
+            'ip route add {} via {} dev uoibr0'.format(lxc_net, ip))
         if out['status'] != 0:
             raise Exception("Could not add static route for {}"
                             " network: out:{}\nerr:{}".format(lxc_net,
@@ -196,9 +196,12 @@ class SingleInstall:
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
+        lxc_network_config = os.path.join(self.config.tmpl_path,
+                                          'uoi-toplevel-lxc.conf')
         self.tasker.start_task("Creating Container",
                                self.read_container_status)
-        self.cdriver.create(self.container_name, self.userdata)
+        self.cdriver.create(self.container_name, self.userdata,
+                            lxc_network_config)
 
         mounts = [(self.config.cfg_path, 'home/ubuntu/.cloud-install', "dir")]
         topcontainer_type = self.config.getopt("topcontainer_type")
@@ -417,6 +420,19 @@ class SingleInstall:
             utils.pollinate(self.session_id, 'EO')
             raise Exception(msg)
 
+    def create_uoi_bridge(self):
+        """ Create a custom bridge for our installer
+        """
+        cmd = "virsh net-define {}".format(os.path.join(
+            self.config.tmpl_path, 'uoi-bridge.xml'))
+        log.debug("Defining bridge: {}".format(cmd))
+        utils.get_command_output(cmd, user_sudo=True)
+        cmd = "virsh net-start uoinet"
+        log.debug("Starting bridge: {}".format(cmd))
+        utils.get_command_output(cmd, user_sudo=True)
+        cmd = "virsh net-autostart uoinet"
+        utils.get_command_output(cmd, user_sudo=True)
+
     def ensure_nested_kvm(self):
         """kvm_intel module defaults to nested OFF. If qemu_system_x86 is not
         installed, this may stay off. Our package installs a
@@ -484,6 +500,8 @@ class SingleInstall:
         if upstream_deb and not os.path.isfile(upstream_deb):
             raise Exception("Upstream deb '{}' "
                             "not found.".format(upstream_deb))
+
+        self.create_uoi_bridge()
 
         utils.ssh_genkey()
 

@@ -49,7 +49,7 @@ class TestSingle:
         """
         saved_ip = self.CONFIG['container_ip']
         lxc_ip = LXCContainer.ip(self.CONFIG['container_name'])
-        assert saved_ip == lxc_ip
+        assert saved_ip in lxc_ip
 
     def test_config_deploy_complete(self):
         """ Verifies config data:  deploy is complete.

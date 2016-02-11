@@ -202,8 +202,13 @@ class LXCContainer:
                                 src, name, ip, ret['output'], ret['err'], cmd))
 
     @classmethod
-    def create(cls, name, userdata):
+    def create(cls, name, userdata, config=None):
         """ creates a container from ubuntu-cloud template
+
+        Arguments:
+        name: name of container
+        userdata: cloud-init config
+        config: lxc container configuration
         """
         # NOTE: the -F template arg is a workaround. it flushes the lxc
         # ubuntu template's image cache and forces a re-download. It
@@ -213,10 +218,14 @@ class LXCContainer:
         if os.getenv("USE_LXC_IMAGE_CACHE"):
             log.debug("USE_LXC_IMAGE_CACHE set, so not flushing in lxc-create")
             flushflag = ""
+        configflag = ""
+        if config is not None:
+            configflag = "-f {0}".format(config)
         out = utils.get_command_output(
-            'sudo -E lxc-create -t ubuntu-cloud '
+            'sudo -E lxc-create -t ubuntu-cloud {configflag} '
             '-n {name} -- {flushflag} '
             '-u {userdatafilename}'.format(name=name,
+                                           configflag=configflag,
                                            flushflag=flushflag,
                                            userdatafilename=userdata))
         if out['status'] > 0:
@@ -489,7 +498,7 @@ class LXDContainer:
                                                cmd))
 
     @classmethod
-    def create(cls, name, userdata):
+    def create(cls, name, userdata, config=None):
         """ creates a container from an image with the alias 'ubuntu'
         """
 

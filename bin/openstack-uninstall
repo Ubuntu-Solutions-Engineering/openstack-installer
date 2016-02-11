@@ -50,6 +50,8 @@ case $WHAT in
     else
         echo "No static route defined. Not changing routing tables."
     fi
+    virsh net-destroy uoinet || true
+    virsh net-undefine uoinet || true
     ;;
   *)
     echo Could not determine install type, was ~/.cloud-install removed prior to running the uninstallation?

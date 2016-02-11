@@ -1,0 +1,16 @@
+<network>
+  <name>uoinet</name>
+  <uuid>f43b4b7c-ede6-4615-b27d-d24b760f4229</uuid>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='uoibr0' stp='on' delay='0' />
+  <mac address='52:54:00:60:f8:6e'/>
+  <ip address='10.100.1.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='10.100.1.2' end='10.100.1.254' />
+    </dhcp>
+  </ip>
+</network>
