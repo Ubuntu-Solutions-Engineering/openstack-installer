@@ -93,8 +93,8 @@ def get_default_gateway():
 
 def get_unique_lxc_network():
     """Returns CIDR notation for a network that does not overlap with an
-    existing static route. Starts at 10.1.3.0/24, then tries
-    10.1.4.0/24 etc.
+    existing static route. Starts at 10.0.3.0/24, then tries
+    10.0.4.0/24 etc.
     """
     def static_route_exists(cidr):
         out = check_output("ip route show to {}".format(cidr),
@@ -102,7 +102,7 @@ def get_unique_lxc_network():
         return len(out) > 0
 
     n = 3
-    cidrfmt = "10.1.{}.0/24"
+    cidrfmt = "10.0.{}.0/24"
     while static_route_exists(cidrfmt.format(n)):
         n += 1
     return cidrfmt.format(n)

@@ -41,7 +41,8 @@ case $WHAT in
 	lxc-stop -n $CONTAINER_NAME || true
 	lxc-destroy -n $CONTAINER_NAME || true
     else
-	lxc delete $CONTAINER_NAME || true
+        lxc stop --force $CONTAINER_NAME || true
+	lxc delete --force $CONTAINER_NAME || true
     fi
 
     if [ -n "$CONTAINER_NETWORK" ]; then
