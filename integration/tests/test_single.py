@@ -19,7 +19,6 @@ import yaml
 
 sys.path.insert(0, '/usr/share/openstack')
 import cloudinstall.utils as utils  # noqa
-from cloudinstall.api.container import LXCContainer  # noqa
 
 
 class TestSingle:
@@ -37,19 +36,10 @@ class TestSingle:
     def test_bootstrap_succeeded(self):
         """ Verifies a local bootstrap happened
         """
-        cmd = ("JUJU_HOME=~/.cloud-install/juju juju stat --format yaml")
-        out = LXCContainer.run(self.CONFIG['container_name'],
-                               cmd, use_ssh=True)
-        out = out.split("\n")[0].strip()
+        cmd = ("openstack-juju stat --format yaml")
+        out = utils.get_command_output(cmd)
+        out = out['output']
         assert('environment: local' in out)
-
-    def test_container_ip_matches(self):
-        """ Verifies container ip in config matches
-        what LXC sees
-        """
-        saved_ip = self.CONFIG['container_ip']
-        lxc_ip = LXCContainer.ip(self.CONFIG['container_name'])
-        assert saved_ip in lxc_ip
 
     def test_config_deploy_complete(self):
         """ Verifies config data:  deploy is complete.
