@@ -34,15 +34,15 @@ class NetUtilsTestCase(unittest.TestCase):
     def test_get_unique_lxc_network(self, mock_check_output):
         mock_check_output.return_value = ""
         s = get_unique_lxc_network()
-        self.assertEqual(s, "10.1.3.0/24")
+        self.assertEqual(s, "10.0.3.0/24")
 
         mock_check_output.side_effect = ['1', '']
         s = get_unique_lxc_network()
-        self.assertEqual(s, "10.1.4.0/24")
+        self.assertEqual(s, "10.0.4.0/24")
 
         mock_check_output.side_effect = ['1', '2', '3', '']
         s = get_unique_lxc_network()
-        self.assertEqual(s, "10.1.6.0/24")
+        self.assertEqual(s, "10.0.6.0/24")
 
     def test_is_ipv6(self):
         """ Should be an ipv6 address
