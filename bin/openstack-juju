@@ -44,10 +44,11 @@ if __name__ == '__main__':
 
         if cfg.getopt("topcontainer_type") == 'lxd':
             cdriver = LXDContainer
+            out = cdriver.run(name, cmd)
         else:
             cdriver = LXCContainer
+            out = cdriver.run(name, cmd, use_sudo=True)
 
-        out = cdriver.run(name, cmd, use_sudo=True)
         print(out)
     else:
         cmd = ("{} juju {}".format(cfg.juju_home(True), args))

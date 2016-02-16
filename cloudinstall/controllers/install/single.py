@@ -196,12 +196,9 @@ class SingleInstall:
     def create_container_and_wait(self):
         """ Creates container and waits for cloud-init to finish
         """
-        lxc_network_config = os.path.join(self.config.tmpl_path,
-                                          'uoi-toplevel-lxc.conf')
         self.tasker.start_task("Creating Container",
                                self.read_container_status)
-        self.cdriver.create(self.container_name, self.userdata,
-                            lxc_network_config)
+        self.cdriver.create(self.container_name, self.userdata)
 
         mounts = [(self.config.cfg_path, 'home/ubuntu/.cloud-install', "dir")]
         topcontainer_type = self.config.getopt("topcontainer_type")
@@ -233,9 +230,20 @@ class SingleInstall:
         mount_configs = self.cdriver.add_bind_mounts(self.container_name,
                                                      mounts)
 
-        cfgs = ['lxc.mount.auto = cgroup:mixed',
-                'lxc.start.auto = 1',
-                'lxc.start.delay = 5'] + mount_configs
+        lxc_bridge_config = [
+            'lxc.network.type = veth',
+            'lxc.network.link = uoibr0',
+            'lxc.network.flags = up',
+            'lxc.network.hwaddr = 00:16:3e:18:12:9f',
+        ]
+
+        cfgs = [
+            'lxc.mount.auto = cgroup:mixed',
+            'lxc.start.auto = 1',
+            'lxc.start.delay = 5'] + mount_configs
+
+        if topcontainer_type == 'lxc':
+            cfgs.extend(lxc_bridge_config)
 
         self.cdriver.add_config_entries(self.container_name, cfgs)
 

@@ -202,13 +202,12 @@ class LXCContainer:
                                 src, name, ip, ret['output'], ret['err'], cmd))
 
     @classmethod
-    def create(cls, name, userdata, config=None):
+    def create(cls, name, userdata):
         """ creates a container from ubuntu-cloud template
 
         Arguments:
         name: name of container
         userdata: cloud-init config
-        config: lxc container configuration
         """
         # NOTE: the -F template arg is a workaround. it flushes the lxc
         # ubuntu template's image cache and forces a re-download. It
@@ -218,14 +217,10 @@ class LXCContainer:
         if os.getenv("USE_LXC_IMAGE_CACHE"):
             log.debug("USE_LXC_IMAGE_CACHE set, so not flushing in lxc-create")
             flushflag = ""
-        configflag = ""
-        if config is not None:
-            configflag = "-f {0}".format(config)
         out = utils.get_command_output(
-            'sudo -E lxc-create -t ubuntu-cloud {configflag} '
+            'sudo -E lxc-create -t ubuntu-cloud '
             '-n {name} -- {flushflag} '
             '-u {userdatafilename}'.format(name=name,
-                                           configflag=configflag,
                                            flushflag=flushflag,
                                            userdatafilename=userdata))
         if out['status'] > 0:
@@ -498,7 +493,7 @@ class LXDContainer:
                                                cmd))
 
     @classmethod
-    def create(cls, name, userdata, config=None):
+    def create(cls, name, userdata):
         """ creates a container from an image with the alias 'ubuntu'
         """
 
@@ -506,14 +501,51 @@ class LXDContainer:
         out = utils.get_command_output('lxc image list | '
                                        'grep {}'.format(imgname),
                                        user_sudo=True)
+
         if len(out['output']) == 0:
             m = ("LXD: No image named '{}' found. "
                  "Please import an image or set an alias.".format(imgname))
             raise Exception(m)
 
-        out = utils.get_command_output('lxc init {} {}'.format(imgname,
-                                                               name),
-                                       user_sudo=True)
+        with tempfile.NamedTemporaryFile(delete=False) as profiletmp:
+            cmd = 'lxc profile create uoi-default'
+            utils.get_command_output(cmd, user_sudo=True)
+
+            profileyaml = {
+                'name': 'uoi-default',
+                'config': {
+                    "boot.autostart": True,
+                    "linux.kernel_modules": "openvswitch,nbd,ip_tables,ip6_tables",  # noqa
+                    "security.nesting": True,
+                    "security.privileged": True
+                },
+                'devices': {
+                    "eth0": {
+                        "mtu": "9000",
+                        "name": "eth0",
+                        "nictype": "bridged",
+                        "parent": "uoibr0",
+                        "type": "nic"
+                    }
+                }
+            }
+            profiletmp.write(yaml.dump(profileyaml).encode())
+            profiletmp.flush()
+            os.chmod(profiletmp.name, stat.S_IROTH | stat.S_IRWXU)
+            cmd = 'cat {} | lxc profile edit uoi-default'.format(
+                profiletmp.name)
+            out = utils.get_command_output(cmd, user_sudo=True)
+            if out['status'] > 0:
+                raise Exception(
+                    "Unable to configure network: ({}) {}:{}".format(
+                        profiletmp.name, out['output'], out['err']
+                    ))
+
+        out = utils.get_command_output(
+            'lxc init {} {} -p uoi-default'.format(
+                imgname,
+                name),
+            user_sudo=True)
         if out['status'] > 0:
             raise Exception("Unable to create container: " +
                             out['output'] + "\nERR:\n" +
@@ -559,7 +591,10 @@ class LXDContainer:
                                        '"{}"'.format(name, raw_lxc_config),
                                        user_sudo=True)
         if out['status'] > 0:
-            raise Exception("couldn't set container config")
+            raise Exception(
+                "couldn't set container "
+                "config: out:{} err:{}".format(out['output'],
+                                               out['err']))
 
     @classmethod
     def add_devices(cls, name, devices):
