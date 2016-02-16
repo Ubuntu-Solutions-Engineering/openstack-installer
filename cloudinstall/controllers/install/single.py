@@ -230,20 +230,10 @@ class SingleInstall:
         mount_configs = self.cdriver.add_bind_mounts(self.container_name,
                                                      mounts)
 
-        lxc_bridge_config = [
-            'lxc.network.type = veth',
-            'lxc.network.link = uoibr0',
-            'lxc.network.flags = up',
-            'lxc.network.hwaddr = 00:16:3e:18:12:9f',
-        ]
-
         cfgs = [
             'lxc.mount.auto = cgroup:mixed',
             'lxc.start.auto = 1',
             'lxc.start.delay = 5'] + mount_configs
-
-        if topcontainer_type == 'lxc':
-            cfgs.extend(lxc_bridge_config)
 
         self.cdriver.add_config_entries(self.container_name, cfgs)
 

@@ -217,15 +217,31 @@ class LXCContainer:
         if os.getenv("USE_LXC_IMAGE_CACHE"):
             log.debug("USE_LXC_IMAGE_CACHE set, so not flushing in lxc-create")
             flushflag = ""
-        out = utils.get_command_output(
-            'sudo -E lxc-create -t ubuntu-cloud '
-            '-n {name} -- {flushflag} '
-            '-u {userdatafilename}'.format(name=name,
-                                           flushflag=flushflag,
-                                           userdatafilename=userdata))
+
+        configflag = ""
+        with tempfile.NamedTemporaryFile(delete=False) as netcfg:
+            netout = ("lxc.network.type = veth\n"
+                      "lxc.network.link = uoibr0\n"
+                      "lxc.network.flags = up\n"
+                      "lxc.network.hwaddr = {}\n".format(utils.macgen()))
+            netcfg.write(netout.encode())
+            netcfg.flush()
+            os.chmod(netcfg.name, stat.S_IROTH | stat.S_IRWXU)
+            configflag = "-f {}".format(netcfg.name)
+
+            cmd = ('sudo -E lxc-create -t ubuntu-cloud {configflag} '
+                   '-n {name} -- {flushflag} '
+                   '-u {userdatafilename}'.format(name=name,
+                                                  flushflag=flushflag,
+                                                  configflag=configflag,
+                                                  userdatafilename=userdata))
+        log.debug("Running command: {}".format(cmd))
+
+        out = utils.get_command_output(cmd)
         if out['status'] > 0:
             raise Exception("Unable to create container: "
-                            "{0}".format(out['output']))
+                            "{0} ({1})".format(out['output'],
+                                               out['err'].strip()))
         return out['status']
 
     @classmethod
