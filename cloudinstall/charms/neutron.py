@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
+# import os
 import logging
-from cloudinstall import utils
-from cloudinstall.charms import CharmBase, CharmPostProcessException
+# from cloudinstall import utils
+from cloudinstall.charms import CharmBase, CharmPostProcessException  # noqa
 from cloudinstall.placement.controller import AssignmentType
 
 log = logging.getLogger('cloudinstall.charms.neutron')
@@ -50,7 +50,8 @@ class CharmNeutron(CharmBase):
     #     unit = svc.unit(self.charm_name)
 
     #     if unit.machine_id == '-1':
-    #         raise CharmPostProcessException("Service not ready for workload.")
+    #         raise CharmPostProcessException(
+    #                 "Service not ready for workload.")
 
     #     self.ui.status_info_message("Validating network parameters "
     #                                 "for Neutron")
