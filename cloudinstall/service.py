@@ -46,6 +46,10 @@ class Unit:
         return self.unit.get('AgentState', 'unknown')
 
     @property
+    def workload(self):
+        return self.unit.get('Workload', {})
+
+    @property
     def workload_state(self):
         return self.unit.get('Workload', {}).get('Status', '')
 

@@ -190,6 +190,7 @@ openstack-dashboard:
 
 neutron-gateway:
   instance-mtu: 1400
+  ext-port: eth1
 {%- if openstack_origin is defined %}
   openstack-origin: {{openstack_origin}}
 {%- endif %}

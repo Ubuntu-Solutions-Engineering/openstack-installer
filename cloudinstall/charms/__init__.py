@@ -1,7 +1,4 @@
-#
-# charms.py - Charm instructions to Cloud Installer
-#
-# Copyright 2014, 2015 Canonical, Ltd.
+# Copyright 2014-2016 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -29,6 +26,7 @@ import requests
 from macumba.errors import MacumbaError, ServerError
 from cloudinstall import async
 from cloudinstall import utils
+from cloudinstall.service import JujuUnitNotFoundException
 from cloudinstall.placement.controller import AssignmentType
 
 log = logging.getLogger('cloudinstall.charms')
@@ -87,6 +85,14 @@ def get_charm(charm_name, juju, juju_state, ui, config):
                                   config=config)
         if charm_name == c.name():
             return c
+
+
+class CharmPostNoWorkloadException(Exception):
+    """ No workload found """
+
+
+class CharmPostProcessException(Exception):
+    """ Exception during post-processing """
 
 
 class CharmBase:
@@ -363,7 +369,21 @@ export OS_REGION_NAME=\"RegionOne\"
 
         Override in charm classes
         """
-        pass
+        try:
+            svc = self.juju_state.service(self.charm_name)
+            unit = svc.unit(self.charm_name)
+        except JujuUnitNotFoundException:
+            msg = "{} has no workload.".format(self.charm_name)
+            log.debug(msg)
+            raise CharmPostNoWorkloadException(msg)
+
+        workload = unit.workload
+        if workload['Status'] not in ['active', 'unknown']:
+            raise CharmPostProcessException(
+                "{} not ready for post "
+                "processing (requeueing): ({}) {}".format(self.charm_name,
+                                                          workload['Status'],
+                                                          workload['Info']))
 
     def __repr__(self):
         return self.name()
@@ -473,14 +493,16 @@ class CharmQueue:
         while not self.charm_post_proc_q.empty():
             try:
                 charm = self.charm_post_proc_q.get()
-                err = charm.post_proc()
-                if err:
-                    self.charm_post_proc_q.put(charm)
+                charm.post_proc()
+            except CharmPostNoWorkloadException as e:
+                log.debug(e)
                 self.charm_post_proc_q.task_done()
-            except:
-                msg = "Exception in post-processing watcher, re-trying."
-                log.exception(msg)
-                self.ui.status_error_message(msg)
-
+            except CharmPostProcessException as e:
+                log.debug(e)
+                self.ui.status_error_message(e)
+                self.charm_post_proc_q.put(charm)
+                self.charm_post_proc_q.task_done()
+            log.debug("Post processing queue size: {}".format(
+                self.charm_post_proc_q.qsize()))
             async.sleep_until(10)
         self.config.setopt('postproc_complete', True)

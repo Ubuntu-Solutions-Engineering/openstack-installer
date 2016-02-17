@@ -36,6 +36,9 @@ class ConsoleUI:
     def status_info_message(self, msg):
         log.info(msg)
 
+    def status_error_message(self, msg):
+        log.error(msg)
+
     def clear_status(self):
         pass
 

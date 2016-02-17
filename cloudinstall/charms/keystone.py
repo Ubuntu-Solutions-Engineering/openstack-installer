@@ -15,7 +15,9 @@
 
 import logging
 import yaml
-from cloudinstall.charms import CharmBase
+from cloudinstall.charms import (CharmBase,
+                                 CharmPostNoWorkloadException,
+                                 CharmPostProcessException)
 from cloudinstall.utils import slurp
 
 log = logging.getLogger('cloudinstall.charms.keystone')
@@ -45,12 +47,13 @@ class CharmKeystone(CharmBase):
         return False
 
     def post_proc(self):
+        super(CharmKeystone, self).post_proc()
         if self._is_auth_url_valid():
-            return False
+            raise CharmPostNoWorkloadException("Keystone auth-url configured.")
 
         service = self.juju_state.service('keystone')
         if len(service.units) < 1:
-            return True
+            raise CharmPostProcessException("No available units.")
 
         unit = service.units[0]
         self.config.update_environments_yaml(
@@ -59,6 +62,5 @@ class CharmKeystone(CharmBase):
             provider='openstack'
         )
         log.debug("Updated keystone auth-url in openstack provider.")
-        return False
 
 __charm_class__ = CharmKeystone

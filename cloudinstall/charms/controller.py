@@ -17,7 +17,7 @@ import os
 import logging
 from cloudinstall import utils
 from cloudinstall.netutils import is_ipv6
-from cloudinstall.charms import CharmBase
+from cloudinstall.charms import CharmBase, CharmPostProcessException
 
 log = logging.getLogger('cloudinstall.charms.controller')
 
@@ -44,6 +44,7 @@ class CharmNovaCloudController(CharmBase):
 
     def post_proc(self):
         """ post processing for nova-cloud-controller """
+        super(CharmNovaCloudController, self).post_proc()
         svc = self.juju_state.service(self.charm_name)
         unit = svc.unit(self.charm_name)
         k_svc = self.juju_state.service('keystone')
@@ -62,39 +63,17 @@ class CharmNovaCloudController(CharmBase):
                                       openstack_password,
                                       u, public_address)
             self._openstack_env_save(u, env)
-            utils.remote_cp(
-                unit.machine_id,
-                src=self._openstack_env_path(u),
-                dst='/tmp/openstack-{u}-rc'.format(u=u),
-                juju_home=self.config.juju_home(use_expansion=True))
 
         setup_script_path = self.render_setup_script()
-        remote_setup_script_path = "/tmp/nova-controller-setup.sh"
-        utils.remote_cp(
-            unit.machine_id,
-            src=setup_script_path,
-            dst=remote_setup_script_path,
-            juju_home=self.config.juju_home(use_expansion=True))
-        utils.remote_run(
-            unit.machine_id,
-            cmds="chmod +x {}".format(remote_setup_script_path),
-            juju_home=self.config.juju_home(use_expansion=True))
-        utils.remote_cp(
-            unit.machine_id,
-            src=utils.ssh_pubkey(),
-            dst="/tmp/id_rsa.pub",
-            juju_home=self.config.juju_home(use_expansion=True))
-        err = utils.remote_run(
-            unit.machine_id,
-            cmds="/tmp/nova-controller-setup.sh "
-            "\"{p}\" \"{install_type}\"".format(
-                p=openstack_password,
-                install_type=self.config.getopt('install_type')),
-            juju_home=self.config.juju_home(use_expansion=True))
+        cmds = ("bash {script} "
+                "\"{password}\" \"{install_type}\"".format(
+                    script=setup_script_path,
+                    password=openstack_password,
+                    install_type=self.config.getopt('install_type')
+                ))
+        err = utils.get_command_output(cmds)
         if err['status'] != 0:
-            # something happened during nova setup, re-run
-            return True
-        return False
+            raise CharmPostProcessException(err)
 
     def render_setup_script(self):
         setup_template = utils.load_template("nova-controller-setup.sh")

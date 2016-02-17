@@ -1,4 +1,4 @@
-# Copyright 2015 Canonical, Ltd.
+# Copyright 2015, 2016 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -273,9 +273,27 @@ class Controller:
                 controller_machine = self.juju_m_idmap['controller']
                 self.configure_lxc_network(controller_machine)
 
-                for juju_machine_id in self.juju_m_idmap.values():
-                    async.sleep_until(0)
-                    self.run_apt_go_fast(juju_machine_id)
+                # Add second nic to VMS after lxc network
+                # is configured
+                if not self.config.getopt('attached_interfaces'):
+                    for i in range(1, 4):
+                        additional_iface_mac = utils.macgen()
+                        cmd = ("virsh attach-interface --domain "
+                               "ubuntu-local-machine-{} "
+                               "--type bridge --source lxcbr0 --model virtio "
+                               "--mac {} --config --live".format(
+                                   i,
+                                   additional_iface_mac))
+                        log.debug("Adding second interface "
+                                  "to machine: {}".format(cmd))
+                        out = utils.get_command_output(cmd)
+                        log.debug("Result: {}".format(out))
+                        utils.remote_run(
+                            i,
+                            cmds="sudo /sbin/sysctl -w net.ipv4.ip_forward=1",
+                            juju_home=self.config.juju_home(
+                                use_expansion=True))
+                    self.config.setopt('attached_interfaces', True)
 
             self.deploy_using_placement()
             self.wait_for_deployed_services_ready()
@@ -597,10 +615,15 @@ class Controller:
                 "All services deployed, relations set, and started")
             self.loop.exit(0)
 
-        self.ui.status_info_message(
-            "Services deployed, relationships still pending."
-            " Please wait for all relations to be set before"
-            " deploying additional services.")
+        session_id = self.config.getopt('session_id')
+        if self.config.is_single():
+            utils.pollinate(session_id, 'DS')
+        elif self.config.is_multi():
+            utils.pollinate(session_id, 'DM')
+
+        if charm_q.charm_post_proc_q.empty():
+            self.ui.status_info_message("Ready.")
+
         self.ui.render_services_view(self.nodes, self.juju_state,
                                      self.maas_state, self.config)
         self.loop.redraw_screen()
