@@ -1,6 +1,5 @@
 bin/configure-landscape                usr/share/openstack/bin
 bin/ip_range.py                        usr/share/openstack/bin
-bin/maas-report-boot-images            usr/share/openstack/bin
 bin/openstack-config                   usr/share/openstack
 bin/openstack-install                  usr/share/openstack
 bin/openstack-juju                     usr/share/openstack

@@ -1,4 +1,11 @@
-openstack (0.99.27) wily; urgency=medium
+openstack (0.99.27) xenial; urgency=medium
+
+  * Support LXD as a toplevel container
+  * Mitaka Support
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Wed, 17 Feb 2016 11:33:47 -0500
+
+openstack (0.99.23) wily; urgency=medium
 
   * Support nclxd
   * Improve threading support in macumba

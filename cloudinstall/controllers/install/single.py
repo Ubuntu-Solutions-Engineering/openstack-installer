@@ -204,6 +204,9 @@ class SingleInstall:
         topcontainer_type = self.config.getopt("topcontainer_type")
         if topcontainer_type == 'lxc':
             mounts += [("/var/cache/lxc", "var/cache/lxc", "dir")]
+            # Cache libvirt image syncs
+            if os.path.isdir('/var/lib/uvtool'):
+                mounts += [("/var/lib/uvtool", "var/lib/uvtool", "dir")]
         elif topcontainer_type == 'lxd':
             self.cdriver.add_devices(self.container_name,
                                      [('tun', 'unix-char',
@@ -502,6 +505,7 @@ class SingleInstall:
         self.create_uoi_bridge()
 
         utils.ssh_genkey()
+        self.config.setopt('pubkey', utils.ssh_pubkey())
 
         self.setup_apt_proxy()
 

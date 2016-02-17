@@ -1,18 +1,3 @@
-# Copyright 2014-2016 Canonical, Ltd.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import os
 import sys
 import yaml
@@ -33,11 +18,11 @@ def parse_options(argv):
 
 
 def main():
-    juju_home = os.getenv("JUJU_HOME", "~/.juju")
     opts = parse_options(sys.argv[1:])
     if not opts.model:
         raise Exception("Must choose a Environment/Model.")
     if opts.v1:
+        juju_home = os.getenv("JUJU_HOME", "~/.juju")
         from .v1 import JujuClient  # noqa
         env = os.path.expanduser(
             os.path.join(
@@ -53,6 +38,8 @@ def main():
         url = os.path.join('wss://', server, 'environment', uuid, 'api')
 
     elif opts.v2:
+        xdg_home = os.getenv("XDG_DATA_HOME", "~/.local/share")
+        juju_home = os.path.join(xdg_home, 'juju')
         from .v2 import JujuClient  # noqa
         env = os.path.expanduser(
             os.path.join(

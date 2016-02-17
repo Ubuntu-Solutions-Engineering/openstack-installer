@@ -1,20 +1,6 @@
-# Copyright 2014-2016 Canonical, Ltd.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 from .api import Base, query_cs
 from .errors import ServerError
+from .jobs import Jobs
 
 # https://github.com/juju/juju/blob/master/api/facadeversions.go
 _FACADE_VERSIONS = {
@@ -73,6 +59,79 @@ _FACADE_VERSIONS = {
 class JujuClient(Base):
     API_VERSION = 1
     FACADE_VERSIONS = _FACADE_VERSIONS
+
+    def status(self):
+        """ Returns status of juju environment """
+        return self.call(dict(Type="Client",
+                              Request="FullStatus"),
+                         timeout=60)
+
+    def get_watcher(self):
+        """ Returns watcher """
+        return self.call(dict(Type="Client",
+                              Request="WatchAll"))
+
+    def get_watched_tasks(self, watcher_id):
+        """ Returns a list of all watches for Id """
+        return self.call(dict(Type="AllWatcher",
+                              Request="Next",
+                              Id=watcher_id))
+
+    def add_charm(self, charm_url):
+        """ Adds charm """
+        return self.call(dict(Type="Client",
+                              Request="AddCharm",
+                              Params=dict(URL=charm_url)))
+
+    def get_charm(self, charm_url):
+        """ Get charm """
+        return self.call(dict(Type='Client',
+                              Request='CharmInfo',
+                              Params=dict(CharmURL=charm_url)))
+
+    def add_machine(self, series="", constraints={},
+                    machine_spec="", parent_id="", container_type=""):
+        """Allocate a new machine from the iaas provider.
+        """
+        if machine_spec:
+            err_msg = "Cant specify machine spec with container_type/parent_id"
+            assert not (parent_id or container_type), err_msg
+            parent_id, container_type = machine_spec.split(":", 1)
+
+        params = dict(
+            Series=series,
+            ContainerType=container_type,
+            ParentId=parent_id,
+            Constraints=self._prepare_constraints(constraints),
+            Jobs=[Jobs.HostUnits])
+        return self.add_machines([params])
+
+    def add_machines(self, machines):
+        """ Add machines """
+        return self.call(dict(Type="Client",
+                              Request="AddMachines",
+                              Params=dict(MachineParams=machines)))
+
+    def destroy_machines(self, machine_ids, force=False):
+        params = {"MachineNames": machine_ids}
+        if force:
+            params["Force"] = True
+        return self.call(dict(Type="Client",
+                              Request="DestroyMachines",
+                              Params=params))
+
+    def resolved(self, unit_name, retry=0):
+        """ Resolved """
+        return self.call(dict(Type="Client",
+                              Request="Resolved",
+                              Params=dict(UnitName=unit_name,
+                                          Retry=retry)))
+
+    def get_public_address(self, target):
+        """ Gets public address of instance """
+        return self.call(dict(Type="Client",
+                              Request="PublicAddress",
+                              Params=dict(Target=target)))
 
     def info(self):
         """ Returns Juju environment state """

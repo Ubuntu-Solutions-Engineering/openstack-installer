@@ -30,6 +30,8 @@ Architecture: all
 Depends: juju-core,
          libvirt-bin,
          pollinate,
+         python-neutronclient,
+         python-openstackclient,
          python3-bson,
          python3-jinja2,
          python3-kombu,

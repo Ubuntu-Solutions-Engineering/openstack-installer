@@ -40,6 +40,7 @@ case $WHAT in
     if [ "$CONTAINER_TYPE" = "lxc" ]; then
 	lxc-stop -n $CONTAINER_NAME || true
 	lxc-destroy -n $CONTAINER_NAME || true
+        rm -rf /var/lib/uvtool/libvirt/images/ubuntu-local*
     else
         lxc stop --force $CONTAINER_NAME || true
 	lxc delete --force $CONTAINER_NAME || true
@@ -51,8 +52,6 @@ case $WHAT in
     else
         echo "No static route defined. Not changing routing tables."
     fi
-    virsh net-destroy uoinet || true
-    virsh net-undefine uoinet || true
     ;;
   *)
     echo Could not determine install type, was ~/.cloud-install removed prior to running the uninstallation?
