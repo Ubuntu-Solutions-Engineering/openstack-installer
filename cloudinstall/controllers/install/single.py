@@ -261,8 +261,13 @@ class SingleInstall:
         # for wily+ hosts and containers, restart the preexisting
         # lxc-net to pick up our config:
         if platform.linux_distribution()[2][0] >= 'w':
-            self.cdriver.run(self.container_name,
-                             "systemctl restart lxc-net")
+            cmds = [
+                "systemctl stop lxc-net.service",
+                "systemctl start lxc-net.service"
+            ]
+            for cmd in cmds:
+                self.cdriver.run(self.container_name,
+                                 cmd)
 
         lxc_network = self.write_lxc_net_config()
         self.add_static_route(lxc_network)
