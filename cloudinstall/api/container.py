@@ -30,6 +30,8 @@ import yaml
 
 log = logging.getLogger("cloudinstall.api.container")
 
+BLACKLIST_GW = [b'10.0.3.1', b'192.168.122.1']
+
 
 class NoContainerIPException(Exception):
 
@@ -68,8 +70,10 @@ class LXCContainer:
             log.debug("lxc-info found: '{}'".format(ips))
             if len(ips) == 0:
                 raise NoContainerIPException()
-            log.debug("using {} as the container ip".format(ips[0].decode()))
-            return ips[0].decode()
+            for ip in ips:
+                if ip not in BLACKLIST_GW:
+                    log.debug("using container ip: {}".format(ip.decode()))
+                    return ip.decode()
         except subprocess.CalledProcessError:
             log.exception("error calling lxc-info to get container IP")
             raise NoContainerIPException()
