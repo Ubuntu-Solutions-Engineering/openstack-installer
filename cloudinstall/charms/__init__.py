@@ -499,7 +499,6 @@ class CharmQueue:
                 self.charm_post_proc_q.task_done()
             except CharmPostProcessException as e:
                 log.debug(e)
-                self.ui.status_error_message(e)
                 self.charm_post_proc_q.put(charm)
                 self.charm_post_proc_q.task_done()
             log.debug("Post processing queue size: {}".format(

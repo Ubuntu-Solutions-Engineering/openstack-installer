@@ -45,11 +45,13 @@ class StatusBarWidget(WidgetWrap):
 
     def error_message(self, text):
         self.message([('status_error', self.ERROR),
-                      self.ARROW + text])
+                      "{arrow} {msg}".format(arrow=self.ARROW,
+                                             msg=text)])
 
     def info_message(self, text):
         self.message([('status_info', self.INFO),
-                      self.ARROW + text])
+                      "{arrow} {msg}".format(arrow=self.ARROW,
+                                             msg=text)])
 
     def set_pending_deploys(self, pending_deploys):
         if len(pending_deploys) > 0:
