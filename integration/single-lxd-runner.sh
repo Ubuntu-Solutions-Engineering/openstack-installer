@@ -1,8 +1,12 @@
 #!/bin/bash -ex
 
-sudo add-apt-repository -y ppa:ubuntu-lxc/lxd-stable
-sudo apt-get update
-sudo apt-get install -qyf lxd
+grep -q 'Trusty' /etc/lsb-release
+if [ $? -eq 0 ]; then
+    sudo add-apt-repository -y ppa:ubuntu-lxc/lxd-stable
+    sudo apt-get update
+    sudo apt-get install -qyf lxd
+fi
+
 sudo su ubuntu -c "lxc list"
 sudo su ubuntu -c "lxd-images import ubuntu --alias ubuntu"
 
