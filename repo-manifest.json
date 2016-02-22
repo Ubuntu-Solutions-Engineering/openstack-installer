@@ -1,0 +1,24 @@
+{
+    "repos": [
+        {
+            "url": "https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git",
+            "version": "v0.99.28",
+            "directories": "debian"
+        },
+        {
+            "url": "https://github.com/Ubuntu-Solutions-Engineering/macumba.git",
+            "version": "v0.9",
+            "directories": "macumba"
+        },
+        {
+            "url": "https://github.com/Ubuntu-Solutions-Engineering/maasclient.git",
+            "version": "v0.3",
+            "directories": "maasclient"
+        },
+        {
+            "url": "https://github.com/Ubuntu-Solutions-Engineering/urwid-ubuntu.git",
+            "version": "v0.1.1",
+            "directories": "ubuntui"
+        }
+    ]
+}

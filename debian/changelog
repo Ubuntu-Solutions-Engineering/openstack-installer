@@ -1,3 +1,9 @@
+openstack (0.99.28) xenial; urgency=medium
+
+  * Next development release
+
+ -- Adam Stokes <adam.stokes@ubuntu.com>  Mon, 22 Feb 2016 13:45:37 -0500
+
 openstack (0.99.27) xenial; urgency=medium
 
   * Support LXD as a toplevel container

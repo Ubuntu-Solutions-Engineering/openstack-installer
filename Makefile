@@ -5,14 +5,6 @@ NAME                = openstack
 TOPDIR              := $(shell basename `pwd`)
 GIT_REV		    := $(shell git log --oneline -n1| cut -d" " -f1)
 VERSION             := $(shell ./tools/version)
-UPSTREAM_DEB        := https://github.com/Ubuntu-Solutions-Engineering/openstack-installer-deb.git
-UPSTREAM_DEB_COMMIT := v0.99.27
-UPSTREAM_MACUMBA    := https://github.com/Ubuntu-Solutions-Engineering/macumba.git
-UPSTREAM_MACUMBA_COMMIT := v0.9
-UPSTREAM_MAASCLIENT := https://github.com/Ubuntu-Solutions-Engineering/maasclient.git
-UPSTREAM_MAASCLIENT_COMMIT := 357db23
-UPSTREAM_UBUNTUI := https://github.com/Ubuntu-Solutions-Engineering/urwid-ubuntu.git
-UPSTREAM_UBUNTUI_COMMIT := v0.0.9
 
 .PHONY: install-dependencies
 install-dependencies:
@@ -61,25 +53,8 @@ current_version:
 	@echo $(VERSION)
 
 git-sync-requirements:
-	@echo Syncing git repos
-	@rm -rf tmp && mkdir -p tmp
-	@rm -rf debian
-	@rm -rf macumba
-	@rm -rf maasclient
-	@rm -rf ubuntui
-	git clone -q $(UPSTREAM_DEB) tmp/debian
-	git clone -q $(UPSTREAM_MACUMBA) tmp/macumba
-	git clone -q $(UPSTREAM_MAASCLIENT) tmp/maasclient
-	git clone -q $(UPSTREAM_UBUNTUI) tmp/ubuntui
-	@(cd tmp/debian && git checkout -q -f $(UPSTREAM_DEB_COMMIT))
-	@(cd tmp/maasclient && git checkout -q -f $(UPSTREAM_MAASCLIENT_COMMIT))
-	@(cd tmp/macumba && git checkout -q -f $(UPSTREAM_MACUMBA_COMMIT))
-	@(cd tmp/ubuntui && git checkout -q -f $(UPSTREAM_UBUNTUI_COMMIT))
-	@rsync -az -C --delete tmp/debian/debian .
-	@rsync -az -C --delete tmp/macumba/macumba .
-	@rsync -az -C --delete tmp/maasclient/maasclient .
-	@rsync -C -az --delete tmp/ubuntui/ubuntui .
-	@rm -rf tmp
+	if [ ! -f tools/sync-repo.py ]; then echo "Need to download sync-repo.py from https://git.io/v2mEw" && exit 1; fi
+	tools/sync-repo.py -m repo-manifest.json -f
 
 git_rev:
 	@echo $(GIT_REV)
