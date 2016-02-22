@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-grep -q 'Trusty' /etc/lsb-release
+grep -q 'trusty' /etc/lsb-release
 if [ $? -eq 0 ]; then
     sudo add-apt-repository -y ppa:ubuntu-lxc/lxd-stable
     sudo apt-get update
