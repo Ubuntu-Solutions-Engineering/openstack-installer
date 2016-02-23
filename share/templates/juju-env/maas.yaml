@@ -10,8 +10,6 @@ environments:
     authorized-keys-path: ~/.ssh/id_rsa.pub
 {%- if apt_proxy %}
     apt-http-proxy: {{apt_proxy}}
-{%- else %}
-    apt-http-proxy: 'http://{{maas_server}}:8000/'
 {%- endif %}
     lxc-clone: true
     bootstrap-timeout: 3600
