@@ -66,9 +66,11 @@ class CharmNovaCloudController(CharmBase):
 
         setup_script_path = self.render_setup_script()
         cmds = ("bash {script} "
-                "\"{password}\" \"{install_type}\"".format(
+                "\"{password}\" \"{install_type}\" "
+                "> {cfg_home}/script.log 2>&1".format(
                     script=setup_script_path,
                     password=openstack_password,
+                    cfg_home=self.config.cfg_path,
                     install_type=self.config.getopt('install_type')
                 ))
         err = utils.get_command_output(cmds)

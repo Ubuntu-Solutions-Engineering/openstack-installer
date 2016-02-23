@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# import os
+import os
 import logging
-# from cloudinstall import utils
+from cloudinstall import utils
 from cloudinstall.charms import CharmBase, CharmPostProcessException  # noqa
 from cloudinstall.placement.controller import AssignmentType
 
@@ -43,31 +43,31 @@ class CharmNeutron(CharmBase):
     is_core = True
     available_sources = ['charmstore', 'next']
 
-    # def post_proc(self):
-    #     """ performs additional network configuration for charm """
-    #     super(CharmNeutron, self).post_proc()
-    #     svc = self.juju_state.service(self.charm_name)
-    #     unit = svc.unit(self.charm_name)
+    def post_proc(self):
+        """ performs additional network configuration for charm """
+        super(CharmNeutron, self).post_proc()
+        svc = self.juju_state.service(self.charm_name)
+        unit = svc.unit(self.charm_name)
 
-    #     if unit.machine_id == '-1':
-    #         raise CharmPostProcessException(
-    #                 "Service not ready for workload.")
+        if unit.machine_id == '-1':
+            raise CharmPostProcessException(
+                    "Service not ready for workload.")
 
-    #     self.ui.status_info_message("Validating network parameters "
-    #                                 "for Neutron")
-    #     utils.remote_cp(
-    #         unit.machine_id,
-    #         src=os.path.join(self.config.tmpl_path, "neutron-network.sh"),
-    #         dst="/tmp/neutron-network.sh",
-    #         juju_home=self.config.juju_home(use_expansion=True))
-    #     out = utils.remote_run(
-    #         unit.machine_id,
-    #         cmds="sudo bash /tmp/neutron-network.sh {}".format(
-    #             self.config.getopt('install_type')),
-    #         juju_home=self.config.juju_home(use_expansion=True))
-    #     if out['status'] > 0:
-    #         log.error("Neutron error: {}".format(out))
-    #         raise CharmPostProcessException(out)
+        self.ui.status_info_message("Validating network parameters "
+                                    "for Neutron")
+        utils.remote_cp(
+            unit.machine_id,
+            src=os.path.join(self.config.tmpl_path, "neutron-network.sh"),
+            dst="/tmp/neutron-network.sh",
+            juju_home=self.config.juju_home(use_expansion=True))
+        out = utils.remote_run(
+            unit.machine_id,
+            cmds="sudo bash /tmp/neutron-network.sh {}".format(
+                self.config.getopt('install_type')),
+            juju_home=self.config.juju_home(use_expansion=True))
+        if out['status'] > 0:
+            log.error("Neutron error: {}".format(out))
+            raise CharmPostProcessException(out)
 
 
 __charm_class__ = CharmNeutron
