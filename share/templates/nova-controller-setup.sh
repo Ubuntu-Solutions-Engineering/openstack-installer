@@ -23,7 +23,6 @@ if [[ "$2" == "Single" ]]; then
     # configure external network for Single install path
     neutron net-show ext-net || neutron net-create --router:external ext-net
     neutron subnet-show ext-subnet || neutron subnet-create ext-net 10.0.{{N}}.0/24 \
-                                              10.0.{{N}}.0/24 \
                                               --gateway 10.0.{{N}}.1 \
                                               --allocation-pool start=10.0.{{N}}.2,end=10.0.{{N}}.254
     neutron net-show ubuntu-net || neutron net-create ubuntu-net
