@@ -25,7 +25,7 @@ if [[ "$2" == "Single" ]]; then
     neutron subnet-show ext-subnet || neutron subnet-create ext-net 10.0.{{N}}.0/24 \
                                               --gateway 10.0.{{N}}.1 \
                                               --allocation-pool start=10.0.{{N}}.2,end=10.0.{{N}}.254
-    neutron net-show ubuntu-net || neutron net-create ubuntu-net
+    neutron net-show ubuntu-net || neutron net-create ubuntu-net --shared
     neutron subnet-show ubuntu-subnet || neutron subnet-create --name ubuntu-subnet --gateway 10.101.0.1 --dns-nameserver 10.0.{{N}}.1 ubuntu-net 10.101.0.0/24
     neutron router-show ubuntu-router || neutron router-create ubuntu-router
     neutron router-interface-add ubuntu-router ubuntu-subnet || true
