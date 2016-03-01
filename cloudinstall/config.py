@@ -28,7 +28,7 @@ log = logging.getLogger('cloudinstall.config')
 INSTALL_TYPE_SINGLE = ("Single", "Fully containerized OpenStack installation "
                        "on a single machine.")
 INSTALL_TYPE_MULTI = ("Multi", "OpenStack installation utilizing MAAS.")
-INSTALL_TYPE_LANDSCAPE = ("OpenStack Autopilot",
+INSTALL_TYPE_LANDSCAPE = ("Autopilot",
                           "The Canonical Distribution "
                           "- Enterprise Openstack Install and Management.")
 
