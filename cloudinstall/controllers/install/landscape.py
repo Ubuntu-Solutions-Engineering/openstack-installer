@@ -28,7 +28,7 @@ class LandscapeInstall:
         self.config = config
         self.display_controller = display_controller
         self.loop = loop
-        self.config.setopt('install_type', 'OpenStack Autopilot')
+        self.config.setopt('install_type', 'Autopilot')
 
         session_id = self.config.getopt('session_id')
         pollinate(session_id, 'IL')
@@ -87,5 +87,5 @@ class LandscapeInstall:
                 "MAAS Server IP and API Key. Use the MAAS web UI or "
                 "'maas list' to find your API Key")
             self.display_controller.show_landscape_input(
-                "OpenStack Autopilot Setup",
+                "Autopilot Setup",
                 self._save_lds_creds)

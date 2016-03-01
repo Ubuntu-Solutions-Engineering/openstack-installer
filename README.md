@@ -13,7 +13,7 @@ Any support for administering, running, maintaining the OpenStack cloud is outsi
 of this project. However, additional support for those questions are handled at:
 
 * [Askubuntu/OpenStack](https://askubuntu.com/questions/tagged/openstack)
-* [Askubuntu/Landscape OpenStack Autopilot](https://askubuntu.com/questions/tagged/landscape+openstack-autopilot)
+* [Askubuntu/Autopilot](https://askubuntu.com/questions/tagged/landscape+openstack-autopilot)
 
 ### Filing Bugs
 
@@ -31,7 +31,7 @@ IRC: **freenode.net** in channel **#ubuntu-solutions**
 
 * [Single Installer guide](https://help.ubuntu.com/lts/clouddocs/installer/en/single-install.html)
 * [Multi Installer guide](https://help.ubuntu.com/lts/clouddocs/installer/en/multi-install.html)
-* [Landscape OpenStack Autopilot Guide](http://www.ubuntu.com/download/cloud/install-ubuntu-openstack)
+* [Autopilot Guide](http://www.ubuntu.com/download/cloud/install-ubuntu-openstack)
 
 # Copyright
 

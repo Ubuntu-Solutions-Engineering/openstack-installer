@@ -134,7 +134,7 @@ class Config:
 
     def is_landscape(self):
         if self.getopt('install_type') and \
-           'OpenStack Autopilot' in self.getopt('install_type'):
+           'Autopilot' in self.getopt('install_type'):
             return True
         return False
 

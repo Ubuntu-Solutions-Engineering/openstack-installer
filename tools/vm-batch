@@ -59,7 +59,7 @@ def parse_options(argv):
     parser.add_argument('--for-lds', action='store_true',
                         default=False, dest='for_lds',
                         help='Creates VMs with required hardware for '
-                        'Landscape OpenStack Autopilot.')
+                        'Autopilot.')
     return parser.parse_args(argv)
 
 

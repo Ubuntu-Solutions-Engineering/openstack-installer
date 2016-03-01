@@ -1,4 +1,4 @@
-install_type: OpenStack Autopilot
+install_type: Autopilot
 landscapecreds:
   admin_email: foo@bar.com
   admin_name: foo ey

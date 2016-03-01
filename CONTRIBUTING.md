@@ -5,7 +5,7 @@ Guidelines to follow when writing new code or submitting patches.
   2. Which install type
   3. A `sosreport` from the host system if a *single* install, MAAS server if *multi/landscape autopilot* installation.
 
-## Landscape OpenStack Autopilot requirements
+## Autopilot requirements
   1. */var/log/landscape-server/job-handler.log*
 
       Obtain that by running the following from the MAAS system:
