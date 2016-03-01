@@ -122,19 +122,19 @@ class Config:
 
     def is_single(self):
         if self.getopt('install_type') and \
-           'Single' in self.getopt('install_type'):
+           INSTALL_TYPE_SINGLE[0] in self.getopt('install_type'):
             return True
         return False
 
     def is_multi(self):
         if self.getopt('install_type') and \
-           'Multi' in self.getopt('install_type'):
+           INSTALL_TYPE_MULTI[0] in self.getopt('install_type'):
             return True
         return False
 
     def is_landscape(self):
         if self.getopt('install_type') and \
-           'Autopilot' in self.getopt('install_type'):
+           INSTALL_TYPE_LANDSCAPE[0] in self.getopt('install_type'):
             return True
         return False
 

@@ -29,6 +29,7 @@ from cloudinstall.state import InstallState
 from cloudinstall.netutils import get_ip_set
 
 from cloudinstall import utils
+from cloudinstall.config import INSTALL_TYPE_MULTI
 
 
 log = logging.getLogger('cloudinstall.c.i.multi')
@@ -51,7 +52,8 @@ class MultiInstall:
         # Sets install type
         self.session_id = self.config.getopt('session_id')
         if not self.config.is_landscape():
-            self.config.setopt('install_type', 'Multi')
+            self.config.setopt('install_type',
+                               INSTALL_TYPE_MULTI[0])
             utils.pollinate(self.session_id, 'IM')
 
     def set_perms(self):

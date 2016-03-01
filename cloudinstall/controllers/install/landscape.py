@@ -15,6 +15,7 @@
 
 import logging
 from cloudinstall.utils import pollinate
+from cloudinstall.config import INSTALL_TYPE_LANDSCAPE
 from .multi import (MultiInstall,
                     MultiInstallExistingMaas)
 
@@ -28,7 +29,7 @@ class LandscapeInstall:
         self.config = config
         self.display_controller = display_controller
         self.loop = loop
-        self.config.setopt('install_type', 'Autopilot')
+        self.config.setopt('install_type', INSTALL_TYPE_LANDSCAPE[0])
 
         session_id = self.config.getopt('session_id')
         pollinate(session_id, 'IL')

@@ -26,6 +26,7 @@ import platform
 import shutil
 from subprocess import call, check_call, check_output, STDOUT
 from cloudinstall import async, utils, netutils
+from cloudinstall.config import INSTALL_TYPE_SINGLE
 from cloudinstall.api.container import (LXCContainer, LXDContainer,
                                         NoContainerIPException,
                                         ContainerRunException)
@@ -59,7 +60,7 @@ class SingleInstall:
             self.config.cfg_path, 'userdata.yaml')
 
         # Sets install type
-        self.config.setopt('install_type', 'Single')
+        self.config.setopt('install_type', INSTALL_TYPE_SINGLE[0])
 
         utils.pollinate(self.session_id, 'IS')
 
