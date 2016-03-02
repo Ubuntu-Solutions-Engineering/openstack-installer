@@ -223,8 +223,9 @@ export OS_REGION_NAME=\"RegionOne\"
             config_yaml = charm_config_raw
 
         # Set revision
-        if self.charm_rev:
-            _charm_name_rev = "{}-{}".format(self.charm_name, self.charm_rev)
+        # TODO: remove
+        # if self.charm_rev:
+        #     _charm_name_rev = "{}-{}".format(self.charm_name, self.charm_rev)
 
         if self.config.getopt('use_nclxd'):
             # nclxd support is only enabled on vivid and later, and we
