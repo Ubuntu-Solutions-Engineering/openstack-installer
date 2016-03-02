@@ -8,6 +8,7 @@ if [ $? -eq 0 ]; then
     sudo su ubuntu -c "lxc list"
     sudo su ubuntu -c "lxd-images import ubuntu --alias ubuntu"
 else
+    sudo apt-get install -qyf lxd
     sudo su ubuntu -c "lxc list"
     sudo su ubuntu -c "lxd-images import ubuntu xenial amd64 --alias ubuntu"
 fi
