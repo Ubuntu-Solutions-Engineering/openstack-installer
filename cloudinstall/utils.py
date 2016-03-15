@@ -585,6 +585,15 @@ def install_user():
     return user
 
 
+def install_group():
+    """ returns ID of install user's group as int.
+    """
+    gid = os.getenv('SUDO_GID', None)
+    if not gid:
+        gid = os.getegid()
+    return int(gid)
+
+
 def install_home():
     """ returns installer user home
     """

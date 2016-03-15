@@ -233,13 +233,13 @@ if __name__ == '__main__':
 
     if not os.path.exists(cfg.cfg_path):
         os.makedirs(cfg.cfg_path)
-        utils.chown(cfg.cfg_path, utils.install_user())
+        utils.chown(cfg.cfg_path, utils.install_user(), utils.install_group())
 
     if not os.path.exists(cfg.juju_path()):
         logger.info("Creating juju directories: {}".format(cfg.juju_path()))
         os.makedirs(cfg.juju_path())
         utils.chown(
-            cfg.juju_path(), utils.install_user(), utils.install_user())
+            cfg.juju_path(), utils.install_user(), utils.install_group())
 
     if not cfg.getopt('container_name'):
         cfg.setopt('container_name',
