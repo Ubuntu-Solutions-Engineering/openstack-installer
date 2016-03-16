@@ -260,8 +260,8 @@ class SingleInstall:
         # lxc-net to pick up our config:
         if platform.linux_distribution()[2][0] >= 'w':
             cmds = [
-                "/usr/lib/x86_64-linux-gnu/lxc/lxc-net stop",
-                "/usr/lib/x86_64-linux-gnu/lxc/lxc-net start"
+                "/usr/lib/*/lxc/lxc-net stop",
+                "/usr/lib/*/lxc/lxc-net start"
             ]
             for cmd in cmds:
                 self.cdriver.run(self.container_name,
