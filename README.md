@@ -1,6 +1,10 @@
 # Ubuntu OpenStack Installer
 [![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer)
 
+# NOTICE
+
+Ubuntu Xenial (16.04) users and above will need to use our latest OpenStack installer found at [conjure-up.io](http://conjure-up.io)
+
 ### Documenation
 
 [View the Documentation](https://wiki.ubuntu.com/OpenStack/Installer)
