@@ -188,8 +188,7 @@ class PegasusGUI(WidgetWrap):
         self.frame.header.set_openstack_rel(release)
 
     def clear_status(self):
-        self.frame.footer = None
-        self.frame.set_footer(self.frame.footer)
+        self.frame.footer.clear()
 
     def render_services_view(self, nodes, juju_state, maas_state, config):
         self.services_view = ServicesView(nodes, juju_state, maas_state,
@@ -265,6 +264,7 @@ class PegasusGUI(WidgetWrap):
         else:
             msg = ("A fatal error has occurred: {}\n".format(ex.args[0]))
             log.error(msg)
+            log.exception(ex)
             self.frame.body = ErrorView(ex.args[0])
 
         AlarmMonitor.remove_all()
