@@ -20,6 +20,7 @@ import re
 import shlex
 import socket
 import time
+from urllib.parse import urlparse
 import yaml
 
 from subprocess import check_output
@@ -71,6 +72,13 @@ class MultiInstall:
                 raise MaasInstallError(
                     "Unable to set ownership for {}".format(d))
 
+    def _add_default_port(self, netloc):
+        nl = urlparse("http://" + netloc)
+        if not nl.port:
+            return netloc + ":5240"
+        else:
+            return netloc
+
     def do_install(self):
         # Install package deps
         utils.apt_install('openstack-multi')
@@ -80,9 +88,10 @@ class MultiInstall:
         maas_creds = self.config.getopt('maascreds')
         maas_env = utils.load_template('juju-env/maas.yaml')
 
+        maas_server = maas_creds['api_host']
         render_parts = {'openstack_password':
                         self.config.getopt('openstack_password'),
-                        'maas_server': maas_creds['api_host'],
+                        'maas_server': self._add_default_port(maas_server),
                         'maas_apikey': maas_creds['api_key'],
                         'ubuntu_series':
                         self.config.getopt('ubuntu_series')}
