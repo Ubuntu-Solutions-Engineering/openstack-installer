@@ -3,7 +3,7 @@ default: maas
 environments:
   maas:
     type: maas
-    maas-server: 'http://{{maas_server}}/MAAS/'
+    maas-server: 'http://{{maas_host}}{{maas_port}}/MAAS/'
     maas-oauth: '{{maas_apikey}}'
     admin-secret: "{{openstack_password}}"
     default-series: {{ubuntu_series}}
@@ -11,14 +11,14 @@ environments:
 {%- if apt_proxy %}
     apt-http-proxy: {{apt_proxy}}
 {%- else %}
-    apt-http-proxy: 'http://{{maas_server}}:8000/'
+    apt-http-proxy: 'http://{{maas_host}}:8000/'
 {%- endif %}
     lxc-clone: true
     bootstrap-timeout: 3600
 {%- if no_proxy -%}
     no-proxy: {{no_proxy}}
 {%- else %}
-    no-proxy: localhost,{{maas_server}}
+    no-proxy: localhost,{{maas_host}}
 {%- endif %}
 {%- if http_proxy %}
     http-proxy: {{http_proxy}}
@@ -53,5 +53,5 @@ environments:
 {%- if no_proxy -%}
     no-proxy: {{no_proxy}}
 {%- else %}
-    no-proxy: localhost,{{maas_server}}
+    no-proxy: localhost,{{maas_host}}
 {%- endif %}
