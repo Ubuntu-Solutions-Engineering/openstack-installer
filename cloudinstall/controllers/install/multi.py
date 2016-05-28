@@ -72,12 +72,11 @@ class MultiInstall:
                 raise MaasInstallError(
                     "Unable to set ownership for {}".format(d))
 
-    def _add_default_port(self, netloc):
+    def _parse_maas_server(self, netloc):
         nl = urlparse("http://" + netloc)
-        if not nl.port:
-            return netloc + ":5240"
-        else:
-            return netloc
+        port = nl.port if nl.port else 5240
+        port = ":{}".format(port)
+        return nl.hostname, port
 
     def do_install(self):
         # Install package deps
@@ -89,9 +88,11 @@ class MultiInstall:
         maas_env = utils.load_template('juju-env/maas.yaml')
 
         maas_server = maas_creds['api_host']
+        maas_host, maas_port = self._parse_maas_server(maas_server)
         render_parts = {'openstack_password':
                         self.config.getopt('openstack_password'),
-                        'maas_server': self._add_default_port(maas_server),
+                        'maas_host': maas_host,
+                        'maas_port': maas_port,
                         'maas_apikey': maas_creds['api_key'],
                         'ubuntu_series':
                         self.config.getopt('ubuntu_series')}
