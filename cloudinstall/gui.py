@@ -188,7 +188,10 @@ class PegasusGUI(WidgetWrap):
         self.frame.header.set_openstack_rel(release)
 
     def clear_status(self):
-        self.frame.footer.clear()
+        try:
+            self.frame.footer.clear()
+        except Exception as e:
+            log.exception(e)
 
     def render_services_view(self, nodes, juju_state, maas_state, config):
         self.services_view = ServicesView(nodes, juju_state, maas_state,
