@@ -62,4 +62,4 @@ class StatusBarWidget(WidgetWrap):
 
     def clear(self):
         """Clear the text."""
-        self._w.set_text('')
+        self._status_line.set_text('')
