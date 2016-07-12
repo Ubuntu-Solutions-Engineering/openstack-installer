@@ -158,7 +158,6 @@ neutron-api:
 
 nova-cloud-controller:
   network-manager: Neutron
-  quantum-security-groups: "yes"
   {% if openstack_release[0] >= 'j' %}
   console-access-protocol: novnc
   {% endif %}
