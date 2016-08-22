@@ -230,7 +230,7 @@ def render_charm_config(config):
         template_args['openstack_origin'] = openstack_origin
 
     if config.is_single():
-        template_args['worker_multiplier'] = '1'
+        template_args['worker_multiplier'] = '1.0'
 
     # add http proxy settings - should not be necessary as juju sets
     # these in the charm execution environment, but required for
