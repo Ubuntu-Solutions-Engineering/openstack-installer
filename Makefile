@@ -115,5 +115,7 @@ landscape: ../openstack*.deb
 	@echo "/usr/share/openstack/templates/landscape-deployments.yaml"
 	@echo and then run `sudo openstack-install` as usual
 
-
+dev: clean
+	tox -e install-dev
+	@echo "Run 'source install-dev/bin/activate' to enter dev venv"
 all: deb

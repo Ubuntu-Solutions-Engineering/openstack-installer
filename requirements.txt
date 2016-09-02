@@ -14,7 +14,7 @@ nilsimsa==0.2.0
 pyflakes>=0.8.1
 pep8>=1.5.6
 sphinx_rtd_theme
-macumba==0.6
+macumba
 maasclient
 jinja2
 netaddr

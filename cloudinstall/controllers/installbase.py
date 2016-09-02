@@ -155,6 +155,12 @@ class InstallController:
         else:
             self.ui.select_install_type(
                 self.config.install_types(), self._set_install_type)
+            self.ui.status_message(
+                "Attention: Single and Multi installations have been "
+                "deprecated in favor of http://conjure-up.io which "
+                "is supported on Xenial (16.04 LTS) and above. "
+                "Autopilot installation is still supported through the "
+                "life of 14.04 LTS.")
 
         self.update()
         self.loop.register_callback('refresh_display', self.update)

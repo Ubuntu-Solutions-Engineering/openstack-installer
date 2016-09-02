@@ -77,9 +77,7 @@ class Config:
     def install_types(self):
         """ Installer types
         """
-        return [INSTALL_TYPE_LANDSCAPE,
-                INSTALL_TYPE_MULTI,
-                INSTALL_TYPE_SINGLE]
+        return [INSTALL_TYPE_LANDSCAPE]
 
     @property
     def pidfile(self):
