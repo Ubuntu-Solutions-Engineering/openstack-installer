@@ -2,8 +2,7 @@ Guidelines to follow when writing new code or submitting patches.
 
 # Filing a Bug
   1. Need output of *~/.cloud-install/commands.log*, use http://paste.ubuntu.com or some other form of pastebin.
-  2. Which install type
-  3. A `sosreport` from the host system if a *single* install, MAAS server if *multi/landscape autopilot* installation.
+  2. Autopilot installation is the only method supported, all other installation types will be closed as invalid.
 
 ## Autopilot requirements
   1. */var/log/landscape-server/job-handler.log*
@@ -23,16 +22,4 @@ Guidelines to follow when writing new code or submitting patches.
      See: https://github.com/Ubuntu-Solutions-Engineering/openstack-installer/issues/374#issuecomment-71521918
 
 # Filing a Pull Request
-  1. Must sign the CLA http://www.ubuntu.com/legal/contributors/
-  2. Rebase from master before a PR
-  3. Coherent subject/commit message
-  4. (optional) dco
-  5. Passes unittests, pep8, pyflakes (use `make tox` if installed.)
-
-
-* Follow PEP-8 style guide.
-  http://www.python.org/dev/peps/pep-0008/
-* Coding guidelines based off with a few differences
-  http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
-  - Documenting code differences
-    We use the default sphinx style for documenting classes, functions, methods.
+We are not accepting any new contributions as this installer is in a limited supported maintenance mode.

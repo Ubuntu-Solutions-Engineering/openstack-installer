@@ -3,7 +3,9 @@
 
 # NOTICE
 
-Ubuntu Xenial (16.04) users and above will need to use our latest OpenStack installer found at [conjure-up.io](http://conjure-up.io)
+**Single** and **Multi** installations have been deprecated in favor of [conjure-up.io](http://conjure-up.io). The **Autopilot** installation method will continue to be supported through the lifecycle of Trusty 14.04 LTS.
+
+**Ubuntu Xenial (16.04)** users and above will also need to use our latest installer found at [conjure-up.io](http://conjure-up.io).
 
 ### Documenation
 
@@ -33,13 +35,11 @@ IRC: **freenode.net** in channel **#ubuntu-solutions**
 
 ## Users
 
-* [Single Installer guide](https://help.ubuntu.com/lts/clouddocs/installer/en/single-install.html)
-* [Multi Installer guide](https://help.ubuntu.com/lts/clouddocs/installer/en/multi-install.html)
 * [Autopilot Guide](http://www.ubuntu.com/download/cloud/install-ubuntu-openstack)
 
 # Copyright
 
-Copyright 2015 Canonical, Ltd.
+Copyright 2015-2016 Canonical, Ltd.
 
 # License
 

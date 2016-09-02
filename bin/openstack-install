@@ -69,7 +69,7 @@ def parse_options(argv):
                         help="with arg <key>, prints config value for 'key' "
                         "to stdout and exits.")
     parser.add_argument('--install-type',
-                        dest='install_type', default="Single",
+                        dest='install_type',
                         choices=['Single', 'Multi', 'Autopilot'],
                         help="Specify install type")
     parser.add_argument('--openstack-release',
@@ -154,6 +154,17 @@ def parse_options(argv):
 
 if __name__ == '__main__':
     opts = parse_options(sys.argv[1:])
+    if 'install_type' in opts and opts.install_type in ['Single', 'Multi']:
+        print("*" * 79)
+        print("\n")
+        print("{} installation method is deprecated in favor of "
+              "conjure-up on Xenial (16.04 LTS). \nPlease visit "
+              "http://conjure-up.io for more information".format(
+                  opts.install_type))
+        print("\n")
+        print("*" * 79)
+        sys.exit(1)
+
     cfg = Config(utils.populate_config(opts))
     if 'uninstall' in opts:
         def clean():
