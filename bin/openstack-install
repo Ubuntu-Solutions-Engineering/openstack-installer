@@ -35,7 +35,6 @@ from cloudinstall.config import Config
 from cloudinstall.ev import EventLoop
 from cloudinstall.alarms import AlarmMonitor
 from cloudinstall import __version__ as version
-import warnings
 
 CFG_FILE = os.path.join(utils.install_home(),
                         '.cloud-install/config.yaml')
