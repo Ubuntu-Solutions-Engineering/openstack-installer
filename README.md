@@ -1,45 +1,10 @@
-# Ubuntu OpenStack Installer
-[![Build Status](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer.svg?branch=master)](https://travis-ci.org/Ubuntu-Solutions-Engineering/openstack-installer)
-
 # NOTICE
 
-**Single** and **Multi** installations have been deprecated in favor of [conjure-up.io](http://conjure-up.io). The **Autopilot** installation method will continue to be supported through the lifecycle of Trusty 14.04 LTS.
-
-**Ubuntu Xenial (16.04)** users and above will also need to use our latest installer found at [conjure-up.io](http://conjure-up.io).
-
-### Documenation
-
-[View the Documentation](https://wiki.ubuntu.com/OpenStack/Installer)
-
-## Support
-
-All support for the installer itself is done through our [Mailing list](https://lists.ubuntu.com/mailman/listinfo/ubuntu-openstack-installer).
-
-Any support for administering, running, maintaining the OpenStack cloud is outside of the scope
-of this project. However, additional support for those questions are handled at:
-
-* [Askubuntu/OpenStack](https://askubuntu.com/questions/tagged/openstack)
-* [Askubuntu/Autopilot](https://askubuntu.com/questions/tagged/landscape+openstack-autopilot)
-
-### Filing Bugs
-
-Please make sure to read our [CONTRIBUTING](https://github.com/Ubuntu-Solutions-Engineering/openstack-installer/blob/master/CONTRIBUTING.md) document before filing a bug.
-
-## Developers
-
-* [Read the developers guide](https://wiki.ubuntu.com/OpenStack/Installer/developer-setup)
-
-For further discussions of code development of the installer please join our IRC channel.
-
-IRC: **freenode.net** in channel **#ubuntu-solutions**
-
-## Users
-
-* [Autopilot Guide](http://www.ubuntu.com/download/cloud/install-ubuntu-openstack)
+With the release of Landscape 17.03 this project is no longer maintained. You'll want to use **conjure-up** found at [conjure-up.io](http://conjure-up.io).
 
 # Copyright
 
-Copyright 2015-2016 Canonical, Ltd.
+Copyright 2015-2017 Canonical, Ltd.
 
 # License
 
